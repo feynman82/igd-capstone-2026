@@ -21,9 +21,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --all-extras
       - run: psql "$DATABASE_URL" -f db/migrations/0001_init.sql
+      # Fails if a pack.yaml was edited without regenerating. This is what stops Zee's field
+      # names and Desmond's register columns drifting apart.
+      - run: uv run python -m packs.build --check
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run mypy core modules packs corpus
+      - run: uv run mypy core modules corpus
       - run: uv run pytest -q
 
   web:

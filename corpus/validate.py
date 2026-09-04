@@ -15,13 +15,39 @@ from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
 
-KNOWN_DOC_TYPES = {
-    "iras_tax": {"payslip", "ir8a", "cpf_statement", "srs_statement", "donation_receipt"},
-    "insurance_agent": {
-        "policy_schedule", "renewal_notice", "claim_letter", "benefit_illustration",
-        "servicing_invoice",
-    },
-}
+def _known_doc_types() -> dict[str, set[str]]:
+    """Derived from the pack manifests, never hardcoded.
+
+    A register row can only name a document type some installed pack actually owns, so a
+    typo here is caught before the corpus is built rather than at extraction time.
+    """
+    import yaml
+
+    from core.contracts import PackManifest
+
+    out: dict[str, set[str]] = {}
+    for pack_yaml in sorted(Path("packs").glob("*/pack.yaml")):
+        if pack_yaml.parent.name.startswith("_"):
+            continue
+        m = PackManifest.model_validate(yaml.safe_load(pack_yaml.read_text(encoding="utf-8")))
+        out[m.id] = set(m.document_types)
+    return out
+
+
+def _known_fields() -> dict[tuple[str, str], object]:
+    import yaml
+
+    from core.contracts import PackManifest
+
+    out: dict[tuple[str, str], object] = {}
+    for pack_yaml in sorted(Path("packs").glob("*/pack.yaml")):
+        if pack_yaml.parent.name.startswith("_"):
+            continue
+        m = PackManifest.model_validate(yaml.safe_load(pack_yaml.read_text(encoding="utf-8")))
+        out.update(m.field_index())
+    return out
+
+
 TIERS = {"clean", "scanned", "photo"}
 
 
@@ -45,6 +71,8 @@ def _as_date(value: str) -> date | None:
 
 def validate(path: Path) -> list[str]:
     errors: list[str] = []
+    known = _known_doc_types()
+    fields = _known_fields()
     seen_ids: set[str] = set()
     policy_values: dict[str, dict[str, set[str]]] = defaultdict(lambda: defaultdict(set))
 
@@ -62,10 +90,19 @@ def validate(path: Path) -> list[str]:
 
             pack = (row.get("pack_id") or "").strip()
             doc_type = (row.get("doc_type") or "").strip()
-            if pack not in KNOWN_DOC_TYPES:
-                errors.append(f"{where}: unknown pack_id {pack!r}")
-            elif doc_type not in KNOWN_DOC_TYPES[pack]:
-                errors.append(f"{where}: {doc_type!r} is not a document type {pack} owns")
+            if pack not in known:
+                errors.append(f"{where}: unknown pack_id {pack!r} (known: {sorted(known)})")
+            elif doc_type not in known[pack]:
+                errors.append(
+                    f"{where}: {doc_type!r} is not a document type {pack} owns "
+                    f"(it owns: {sorted(known[pack])})"
+                )
+            else:
+                for name in _fields(row):
+                    if (doc_type, name) not in fields:
+                        errors.append(
+                            f"{where}: field {name!r} is not declared on {doc_type} in pack.yaml"
+                        )
 
             tier = (row.get("tier") or "").strip()
             if tier not in TIERS:

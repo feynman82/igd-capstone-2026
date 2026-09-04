@@ -1,0 +1,17 @@
+# Provenance for every file indexed in this corpus. Required before the corpus is used.
+corpus_id: iras_reliefs_ya2026
+applies_to: Year of Assessment 2026
+maintained_by: Zee
+reviewed_by: Siew
+reviewed_on: null                 # set the date Siew signs off
+
+documents:
+  # - file: individual-reliefs.md
+  #   title: Individual Income Tax Reliefs, Rebates and Deductions
+  #   publisher: Inland Revenue Authority of Singapore
+  #   url: https://www.iras.gov.sg/...
+  #   retrieved: "2026-09-08"
+  #   original_format: html
+  #   note: >
+  #     Public guidance. Text extracted and indexed for a student research project in a
+  #     private repository. Not redistributed and not published with the report.

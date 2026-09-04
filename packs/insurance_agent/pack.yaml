@@ -1,0 +1,160 @@
+# Insurance and Coverage — domain pack
+#
+# This file is the SINGLE SOURCE OF TRUTH. After editing, run:
+#     python -m packs.build
+
+id: insurance_agent
+version: 0.1.0
+display_name: Insurance and Coverage
+
+document_types:
+
+  policy_schedule:
+    description: Policy schedule or certificate of insurance setting out cover and premium
+    subject_field: insured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company as printed on the schedule
+        example: Meridian Assurance
+      - name: policy_no
+        type: identifier
+        description: Policy number exactly as printed, not normalised
+        example: MV-2026-448120
+      - name: insured
+        type: person
+        description: Name of the policyholder or life assured
+        example: Marcus Fernandez
+      - name: policy_type
+        type: enum
+        values: [motor, home, life, health, travel, personal_accident]
+        description: Which kind of cover this policy provides
+        example: motor
+      - name: cover_from
+        type: date
+        description: First day of the period of insurance
+        example: "2026-03-01"
+      - name: expiry_date
+        type: date
+        description: Last day of the period of insurance
+        example: "2027-02-28"
+      - name: annual_premium
+        type: money
+        description: Premium payable for the period, in SGD
+        example: "742.00"
+      - name: excess
+        type: money
+        required: false
+        description: Amount the policyholder bears per claim, in SGD
+        example: "750.00"
+
+  renewal_notice:
+    description: Notice issued before expiry inviting the policyholder to renew
+    subject_field: insured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company issuing the notice
+        example: Meridian Assurance
+      - name: policy_no
+        type: identifier
+        description: Policy number exactly as printed
+        example: MV-2026-448120
+      - name: insured
+        type: person
+        description: Name of the policyholder
+        example: Marcus Fernandez
+      - name: expiry_date
+        type: date
+        description: Date the current cover ends
+        example: "2027-02-28"
+      - name: renewal_premium
+        type: money
+        description: Premium quoted for the coming period, in SGD
+        example: "781.00"
+
+  claim_letter:
+    description: Letter from an insurer about a claim, including settlement advice
+    subject_field: claimant
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company
+        example: Meridian Assurance
+      - name: policy_no
+        type: identifier
+        description: Policy the claim was made against, exactly as printed
+        example: HL-2024-771903
+      - name: claim_no
+        type: identifier
+        description: Claim reference exactly as printed
+        example: CLM-2026-0033812
+      - name: claimant
+        type: person
+        description: Name of the person the claim relates to
+        example: Mdm Fernandez
+      - name: incident_date
+        type: date
+        required: false
+        description: Date of the event being claimed for
+        example: "2026-03-14"
+      - name: settled_amount
+        type: money
+        required: false
+        description: Amount paid out, in SGD, if the letter states one
+        example: "4820.50"
+
+  benefit_illustration:
+    description: Illustration of benefits and values issued with a life or health policy
+    subject_field: life_assured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company
+        example: Kallang Life
+      - name: policy_no
+        type: identifier
+        required: false
+        description: Policy number if the illustration carries one
+        example: LF-2023-118844
+      - name: life_assured
+        type: person
+        description: Name of the person covered
+        example: Marcus Fernandez
+      - name: sum_assured
+        type: money
+        description: Headline sum assured, in SGD
+        example: "250000.00"
+      - name: annual_premium
+        type: money
+        description: Premium payable each year, in SGD
+        example: "3180.00"
+
+grounding:
+  corpus: grounding/mas_fair_dealing/
+  top_k: 6
+
+registers:
+  reminder:
+    - key: policy_expiry
+      from_field: expiry_date
+      lead_days: [60, 30, 7]
+  alert:
+    - metric: days_uncovered
+      ceiling: 0
+      warn_at: 1.0
+
+persona:
+  system: >
+    You explain what the user's own insurance documents say: what is covered, what is
+    excluded, what it costs and when it ends. You compare only against the documents in
+    front of you and the published guidance in your corpus, never against products you
+    recall but cannot cite.
+
+guardrails:
+  must_cite: true
+  abstain_below: 0.45
+  never_acts: true
+  disclaimer: >
+    Informational analysis of your own policy documents. This does not constitute advice
+    under the Financial Advisers Act. Confirm cover with your insurer or a licensed adviser.

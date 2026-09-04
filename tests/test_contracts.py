@@ -19,3 +19,18 @@ def test_a_pack_cannot_opt_out_of_never_acts() -> None:
     except Exception:
         return
     raise AssertionError("never_acts=False must be rejected by the type, not by review")
+
+
+def test_generated_files_are_in_sync() -> None:
+    """The register headers and the extraction models are generated from pack.yaml.
+
+    If this fails, someone edited a pack and did not run `python -m packs.build`. That is
+    exactly the drift this whole mechanism exists to prevent, so it is a hard failure.
+    """
+    import subprocess
+    import sys
+
+    r = subprocess.run(
+        [sys.executable, "-m", "packs.build", "--check"], capture_output=True, text=True
+    )
+    assert r.returncode == 0, r.stdout + r.stderr

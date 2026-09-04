@@ -46,22 +46,70 @@ class ModuleTrigger(Strict):
 
 
 # ----------------------------------------------------------------------------- packs
+#
+# A pack is authored as ONE YAML file. The fields are declared inline, and
+# `python -m packs.build` generates the Pydantic extraction models and the register column
+# headers from it. The YAML is the single source of truth: nothing else may define a field.
 
 
-class Extraction(Strict):
-    model: str  # dotted path to the pack's Pydantic document model
-    writes: list[Literal["facts", "obligations"]]
+FieldType = Literal[
+    "string",      # free text                     -> str        -> facts.value_text
+    "identifier",  # policy no, receipt no          -> str        -> facts.value_text (exact match, never normalised)
+    "person",      # names the family member        -> str        -> facts.value_text AND facts.subject
+    "money",       # SGD, two decimal places        -> Decimal    -> facts.value_num
+    "integer",     # counts, mileage                -> int        -> facts.value_num
+    "percent",     # 0-100                          -> float      -> facts.value_num
+    "date",        # ISO YYYY-MM-DD                 -> date       -> facts.value_date
+    "month",       # YYYY-MM                        -> str        -> facts.value_text
+    "enum",        # one of `values`                -> str        -> facts.value_text
+    "boolean",     # true / false                   -> bool       -> facts.value_text
+]
+
+# Which column of `facts` each type lands in. The extractor and the evaluation both read
+# this table, so a type can never be scored against the wrong column.
+FACT_COLUMN: dict[str, str] = {
+    "string": "value_text",
+    "identifier": "value_text",
+    "person": "value_text",
+    "money": "value_num",
+    "integer": "value_num",
+    "percent": "value_num",
+    "date": "value_date",
+    "month": "value_text",
+    "enum": "value_text",
+    "boolean": "value_text",
+}
+
+
+class FieldSpec(Strict):
+    """One extractable field. Its `name` is the column header in Desmond's register and the
+    `facts.key` it is stored under. Renaming it renames both."""
+
+    name: Slug
+    type: FieldType
+    required: bool = True
+    description: str = Field(min_length=8, max_length=200)
+    values: list[str] | None = None      # required when type == "enum"
+    example: str | None = None           # shown to the extraction model and to the corpus author
+
+
+class DocumentTypeSpec(Strict):
+    """One kind of document this pack recognises."""
+
+    description: str = Field(min_length=8, max_length=240)
+    subject_field: Slug | None = None    # which field says whose document this is
+    fields: list[FieldSpec] = Field(min_length=1, max_length=12)
 
 
 class Grounding(Strict):
-    corpus: str | None = None  # a pack with no corpus answers only from user documents
+    corpus: str | None = None            # null = answer only from the user's own documents
     top_k: int = Field(default=6, ge=0, le=20)
 
 
 class ReminderConfig(Strict):
     key: Slug
-    from_field: str | None = None
-    on_date: _Date | None = None   # a fixed calendar date, e.g. a filing deadline
+    from_field: Slug | None = None       # a date field on one of this pack's document types
+    on_date: _Date | None = None         # or a fixed calendar date, e.g. a filing deadline
     lead_days: list[int] = Field(min_length=1)
 
 
@@ -76,35 +124,41 @@ class TrackerConfig(Strict):
 
 
 class Registrations(Strict):
-    reminder: dict[str, list[ReminderConfig]] | None = None
-    alert: dict[str, list[AlertConfig]] | None = None
+    reminder: list[ReminderConfig] | None = None
+    alert: list[AlertConfig] | None = None
     tracker: TrackerConfig | None = None
 
 
 class Persona(Strict):
-    system: str = Field(max_length=2000)  # voice only; cannot change retrieval or guardrails
+    system: str = Field(min_length=20, max_length=2000)  # voice only
 
 
 class Guardrails(Strict):
     must_cite: bool = True
     abstain_below: float = Field(default=0.42, ge=0.0, le=1.0)
-    never_acts: Literal[True] = True  # v1 advises; the type makes it un-overridable
-    disclaimer: str = Field(min_length=1, max_length=800)
+    never_acts: Literal[True] = True     # v1 advises; the type makes it un-overridable
+    disclaimer: str = Field(min_length=20, max_length=800)
 
 
 class PackManifest(Strict):
-    """A domain pack. Declarative: document types, an extraction schema, a grounding
-    corpus, which modules it registers with, and its guardrails."""
+    """A domain pack, authored as one YAML file."""
 
     id: Slug
     version: SemVer
-    display_name: str = Field(max_length=60)
-    owns_document_types: list[Slug] = Field(min_length=1)
-    extraction: Extraction
+    display_name: str = Field(min_length=3, max_length=60)
+    document_types: dict[Slug, DocumentTypeSpec] = Field(min_length=1)
     grounding: Grounding = Grounding()
     registers: Registrations = Registrations()
     persona: Persona
     guardrails: Guardrails
+
+    def field_index(self) -> dict[tuple[str, str], FieldSpec]:
+        """(document_type, field_name) -> FieldSpec. Used by the extractor and the scorer."""
+        return {
+            (dt, f.name): f
+            for dt, spec in self.document_types.items()
+            for f in spec.fields
+        }
 
 
 ModuleManifest.model_rebuild()

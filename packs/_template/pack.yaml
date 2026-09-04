@@ -1,26 +1,51 @@
-# Copy this directory, rename it, fill it in. Validate with:
-#   uv run python -c "from core.contracts import PackManifest; import yaml,sys; \
-#     PackManifest.model_validate(yaml.safe_load(open('packs/<id>/pack.yaml'))); print('ok')"
+# Copy this directory, rename it to your pack id, and fill it in.
+# Then run:  python -m packs.build
+#
+# This YAML is the SINGLE SOURCE OF TRUTH. It generates the Pydantic extraction models and
+# the register column headers the corpus is filled in against. Never edit a generated file.
+
 id: example_pack
 version: 0.1.0
 display_name: Example Domain
-owns_document_types: [example_document]
 
-extraction:
-  model: packs.example_pack.schemas:ExampleDocument
-  writes: [facts, obligations]
+document_types:
+
+  example_document:
+    description: One sentence saying what this kind of document is
+    subject_field: holder          # which field says whose document this is (optional)
+    fields:
+      - name: issuer
+        type: string
+        description: Who produced this document, as printed on it
+        example: Meridian Assurance
+      - name: reference_no
+        type: identifier           # copied exactly, never normalised
+        description: The document reference exactly as printed
+        example: EX-2026-000123
+      - name: holder
+        type: person
+        description: Name of the person this document is about
+        example: Marcus Fernandez
+      - name: effective_date
+        type: date
+        description: The date this document takes effect
+        example: "2026-03-01"
+      - name: amount
+        type: money
+        required: false
+        description: The headline amount on the document, in SGD
+        example: "742.00"
 
 grounding:
-  corpus: null          # null = answer only from the user's own documents
+  corpus: null                     # null = answer only from the user's own documents
   top_k: 6
 
 registers:
   reminder:
-    obligations:
-      - key: example_expiry
-        from_field: expiry_date
-        lead_days: [60, 30, 7]
-  # alert:   { thresholds: [{ metric: example_total, ceiling: 1000, warn_at: 0.9 }] }
+    - key: example_expiry
+      from_field: effective_date
+      lead_days: [60, 30, 7]
+  # alert:   [{ metric: example_total, ceiling: 1000, warn_at: 0.9 }]
   # tracker: { metrics: [example_total] }
 
 persona:
