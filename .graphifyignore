@@ -1,0 +1,20 @@
+# Never send the household corpus to a model backend for semantic extraction.
+# These are gitignored anyway; this is the second lock.
+corpus/batches/
+corpus/holdout/
+inbox/
+*.pdf
+*.jpg
+*.jpeg
+*.png
+
+# Generated — the graph should describe the source of truth, not its outputs.
+packs/*/schemas.py
+corpus/register/*_columns.csv
+docs/field-dictionary.md
+
+# Build noise
+node_modules/
+web/.next/
+.venv/
+eval/results/

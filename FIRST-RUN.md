@@ -1,22 +1,21 @@
-# Creating the repository
+# First run
 
-This directory is already a git repository with one commit on `main`. Two steps to put it
-on GitHub.
+This directory is a git repository with its history already in place. The remote
+`feynman82/igd-capstone-2026` exists and is empty.
 
-## 1. Create the remote and push
-
-With the GitHub CLI (`winget install GitHub.cli`, then `gh auth login`):
+## 1. Push
 
 ```bash
-cd "D:\Git\Project parrot\project-parrot"
-gh repo create project-parrot --private --source=. --remote=origin --push
+cd path/to/igd-capstone-2026
+git remote add origin https://github.com/feynman82/igd-capstone-2026.git
+git push -u origin main
 ```
 
-Or, if you create the empty repository on github.com by hand (private, no README, no
-.gitignore, no licence):
+If the remote already has a commit (a README created with the repository), rebase onto
+it once rather than force-pushing:
 
 ```bash
-git remote add origin https://github.com/feynman82/project-parrot.git
+git pull --rebase origin main
 git push -u origin main
 ```
 
@@ -42,7 +41,24 @@ evaluation workflow can commit its results.
 Desmond). Group by owner for standups, by week for the plan view. The 80 tasks are in
 `docs/team-tasks.csv`.
 
-## 3. The self-hosted runner, when you get to week 3
+## 3. Install graphify
+
+Only you do this, and only from a local checkout — it parses files on disk and installs
+git hooks, so it cannot be started from the GitHub web interface or the API.
+
+```bash
+uv tool install graphifyy
+graphify install     # then check `git diff AGENTS.md` and revert anything it overwrote
+graphify .
+graphify hook install
+git add graphify-out/graph.json graphify-out/GRAPH_REPORT.md
+git commit -m "Add knowledge graph"
+```
+
+Everyone else runs `graphify update .` locally and leaves the output uncommitted. Full
+detail, including why only one person commits it, is in `docs/GRAPHIFY.md`.
+
+## 4. The self-hosted runner, when you get to week 3
 
 The golden set needs Ollama and a real model, so it cannot run on GitHub's runners.
 Settings → Actions → Runners → New self-hosted runner, on the Legion, with the label `gpu`.
@@ -62,6 +78,12 @@ supports both paths.
 | `docs/TEAM.md` | The five lanes, the presentation split, the swap rules. |
 | `docs/team-tasks.csv` | 80 tasks, ready to import into Notion. |
 | `docs/adr/` | Two decision records to start. Add one per non-obvious choice. |
+| `docs/lanes/` | What each person does on Monday, in order, with a starter prompt for their coding agent. |
+| `packs/README.md` | Zee's lane, written for a non-technical author. This is the file to send her. |
+| `docs/GRAPHIFY.md` | The shared knowledge graph: setup, the one-committer rule, what leaves the machine. |
+| `docs/artefacts/` | The proposal, the deck, the architecture review, the interface pack, the diagrams and the original source material. |
+| `CLAUDE.md` | What a Claude Code session reads first. Points at `AGENTS.md` and the lane files. |
+| `.claude/settings.json` | Permission allowlist so agent sessions can run `make check` without prompting, and cannot push or commit. |
 | `packs/_template/`, `modules/_template/` | Copy these to start a pack or a module. |
 
 ## First three commits, in order
@@ -70,4 +92,11 @@ supports both paths.
    until the contracts are on `main`.
 2. **Apply the migration and confirm it.** `psql "$DATABASE_URL" -f db/migrations/0001_init.sql`
 3. **Benchmark the workstation** and paste the table into an ADR. Every VRAM number in the
-   proposal is currently an estimate.
+   proposal is currently an estimate. Pull the model first:
+   `ollama pull hf.co/aisingapore/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M`
+
+## Send these three links on day one
+
+- Zee → `packs/README.md`
+- Desmond → `docs/lanes/lane-e-corpus.md`
+- Yew Mun → `docs/lanes/lane-b-retrieval-eval.md`, Siew → `docs/lanes/lane-c-governance.md`

@@ -1,0 +1,570 @@
+<title>PARROT Interface Design Pack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:wght@500;600&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#F6F7F5; --surface:#FFFFFF; --surface-2:#EDF1EE; --surface-3:#E3E9E5;
+  --ink:#141B18; --ink-2:#3D4A45; --ink-3:#6B7873;
+  --line:#D8DEDA; --line-2:#BCC6C1;
+  --accent:#0F5F52; --accent-soft:#DCEAE6; --accent-line:#7FB6AA; --accent-ink:#FFFFFF;
+  --brass:#8A6224; --brass-soft:#F2E8D6; --brass-line:#C7A167;
+  --crit:#98291A; --crit-soft:#F7E1DC; --crit-line:#D08D7E;
+  --warn:#7E5C0D; --warn-soft:#F6EDD6; --warn-line:#CFAF63;
+  --ok:#26623A; --ok-soft:#DEEDE2; --ok-line:#84B795;
+  --lift:0 1px 2px rgba(20,27,24,.05), 0 10px 26px -16px rgba(20,27,24,.30);
+  --display:"Spectral",Georgia,serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --r:10px; --r-sm:6px; --r-pill:999px;
+  --e-out:cubic-bezier(0.23,1,0.32,1);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0D1311; --surface:#141C19; --surface-2:#1B2521; --surface-3:#222E29;
+  --ink:#E9EFEC; --ink-2:#B2C0B9; --ink-3:#7E8C86;
+  --line:#26312D; --line-2:#374440;
+  --accent:#54C2AB; --accent-soft:#11302B; --accent-line:#2E6E62; --accent-ink:#08120F;
+  --brass:#D6A85F; --brass-soft:#2A2317; --brass-line:#6F5A2F;
+  --crit:#EB8A72; --crit-soft:#331A14; --crit-line:#7A4234;
+  --warn:#E0B252; --warn-soft:#2D2413; --warn-line:#6E5825;
+  --ok:#74CC8E; --ok-soft:#15281B; --ok-line:#3A6B47;
+  --lift:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -18px rgba(0,0,0,.9);
+}}
+:root[data-theme="dark"]{
+  --ground:#0D1311; --surface:#141C19; --surface-2:#1B2521; --surface-3:#222E29;
+  --ink:#E9EFEC; --ink-2:#B2C0B9; --ink-3:#7E8C86;
+  --line:#26312D; --line-2:#374440;
+  --accent:#54C2AB; --accent-soft:#11302B; --accent-line:#2E6E62; --accent-ink:#08120F;
+  --brass:#D6A85F; --brass-soft:#2A2317; --brass-line:#6F5A2F;
+  --crit:#EB8A72; --crit-soft:#331A14; --crit-line:#7A4234;
+  --warn:#E0B252; --warn-soft:#2D2413; --warn-line:#6E5825;
+  --ok:#74CC8E; --ok-soft:#15281B; --ok-line:#3A6B47;
+  --lift:0 1px 2px rgba(0,0,0,.4), 0 12px 28px -18px rgba(0,0,0,.9);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.page{max-width:1180px;margin:0 auto;padding:48px 24px 100px}
+h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.6vw,44px);line-height:1.1;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance;max-width:20ch}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(22px,2.6vw,28px);line-height:1.2;letter-spacing:-.015em;margin:0 0 8px;text-wrap:balance}
+h3{font-weight:700;font-size:16.5px;line-height:1.35;margin:0 0 6px}
+h4{font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);margin:26px 0 10px}
+p{margin:0 0 14px;max-width:70ch}
+.lede{font-size:19px;line-height:1.55;color:var(--ink-2);max-width:64ch;margin-bottom:20px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+section{padding:46px 0;border-top:1px solid var(--line)}
+section.first{border-top:none;padding-top:6px}
+.snum{font-family:var(--mono);font-size:12px;color:var(--ink-3);display:block;margin-bottom:6px}
+code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+ul{margin:0 0 16px;padding-left:20px;max-width:70ch}li{margin-bottom:7px}li::marker{color:var(--ink-3)}
+strong{font-weight:600}
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:560px}
+th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:11px 14px;border-bottom:1px solid var(--line-2);background:var(--surface-2);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:none}
+td strong{color:var(--ink)}
+td.mono{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin:0 0 20px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px;margin:0 0 20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 17px}
+.card p{font-size:14.5px;margin:0;color:var(--ink-2)}
+.kv{font-family:var(--mono);font-size:11px;color:var(--ink-3);display:block;margin-bottom:7px;letter-spacing:.08em;text-transform:uppercase}
+.story{border-left:2px solid var(--accent);padding:2px 0 2px 16px;margin:0 0 18px;max-width:74ch}
+.story .who{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:4px}
+.story p{margin:0 0 6px;font-size:15.5px}
+.story .ac{font-size:14px;color:var(--ink-3);margin:0}
+.note{background:var(--brass-soft);border:1px solid var(--brass-line);border-radius:var(--r);padding:16px 18px;margin:0 0 22px}
+.note h3{color:var(--brass)}
+.note p{margin:0;max-width:68ch;font-size:15px}
+figure{margin:26px 0 28px}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:10px;max-width:76ch}
+figcaption b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:500;margin-right:7px}
+svg.dg{display:block;max-width:100%;height:auto;margin:0 auto}
+.dg text{font-family:var(--body);fill:var(--ink)}
+.t-sm{font-size:11.5px;fill:var(--ink-2)}.t-xs{font-size:10.5px;fill:var(--ink-3)}
+.t-ttl{font-size:13px;font-weight:600}
+.t-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;fill:var(--ink-3)}
+.bx{fill:var(--surface-2);stroke:var(--line-2)}.bx-a{fill:var(--accent-soft);stroke:var(--accent-line)}
+.bx-b{fill:var(--brass-soft);stroke:var(--brass-line)}.bx-w{fill:var(--warn-soft);stroke:var(--warn-line)}
+.ln{stroke:var(--line-2);stroke-width:1.4;fill:none}.mk{fill:var(--line-2)}
+
+/* ============ MOCKUP FRAMES ============ */
+.frame{background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--lift);overflow:hidden}
+.frame-bar{display:flex;align-items:center;gap:7px;padding:9px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line-2)}
+.frame-url{margin-left:8px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+.m{font-size:13px;line-height:1.5}
+.m *{box-sizing:border-box}
+.app{display:grid;grid-template-columns:186px 1fr;min-height:520px}
+@media(max-width:720px){.app{grid-template-columns:1fr}.appnav{display:none}}
+.appnav{border-right:1px solid var(--line);padding:16px 12px;background:var(--surface-2)}
+.applogo{font-family:var(--display);font-weight:600;font-size:15px;padding:0 8px 14px;letter-spacing:-.01em}
+.navitem{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:var(--r-sm);color:var(--ink-2);margin-bottom:2px;font-size:13px;transition:background 160ms var(--e-out)}
+.navitem.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.navbadge{font-family:var(--mono);font-size:10px;background:var(--crit);color:var(--ground);border-radius:var(--r-pill);padding:1px 6px}
+.navsec{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);padding:16px 10px 6px}
+.appmain{padding:20px 22px 24px;min-width:0}
+.apphead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px;flex-wrap:wrap}
+.apph1{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.015em}
+.appsub{color:var(--ink-3);font-size:12.5px;margin-bottom:18px}
+.grouplbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 9px;display:flex;align-items:center;gap:8px}
+.grouplbl::after{content:"";flex:1;height:1px;background:var(--line)}
+.row{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);margin-bottom:8px}
+.row.urgent{border-left:3px solid var(--crit)}
+.row.soon{border-left:3px solid var(--warn)}
+.row.quiet{border-left:3px solid var(--line-2)}
+.row .body{flex:1;min-width:0}
+.row .ttl{font-weight:600;font-size:13.5px;margin-bottom:2px}
+.row .sub{color:var(--ink-3);font-size:12px}
+.row .when{font-family:var(--mono);font-size:11px;white-space:nowrap;text-align:right;padding-top:2px}
+.when.c{color:var(--crit)}.when.w{color:var(--warn)}.when.q{color:var(--ink-3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;font-family:var(--body);font-size:12px;font-weight:600;padding:6px 12px;border-radius:var(--r-sm);border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);white-space:nowrap;transition:transform 160ms var(--e-out)}
+.btn:active{transform:scale(0.97)}
+.btn.ghost{background:transparent;color:var(--ink-2);border-color:var(--line-2)}
+.btn.sm{font-size:11px;padding:4px 9px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:620px){.tiles{grid-template-columns:1fr}}
+.tile{border:1px solid var(--line);border-radius:var(--r);padding:13px 14px;background:var(--surface)}
+.tile .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.tile .num{font-family:var(--mono);font-size:22px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .foot{font-size:11.5px;color:var(--ink-3);margin-top:4px}
+.spark{display:flex;align-items:flex-end;gap:3px;height:26px;margin-top:9px}
+.spark i{flex:1;background:var(--accent-line);border-radius:1px;display:block}
+.spark i.now{background:var(--accent)}
+/* chat */
+.chat{padding:20px 22px;display:flex;flex-direction:column;gap:14px;min-height:520px}
+.bub{max-width:88%;padding:11px 14px;border-radius:var(--r);font-size:13.5px;line-height:1.55}
+.bub.you{align-self:flex-end;background:var(--accent);color:var(--accent-ink);border-bottom-right-radius:3px}
+.bub.it{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line);border-bottom-left-radius:3px}
+.cites{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.cite{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;padding:3px 8px;border-radius:var(--r-pill);border:1px solid var(--accent-line);background:var(--accent-soft);color:var(--accent);transition:transform 160ms var(--e-out)}
+.cite:active{transform:scale(0.97)}
+.cite b{font-weight:700}
+.abstain{align-self:flex-start;max-width:88%;padding:11px 14px;border-radius:var(--r);background:var(--warn-soft);border:1px solid var(--warn-line);font-size:13.5px;border-bottom-left-radius:3px}
+.abstain .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--warn);margin-bottom:5px}
+.composer{margin-top:auto;display:flex;gap:8px;align-items:center;border:1px solid var(--line-2);border-radius:var(--r);padding:8px 10px;background:var(--surface)}
+.composer .ph{color:var(--ink-3);font-size:13px;flex:1}
+.trace{font-family:var(--mono);font-size:10px;color:var(--ink-3);align-self:flex-start;padding-left:2px}
+/* fields */
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+@media(max-width:560px){.fields{grid-template-columns:1fr}}
+.field{background:var(--surface);padding:11px 13px}
+.field .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:3px}
+.field .v{font-size:13.5px;font-weight:600}
+.field .meta{font-family:var(--mono);font-size:10px;color:var(--ink-3);margin-top:3px}
+.field.low{background:var(--warn-soft)}
+.field.low .meta{color:var(--warn)}
+.pv{border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2);padding:14px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);line-height:1.7;min-height:180px}
+.pv b{color:var(--ink-2);font-weight:500}
+/* phone */
+.phone{width:288px;border:1px solid var(--line-2);border-radius:22px;background:var(--surface);box-shadow:var(--lift);overflow:hidden;flex:none}
+.phone-top{padding:8px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);font-family:var(--mono);font-size:10px;color:var(--ink-3);display:flex;justify-content:space-between}
+.wa{padding:14px;display:flex;flex-direction:column;gap:9px;min-height:300px}
+.wa .out{align-self:flex-end;background:var(--accent-soft);border:1px solid var(--accent-line);padding:8px 11px;border-radius:10px 10px 3px 10px;font-size:12.5px;max-width:82%}
+.wa .in{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line);padding:8px 11px;border-radius:10px 10px 10px 3px;font-size:12.5px;max-width:88%}
+.wa .img{width:130px;height:86px;border-radius:6px;background:repeating-linear-gradient(135deg,var(--surface-3) 0 8px,var(--surface-2) 8px 16px);border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9px;color:var(--ink-3)}
+.wa .t{font-family:var(--mono);font-size:9px;color:var(--ink-3);margin-top:3px}
+.mockrow{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start}
+.mockrow>.grow{flex:1;min-width:300px}
+/* packs */
+.packrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);margin-bottom:8px;background:var(--surface)}
+.packrow .body{flex:1;min-width:0}
+.sw{width:34px;height:20px;border-radius:var(--r-pill);background:var(--accent);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:var(--accent-ink)}
+.sw.off{background:var(--line-2)}
+.sw.off::after{right:auto;left:2px;background:var(--surface)}
+.tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;padding:2px 7px;border-radius:var(--r-pill);border:1px solid var(--line-2);color:var(--ink-3);white-space:nowrap}
+.tag.a{border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+.tag.b{border-color:var(--brass-line);color:var(--brass);background:var(--brass-soft)}
+.statebox{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface);min-height:150px;display:flex;flex-direction:column;justify-content:center;gap:8px}
+.skel{height:9px;border-radius:3px;background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 50%,var(--surface-2) 75%);background-size:200% 100%;animation:sh 1.4s linear infinite}
+@keyframes sh{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skel{animation:none}*{transition-duration:1ms!important}}
+.statebox .lab{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+</style>
+<div class="page">
+<header style="padding-bottom:30px">
+  <p class="eyebrow">Interface design pack · Project PARROT</p>
+  <h1>Designing an assistant that speaks first</h1>
+  <p class="lede">User stories from the five personas, the information architecture they imply, hi-fidelity screens, component states and a motion specification. Built to be handed to a coding agent without a second conversation.</p>
+</header>
+
+<section class="first">
+  <span class="snum">01</span>
+  <h2>The design read</h2>
+  <p>This is not a landing page and it is not a chat app. It is a <strong>private record system with a conversational surface</strong>, used in short bursts by people who are already overloaded. That reading produces one decision everything else follows from.</p>
+
+  <div class="note">
+    <h3>The home screen is not a text box</h3>
+    <p>Every AI product opens on an empty prompt. For these five personas that is precisely wrong: they are time-poor, they do not know what to ask, and the Reminder and Alert modules are proactive. Sarah does not want to ask whether there is a school event this week. She wants to be told. So PARROT opens on <strong>Today</strong>, a surface that shows what needs attention, and chat lives one tab away for the times she has a specific question. Retrieval is still the core of the product; Today is what the Reminder and Alert modules put on top of it.</p>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><span class="kv">Principle 01</span><h3>Answer, then prove it</h3><p>No factual claim appears without a source chip linking to the document and page it came from. Trust is the product. The citation is where it lives.</p></div>
+    <div class="card"><span class="kv">Principle 02</span><h3>Silence beats a guess</h3><p>When nothing in the vault supports an answer, the interface says so in a visually distinct state. Abstention is a designed screen, not an error.</p></div>
+    <div class="card"><span class="kv">Principle 03</span><h3>Correction is a first-class flow</h3><p>Extraction will be wrong sometimes. Fixing a field takes one click from the place the mistake is visible, and the fix is remembered.</p></div>
+    <div class="card"><span class="kv">Principle 04</span><h3>Three clicks, from your team's brief</h3><p>Any stored fact is reachable in three interactions from Today. This is an acceptance criterion, not an aspiration: it gets tested.</p></div>
+    <div class="card"><span class="kv">Principle 05</span><h3>Capture is where the user already is</h3><p>Nobody opens an app to file a receipt. They photograph it in a chat app or drop it in a folder. The app is for reading, not filing.</p></div>
+    <div class="card"><span class="kv">Principle 06</span><h3>Nothing moves without a reason</h3><p>This is a daily tool, not a demo. Motion is reserved for state changes and entry. Everything the user does often is instant.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="snum">02</span>
+  <h2>User stories</h2>
+  <p>Written from your team's five personas, one per persona, each tied to a capability module or the RAG core, and to a screen. Acceptance criteria are testable, which matters because they are what a coding agent will build against.</p>
+
+  <div class="story"><span class="who">Sarah, 35 · Reminder module · Today</span>
+    <p>As a parent juggling two school calendars, I want to be told about renewals and school dates before they arrive, so that I stop discovering them the morning they happen.</p>
+    <p class="ac">Accepts when: an obligation with a due date inside its lead window appears at the top of Today, ordered by urgency, with the source document one click away, and can be dismissed or snoozed without leaving the screen.</p></div>
+
+  <div class="story"><span class="who">Marcus, 39 · RAG core · Ask</span>
+    <p>As the person managing my father's care, I want to ask which insurer covered his last admission and get an answer I can verify, so that I can make a claim without opening six folders.</p>
+    <p class="ac">Accepts when: the answer names the insurer and policy number, each carries a source chip that opens the document at the correct page, and the system abstains rather than guessing when no document covers the question.</p></div>
+
+  <div class="story"><span class="who">Daniel and Rachel · Capture · Reminder module</span>
+    <p>As a couple with no time to file anything, we want to photograph a document in a chat app and have it filed and understood, so that filing costs us fifteen seconds instead of an evening.</p>
+    <p class="ac">Accepts when: a photo sent to the PARROT bot returns a confirmation naming the document type and the key date it extracted, within 60 seconds, and the document appears in the vault with those fields populated.</p></div>
+
+  <div class="story"><span class="who">Priya, 32 · Alert module · Today</span>
+    <p>As someone contributing to SRS, I want to be warned before I miss a top-up window or approach the relief cap, so that I stop losing money to a deadline I forgot.</p>
+    <p class="ac">Accepts when: crossing 90% of a threshold raises a single alert on Today, states the current figure and the ceiling, cites the documents the figure was computed from, and does not repeat daily.</p></div>
+
+  <div class="story"><span class="who">Jason, 40 · Tracker module · Today</span>
+    <p>As a business owner whose personal and business spending blur together, I want a monthly view of household spend by category, so that I walk into tax season with the numbers already separated.</p>
+    <p class="ac">Accepts when: the figure is computed in SQL from typed rows rather than generated text, the underlying receipts are one click away, and any uncategorised item is visible rather than silently excluded.</p></div>
+</section>
+
+<section>
+  <span class="snum">03</span>
+  <h2>Information architecture</h2>
+  <p>Four surfaces. The count is deliberate: a fifth would require a "more" menu, and a household tool that needs a "more" menu has already lost the people it was built for.</p>
+
+  <figure>
+    <svg class="dg" viewBox="0 0 900 300" role="img" aria-label="Information architecture: four surfaces named Today, Ask, Vault and Packs with their sub-views">
+      <defs><marker id="u1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk"/></marker></defs>
+      <rect x="360" y="8" width="180" height="42" rx="6" class="bx-a"/>
+      <text x="376" y="26" class="t-ttl" fill="var(--accent)">PARROT</text>
+      <text x="376" y="42" class="t-xs">local passphrase unlock, no account</text>
+      <path d="M450,50 L450,68 L106,68 L106,86" class="ln" marker-end="url(#u1)"/>
+      <path d="M450,50 L450,68 L318,68 L318,86" class="ln" marker-end="url(#u1)"/>
+      <path d="M450,50 L450,68 L582,68 L582,86" class="ln" marker-end="url(#u1)"/>
+      <path d="M450,50 L450,68 L794,68 L794,86" class="ln" marker-end="url(#u1)"/>
+
+      <rect x="10" y="86" width="192" height="52" rx="6" class="bx-a"/>
+      <text x="26" y="106" class="t-ttl" fill="var(--accent)">Today</text>
+      <text x="26" y="124" class="t-xs">default surface, opens here</text>
+      <text x="26" y="164" class="t-sm">Needs you now</text>
+      <text x="26" y="184" class="t-sm">Coming up</text>
+      <text x="26" y="204" class="t-sm">This month at a glance</text>
+      <text x="26" y="224" class="t-sm">Needs your eyes</text>
+      <text x="26" y="248" class="t-xs">Every item links to its source</text>
+      <text x="26" y="264" class="t-xs">document. Nothing is a dead end.</text>
+
+      <rect x="222" y="86" width="192" height="52" rx="6" class="bx"/>
+      <text x="238" y="106" class="t-ttl">Ask</text>
+      <text x="238" y="124" class="t-xs">conversation, with citations</text>
+      <text x="238" y="164" class="t-sm">Thread</text>
+      <text x="238" y="184" class="t-sm">Source panel</text>
+      <text x="238" y="204" class="t-sm">Suggested questions</text>
+      <text x="238" y="224" class="t-sm">Abstention state</text>
+      <text x="238" y="248" class="t-xs">Suggestions are generated from</text>
+      <text x="238" y="264" class="t-xs">what was ingested this week.</text>
+
+      <rect x="434" y="86" width="192" height="52" rx="6" class="bx"/>
+      <text x="450" y="106" class="t-ttl">Vault</text>
+      <text x="450" y="124" class="t-xs">every document, every fact</text>
+      <text x="450" y="164" class="t-sm">Browse and search</text>
+      <text x="450" y="184" class="t-sm">Document detail</text>
+      <text x="450" y="204" class="t-sm">Extracted fields, editable</text>
+      <text x="450" y="224" class="t-sm">Quarantine queue</text>
+      <text x="450" y="248" class="t-xs">The correction loop lives here.</text>
+      <text x="450" y="264" class="t-xs">Edits write back to facts.</text>
+
+      <rect x="646" y="86" width="192" height="52" rx="6" class="bx-b"/>
+      <text x="662" y="106" class="t-ttl" fill="var(--brass)">Packs</text>
+      <text x="662" y="124" class="t-xs">what this assistant knows about</text>
+      <text x="662" y="164" class="t-sm">Installed packs</text>
+      <text x="662" y="184" class="t-sm">Available packs</text>
+      <text x="662" y="204" class="t-sm">Pack detail and permissions</text>
+      <text x="662" y="224" class="t-sm">Reset workspace</text>
+      <text x="662" y="248" class="t-xs">Uninstalling removes a pack's facts</text>
+      <text x="662" y="264" class="t-xs">and jobs, never your documents.</text>
+
+      <line x1="10" y1="146" x2="838" y2="146" stroke="var(--line)"/>
+    </svg>
+    <figcaption><b>Fig 8</b> Capture is deliberately absent from the navigation. It happens in Telegram and in a watched folder, outside the app entirely, because asking an overloaded person to open an app in order to file something is how filing stops happening.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <span class="snum">04</span>
+  <h2>Today</h2>
+  <p>The flagship screen and the one to demo first. It answers the question the personas actually have, which is not "what can I ask you" but "what have I forgotten".</p>
+
+  <figure>
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="frame-url">localhost:3000/today</span></div>
+      <div class="m app">
+        <div class="appnav">
+          <div class="applogo">PARROT</div>
+          <div class="navitem on">Today <span class="navbadge">3</span></div>
+          <div class="navitem">Ask</div>
+          <div class="navitem">Vault</div>
+          <div class="navitem">Packs</div>
+          <div class="navsec">Sources</div>
+          <div class="navitem" style="font-size:12px">Watched folder <span style="font-family:var(--mono);font-size:10px;color:var(--ok)">live</span></div>
+          <div class="navitem" style="font-size:12px">Telegram <span style="font-family:var(--mono);font-size:10px;color:var(--ok)">live</span></div>
+        </div>
+        <div class="appmain">
+          <div class="apphead"><div class="apph1">Wednesday, 2 September</div><span class="btn ghost sm">Snooze all</span></div>
+          <div class="appsub">Three things need you. Everything else is handled.</div>
+
+          <div class="grouplbl">Needs you now</div>
+          <div class="row urgent">
+            <div class="body">
+              <div class="ttl">Motor policy expires for SLK8842J</div>
+              <div class="sub">Renew before cover lapses. Last premium was $742 with NTUC Income.</div>
+              <div class="cites" style="margin-top:8px"><span class="cite"><b>Motor renewal notice</b> p.1</span><span class="cite">Insurance pack</span></div>
+            </div>
+            <div style="text-align:right"><div class="when c">in 11 days</div><div style="margin-top:8px"><span class="btn sm">Open</span></div></div>
+          </div>
+          <div class="row urgent">
+            <div class="body">
+              <div class="ttl">SRS top-up window closes 31 December</div>
+              <div class="sub">You are at $12,400 of the $15,300 cap. Topping up the balance would reduce chargeable income.</div>
+              <div class="cites" style="margin-top:8px"><span class="cite"><b>SRS statement</b> Aug</span><span class="cite"><b>IR8A</b> 2025</span><span class="cite">Tax Assistant</span></div>
+            </div>
+            <div style="text-align:right"><div class="when c">120 days</div><div style="margin-top:8px"><span class="btn sm">Open</span></div></div>
+          </div>
+          <div class="row soon">
+            <div class="body">
+              <div class="ttl">2 documents could not be read</div>
+              <div class="sub">A scanned receipt and one page of a policy renewal. Two minutes to confirm.</div>
+            </div>
+            <div style="text-align:right"><div class="when w">quarantine</div><div style="margin-top:8px"><span class="btn ghost sm">Review</span></div></div>
+          </div>
+
+          <div class="grouplbl">Coming up</div>
+          <div class="row quiet">
+            <div class="body"><div class="ttl">Home insurance renewal, NTUC Income</div><div class="sub">Premium last year $486. Policy number HI-2244019.</div></div>
+            <div class="when q">14 Oct</div>
+          </div>
+          <div class="row quiet">
+            <div class="body"><div class="ttl">Aircon servicing, quarterly</div><div class="sub">Last done 19 June by Cool Breeze Services.</div></div>
+            <div class="when q">19 Sep</div>
+          </div>
+
+          <div class="grouplbl">This month</div>
+          <div class="tiles">
+            <div class="tile"><div class="lab">Household spend</div><div class="num">$2,184</div><div class="foot">from 41 receipts</div>
+              <div class="spark"><i style="height:44%"></i><i style="height:61%"></i><i style="height:38%"></i><i style="height:72%"></i><i style="height:55%"></i><i class="now" style="height:66%"></i></div></div>
+            <div class="tile"><div class="lab">Donations, year to date</div><div class="num">$1,050</div><div class="foot">deductible at 250%</div>
+              <div class="spark"><i style="height:20%"></i><i style="height:20%"></i><i style="height:52%"></i><i style="height:52%"></i><i style="height:52%"></i><i class="now" style="height:78%"></i></div></div>
+            <div class="tile"><div class="lab">Documents filed</div><div class="num">63</div><div class="foot">7 via Telegram this week</div>
+              <div class="spark"><i style="height:30%"></i><i style="height:48%"></i><i style="height:41%"></i><i style="height:59%"></i><i style="height:70%"></i><i class="now" style="height:84%"></i></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption><b>Fig 9</b> Urgency is encoded twice, in the left stripe and in the countdown, so the screen is scannable without reading it. Numbers are tabular and the sparkline's final bar is emphasised, because a household figure only means something against last month's. Figures shown are sample data.</figcaption>
+  </figure>
+</section>
+<section>
+  <span class="snum">05</span>
+  <h2>Ask, and the two answers it can give</h2>
+  <p>The conversational surface exists for Marcus's question, the one that has a specific answer buried in a specific document. Two states matter more than anything else here: the grounded answer with its sources, and the refusal.</p>
+
+  <figure>
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="frame-url">localhost:3000/ask</span></div>
+      <div class="m app">
+        <div class="appnav">
+          <div class="applogo">PARROT</div>
+          <div class="navitem">Today</div>
+          <div class="navitem on">Ask</div>
+          <div class="navitem">Vault</div>
+          <div class="navitem">Packs</div>
+          <div class="navsec">Try asking</div>
+          <div class="navitem" style="font-size:12px;line-height:1.4">Which policies renew this quarter?</div>
+          <div class="navitem" style="font-size:12px;line-height:1.4">What did the plumber charge in June?</div>
+          <div class="navitem" style="font-size:12px;line-height:1.4">Am I close to any relief cap?</div>
+        </div>
+        <div class="chat">
+          <div class="bub you">Which insurer covered Dad's admission in March, and what's the policy number?</div>
+          <div class="bub it">
+            <strong>Great Eastern</strong>, under a Supreme Health P Plus rider, policy <strong>GE-7714-2208</strong>. The admission on 14 March 2026 at Tan Tock Seng was claimed under this policy and settled on 2 April. Your father is listed as the life assured, with you as the payer.
+            <div class="cites">
+              <span class="cite"><b>GE policy schedule</b> p.2</span>
+              <span class="cite"><b>Claim settlement letter</b> p.1</span>
+              <span class="cite"><b>Hospital bill</b> p.1</span>
+            </div>
+          </div>
+          <div class="trace">answered from 3 documents · 1.4s · Gemma 3 12B, local</div>
+
+          <div class="bub you">What's his blood type?</div>
+          <div class="abstain">
+            <div class="lab">No document supports an answer</div>
+            I do not have a document that records your father's blood type. Nothing in the vault contains it, and I will not guess at something this consequential.
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              <span class="btn ghost sm">Search wider</span>
+              <span class="btn ghost sm">Add a document</span>
+            </div>
+          </div>
+          <div class="trace">best match scored 0.19, below the 0.42 floor · nothing generated</div>
+
+          <div class="composer"><span class="ph">Ask about your documents</span><span class="btn sm">Send</span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption><b>Fig 10</b> The refusal is styled as a considered state, not as an error. It names why it declined and offers two ways forward. The trace line beneath each answer is optional in the settings, but leaving it on during the capstone demo is worth doing: it shows the examiners a system that can account for itself.</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div class="card"><span class="kv">Detail that matters</span><h3>Citation chips are the trust surface</h3><p>They name the document and the page, not an index number. Tapping one opens the document at that page with the supporting passage highlighted. If a claim has no chip, it does not ship.</p></div>
+    <div class="card"><span class="kv">Detail that matters</span><h3>Suggestions come from this week's ingest</h3><p>An empty chat with three generic prompts is filler. Three questions generated from documents that arrived in the last seven days are genuinely useful, and they demonstrate that ingestion is live.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="snum">06</span>
+  <h2>Vault, and the correction loop</h2>
+  <p>Extraction will be wrong. Designing for that honestly is what separates a system people keep using from one they abandon after the third bad date. Low-confidence fields are visually flagged before the user is surprised by them.</p>
+
+  <figure>
+    <div class="frame">
+      <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="frame-url">localhost:3000/vault/ntuc-home-2026.pdf</span></div>
+      <div class="m" style="padding:20px 22px">
+        <div class="apphead"><div class="apph1">NTUC Income home insurance renewal</div><span class="tag b">Insurance Agent pack</span></div>
+        <div class="appsub">Added 28 Aug via watched folder · 4 pages · parsed with Docling · SHA 8f3a91c2</div>
+
+        <div class="mockrow" style="margin-top:16px">
+          <div class="grow">
+            <div class="grouplbl" style="margin-top:0">Extracted fields</div>
+            <div class="fields">
+              <div class="field"><div class="k">Insurer</div><div class="v">NTUC Income</div><div class="meta">p.1 · confidence 0.97</div></div>
+              <div class="field"><div class="k">Policy number</div><div class="v">HI-2244019</div><div class="meta">p.1 · confidence 0.95</div></div>
+              <div class="field"><div class="k">Expiry date</div><div class="v">14 Oct 2026</div><div class="meta">p.1 · confidence 0.93 · reminder set</div></div>
+              <div class="field low"><div class="k">Annual premium</div><div class="v">$486.00 <span class="btn ghost sm" style="margin-left:6px">Confirm</span></div><div class="meta">p.3 · confidence 0.61 · please check</div></div>
+              <div class="field"><div class="k">Insured address</div><div class="v">Blk 118 Rivervale Drive</div><div class="meta">p.1 · confidence 0.91</div></div>
+              <div class="field"><div class="k">Excess</div><div class="v">$250 per claim</div><div class="meta">p.2 · confidence 0.88</div></div>
+            </div>
+            <p style="font-size:13px;color:var(--ink-3);margin:12px 0 0">One field landed below the confidence floor, so it is flagged rather than trusted. Confirming it takes one click and the correction is stored as a labelled example.</p>
+          </div>
+          <div style="width:280px;flex:none;min-width:250px">
+            <div class="grouplbl" style="margin-top:0">Source, page 3</div>
+            <div class="pv">POLICY SCHEDULE<br>Period of insurance<br>15 Oct 2026 to 14 Oct 2027<br><br>Premium summary<br>Base premium &nbsp;&nbsp;&nbsp; 440.00<br>GST 9%&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 39.60<br><b>Total payable&nbsp;&nbsp;&nbsp; 479.60</b><br><br>Excess per claim 250.00</div>
+            <p style="font-size:12px;color:var(--warn);margin:10px 0 0;font-family:var(--mono)">The document says 479.60. The extractor read a figure from a different table. This is exactly the case the confidence floor is for.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <figcaption><b>Fig 11</b> A worked failure, not a happy path. Showing the reviewer a screen where the system was wrong and caught itself is more persuasive than three screens where it was right.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <span class="snum">07</span>
+  <h2>Capture and Packs</h2>
+  <p>Capture happens outside the app. Packs is where the platform argument becomes visible to a user rather than only to an architect.</p>
+
+  <div class="mockrow" style="margin:24px 0 10px">
+    <div class="phone">
+      <div class="phone-top"><span>PARROT bot</span><span>Telegram</span></div>
+      <div class="wa">
+        <div class="out"><div class="img">receipt photo</div><div class="t">09:42</div></div>
+        <div class="in">Got it. Reading now.<div class="t">09:42</div></div>
+        <div class="in">Filed as a <strong>vehicle servicing invoice</strong>, Cool Breeze Auto, $318.00, 2 September. Warranty on the work runs to 2 March 2027, so I have set a reminder for late February.<div class="t">09:43</div></div>
+        <div class="out">wrong, that was aircon not the car<div class="t">09:43</div></div>
+        <div class="in">Corrected to <strong>home maintenance</strong>. The reminder now sits under aircon servicing. Thanks.<div class="t">09:43</div></div>
+      </div>
+    </div>
+    <div class="grow">
+      <div class="frame">
+        <div class="frame-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="frame-url">localhost:3000/packs</span></div>
+        <div class="m" style="padding:18px 20px">
+          <div class="apph1" style="font-size:19px">Packs</div>
+          <div class="appsub">What this assistant knows about. Turning a pack off stops its reminders and hides its facts. Your documents stay searchable.</div>
+          <div class="packrow"><div class="body"><div class="ttl" style="font-weight:600;font-size:13.5px">RAG core</div><div class="sub" style="color:var(--ink-3);font-size:12px">Every document is searchable, pack or no pack · 63 documents indexed</div></div><span class="tag a">always on</span><span class="sw"></span></div>
+          <div class="packrow"><div class="body"><div class="ttl" style="font-weight:600;font-size:13.5px">Tax Assistant</div><div class="sub" style="color:var(--ink-3);font-size:12px">Payslips, CPF, SRS, donations · 14 documents, 2 alerts armed</div></div><span class="tag b">v0.3.0</span><span class="sw"></span></div>
+          <div class="packrow"><div class="body"><div class="ttl" style="font-weight:600;font-size:13.5px">Insurance Agent</div><div class="sub" style="color:var(--ink-3);font-size:12px">Life, health, home, motor policies · 9 documents, 4 reminders</div></div><span class="tag b">v0.1.2</span><span class="sw"></span></div>
+          <div class="packrow" style="opacity:.62"><div class="body"><div class="ttl" style="font-weight:600;font-size:13.5px">MOE Syllabus Teacher</div><div class="sub" style="color:var(--ink-3);font-size:12px">Papers, report cards, syllabus mapping</div></div><span class="tag">not installed</span><span class="sw off"></span></div>
+          <div class="packrow" style="opacity:.62"><div class="body"><div class="ttl" style="font-weight:600;font-size:13.5px">Vehicle and Road Tax</div><div class="sub" style="color:var(--ink-3);font-size:12px">Road tax, motor policy, servicing</div></div><span class="tag">not installed</span><span class="sw off"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <figcaption style="max-width:76ch"><b>Fig 12</b> The bot's reply names what it understood and what it did about it, which is what makes a fifteen-second interaction feel safe. Correction works in the same thread, in plain language, because nobody is going to open a laptop to fix a category.</figcaption>
+</section>
+
+<section>
+  <span class="snum">08</span>
+  <h2>Component states</h2>
+  <p>The states that get skipped are the states users hit on their first day. Building them is roughly a day of work and it is the difference between a prototype and something that survives a stranger using it.</p>
+  <div class="grid3">
+    <div class="statebox"><span class="lab">Loading</span>
+      <div class="skel" style="width:70%"></div><div class="skel" style="width:92%"></div><div class="skel" style="width:48%"></div>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:6px 0 0">Skeletons match the shape of what arrives, so the layout does not jump. No spinners.</p></div>
+    <div class="statebox"><span class="lab">Empty, first run</span>
+      <h3 style="font-size:14px">Nothing filed yet</h3>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0">Drop a document into your watched folder, or send one to the PARROT bot on Telegram. It will appear here within a minute.</p>
+      <div><span class="btn sm">Open watched folder</span></div></div>
+    <div class="statebox"><span class="lab">Quarantine</span>
+      <h3 style="font-size:14px;color:var(--warn)">Could not read page 2</h3>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0">The scan is too faint for the OCR to be confident. Nothing from this page has been filed.</p>
+      <div style="display:flex;gap:6px"><span class="btn sm">Retype the key fields</span><span class="btn ghost sm">Rescan</span></div></div>
+    <div class="statebox"><span class="lab">Error, model offline</span>
+      <h3 style="font-size:14px;color:var(--crit)">The local model is not running</h3>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0">Reminders and stored facts still work. Only questions need the model.</p>
+      <div><span class="btn sm">Start Ollama</span></div></div>
+    <div class="statebox"><span class="lab">Streaming</span>
+      <p style="font-size:12.5px;color:var(--ink-2);margin:0">Text arrives token by token, but <strong>source chips only appear once the answer is complete.</strong></p>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0">A citation that appears mid-stream and then changes reads as the system changing its story.</p></div>
+    <div class="statebox"><span class="lab">Nothing to do</span>
+      <h3 style="font-size:14px">Nothing needs you today</h3>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0">Next up is aircon servicing on 19 September. Seventeen days.</p>
+      <p style="font-size:12px;color:var(--ink-3);margin:0;font-style:italic">This is a success state. Design it as one.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="snum">09</span>
+  <h2>Motion specification</h2>
+  <p>A daily household tool should feel instant, not animated. The rule applied throughout: the more often a user sees an interaction, the less it moves.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Element</th><th>Movement</th><th>Duration</th><th>Easing</th><th>Reason</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Any button press</strong></td><td class="mono">scale(0.97)</td><td class="mono">160ms</td><td class="mono">ease-out</td><td>Confirms the interface heard the press. The one animation that is always worth it.</td></tr>
+      <tr><td><strong>Today rows on load</strong></td><td class="mono">opacity 0 to 1, translateY(8px)</td><td class="mono">300ms, 50ms stagger</td><td class="mono">cubic-bezier(.23,1,.32,1)</td><td>Seen once per session. The stagger reads as ordering by urgency.</td></tr>
+      <tr><td><strong>Source chip reveal</strong></td><td class="mono">opacity, scale(0.96) to 1</td><td class="mono">180ms</td><td class="mono">ease-out</td><td>Marks the moment the answer became verifiable. Fires once, after streaming ends.</td></tr>
+      <tr><td><strong>Document preview open</strong></td><td class="mono">scale(0.96) to 1 from the chip</td><td class="mono">220ms</td><td class="mono">ease-out</td><td><code>transform-origin</code> set to the chip, so the panel grows out of what was clicked.</td></tr>
+      <tr><td><strong>Row dismiss or snooze</strong></td><td class="mono">translateX + height collapse</td><td class="mono">200ms</td><td class="mono">ease-out</td><td>CSS transition, never keyframes, so rapid dismissals retarget instead of restarting.</td></tr>
+      <tr><td><strong>Tab switch, Today to Ask</strong></td><td class="mono">none</td><td class="mono">0ms</td><td class="mono">n/a</td><td>Used dozens of times a day. Animation here makes the app feel slow.</td></tr>
+      <tr><td><strong>Any keyboard-triggered action</strong></td><td class="mono">none</td><td class="mono">0ms</td><td class="mono">n/a</td><td>Never animate a keyboard action. It is the fastest way to make a fast app feel sluggish.</td></tr>
+      <tr><td><strong>Skeleton shimmer</strong></td><td class="mono">background-position</td><td class="mono">1400ms loop</td><td class="mono">linear</td><td>Constant motion takes linear. Collapses to a static tint under reduced motion.</td></tr>
+    </tbody>
+  </table></div>
+  <p>Three rules behind the table. Animate only <code>transform</code> and <code>opacity</code>, so everything runs off the main thread while the ingestion worker is busy. Never enter from <code>scale(0)</code>; start at <code>0.96</code> with opacity, because nothing in the physical world appears from nothing. And gate every hover effect behind <code>@media (hover: hover) and (pointer: fine)</code>, since a touch device fires hover on tap and produces effects that stick.</p>
+  <p>Under <code>prefers-reduced-motion: reduce</code>, keep the opacity transitions that aid comprehension and remove every positional one. Reduced motion means gentler, not absent.</p>
+</section>
+
+<section>
+  <span class="snum">10</span>
+  <h2>Build order</h2>
+  <p>Five screens, but not five weeks. The order matters because each one unblocks a demo you can show a supervisor.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Order</th><th>Screen</th><th>Unblocks</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">1</td><td><strong>Ask</strong>, with citations and the abstention state</td><td>Proves retrieval works and the trust story is real. Demoable the day retrieval lands.</td><td class="mono">2 days</td></tr>
+      <tr><td class="mono">2</td><td><strong>Vault</strong> document detail with editable fields</td><td>Proves extraction works, and gives you the correction loop that feeds evaluation labels.</td><td class="mono">2 days</td></tr>
+      <tr><td class="mono">3</td><td><strong>Today</strong></td><td>The differentiating screen. Needs obligations and the scheduler, so it comes after extraction.</td><td class="mono">3 days</td></tr>
+      <tr><td class="mono">4</td><td><strong>Packs</strong></td><td>Makes the platform argument visible. Mostly a list view over the pack registry.</td><td class="mono">1 day</td></tr>
+      <tr><td class="mono">5</td><td><strong>States and polish</strong></td><td>Empty, loading, error, quarantine. The day that makes it feel finished.</td><td class="mono">1 day</td></tr>
+    </tbody>
+  </table></div>
+  <p>The order also matches the agreed build scope. Ask lands while the RAG core is the only thing running, in week 4. Vault arrives once typed extraction is in, in week 4 to 5. Today needs the Reminder and Alert modules, so it follows them in week 7. Packs is the last functional screen because it has nothing to list until Tax Assistant and Insurance Agent exist.</p>
+
+  <div class="note">
+    <h3>Stack note for Antigravity</h3>
+    <p>Next.js 15 with the App Router, Tailwind and shadcn/ui. shadcn shipped dedicated chat primitives in June 2026 (MessageScroller, Message, Bubble, Attachment, Marker) that work directly with <code>useChat</code> from the AI SDK, which removes most of the work in screen 1. Do not ship them in their default state: set the radius scale, the palette and the type once in the theme, then let the agent generate against it. One accent colour, one radius system, one type scale, locked before the first screen.</p>
+  </div>
+</section>
+</div>

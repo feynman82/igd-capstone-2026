@@ -1,0 +1,998 @@
+<title>PARROT Architecture Review</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,400;0,500;0,600;1,400&family=Archivo:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --ground:#F6F7F5; --surface:#FFFFFF; --surface-2:#EDF1EE; --surface-3:#E3E9E5;
+  --ink:#141B18; --ink-2:#3D4A45; --ink-3:#6B7873;
+  --line:#D8DEDA; --line-2:#BCC6C1;
+  --accent:#0F5F52; --accent-soft:#DCEAE6; --accent-line:#7FB6AA;
+  --brass:#8A6224; --brass-soft:#F2E8D6; --brass-line:#C7A167;
+  --crit:#98291A; --crit-soft:#F7E1DC; --crit-line:#D08D7E;
+  --warn:#7E5C0D; --warn-soft:#F6EDD6; --warn-line:#CFAF63;
+  --ok:#26623A; --ok-soft:#DEEDE2; --ok-line:#84B795;
+  --shadow:0 1px 2px rgba(20,27,24,.05), 0 6px 18px -12px rgba(20,27,24,.22);
+  --display:"Spectral",Georgia,"Times New Roman",serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#0D1311; --surface:#141C19; --surface-2:#1B2521; --surface-3:#222E29;
+  --ink:#E9EFEC; --ink-2:#B2C0B9; --ink-3:#7E8C86;
+  --line:#26312D; --line-2:#374440;
+  --accent:#54C2AB; --accent-soft:#11302B; --accent-line:#2E6E62;
+  --brass:#D6A85F; --brass-soft:#2A2317; --brass-line:#6F5A2F;
+  --crit:#EB8A72; --crit-soft:#331A14; --crit-line:#7A4234;
+  --warn:#E0B252; --warn-soft:#2D2413; --warn-line:#6E5825;
+  --ok:#74CC8E; --ok-soft:#15281B; --ok-line:#3A6B47;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -14px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --ground:#0D1311; --surface:#141C19; --surface-2:#1B2521; --surface-3:#222E29;
+  --ink:#E9EFEC; --ink-2:#B2C0B9; --ink-3:#7E8C86;
+  --line:#26312D; --line-2:#374440;
+  --accent:#54C2AB; --accent-soft:#11302B; --accent-line:#2E6E62;
+  --brass:#D6A85F; --brass-soft:#2A2317; --brass-line:#6F5A2F;
+  --crit:#EB8A72; --crit-soft:#331A14; --crit-line:#7A4234;
+  --warn:#E0B252; --warn-soft:#2D2413; --warn-line:#6E5825;
+  --ok:#74CC8E; --ok-soft:#15281B; --ok-line:#3A6B47;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 22px -14px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+.wrap{display:grid;grid-template-columns:1fr;max-width:1360px;margin:0 auto;padding:0 22px}
+@media(min-width:1100px){.wrap{grid-template-columns:236px minmax(0,1fr);gap:56px;padding:0 40px}}
+/* ---------- rail ---------- */
+.rail{display:none}
+@media(min-width:1100px){
+ .rail{display:block;position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:44px 0 40px;border-right:1px solid var(--line)}
+}
+.rail .brand{font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:-.01em;line-height:1.25;margin:0 0 4px}
+.rail .brandsub{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:0 0 26px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
+.rail a{display:grid;grid-template-columns:26px 1fr;gap:6px;text-decoration:none;color:var(--ink-2);font-size:13.5px;line-height:1.35;padding:5px 8px 5px 0;border-radius:4px}
+.rail a:hover{color:var(--accent);background:var(--accent-soft)}
+.rail a span{font-family:var(--mono);font-size:11px;color:var(--ink-3);padding-top:1px}
+.rail a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+main{padding:44px 0 96px;min-width:0}
+/* ---------- type ---------- */
+h1{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.6vw,46px);line-height:1.1;letter-spacing:-.02em;margin:0 0 14px;text-wrap:balance;max-width:19ch}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(22px,2.6vw,28px);line-height:1.2;letter-spacing:-.015em;margin:0 0 6px;text-wrap:balance}
+h3{font-family:var(--body);font-weight:700;font-size:16px;line-height:1.35;margin:0 0 6px;letter-spacing:-.005em}
+h4{font-family:var(--mono);font-weight:700;font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink-3);margin:0 0 8px}
+p{margin:0 0 14px;max-width:70ch}
+a{color:var(--accent)}
+strong{font-weight:600;color:var(--ink)}
+em{font-style:italic}
+code{font-family:var(--mono);font-size:.87em;background:var(--surface-2);border:1px solid var(--line);border-radius:3px;padding:1px 5px;color:var(--ink)}
+.lede{font-size:19px;line-height:1.55;color:var(--ink-2);max-width:62ch;margin-bottom:22px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+section{padding:44px 0;border-top:1px solid var(--line)}
+section:first-of-type{border-top:none;padding-top:8px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+.sec-num{font-family:var(--mono);font-size:12px;color:var(--ink-3);padding-top:4px;flex:none}
+ul,ol.body{margin:0 0 16px;padding-left:20px;max-width:70ch}
+li{margin-bottom:7px}
+li::marker{color:var(--ink-3)}
+.hr{height:1px;background:var(--line);margin:26px 0;border:0}
+/* ---------- masthead ---------- */
+.mast{padding:14px 0 34px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 10px;margin-top:20px}
+.chip{font-family:var(--mono);font-size:11px;letter-spacing:.05em;padding:4px 9px;border-radius:99px;border:1px solid var(--line-2);color:var(--ink-2);background:var(--surface)}
+.chip.acc{border-color:var(--accent-line);color:var(--accent);background:var(--accent-soft)}
+.chip.br{border-color:var(--brass-line);color:var(--brass);background:var(--brass-soft)}
+/* ---------- findings ---------- */
+.find{border-top:1px solid var(--line);padding:22px 0}
+.find:first-of-type{border-top:1px solid var(--line-2)}
+.find-h{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;margin-bottom:10px}
+.fid{font-family:var(--mono);font-size:11.5px;font-weight:700;letter-spacing:.04em;padding:3px 7px;border-radius:4px;white-space:nowrap;margin-top:2px}
+.sev-c{background:var(--crit-soft);color:var(--crit);border:1px solid var(--crit-line)}
+.sev-w{background:var(--warn-soft);color:var(--warn);border:1px solid var(--warn-line)}
+.sev-n{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line-2)}
+.fix{border-left:2px solid var(--accent);background:var(--accent-soft);padding:12px 16px;margin:12px 0 0;border-radius:0 5px 5px 0}
+.fix p{margin:0;max-width:66ch;font-size:15px}
+.fix .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.ev{font-size:14.5px;color:var(--ink-2);border-left:2px solid var(--line-2);padding-left:14px;margin:12px 0}
+.ev p{margin:0 0 6px;max-width:66ch}
+.ev .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:5px}
+/* ---------- tables ---------- */
+.tw{overflow-x:auto;margin:0 0 20px;border:1px solid var(--line);border-radius:7px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:520px}
+th{text-align:left;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:11px 14px;border-bottom:1px solid var(--line-2);background:var(--surface-2);white-space:nowrap}
+td{padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--ink-2)}
+tr:last-child td{border-bottom:none}
+td strong{color:var(--ink)}
+td.n{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px;white-space:nowrap}
+/* ---------- cards ---------- */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:0 0 20px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:0 0 20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:16px 17px}
+.card h3{margin-bottom:5px}
+.card p{font-size:14.5px;margin:0;color:var(--ink-2)}
+.card p+p{margin-top:9px}
+.kv{font-family:var(--mono);font-size:12px;color:var(--ink-3);display:block;margin-bottom:7px;letter-spacing:.06em;text-transform:uppercase}
+/* ---------- figure ---------- */
+figure{margin:24px 0 26px}
+.figbox{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:20px 18px 10px;overflow-x:auto}
+figcaption{font-size:13px;color:var(--ink-3);margin-top:9px;font-family:var(--body);max-width:74ch}
+figcaption b{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:500;margin-right:7px}
+svg{display:block;max-width:100%;height:auto;margin:0 auto}
+/* svg tokens */
+.dg text{font-family:var(--body);fill:var(--ink)}
+.t-ttl{font-size:13.5px;font-weight:600}
+.t-sm{font-size:11.5px;fill:var(--ink-2)}
+.t-xs{font-size:10.5px;fill:var(--ink-3)}
+.t-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.1em;fill:var(--ink-3);text-transform:uppercase}
+.t-mono{font-family:var(--mono);font-size:11px;fill:var(--ink-2)}
+.bx{fill:var(--surface-2);stroke:var(--line-2);stroke-width:1}
+.bx-a{fill:var(--accent-soft);stroke:var(--accent-line);stroke-width:1}
+.bx-b{fill:var(--brass-soft);stroke:var(--brass-line);stroke-width:1}
+.bx-c{fill:var(--crit-soft);stroke:var(--crit-line);stroke-width:1}
+.bx-w{fill:var(--warn-soft);stroke:var(--warn-line);stroke-width:1}
+.bx-o{fill:none;stroke:var(--line-2);stroke-width:1}
+.ln{stroke:var(--line-2);stroke-width:1.4;fill:none}
+.ln-a{stroke:var(--accent-line);stroke-width:1.6;fill:none}
+.ln-d{stroke:var(--crit-line);stroke-width:1.6;fill:none;stroke-dasharray:6 4}
+.mk{fill:var(--line-2)}
+.mk-a{fill:var(--accent-line)}
+pre{font-family:var(--mono);font-size:12.5px;line-height:1.62;background:var(--surface-2);border:1px solid var(--line);border-radius:7px;padding:15px 17px;overflow-x:auto;margin:0 0 20px;color:var(--ink-2)}
+pre b{color:var(--accent);font-weight:500}
+pre i{color:var(--ink-3);font-style:normal}
+.foot{border-top:1px solid var(--line);padding-top:22px;font-size:13.5px;color:var(--ink-3)}
+.foot ol{padding-left:20px;max-width:78ch}
+.foot li{margin-bottom:5px}
+.foot a{color:var(--ink-2);text-decoration:none;border-bottom:1px solid var(--line-2)}
+.foot a:hover{color:var(--accent);border-color:var(--accent)}
+.callout{background:var(--brass-soft);border:1px solid var(--brass-line);border-radius:7px;padding:16px 18px;margin:0 0 22px}
+.callout h3{color:var(--brass);margin-bottom:6px}
+.callout p{margin:0;max-width:68ch;font-size:15px}
+</style><div class="wrap">
+<nav class="rail" aria-label="Contents">
+  <p class="brand">Architecture Decisions</p>
+  <p class="brandsub">Project&nbsp;Parrot · rev&nbsp;2 · 2&nbsp;Sep&nbsp;2026</p>
+  <ol>
+    <li><a href="#s1"><span>01</span>What changed</a></li>
+    <li><a href="#s2"><span>02</span>The expansion model</a></li>
+    <li><a href="#s3"><span>03</span>Architecture</a></li>
+    <li><a href="#s4"><span>04</span>VRAM budget</a></li>
+    <li><a href="#s5"><span>05</span>Document pipeline</a></li>
+    <li><a href="#s6"><span>06</span>Domain pack manifest</a></li>
+    <li><a href="#s7"><span>07</span>Capability modules</a></li>
+    <li><a href="#s8"><span>08</span>Query &amp; grounding</a></li>
+    <li><a href="#s9"><span>09</span>The golden set</a></li>
+    <li><a href="#s10"><span>10</span>Governance</a></li>
+    <li><a href="#s11"><span>11</span>Corrections closed</a></li>
+    <li><a href="#s12"><span>12</span>Build plan</a></li>
+    <li><a href="#s13"><span>13</span>Risks</a></li>
+    <li><a href="#s14"><span>14</span>Sources</a></li>
+  </ol>
+</nav>
+
+<main>
+<header class="mast">
+  <p class="eyebrow">Revision 2 · decisions taken · SMU IGD Integrated Learning Project</p>
+  <h1>RAG at the core, two axes of expansion</h1>
+  <p class="lede">The architecture your team decided on, written down. Retrieval is the platform. Capability modules extend it sideways, domain packs extend it downwards, and both plug in through a declared contract rather than by editing core code.</p>
+  <div class="meta">
+    <span class="chip acc">4 corrections closed</span>
+    <span class="chip">2 modules built</span>
+    <span class="chip">2 domain packs built</span>
+    <span class="chip br">9 specified</span>
+  </div>
+</header>
+
+<section id="s1">
+  <div class="sec-head"><span class="sec-num">01</span><div><h2>What changed in this revision</h2></div></div>
+  <p>Ten decisions came back from the team. Here is what each one did to the design.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Your decision</th><th>Effect on the architecture</th></tr></thead>
+    <tbody>
+      <tr><td><strong>1 · Correct the SEA-LION model names</strong></td><td>Now <code>Qwen-SEA-LION-v4-4B-VL</code> on the demo path, cited to its model card. The 27B variants are reported as a quality comparison only. Section&nbsp;11.</td></tr>
+      <tr><td><strong>2 · Keep VRAM headroom so the demo works</strong></td><td>New Section&nbsp;04. The generator is pinned to one GPU rather than split across both, which removes per-token traffic over the Thunderbolt link entirely. Demo path leaves roughly 7&nbsp;GB spare.</td></tr>
+      <tr><td><strong>3 · Quote both 5338 and 22989</strong></td><td>Section&nbsp;10 maps 22989's life-cycle stages and 5338's three AI-specific processes side by side, correctly attributed. One slide, one table.</td></tr>
+      <tr><td><strong>4 · Keep OAuth, WhatsApp and Drive; amend the claim</strong></td><td>Nothing removed. The abstract now says <em>local-by-default with a stated trust boundary</em> instead of zero-telemetry. Drive sync and WhatsApp move to the post-MVP band and are drawn as such.</td></tr>
+      <tr><td><strong>5 · Phone camera is the real requirement</strong></td><td>Capture is now an <em>adapter contract</em>, not a channel. Telegram is the default implementation. WhatsApp and a local camera page are alternate adapters behind the same interface.</td></tr>
+      <tr><td><strong>6 · PARROT is an internal codename</strong></td><td>Naming critique withdrawn. The document says "working name" once and moves on.</td></tr>
+      <tr><td><strong>7 · RAG is the core; tracker and alert are modules</strong></td><td>The framing is rebuilt around this. Retrieval is the platform; the other capabilities are add-ons. One consequence carried forward: typed fact extraction stays in the core, because a module has nothing to read without it.</td></tr>
+      <tr><td><strong>8 · State the expansion possibilities</strong></td><td>Section&nbsp;02 is new and is now the centre of the document. Two orthogonal axes, thirteen named extensions, four built.</td></tr>
+      <tr><td><strong>9 · Golden set as the evaluation harness</strong></td><td>Section&nbsp;09, unchanged in substance from revision 1.</td></tr>
+      <tr><td><strong>10 · Settle the pack manifest and list the packs</strong></td><td>Section&nbsp;06 gives the schema field by field, plus a catalogue of eleven domain packs with their document types and registered modules.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <h3>The one consequence of decision 7 worth saying out loud</h3>
+    <p>Tracker, Alert and Reminder read <strong>typed rows</strong>: dates, amounts, policy numbers, owners. They cannot read chunks. So even with retrieval as the core and the modules as add-ons, the core still has to extract typed fields at ingest and write them to a facts table, or there is nothing for a module to attach to. This is not a return to the four-primitive framing; it is a statement about what the core RAG platform must include for the expansion story to be buildable rather than aspirational. It costs the core one pipeline stage and one table.</p>
+  </div>
+</section>
+
+<section id="s2">
+  <div class="sec-head"><span class="sec-num">02</span><div><h2>The expansion model</h2></div></div>
+  <p>This is the answer to "how far can this go", and it is the strongest slide in the deck. One core, two independent axes. Adding a capability module makes every existing domain pack more useful. Adding a domain pack makes every installed module apply to a new part of household life. Neither requires touching the other, and neither requires touching the core.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 900 520" role="img" aria-label="Expansion model: a RAG core with capability modules extending horizontally and domain packs extending vertically">
+        <defs>
+          <marker id="e1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk-a"/></marker>
+          <marker id="e2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--brass-line)"/></marker>
+        </defs>
+
+        <rect x="8" y="8" width="884" height="22" rx="4" fill="var(--accent-soft)" stroke="var(--accent-line)"/>
+        <text x="20" y="24" class="t-mono" fill="var(--accent)">AXIS 1 — CAPABILITY MODULES · what the assistant can DO · horizontal expansion</text>
+
+        <rect x="8" y="42" width="210" height="60" rx="6" class="bx-a"/>
+        <text x="22" y="62" class="t-ttl" fill="var(--accent)">Reminder</text>
+        <text x="22" y="79" class="t-xs">reads obligations, schedules ahead</text>
+        <text x="22" y="94" class="t-mono" fill="var(--accent)">BUILT · WEEK 4</text>
+
+        <rect x="232" y="42" width="210" height="60" rx="6" class="bx-a"/>
+        <text x="246" y="62" class="t-ttl" fill="var(--accent)">Alert</text>
+        <text x="246" y="79" class="t-xs">watches thresholds on fact write</text>
+        <text x="246" y="94" class="t-mono" fill="var(--accent)">BUILT · WEEK 5</text>
+
+        <rect x="456" y="42" width="210" height="60" rx="6" class="bx"/>
+        <text x="470" y="62" class="t-ttl">Tracker</text>
+        <text x="470" y="79" class="t-xs">aggregates typed rows over time</text>
+        <text x="470" y="94" class="t-mono">SPECIFIED</text>
+
+        <rect x="680" y="42" width="212" height="60" rx="6" class="bx-o" stroke-dasharray="5 4"/>
+        <text x="694" y="62" class="t-ttl" fill="var(--ink-3)">Actions</text>
+        <text x="694" y="79" class="t-xs">book, pay, file — needs a governance</text>
+        <text x="694" y="94" class="t-xs">case of its own. Deliberately not v1.</text>
+
+        <path d="M113,102 L113,150" class="ln-a" marker-end="url(#e1)"/>
+        <path d="M337,102 L337,150" class="ln-a" marker-end="url(#e1)"/>
+        <path d="M561,102 L561,150" class="ln-a" stroke-dasharray="5 4" marker-end="url(#e1)"/>
+        <path d="M786,102 L786,150" class="ln-a" stroke-dasharray="5 4" marker-end="url(#e1)"/>
+
+        <rect x="8" y="150" width="884" height="132" rx="8" class="bx-a" stroke-width="1.6"/>
+        <text x="24" y="176" class="t-ttl" fill="var(--accent)" style="font-size:15px">RAG core</text>
+        <text x="120" y="176" class="t-mono">capture → parse → index → retrieve → ground → answer with citations</text>
+        <rect x="24" y="190" width="160" height="48" rx="5" class="bx"/>
+        <text x="34" y="209" class="t-sm">Capture adapters</text><text x="34" y="225" class="t-xs">folder · Telegram · WhatsApp</text>
+        <rect x="196" y="190" width="160" height="48" rx="5" class="bx"/>
+        <text x="206" y="209" class="t-sm">Docling parse + OCR</text><text x="206" y="225" class="t-xs">layout, tables, scans</text>
+        <rect x="368" y="190" width="160" height="48" rx="5" class="bx"/>
+        <text x="378" y="209" class="t-sm">Index</text><text x="378" y="225" class="t-xs">pgvector + tsvector, RRF</text>
+        <rect x="540" y="190" width="160" height="48" rx="5" class="bx"/>
+        <text x="550" y="209" class="t-sm">Retrieve + rerank</text><text x="550" y="225" class="t-xs">grounding gate, abstain</text>
+        <rect x="712" y="190" width="164" height="48" rx="5" class="bx-b"/>
+        <text x="722" y="209" class="t-sm" fill="var(--brass)">Typed fact extraction</text><text x="722" y="225" class="t-xs">the substrate modules read</text>
+        <rect x="24" y="248" width="852" height="22" rx="4" fill="var(--surface-2)" stroke="var(--line)"/>
+        <text x="34" y="264" class="t-xs">One PostgreSQL instance: chunks · facts · obligations · agent state · pack and module registry. The core knows nothing about tax, insurance or schools.</text>
+
+        <path d="M113,282 L113,330" class="ln" stroke="var(--brass-line)" marker-end="url(#e2)"/>
+        <path d="M337,282 L337,330" class="ln" stroke="var(--brass-line)" marker-end="url(#e2)"/>
+        <path d="M561,282 L561,330" class="ln" stroke="var(--brass-line)" stroke-dasharray="5 4" marker-end="url(#e2)"/>
+        <path d="M786,282 L786,330" class="ln" stroke="var(--brass-line)" stroke-dasharray="5 4" marker-end="url(#e2)"/>
+
+        <rect x="8" y="330" width="884" height="22" rx="4" fill="var(--brass-soft)" stroke="var(--brass-line)"/>
+        <text x="20" y="346" class="t-mono" fill="var(--brass)">AXIS 2 — DOMAIN PACKS · what the assistant KNOWS ABOUT · vertical expansion</text>
+
+        <rect x="8" y="364" width="210" height="72" rx="6" class="bx-b"/>
+        <text x="22" y="384" class="t-ttl" fill="var(--brass)">Tax Assistant</text>
+        <text x="22" y="400" class="t-xs">payslips · CPF · SRS · donations</text>
+        <text x="22" y="414" class="t-xs">grounded in published IRAS guidance</text>
+        <text x="22" y="426" class="t-mono" fill="var(--brass)">BUILT · WEEK 6</text>
+
+        <rect x="232" y="364" width="210" height="72" rx="6" class="bx-b"/>
+        <text x="246" y="384" class="t-ttl" fill="var(--brass)">Insurance Agent</text>
+        <text x="246" y="400" class="t-xs">life · health · home · motor policies</text>
+        <text x="246" y="414" class="t-xs">coverage, exclusions, renewals</text>
+        <text x="246" y="426" class="t-mono" fill="var(--brass)">BUILT · WEEK 7</text>
+
+        <rect x="456" y="364" width="210" height="72" rx="6" class="bx"/>
+        <text x="470" y="384" class="t-ttl">MOE Syllabus Teacher</text>
+        <text x="470" y="400" class="t-xs">papers · report cards · syllabus map</text>
+        <text x="470" y="414" class="t-xs">the flagship roadmap pack</text>
+        <text x="470" y="426" class="t-mono">SPECIFIED</text>
+
+        <rect x="680" y="364" width="212" height="72" rx="6" class="bx"/>
+        <text x="694" y="384" class="t-ttl">Eight more</text>
+        <text x="694" y="400" class="t-xs">Vehicle · Caregiving · Children &amp; School</text>
+        <text x="694" y="414" class="t-xs">Home Maintenance · Groceries · Travel</text>
+        <text x="694" y="426" class="t-xs">Legal &amp; Estate · Property</text>
+
+        <line x1="8" y1="454" x2="892" y2="454" stroke="var(--line)"/>
+        <text x="8" y="474" class="t-sm">A domain pack declares which capability modules it registers with. Installing the Tracker module later makes every</text>
+        <text x="8" y="492" class="t-sm">already-installed pack able to track, with no change to the pack. That is the property that makes the roadmap credible</text>
+        <text x="8" y="510" class="t-sm">rather than a list of features someone might build one day.</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 1</b> The two-axis expansion model. Four extensions ship in the capstone: two capability modules and two domain packs. Nine more are specified against the same two contracts. The Actions module is drawn deliberately as a boundary, not an omission.</figcaption>
+  </figure>
+
+  <h4>Why two axes and not one list</h4>
+  <p>A flat list of features has no story about growth. Two axes give you a multiplication table: <strong>13 named extensions produce far more than 13 capabilities</strong>, because every module applies to every pack that registers it. Insurance plus Reminder is renewal warnings. Insurance plus Alert is a coverage gap crossing a threshold. Tax plus Tracker is deductions year to date. You build four things and demonstrate a combinatorial surface, which is exactly the argument a platform proposal has to make.</p>
+  <p>It also gives you a clean answer to the question a supervisor will ask, which is where this stops. It stops at Actions. Everything up to and including Alert observes and advises. The moment a module can transact, the governance case changes completely, and Section&nbsp;10 says so explicitly rather than leaving it as an unexamined edge.</p>
+</section>
+<section id="s3">
+  <div class="sec-head"><span class="sec-num">03</span><div><h2>Architecture</h2></div></div>
+  <p>Nothing has been removed from the ambition. What has changed is that the boundary is drawn, and everything that crosses it is labelled with when it ships.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 940 748" role="img" aria-label="Revised architecture with a capture adapter contract, an explicit trust boundary, and post-MVP channels drawn as such">
+        <defs>
+          <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk"/></marker>
+          <marker id="a2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk-a"/></marker>
+        </defs>
+
+        <text x="14" y="30" class="t-lbl">Off device</text>
+        <rect x="112" y="12" width="222" height="56" rx="6" class="bx-a"/>
+        <text x="126" y="32" class="t-ttl" fill="var(--accent)">Telegram Bot API</text>
+        <text x="126" y="49" class="t-xs">default capture channel · free · no</text>
+        <text x="126" y="62" class="t-xs">business verification · MVP</text>
+
+        <rect x="348" y="12" width="222" height="56" rx="6" class="bx-o" stroke-dasharray="5 4"/>
+        <text x="362" y="32" class="t-ttl" fill="var(--ink-3)">WhatsApp Cloud API</text>
+        <text x="362" y="49" class="t-xs">official API only · per-message cost</text>
+        <text x="362" y="62" class="t-xs">from 1 Oct 2026 · post-MVP</text>
+
+        <rect x="584" y="12" width="222" height="56" rx="6" class="bx-o" stroke-dasharray="5 4"/>
+        <text x="598" y="32" class="t-ttl" fill="var(--ink-3)">Google Drive + OAuth</text>
+        <text x="598" y="49" class="t-xs">nightly folder sync · OAuth scoped to</text>
+        <text x="598" y="62" class="t-xs">Drive read only · post-MVP</text>
+        <text x="820" y="34" class="t-xs">Solid = MVP</text>
+        <text x="820" y="50" class="t-xs">Dashed = after</text>
+        <text x="820" y="64" class="t-xs">the MVP</text>
+
+        <line x1="14" y1="90" x2="926" y2="90" class="ln-d"/>
+        <rect x="112" y="78" width="416" height="24" rx="12" fill="var(--ground)" stroke="var(--crit-line)"/>
+        <text x="126" y="94" class="t-mono" fill="var(--crit)">TRUST BOUNDARY — documents, facts, embeddings and inference stay below it</text>
+
+        <text x="14" y="140" class="t-lbl">Capture</text>
+        <rect x="112" y="116" width="814" height="66" rx="7" class="bx-o"/>
+        <text x="126" y="136" class="t-ttl">Capture adapter contract</text>
+        <text x="290" y="136" class="t-mono">one interface: receive(bytes, mime, sender, ts) → ingest_job</text>
+        <rect x="126" y="146" width="186" height="26" rx="4" class="bx-a"/>
+        <text x="136" y="163" class="t-xs" fill="var(--accent)">Folder watchdog · MVP</text>
+        <rect x="322" y="146" width="186" height="26" rx="4" class="bx-a"/>
+        <text x="332" y="163" class="t-xs" fill="var(--accent)">Telegram bot · MVP</text>
+        <rect x="518" y="146" width="186" height="26" rx="4" class="bx" stroke-dasharray="5 4"/>
+        <text x="528" y="163" class="t-xs">WhatsApp webhook</text>
+        <rect x="714" y="146" width="198" height="26" rx="4" class="bx" stroke-dasharray="5 4"/>
+        <text x="724" y="163" class="t-xs">Drive poller · local camera page</text>
+        <path d="M223,68 L223,116" class="ln-a" marker-end="url(#a2a)"/>
+        <path d="M459,68 L459,116" class="ln" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+        <path d="M695,68 L695,116" class="ln" stroke-dasharray="5 4" marker-end="url(#a2)"/>
+        <path d="M519,182 L519,212" class="ln" marker-end="url(#a2)"/>
+
+        <text x="14" y="246" class="t-lbl">Understand</text>
+        <rect x="112" y="212" width="814" height="92" rx="7" class="bx-o"/>
+        <text x="126" y="232" class="t-ttl">Ingestion worker</text>
+        <text x="262" y="232" class="t-mono">FastAPI + Celery + Redis</text>
+        <rect x="126" y="244" width="152" height="46" rx="5" class="bx"/>
+        <text x="136" y="263" class="t-sm">Docling parse</text><text x="136" y="280" class="t-xs">layout · tables · OCR</text>
+        <rect x="288" y="244" width="152" height="46" rx="5" class="bx"/>
+        <text x="298" y="263" class="t-sm">Contextualise</text><text x="298" y="280" class="t-xs">chunk-level summary</text>
+        <rect x="450" y="244" width="152" height="46" rx="5" class="bx"/>
+        <text x="460" y="263" class="t-sm">Embed</text><text x="460" y="280" class="t-xs">EmbeddingGemma-300M</text>
+        <rect x="612" y="244" width="152" height="46" rx="5" class="bx-b"/>
+        <text x="622" y="263" class="t-sm" fill="var(--brass)">Extract typed fields</text><text x="622" y="280" class="t-xs">pack schema, JSON-constrained</text>
+        <rect x="774" y="244" width="138" height="46" rx="5" class="bx"/>
+        <text x="784" y="263" class="t-sm">Idempotent upsert</text><text x="784" y="280" class="t-xs">SHA-256 content key</text>
+        <path d="M519,304 L519,334" class="ln" marker-end="url(#a2)"/>
+
+        <text x="14" y="368" class="t-lbl">Remember</text>
+        <rect x="112" y="334" width="814" height="104" rx="7" class="bx-a"/>
+        <text x="126" y="354" class="t-ttl" fill="var(--accent)">PostgreSQL 17 + pgvector</text>
+        <text x="330" y="354" class="t-mono">one container · one backup · ACID across chunks and facts</text>
+        <rect x="126" y="366" width="186" height="58" rx="5" class="bx"/>
+        <text x="136" y="385" class="t-sm">chunks</text><text x="136" y="401" class="t-xs">vector(768) + tsvector</text><text x="136" y="416" class="t-xs">HNSW + GIN</text>
+        <rect x="322" y="366" width="186" height="58" rx="5" class="bx"/>
+        <text x="332" y="385" class="t-sm">facts + obligations</text><text x="332" y="401" class="t-xs">typed rows, each citing</text><text x="332" y="416" class="t-xs">a document and page</text>
+        <rect x="518" y="366" width="186" height="58" rx="5" class="bx"/>
+        <text x="528" y="385" class="t-sm">agent state</text><text x="528" y="401" class="t-xs">LangGraph PostgresSaver</text><text x="528" y="416" class="t-xs">+ cross-thread Store</text>
+        <rect x="714" y="366" width="198" height="58" rx="5" class="bx"/>
+        <text x="724" y="385" class="t-sm">registry</text><text x="724" y="401" class="t-xs">installed packs and modules,</text><text x="724" y="416" class="t-xs">versions, grounding corpora</text>
+        <path d="M380,438 L380,470" class="ln-a" marker-end="url(#a2a)"/>
+        <path d="M660,470 L660,438" class="ln-a" marker-end="url(#a2a)"/>
+
+        <text x="14" y="504" class="t-lbl">Reason</text>
+        <rect x="112" y="470" width="592" height="112" rx="7" class="bx-a" stroke-width="1.6"/>
+        <text x="126" y="490" class="t-ttl" fill="var(--accent)">RAG core runtime</text>
+        <text x="262" y="490" class="t-mono">LangGraph · route → retrieve → rerank → ground → answer or abstain</text>
+        <rect x="126" y="502" width="270" height="34" rx="5" class="bx-a"/>
+        <text x="136" y="516" class="t-sm" fill="var(--accent)">Retrieval and grounded answering</text>
+        <text x="136" y="530" class="t-xs">hybrid search · RRF · bge-reranker-v2-m3 · citation required</text>
+        <rect x="406" y="502" width="286" height="34" rx="5" class="bx"/>
+        <text x="416" y="516" class="t-sm">Ollama client</text>
+        <text x="416" y="530" class="t-xs">generation · embedding · reranking · schema-constrained extraction</text>
+        <rect x="126" y="544" width="176" height="28" rx="5" class="bx-b"/>
+        <text x="136" y="562" class="t-xs" fill="var(--brass)">Reminder module · built</text>
+        <rect x="312" y="544" width="176" height="28" rx="5" class="bx-b"/>
+        <text x="322" y="562" class="t-xs" fill="var(--brass)">Alert module · built</text>
+        <rect x="498" y="544" width="194" height="28" rx="5" class="bx" stroke-dasharray="5 4"/>
+        <text x="508" y="562" class="t-xs">Tracker module · specified</text>
+
+        <rect x="722" y="470" width="204" height="112" rx="7" class="bx"/>
+        <text x="736" y="490" class="t-ttl">Ollama</text>
+        <text x="736" y="510" class="t-xs">GPU 1 (RTX 3080, 10 GB):</text>
+        <text x="736" y="525" class="t-xs">SEA-LION 4B-VL Q4, 16K ctx</text>
+        <text x="736" y="545" class="t-xs">GPU 1 (RTX 3080, 10 GB):</text>
+        <text x="736" y="560" class="t-xs">EmbeddingGemma-300M</text>
+        <text x="736" y="574" class="t-xs">bge-reranker-v2-m3 · Docling</text>
+        <path d="M704,519 L722,519" class="ln" marker-end="url(#a2)"/>
+        <path d="M380,582 L380,612" class="ln" marker-end="url(#a2)"/>
+        <path d="M620,612 L620,582" class="ln" marker-end="url(#a2)"/>
+
+        <text x="14" y="646" class="t-lbl">Surface</text>
+        <rect x="112" y="612" width="392" height="68" rx="6" class="bx"/>
+        <text x="126" y="632" class="t-ttl">Next.js 15 · shadcn/ui chat</text>
+        <text x="126" y="650" class="t-xs">Today · Ask with inline citations · Vault · Packs</text>
+        <text x="126" y="666" class="t-xs">local passphrase login, so it works with no network</text>
+        <rect x="524" y="612" width="402" height="68" rx="6" class="bx"/>
+        <text x="538" y="632" class="t-ttl">Scheduler and notifier</text>
+        <text x="538" y="650" class="t-xs">APScheduler · nightly sweep of the obligations table</text>
+        <text x="538" y="666" class="t-xs">desktop notification · reply on the originating chat thread</text>
+
+        <rect x="112" y="694" width="814" height="26" rx="5" fill="var(--surface-2)" stroke="var(--line)"/>
+        <text x="126" y="711" class="t-mono">Structured JSONL trace log — node, latency, retrieved doc ids, reranker scores, gate decision. One file. Feeds the golden-set harness and the audit trail.</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 2</b> Capture is an adapter contract, so the channel is a configuration choice rather than an architectural commitment. Google OAuth is scoped to Drive authorisation only; application login stays local so the assistant still opens when the network is down.</figcaption>
+  </figure>
+
+  <div class="callout">
+    <h3>How to phrase the privacy claim now</h3>
+    <p>Replace "zero-telemetry, offline privacy" with this: <em>"Documents, extracted facts, embeddings and all model inference remain on the user's hardware. Capture channels are transports only: media is fetched, filed locally, and deleted at source. Google Drive access, when enabled, is read-only and scoped by OAuth to a single folder."</em> It is defensible line by line, it survives someone reading the architecture diagram next to it, and it is what IMDA's agentic framework asks a system to publish. An unqualified offline claim next to a Drive integration is the kind of thing that costs you the room.</p>
+  </div>
+</section>
+
+<section id="s4">
+  <div class="sec-head"><span class="sec-num">04</span><div><h2>The VRAM budget, with headroom</h2></div></div>
+  <p>You asked for buffer so the demo works. Swapping to a 4B model does more than buy headroom: <strong>the whole stack now fits on one 8&nbsp;GB laptop GPU</strong>, which means the demo path and the product claim finally describe the same machine. A local-first household assistant that needs an 18&nbsp;GB workstation is a research prototype; one that runs on a laptop is a product.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 900 318" role="img" aria-label="VRAM budget: the originally proposed 27B split configuration overflows 18GB, while the 4B vision-language demo path fits entirely on one 8GB laptop card">
+        <text x="10" y="16" class="t-lbl">Gigabytes of VRAM</text>
+        <g stroke="var(--line)"><path d="M185,28 L185,236 M305,28 L305,236 M425,28 L425,236 M545,28 L545,236 M665,28 L665,236 M785,28 L785,236"/></g>
+        <path d="M425,24 L425,242" stroke="var(--ok-line)" stroke-dasharray="4 3"/>
+        <path d="M725,24 L725,242" stroke="var(--crit-line)" stroke-dasharray="4 3"/>
+        <text x="336" y="20" class="t-xs" fill="var(--ok)">8 GB — the 4060 alone</text>
+        <text x="646" y="20" class="t-xs" fill="var(--crit)">18 GB installed</text>
+        <text x="181" y="256" class="t-xs">0</text><text x="301" y="256" class="t-xs">4</text><text x="421" y="256" class="t-xs">8</text><text x="539" y="256" class="t-xs">12</text><text x="659" y="256" class="t-xs">16</text><text x="779" y="256" class="t-xs">20</text>
+
+        <text x="10" y="52" class="t-sm">As proposed</text>
+        <text x="10" y="68" class="t-xs">27B Q4, split across</text>
+        <text x="10" y="82" class="t-xs">both GPUs</text>
+        <rect x="185" y="40" width="495" height="26" rx="3" class="bx-c"/>
+        <text x="195" y="58" class="t-xs" fill="var(--crit)">weights 16.5</text>
+        <rect x="680" y="40" width="102" height="26" rx="3" fill="var(--crit)" stroke="var(--crit)"/>
+        <text x="688" y="58" class="t-xs" fill="var(--ground)">KV + rest 3.4</text>
+        <text x="185" y="84" class="t-xs" fill="var(--crit)">Over budget before the embedder, reranker and Docling load. Pays a cross-GPU penalty on every token.</text>
+
+        <text x="10" y="128" class="t-sm">Demo path</text>
+        <text x="10" y="144" class="t-xs">Qwen-SEA-LION-v4-4B-VL</text>
+        <text x="10" y="158" class="t-xs">Q4, 16K context,</text>
+        <text x="10" y="172" class="t-xs">one card, no split</text>
+        <rect x="185" y="116" width="78" height="26" rx="3" class="bx-a"/>
+        <text x="193" y="134" class="t-xs" fill="var(--accent)">2.6</text>
+        <rect x="263" y="116" width="18" height="26" rx="2" fill="var(--accent-line)" stroke="var(--accent-line)"/>
+        <rect x="281" y="116" width="9" height="26" rx="2" class="bx-b"/>
+        <rect x="290" y="116" width="18" height="26" rx="2" class="bx-b"/>
+        <rect x="308" y="116" width="24" height="26" rx="2" class="bx-b"/>
+        <text x="342" y="134" class="t-xs">weights 2.6 · KV 0.6 · embed 0.3 · rerank 0.6 · Docling 0.8</text>
+        <path d="M332,158 L332,148 M425,158 L425,148 M332,153 L425,153" stroke="var(--ok-line)"/>
+        <text x="342" y="174" class="t-xs" fill="var(--ok)">3.1 GB spare on an 8 GB card — 13 GB spare on the machine</text>
+
+        <text x="10" y="208" class="t-sm">Deep mode</text>
+        <text x="10" y="224" class="t-xs">27B Q4, optional,</text>
+        <text x="10" y="238" class="t-xs">reported not demoed</text>
+        <rect x="185" y="196" width="495" height="26" rx="3" class="bx-w"/>
+        <text x="195" y="214" class="t-xs" fill="var(--warn)">benchmarked for the report as a quality comparison, never on the demo path</text>
+
+        <line x1="10" y1="272" x2="890" y2="272" stroke="var(--line)"/>
+        <text x="10" y="288" class="t-xs">Planning estimates. The week-1 task is to replace every number here with a measurement from the actual machine and publish the table.</text>
+        <text x="10" y="304" class="t-xs">The whole stack now fits on a single 8 GB laptop GPU, which makes the demo path and the product claim the same thing.</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 3</b> The demo path leaves roughly 3 GB spare on a single 8 GB card, and 13 GB spare on the 18 GB workstation. Headroom is not waste: it is what stops a live demonstration from swapping to system RAM when a second question arrives while the first is still generating.</figcaption>
+  </figure>
+
+  <p>Three consequences worth putting in the report. <strong>No layer splitting at all.</strong> The eGPU is no longer needed for inference, which removes the per-token traffic over the narrowest link in the machine and one whole class of demo-night failure. <strong>Context capped at 16K.</strong> The model offers 256K, but nothing in a household question needs it once retrieval has narrowed the evidence to six reranked passages, and the KV cache grows linearly. <strong>The 27B stays in the report, not the demo.</strong> Benchmark it, publish the quality comparison, explain why the smaller model was chosen. A measured trade-off reads as engineering judgement; an unmeasured claim of comfort reads as optimism.</p>
+
+  <div class="callout">
+    <h3>The swap buys a capability, not just headroom</h3>
+    <p><code>Qwen-SEA-LION-v4-4B-VL</code> is a <strong>vision-language</strong> model, so it can read a document image directly rather than only the text Docling extracted from it. Do not replace Docling with it — Docling is faster, cheaper and better at tables from digital PDFs. Use it for the case Docling cannot handle: <strong>give the quarantine queue a second pass through the VLM.</strong> A faint scan or a phone photo that failed layout parsing gets one more attempt from a model that looks at the pixels. That turns quarantine from a dead end into a two-stage pipeline, and it is a genuinely interesting result to report either way — how many quarantined documents a vision model recovers is a number nobody else in the cohort will have.</p>
+  </div>
+</section>
+<section id="s5">
+  <div class="sec-head"><span class="sec-num">05</span><div><h2>Document pipeline</h2></div></div>
+  <p>Unchanged from revision 1, and it is the stage that makes the expansion model buildable. Every document produces searchable chunks for the RAG core <em>and</em> typed rows for whichever capability modules are installed. The two commit together, so a reminder can never disagree with a search result.</p>
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 900 432" role="img" aria-label="Document pipeline forking into a retrieval lane producing chunks and a facts lane producing typed rows, with a quarantine branch">
+        <defs><marker id="pr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk"/></marker>
+        <marker id="prc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--crit-line)"/></marker></defs>
+
+        <rect x="8" y="8" width="312" height="24" rx="4" fill="var(--accent-soft)" stroke="var(--accent-line)"/>
+        <text x="20" y="25" class="t-mono" fill="var(--accent)">RETRIEVAL LANE — feeds the RAG core</text>
+        <rect x="340" y="42" width="176" height="74" rx="6" class="bx-a"/>
+        <text x="354" y="64" class="t-sm">Contextualise chunk</text>
+        <text x="354" y="84" class="t-xs">prepend a one-line note</text>
+        <text x="354" y="100" class="t-xs">saying what it is</text>
+        <path d="M516,79 L532,79" class="ln" marker-end="url(#pr)"/>
+        <rect x="534" y="42" width="176" height="74" rx="6" class="bx-a"/>
+        <text x="548" y="64" class="t-sm">Embed and tokenise</text>
+        <text x="548" y="84" class="t-xs">EmbeddingGemma-300M</text>
+        <text x="548" y="100" class="t-xs">+ Postgres tsvector</text>
+        <path d="M710,79 L726,79" class="ln" marker-end="url(#pr)"/>
+        <rect x="728" y="42" width="164" height="74" rx="6" class="bx-a"/>
+        <text x="742" y="64" class="t-sm" fill="var(--accent)">chunks</text>
+        <text x="742" y="84" class="t-xs">doc_id · page · text</text>
+        <text x="742" y="100" class="t-xs">embedding + tsvector</text>
+
+        <line x1="340" y1="134" x2="892" y2="134" stroke="var(--line)"/>
+
+        <rect x="8" y="152" width="136" height="80" rx="6" class="bx"/>
+        <text x="22" y="176" class="t-sm">Scanned policy,</text>
+        <text x="22" y="196" class="t-sm">receipt, paper</text>
+        <text x="22" y="216" class="t-xs">PDF · JPG · DOCX</text>
+        <path d="M144,192 L162,192" class="ln" marker-end="url(#pr)"/>
+        <rect x="164" y="146" width="164" height="92" rx="6" class="bx"/>
+        <text x="178" y="170" class="t-ttl">Docling</text>
+        <text x="178" y="192" class="t-xs">layout model + TableFormer</text>
+        <text x="178" y="210" class="t-xs">OCR backend for scans</text>
+        <text x="178" y="228" class="t-xs">→ structured Markdown</text>
+        <path d="M328,168 L336,168 L336,79 L340,79" class="ln" marker-end="url(#pr)"/>
+        <path d="M328,216 L336,216 L336,305 L340,305" class="ln" marker-end="url(#pr)"/>
+        <path d="M246,238 L246,382 L336,382" class="ln-d" marker-end="url(#prc)"/>
+
+        <rect x="8" y="256" width="312" height="24" rx="4" fill="var(--brass-soft)" stroke="var(--brass-line)"/>
+        <text x="20" y="273" class="t-mono" fill="var(--brass)">FACTS LANE — feeds the capability modules</text>
+        <rect x="340" y="268" width="176" height="74" rx="6" class="bx-b"/>
+        <text x="354" y="290" class="t-sm">Classify doc type</text>
+        <text x="354" y="310" class="t-xs">which pack owns this?</text>
+        <text x="354" y="326" class="t-xs">policy · payslip · receipt</text>
+        <path d="M516,305 L532,305" class="ln" marker-end="url(#pr)"/>
+        <rect x="534" y="268" width="176" height="74" rx="6" class="bx-b"/>
+        <text x="548" y="290" class="t-sm">Extract to schema</text>
+        <text x="548" y="310" class="t-xs">the pack's Pydantic model</text>
+        <text x="548" y="326" class="t-xs">as a JSON constraint</text>
+        <path d="M710,305 L726,305" class="ln" marker-end="url(#pr)"/>
+        <rect x="728" y="268" width="164" height="74" rx="6" class="bx-b"/>
+        <text x="742" y="290" class="t-sm" fill="var(--brass)">facts · obligations</text>
+        <text x="742" y="310" class="t-xs">expiry_date · amount</text>
+        <text x="742" y="326" class="t-xs">policy_no · owner</text>
+
+        <rect x="340" y="360" width="552" height="46" rx="6" class="bx-c"/>
+        <text x="354" y="380" class="t-sm" fill="var(--crit)">Quarantine</text>
+        <text x="354" y="398" class="t-xs">parse failed, low OCR confidence, or schema validation failed → shown in the UI as “needs your eyes”</text>
+
+        <line x1="8" y1="416" x2="892" y2="416" stroke="var(--line)"/>
+        <text x="8" y="430" class="t-xs">Both lanes commit in one transaction, keyed on a SHA-256 of the source bytes, so a rescan updates in place instead of duplicating.</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 4</b> The fork is the point. The quarantine branch is not decoration: a document the system silently failed to read is the failure mode users never forgive, and showing it in the UI costs an afternoon.</figcaption>
+  </figure>
+  <p>Two details worth defending in the report. <strong>Contextualising chunks before embedding</strong> is a measured technique: Anthropic reported a 35% reduction in retrieval failures from contextual embeddings alone, 49% combined with contextual lexical search, and 67% with reranking added.<sup>[13]</sup> Cite theirs as the motivating result and measure your own. <strong>Extraction through a JSON schema</strong> rather than prompt-and-parse: Ollama constrains generation to the schema at decode time, which is what makes a 4B model reliable enough to write into a date column.<sup>[14]</sup> That constraint is doing more work now than it was: a smaller generator is a weaker free-form writer but an equally obedient schema filler, so the extraction quality survives the model swap in a way prose fluency would not.</p>
+  <p>One addition the swap makes possible. <strong>Quarantine is now a second pass rather than a dead end.</strong> The generator is a vision-language model, so a document that fails layout parsing or falls below the OCR confidence floor is re-attempted against the page <em>image</em>. Docling is not replaced — it is faster, cheaper and better on digital PDFs, and it handles the common case. The vision pass exists for the faint scan and the phone photograph taken at an angle, and the proportion of quarantined documents it recovers is a reportable finding.</p>
+</section>
+
+<section id="s6">
+  <div class="sec-head"><span class="sec-num">06</span><div><h2>The domain pack manifest</h2></div></div>
+  <p>A pack that is only a system prompt is a persona with better branding. This is the contract that makes it a plugin. Every field is either consumed by the core at a defined point or enforced as a guardrail; there are no decorative keys.</p>
+
+  <div class="tw"><table>
+    <thead><tr><th>Field</th><th>Type</th><th>Consumed by</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="n">id</td><td>slug</td><td>registry</td><td>Primary key. Namespaces the pack's facts, grounding corpus and scheduled jobs so an uninstall is clean.</td></tr>
+      <tr><td class="n">version</td><td>semver</td><td>registry</td><td>Extraction schemas change. Facts record the pack version that wrote them, so a re-extraction is auditable.</td></tr>
+      <tr><td class="n">display_name</td><td>string</td><td>UI</td><td>What the user sees in Packs. Never the persona's voice, just the domain.</td></tr>
+      <tr><td class="n">owns_document_types</td><td>list</td><td>classifier</td><td>Routing at ingest. A document matching none of the installed packs still indexes for retrieval; it just gets no typed extraction.</td></tr>
+      <tr><td class="n">extraction.model</td><td>Pydantic ref</td><td>ingestion worker</td><td>Compiled to a JSON schema and passed to Ollama as a decode constraint.</td></tr>
+      <tr><td class="n">extraction.writes</td><td>list</td><td>ingestion worker</td><td>Which tables the pack may write. A pack cannot write outside its declaration.</td></tr>
+      <tr><td class="n">grounding.corpus</td><td>path</td><td>retriever</td><td>Authoritative reference material indexed under the pack's namespace, separate from user documents. This is ISO/IEC 5338's knowledge acquisition process, 6.4.7.</td></tr>
+      <tr><td class="n">grounding.top_k</td><td>int</td><td>retriever</td><td>How many pack-corpus passages join the user's own documents in the candidate set.</td></tr>
+      <tr><td class="n">registers</td><td>map</td><td>module host</td><td>Which capability modules the pack activates, and their configuration. A module that is not installed is ignored, not an error.</td></tr>
+      <tr><td class="n">persona.system</td><td>string</td><td>answer node</td><td>Voice and framing only. It cannot change retrieval, thresholds or guardrails.</td></tr>
+      <tr><td class="n">guardrails.must_cite</td><td>bool</td><td>answer node</td><td>Blocks any claim without a document id and page.</td></tr>
+      <tr><td class="n">guardrails.abstain_below</td><td>float</td><td>grounding gate</td><td>Reranker score floor. Below it the system says it has no document that answers.</td></tr>
+      <tr><td class="n">guardrails.never_acts</td><td>bool</td><td>module host</td><td>Blocks the pack from registering with any transacting module. True for every pack in v1.</td></tr>
+      <tr><td class="n">guardrails.disclaimer</td><td>string</td><td>UI</td><td>Rendered with every answer from this pack. Regulatory framing lives here, not in the prompt.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h4>Worked example</h4>
+  <pre><i># packs/insurance_agent/pack.yaml</i>
+<b>id</b>: insurance_agent
+<b>version</b>: 0.2.0
+<b>display_name</b>: Insurance and Coverage
+<b>owns_document_types</b>: [policy_schedule, renewal_notice, claim_letter, benefit_illustration, rider_endorsement]
+
+<b>extraction</b>:
+  model: packs.insurance_agent.schemas:PolicyDocument
+  writes: [facts, obligations]
+
+<b>grounding</b>:
+  corpus: grounding/mas_fair_dealing_and_product_summaries/
+  top_k: 6
+
+<b>registers</b>:
+  reminder: { obligations: [{ key: policy_expiry, from_field: expiry_date, lead_days: [60, 30, 7] }] }
+  alert:    { thresholds: [{ metric: uncovered_months, ceiling: 0, warn_at: 1.0 }] }
+  <i># tracker not registered — this pack has nothing meaningful to aggregate</i>
+
+<b>persona</b>:
+  system: >
+    You review the user's own policy documents and explain what they say.
+    You compare coverage against what the documents state, never against products you recall.
+
+<b>guardrails</b>:
+  must_cite: true
+  abstain_below: 0.45
+  never_acts: true
+  disclaimer: >
+    Informational analysis of your own documents. Not financial advice under the
+    Financial Advisers Act. Confirm coverage with your insurer or a licensed adviser.
+</pre>
+
+  <h4>The catalogue</h4>
+  <p>Eleven domain packs, all against the schema above. Two are built for the capstone; the rest are specified, which is a materially different claim from "we could add more".</p>
+  <div class="tw"><table>
+    <thead><tr><th>Pack</th><th>Owns document types</th><th>Registers</th><th>Grounding corpus</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Tax Assistant</strong><br><span style="color:var(--ink-3)">IRAS, Singapore</span></td><td>payslip, IR8A, CPF statement, SRS statement, donation receipt</td><td>Reminder, Alert, Tracker</td><td>Published IRAS relief guidance, by Year of Assessment</td><td><span class="chip acc">Built · W6</span></td></tr>
+      <tr><td><strong>Insurance Agent</strong></td><td>policy schedule, renewal notice, claim letter, benefit illustration, rider</td><td>Reminder, Alert</td><td>MAS fair dealing guidance, product summary templates</td><td><span class="chip acc">Built · W7</span></td></tr>
+      <tr><td><strong>MOE Syllabus Teacher</strong></td><td>test paper, worksheet, report card, school circular</td><td>Reminder, Tracker</td><td>MOE primary and secondary Mathematics and Science syllabus documents</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Vehicle and Road Tax</strong></td><td>road tax notice, motor policy, servicing invoice, COE documents</td><td>Reminder, Alert</td><td>LTA renewal and inspection schedules</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Caregiving and Health</strong></td><td>discharge summary, prescription, lab report, appointment letter</td><td>Reminder, Tracker</td><td>None. Answers only from the user's own documents.</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Children and School</strong></td><td>term calendar, enrichment invoice, consent form, PSLE material</td><td>Reminder, Tracker</td><td>MOE school terms and holidays</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Home Maintenance</strong></td><td>warranty card, contractor invoice, service contract, appliance manual</td><td>Reminder, Alert</td><td>None</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Legal and Estate</strong></td><td>will, LPA, title deed, tenancy agreement</td><td>Reminder</td><td>None. Location and key contacts only, never interpretation.</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Property and Tenancy</strong></td><td>lease, mortgage statement, MCST notice, valuation report</td><td>Reminder, Tracker</td><td>None</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Groceries and Supplies</strong></td><td>receipt, delivery order</td><td>Tracker, Alert</td><td>None</td><td><span class="chip">Specified</span></td></tr>
+      <tr><td><strong>Travel</strong></td><td>booking confirmation, travel insurance, passport, visa</td><td>Reminder</td><td>ICA passport validity rules</td><td><span class="chip">Specified</span></td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout">
+    <h3>Why Tax and Insurance are the two to build</h3>
+    <p><strong>Tax</strong> is the only pack with objectively checkable ground truth. IRAS relief rules are public, rule-based and versioned by Year of Assessment, and payslips and CPF statements are highly structured, so the golden set has answers that are unambiguously right or wrong. That is what makes your accuracy number mean something. <strong>Insurance</strong> is the one every household in the room recognises, its documents are the messiest realistic input you will find, and it registers a different combination of modules from Tax. Building those two proves the contract holds across genuinely different domains, which is exactly what a single pack cannot demonstrate. Note that Caregiving, Legal and several others declare <em>no</em> grounding corpus: they answer only from the user's own documents, which is itself a designed guardrail rather than a gap.</p>
+  </div>
+</section>
+
+<section id="s7">
+  <div class="sec-head"><span class="sec-num">07</span><div><h2>The capability module contract</h2></div></div>
+  <p>The second axis needs its own contract, and it is deliberately smaller than the pack contract. A module declares what it reads, when it runs, and what it renders. It never touches retrieval, and it never writes facts.</p>
+  <pre><i># modules/reminder/module.yaml</i>
+<b>id</b>: reminder
+<b>version</b>: 1.0.0
+<b>reads</b>: [obligations]           <i># typed rows only. Modules cannot read chunks.</i>
+<b>writes</b>: [schedule]              <i># its own namespace, never facts</i>
+<b>runs</b>: { on: schedule, cron: "0 7 * * *" }
+<b>surfaces</b>: [today, notification, chat_thread]
+<b>config_schema</b>: modules.reminder.schemas:ReminderConfig
+<i># packs supply the config; the module supplies the behaviour</i>
+</pre>
+  <div class="grid3">
+    <div class="card"><span class="kv">Built · week 4</span><h3>Reminder</h3><p>Reads the obligations table nightly, compares due dates against each pack's declared lead times, and surfaces what is inside the window. The single highest-value module: it is what makes the assistant speak first.</p></div>
+    <div class="card"><span class="kv">Built · week 5</span><h3>Alert</h3><p>Runs on fact write rather than on a schedule. Compares a computed metric against a pack-declared ceiling and fires once per crossing, with a debounce so it cannot repeat daily.</p></div>
+    <div class="card"><span class="kv">Specified</span><h3>Tracker</h3><p>Aggregates typed rows over a period with parameterised SQL. Deferred because it is the least surprising of the three to a reviewer, not because it is hard.</p></div>
+  </div>
+  <p>One rule governs all three: <strong>the number is computed by PostgreSQL, never written by the model.</strong> Parameters are extracted into a typed structure and bound into hand-written, reviewed SQL. The model's only job is to phrase the sentence around a figure it did not produce. This is why a household assistant built this way can be trusted with a renewal date in a way a purely generative one cannot, and it is worth a sentence in the presentation.</p>
+</section>
+<section id="s8">
+  <div class="sec-head"><span class="sec-num">08</span><div><h2>Query flow and grounding</h2></div></div>
+  <p>The RAG core owns the answer path. A module only intercepts when the question is explicitly about a schedule or a total; everything else is retrieval, and retrieval can decline.</p>
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 900 356" role="img" aria-label="Query flow: the router splits into a RAG core lane with a grounding gate that can abstain, and a module lane running parameterised SQL">
+        <defs><marker id="qr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk"/></marker>
+        <marker id="qw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--warn-line)"/></marker>
+        <marker id="qa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="mk-a"/></marker></defs>
+
+        <rect x="8" y="8" width="272" height="24" rx="4" fill="var(--accent-soft)" stroke="var(--accent-line)"/>
+        <text x="20" y="25" class="t-mono" fill="var(--accent)">RAG CORE — probabilistic, must cite</text>
+
+        <rect x="8" y="140" width="128" height="76" rx="6" class="bx"/>
+        <text x="22" y="164" class="t-sm">Question</text>
+        <text x="22" y="184" class="t-xs">“Is my motor cover</text>
+        <text x="22" y="202" class="t-xs">still valid in October?”</text>
+        <path d="M136,178 L152,178" class="ln" marker-end="url(#qr)"/>
+        <rect x="154" y="134" width="136" height="88" rx="6" class="bx-a"/>
+        <text x="168" y="158" class="t-sm" fill="var(--accent)">Router</text>
+        <text x="168" y="178" class="t-xs">picks the lane, the pack</text>
+        <text x="168" y="196" class="t-xs">and the module</text>
+        <text x="168" y="214" class="t-xs">the only generative step</text>
+        <path d="M290,158 L300,158 L300,80 L312,80" class="ln" marker-end="url(#qr)"/>
+        <path d="M290,198 L300,198 L300,290 L312,290" class="ln" marker-end="url(#qr)"/>
+
+        <rect x="312" y="44" width="190" height="72" rx="6" class="bx-a"/>
+        <text x="326" y="66" class="t-sm">Retrieve and rerank</text>
+        <text x="326" y="86" class="t-xs">pgvector HNSW + tsvector,</text>
+        <text x="326" y="102" class="t-xs">fused with RRF, then 40 → 6</text>
+        <path d="M502,80 L516,80" class="ln" marker-end="url(#qr)"/>
+        <path d="M562,44 L608,80 L562,116 L516,80 Z" class="bx-w"/>
+        <text x="533" y="76" class="t-xs" fill="var(--warn)">score ≥</text>
+        <text x="536" y="92" class="t-xs" fill="var(--warn)">floor?</text>
+
+        <path d="M562,44 L562,26 L630,26" class="ln" stroke="var(--warn-line)" marker-end="url(#qw)"/>
+        <text x="570" y="22" class="t-xs" fill="var(--warn)">no</text>
+        <rect x="632" y="6" width="260" height="52" rx="6" class="bx-w"/>
+        <text x="646" y="26" class="t-sm" fill="var(--warn)">Abstain</text>
+        <text x="646" y="46" class="t-xs">“I don’t have a document that says.”</text>
+        <path d="M608,80 L620,80 L620,102 L632,102" class="ln-a" marker-end="url(#qa)"/>
+        <text x="612" y="122" class="t-xs" fill="var(--accent)">yes</text>
+        <rect x="632" y="76" width="260" height="52" rx="6" class="bx-a"/>
+        <text x="646" y="96" class="t-sm" fill="var(--accent)">Answer with citations</text>
+        <text x="646" y="116" class="t-xs">every claim linked to a document and page</text>
+
+        <rect x="8" y="234" width="272" height="24" rx="4" fill="var(--brass-soft)" stroke="var(--brass-line)"/>
+        <text x="20" y="251" class="t-mono" fill="var(--brass)">CAPABILITY MODULES — deterministic</text>
+
+        <rect x="312" y="254" width="190" height="72" rx="6" class="bx-b"/>
+        <text x="326" y="276" class="t-sm">Bind parameters</text>
+        <text x="326" y="296" class="t-xs">pack, metric and date range</text>
+        <text x="326" y="312" class="t-xs">into a typed struct</text>
+        <path d="M502,290 L516,290" class="ln" marker-end="url(#qr)"/>
+        <rect x="516" y="254" width="376" height="72" rx="6" class="bx-b"/>
+        <text x="530" y="276" class="t-sm" fill="var(--brass)">Fixed SQL, then the rows behind the answer</text>
+        <text x="530" y="296" class="t-xs">Hand-written, reviewed, parameterised. Never generated.</text>
+        <text x="530" y="312" class="t-xs">Postgres computes the number; the model only phrases the sentence.</text>
+
+        <line x1="8" y1="340" x2="892" y2="340" stroke="var(--line)"/>
+        <text x="8" y="354" class="t-xs">Every node writes one line to the trace log: node, latency, model, retrieved doc ids, reranker scores, gate decision. That file is both the evaluation dataset and the audit trail.</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 6</b> Two lanes with different guarantees, stated as such. The dates and dollar figures a household assistant must be right about never pass through generated text — they are read from columns and computed by the database.</figcaption>
+  </figure>
+  <p>The grounding gate is the single feature most worth demonstrating. Below the pack's reranker floor the system states that it has no document that answers, rather than composing something plausible from weak context. In the trace log this is one line and one decision; in the room it is the difference between a tool a family would trust with a will and a tool they would not.</p>
+</section>
+
+<section id="s9">
+  <div class="sec-head"><span class="sec-num">09</span><div><h2>The golden set</h2></div></div>
+  <p>Agreed as the evaluation harness. Three datasets, built from your own documents, run at three fixed points so the report shows movement rather than a single number.</p>
+  <div class="grid3">
+    <div class="card"><span class="kv">Set A · 60 items</span><h3>Answerable</h3><p>Known answers in your corpus. Split across the RAG core and both built modules, and across both built packs, so the table breaks down by component.</p></div>
+    <div class="card"><span class="kv">Set B · 25 items</span><h3>Hard negatives</h3><p>Questions the corpus cannot answer. Scored purely on whether the system abstains. This is the set that proves the grounding gate.</p></div>
+    <div class="card"><span class="kv">Set C · 15 items</span><h3>Adversarial</h3><p>Prompt injection inside an ingested PDF, a request to act rather than advise, and an invitation to claim a relief the documents do not support.</p></div>
+  </div>
+  <div class="tw"><table>
+    <thead><tr><th>Metric</th><th>Component</th><th>What it catches</th><th>Target</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Context recall</strong></td><td>RAG core</td><td>Retrieval missed the document that held the answer</td><td class="n">≥ 0.85</td></tr>
+      <tr><td><strong>Context precision</strong></td><td>RAG core</td><td>Retrieval returned noise that distracts the generator</td><td class="n">≥ 0.70</td></tr>
+      <tr><td><strong>Faithfulness</strong></td><td>RAG core</td><td>The answer asserted something the context does not support</td><td class="n">≥ 0.90</td></tr>
+      <tr><td><strong>Answer relevancy</strong></td><td>RAG core</td><td>True but does not address the question</td><td class="n">≥ 0.80</td></tr>
+      <tr><td><strong>Abstention rate on Set B</strong></td><td>grounding gate</td><td>Inventing answers with no evidence</td><td class="n">≥ 0.95</td></tr>
+      <tr><td><strong>Field extraction F1</strong></td><td>extraction stage</td><td>Wrong dates and amounts entering the facts table</td><td class="n">≥ 0.90</td></tr>
+      <tr><td><strong>Obligation precision</strong></td><td>Reminder module</td><td>Reminders that fire for the wrong date or the wrong document</td><td class="n">≥ 0.95</td></tr>
+      <tr><td><strong>Alert false-positive rate</strong></td><td>Alert module</td><td>Threshold crossings that are noise</td><td class="n">≤ 0.05</td></tr>
+      <tr><td><strong>Decode tok/s, peak VRAM</strong></td><td>runtime</td><td>Whether the demonstration survives the room</td><td>measured</td></tr>
+    </tbody>
+  </table></div>
+  <p>Ragas with a judge served locally through Ollama's OpenAI-compatible endpoint, so no evaluation question leaves the machine.<sup>[11]</sup> Runs land in weeks 3, 5 and 8. Note the two module metrics: adding capability modules to the architecture means adding rows to this table, and a reviewer who sees a module measured takes the expansion story more seriously than one who sees it only drawn.</p>
+  <div class="callout">
+    <h3>The number to lead with</h3>
+    <p>Not accuracy. <strong>Abstention rate on Set B.</strong> Every commercial assistant in that room will confidently invent an answer to a question its evidence does not cover. A local system that says "I do not have a document that says" is making an argument about trust that no benchmark score can make on its behalf, and it is the argument this module is actually about.</p>
+  </div>
+</section>
+
+<section id="s10">
+  <div class="sec-head"><span class="sec-num">10</span><div><h2>Governance</h2></div></div>
+  <p>Four layers, and the ISO layer now cites both standards with the right work attributed to each. That distinction is a slide on its own, and it is the kind of precision that separates a team that read the standard from one that read a summary.</p>
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 900 372" role="img" aria-label="Four governance layers from PDPA through ISO/IEC 5338 to IMDA's generative and agentic AI frameworks, each mapped to a concrete project artefact">
+        <text x="10" y="14" class="t-lbl">Framework</text>
+        <text x="262" y="14" class="t-lbl">What it asks of you</text>
+        <text x="612" y="14" class="t-lbl">The artefact you produce</text>
+
+        <rect x="10" y="24" width="880" height="78" rx="6" class="bx-c"/>
+        <line x1="252" y1="24" x2="252" y2="102" stroke="var(--crit-line)"/>
+        <line x1="602" y1="24" x2="602" y2="102" stroke="var(--crit-line)"/>
+        <text x="24" y="48" class="t-ttl" fill="var(--crit)">PDPA</text>
+        <text x="24" y="66" class="t-xs">Personal Data Protection Act</text>
+        <text x="24" y="82" class="t-mono" fill="var(--crit)">MANDATORY — law, not guidance</text>
+        <text x="266" y="48" class="t-sm">Consent, purpose limitation, protection,</text>
+        <text x="266" y="65" class="t-sm">retention limitation, access and correction.</text>
+        <text x="266" y="86" class="t-xs">Applies even to a personal system the moment it holds another family member’s data.</text>
+        <text x="616" y="48" class="t-sm">Data inventory + retention policy</text>
+        <text x="616" y="65" class="t-xs">What is held, why, for how long, and how the</text>
+        <text x="616" y="80" class="t-xs">“Reset Workspace” purge satisfies erasure.</text>
+
+        <rect x="10" y="110" width="880" height="78" rx="6" class="bx"/>
+        <line x1="252" y1="110" x2="252" y2="188" stroke="var(--line-2)"/>
+        <line x1="602" y1="110" x2="602" y2="188" stroke="var(--line-2)"/>
+        <text x="24" y="134" class="t-ttl">ISO/IEC 5338 + 22989</text>
+        <text x="24" y="152" class="t-xs">22989 stages · 5338 processes</text>
+        <text x="24" y="170" class="t-mono">TWO STANDARDS, ONE MAP</text>
+        <text x="266" y="134" class="t-sm">22989 names the life-cycle stages; 5338 adds three AI-specific</text>
+        <text x="266" y="152" class="t-sm">technical processes to 12207: knowledge acquisition (6.4.7),</text>
+        <text x="266" y="169" class="t-sm">AI data engineering (6.4.8), continuous validation (6.4.14)</text>
+        <text x="616" y="134" class="t-sm">Process map, correctly attributed</text>
+        <text x="616" y="151" class="t-xs">Pack grounding corpora → 6.4.7. The Fig 3</text>
+        <text x="616" y="166" class="t-xs">pipeline → 6.4.8. The Ragas harness → 6.4.14.</text>
+        <text x="616" y="181" class="t-xs">Stage-by-process table in Section 10.</text>
+
+        <rect x="10" y="196" width="880" height="78" rx="6" class="bx"/>
+        <line x1="252" y1="196" x2="252" y2="274" stroke="var(--line-2)"/>
+        <line x1="602" y1="196" x2="602" y2="274" stroke="var(--line-2)"/>
+        <text x="24" y="220" class="t-ttl">IMDA Model AI Governance</text>
+        <text x="24" y="237" class="t-ttl">Framework for GenAI</text>
+        <text x="24" y="256" class="t-xs">Singapore, May 2024</text>
+        <text x="24" y="271" class="t-mono">NINE DIMENSIONS</text>
+        <text x="266" y="220" class="t-sm">Accountability · data governance · trusted development</text>
+        <text x="266" y="237" class="t-sm">incident reporting · testing and assurance · content provenance</text>
+        <text x="266" y="254" class="t-sm">safety and alignment · cybersecurity · human oversight</text>
+        <text x="266" y="270" class="t-xs">Address all nine; four of them you can evidence rather than describe.</text>
+        <text x="616" y="220" class="t-sm">Model card + test report</text>
+        <text x="616" y="237" class="t-xs">Model card for the SEA-LION deployment.</text>
+        <text x="616" y="252" class="t-xs">Section 10 results table answers “testing and</text>
+        <text x="616" y="267" class="t-xs">assurance”. Set C answers “cybersecurity”.</text>
+
+        <rect x="10" y="282" width="880" height="78" rx="6" class="bx-a"/>
+        <line x1="252" y1="282" x2="252" y2="360" stroke="var(--accent-line)"/>
+        <line x1="602" y1="282" x2="602" y2="360" stroke="var(--accent-line)"/>
+        <text x="24" y="306" class="t-ttl" fill="var(--accent)">IMDA Model AI Governance</text>
+        <text x="24" y="323" class="t-ttl" fill="var(--accent)">Framework for Agentic AI</text>
+        <text x="24" y="342" class="t-xs">Singapore, 22 Jan 2026 · updated Jun 2026</text>
+        <text x="24" y="357" class="t-mono" fill="var(--accent)">FOUR DIMENSIONS</text>
+        <text x="266" y="306" class="t-sm">Risk assessment and bounding · human accountability</text>
+        <text x="266" y="323" class="t-sm">technical controls · end-user responsibility</text>
+        <text x="266" y="343" class="t-xs">Written for exactly the class of system you are building: an agent with tools, memory and autonomy.</text>
+        <text x="616" y="306" class="t-sm">Autonomy statement</text>
+        <text x="616" y="323" class="t-xs">One page: v1 advises and never acts; the tool</text>
+        <text x="616" y="338" class="t-xs">allow-list; the abstention gate; the trace log as</text>
+        <text x="616" y="353" class="t-xs">audit trail; what a user must check before relying on it.</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 7</b> Four layers, four artefacts, roughly six pages of writing in total. Every artefact is generated by something you were building anyway — which is the test of whether a governance section is real or performative.</figcaption>
+  </figure>
+
+  <h4>ISO/IEC 22989 stages and ISO/IEC 5338 processes, side by side</h4>
+  <p>22989 supplies the life-cycle stage vocabulary. 5338 supplies the processes, and explicitly does not prescribe a life cycle; the stage names commonly attributed to it are 22989's, appearing in 5338 only as an illustrative figure. Presenting them as two complementary standards is both accurate and more interesting than presenting either alone.</p>
+  <div class="tw"><table>
+    <thead><tr><th>ISO/IEC 22989 stage</th><th>ISO/IEC 5338 process engaged</th><th>What we actually do</th><th>When</th></tr></thead>
+    <tbody>
+      <tr><td>Inception</td><td>Project planning; stakeholder needs and requirements definition</td><td>Problem framing from the five personas; scope freeze; the two-axis expansion model</td><td class="n">W1</td></tr>
+      <tr><td>Design and development</td><td>Architecture definition; design definition; <strong>knowledge acquisition (6.4.7)</strong></td><td>Architecture in Section 03; the pack and module contracts; assembling each pack's grounding corpus</td><td class="n">W1 to W4</td></tr>
+      <tr><td>Verification and validation</td><td>Implementation; integration; verification; <strong>AI data engineering (6.4.8)</strong></td><td>The ingestion, contextualisation and extraction pipeline; golden-set runs 1 and 2</td><td class="n">W2 to W7</td></tr>
+      <tr><td>Deployment</td><td>Transition; validation; configuration management</td><td>Docker Compose stack, code freeze on 28 Oct, demonstration rehearsal</td><td class="n">W8 to W9</td></tr>
+      <tr><td>Operation and monitoring</td><td><strong>Continuous validation (6.4.14)</strong>; operation</td><td>Golden-set run 3; the JSONL trace log; the user-correction loop as a labelled-data source</td><td class="n">W8 onward</td></tr>
+      <tr><td>Continuous validation</td><td>Continuous validation (6.4.14); measurement</td><td>Re-running the harness whenever a pack version or the model changes</td><td class="n">post-project</td></tr>
+      <tr><td>Re-evaluation and retirement</td><td>Disposal</td><td>Pack uninstall removes its facts and jobs; Reset Workspace purges indexes and embeddings</td><td class="n">designed in</td></tr>
+    </tbody>
+  </table></div>
+
+  <p>Above the ISO layer, IMDA's 2024 framework for generative AI sets nine dimensions, and a local-first architecture answers the data governance dimension structurally rather than procedurally. IMDA's framework for <strong>agentic</strong> AI, launched 22 January 2026, is the one that speaks directly to a system with tools, memory and modules; its four dimensions are risk assessment and bounding, human accountability, technical controls, and end-user responsibility.</p>
+  <p>Your risk-bounding statement is now unusually clean, because the expansion model draws the line for you: <strong>the Actions module is specified and deliberately not built.</strong> Everything shipped observes, retrieves and advises. Nothing transacts. That is a documented autonomy boundary rather than an absence, and every pack enforces it with <code>never_acts: true</code> in its manifest, which means the boundary is machine-checked and not merely asserted in prose.</p>
+</section>
+
+<section id="s11">
+  <div class="sec-head"><span class="sec-num">11</span><div><h2>The four corrections, closed</h2></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Was</th><th>Now</th><th>Source</th></tr></thead>
+    <tbody>
+      <tr><td><code>aisingapore/Qwen-SEA-LION-v4-32B-IT</code>, a model that has never been released</td><td><code>Qwen-SEA-LION-v4-4B-VL</code> (Qwen3-VL-4B-Instruct base, 4B, 256K context, MIT, vision-language, English plus seven Southeast Asian languages). AI Singapore states it is optimised for consumer hardware including laptops. The 27B variants are benchmarked for the report, not demoed.</td><td class="n">[2] [3]</td></tr>
+      <tr><td>"18 GB VRAM enables the 32B at highly comfortable token-per-second speeds"</td><td>Section 04. A 4B generator on one GPU, 16K context, the whole stack inside 8 GB with roughly 3 GB spare on that card and 13 GB spare on the machine. Every figure to be replaced by a week-1 measurement.</td><td class="n">[4] [15]</td></tr>
+      <tr><td>"The six phases of ISO/IEC 5338"</td><td>Section 10. 22989 supplies the stages, 5338 supplies the processes including 6.4.7, 6.4.8 and 6.4.14, mapped side by side with the work each covers.</td><td class="n">[8]</td></tr>
+      <tr><td>"Zero-telemetry, offline privacy", contradicted three paragraphs later</td><td>Nothing removed from the architecture. The claim is now scoped to what the system does: inference and storage stay local, capture channels are transports, Drive access is read-only and scoped. Section 03.</td><td class="n">[9] [10]</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>On the name:</strong> PARROT is recorded as the internal working name. Worth knowing when you choose a commercial one: a distinct published system already carries it in this space (Suresh, 2026, cited in your reference list), so cite it as prior art in the report and pick something else when you go public.</p>
+</section>
+<section id="s12">
+  <div class="sec-head"><span class="sec-num">12</span><div><h2>Build plan</h2></div></div>
+  <p>Four extensions instead of two, and Telegram instead of WhatsApp on the critical path. That second change is what pays for the first: business verification was the only item in the schedule with an external clock nobody controls.</p>
+
+  <figure>
+    <div class="figbox">
+      <svg class="dg" viewBox="0 0 900 468" role="img" aria-label="Ten-week build schedule from 2 September to 10 November with six graded milestones, two capability modules and two domain packs">
+        <text x="10" y="16" class="t-lbl">Week</text>
+        <text x="128" y="16" class="t-mono">W1</text><text x="203" y="16" class="t-mono">W2</text><text x="278" y="16" class="t-mono">W3</text><text x="353" y="16" class="t-mono">W4</text><text x="428" y="16" class="t-mono">W5</text><text x="503" y="16" class="t-mono">W6</text><text x="578" y="16" class="t-mono">W7</text><text x="653" y="16" class="t-mono">W8</text><text x="728" y="16" class="t-mono">W9</text><text x="800" y="16" class="t-mono">W10</text>
+        <text x="126" y="32" class="t-xs">2 Sep</text><text x="201" y="32" class="t-xs">9 Sep</text><text x="276" y="32" class="t-xs">16 Sep</text><text x="351" y="32" class="t-xs">23 Sep</text><text x="426" y="32" class="t-xs">30 Sep</text><text x="501" y="32" class="t-xs">7 Oct</text><text x="576" y="32" class="t-xs">14 Oct</text><text x="651" y="32" class="t-xs">21 Oct</text><text x="726" y="32" class="t-xs">28 Oct</text><text x="801" y="32" class="t-xs">4 Nov</text>
+
+        <g stroke="var(--line)"><path d="M120,42 L120,418 M195,42 L195,418 M270,42 L270,418 M345,42 L345,418 M420,42 L420,418 M495,42 L495,418 M570,42 L570,418 M645,42 L645,418 M720,42 L720,418 M795,42 L795,418 M870,42 L870,418"/></g>
+        <g stroke="var(--crit-line)" stroke-dasharray="4 3"><path d="M195,42 L195,418 M270,42 L270,418 M495,42 L495,418 M570,42 L570,418 M795,42 L795,418 M870,42 L870,418"/></g>
+        <g>
+          <circle cx="195" cy="48" r="9" fill="var(--crit-soft)" stroke="var(--crit-line)"/><text x="191" y="52" class="t-xs" fill="var(--crit)">1</text>
+          <circle cx="270" cy="48" r="9" fill="var(--crit)" stroke="var(--crit)"/><text x="266" y="52" class="t-xs" fill="var(--ground)">2</text>
+          <circle cx="495" cy="48" r="9" fill="var(--crit-soft)" stroke="var(--crit-line)"/><text x="491" y="52" class="t-xs" fill="var(--crit)">3</text>
+          <circle cx="570" cy="48" r="9" fill="var(--crit)" stroke="var(--crit)"/><text x="566" y="52" class="t-xs" fill="var(--ground)">4</text>
+          <circle cx="795" cy="48" r="9" fill="var(--crit)" stroke="var(--crit)"/><text x="791" y="52" class="t-xs" fill="var(--ground)">5</text>
+          <circle cx="870" cy="48" r="9" fill="var(--crit)" stroke="var(--crit)"/><text x="866" y="52" class="t-xs" fill="var(--ground)">6</text>
+        </g>
+
+        <text x="10" y="82" class="t-sm">Scope and proposal</text>
+        <rect x="120" y="68" width="150" height="22" rx="4" class="bx-c"/><text x="130" y="83" class="t-xs" fill="var(--crit)">scope freeze · benchmark</text>
+
+        <text x="10" y="116" class="t-sm">RAG core</text>
+        <rect x="120" y="102" width="300" height="22" rx="4" class="bx-a"/><text x="130" y="117" class="t-xs" fill="var(--accent)">capture · parse · index · retrieve · grounding gate</text>
+
+        <text x="10" y="150" class="t-sm">Typed extraction</text>
+        <rect x="270" y="136" width="150" height="22" rx="4" class="bx-b"/><text x="280" y="151" class="t-xs" fill="var(--brass)">extraction → facts table</text>
+
+        <text x="10" y="184" class="t-sm">Capability modules</text>
+        <rect x="345" y="170" width="75" height="22" rx="4" class="bx-a"/><text x="353" y="185" class="t-xs" fill="var(--accent)">Reminder</text>
+        <rect x="420" y="170" width="75" height="22" rx="4" class="bx-a"/><text x="432" y="185" class="t-xs" fill="var(--accent)">Alert</text>
+        <text x="502" y="185" class="t-xs" fill="var(--ink-3)">Tracker specified, not built</text>
+
+        <text x="10" y="218" class="t-sm">Domain packs</text>
+        <rect x="495" y="204" width="75" height="22" rx="4" class="bx-b"/><text x="502" y="219" class="t-xs" fill="var(--brass)">Tax</text>
+        <rect x="570" y="204" width="75" height="22" rx="4" class="bx-b"/><text x="577" y="219" class="t-xs" fill="var(--brass)">Insurance</text>
+        <text x="652" y="219" class="t-xs" fill="var(--ink-3)">nine more specified against the same manifest</text>
+
+        <text x="10" y="252" class="t-sm">Retrieval quality</text>
+        <rect x="420" y="238" width="75" height="22" rx="4" class="bx"/><text x="428" y="253" class="t-xs">rerank</text>
+        <text x="502" y="253" class="t-xs" fill="var(--ink-3)">contextualisation lands with the reranker in W5 · code freeze 28 Oct</text>
+
+        <text x="10" y="286" class="t-sm">UI</text>
+        <rect x="345" y="272" width="375" height="22" rx="4" class="bx"/><text x="355" y="287" class="t-xs">Ask → Today → Vault → Packs → empty and error states</text>
+
+        <text x="10" y="320" class="t-sm">Evaluation</text>
+        <rect x="270" y="306" width="75" height="22" rx="4" class="bx-w"/><text x="284" y="321" class="t-xs" fill="var(--warn)">run 1</text>
+        <rect x="420" y="306" width="75" height="22" rx="4" class="bx-w"/><text x="434" y="321" class="t-xs" fill="var(--warn)">run 2</text>
+        <rect x="645" y="306" width="75" height="22" rx="4" class="bx-w"/><text x="659" y="321" class="t-xs" fill="var(--warn)">run 3</text>
+
+        <text x="10" y="354" class="t-sm">Governance artefacts</text>
+        <rect x="645" y="340" width="75" height="22" rx="4" class="bx"/><text x="652" y="355" class="t-xs">6 pages</text>
+
+        <text x="10" y="388" class="t-sm">Freeze, rehearse, write</text>
+        <rect x="720" y="374" width="150" height="22" rx="4" class="bx-c"/><text x="730" y="389" class="t-xs" fill="var(--crit)">freeze · rehearse · write</text>
+
+        <line x1="10" y1="426" x2="890" y2="426" stroke="var(--line)"/>
+        <text x="10" y="444" class="t-xs">1 — 8 Sep proposal presentation (Session 2)   ·   2 — 15 Sep proposal due, max 15 slides   ·   3 — 6 Oct mid-term presentation (Session 6)</text>
+        <text x="10" y="460" class="t-xs">4 — 13 Oct mid-term update due, max 20 slides   ·   5 — 3 Nov final presentation (Session 10), max 25 slides   ·   6 — 10 Nov slides + report due, max 20 pages</text>
+      </svg>
+    </div>
+    <figcaption><b>Fig 8</b> Four extensions ship: Reminder and Alert on the horizontal axis, Tax and Insurance on the vertical. Weeks 6 and 7 are the ones that carry the platform argument, because that is where two different packs go in against one unchanged core.</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div class="card"><span class="kv">This week — by 8 Sep</span><h3>Five things</h3>
+      <p>1 · Freeze the scope in writing and have both supervisors acknowledge it.<br>2 · <code>docker compose up</code> with Postgres 17, pgvector and Ollama. Nothing else.<br>3 · Benchmark SEA-LION 4B-VL on the actual machine and replace every number in Section 04. Benchmark the 27B too, for the comparison table.<br>4 · Register a Telegram bot. It takes ten minutes and it retires your largest schedule risk.<br>5 · Build the proposal deck around Fig 1, not around the technology stack.</p></div>
+    <div class="card"><span class="kv">Working with Antigravity</span><h3>Three things that save a week</h3>
+      <p><strong>Write both contracts before the first extension.</strong> An agent given the pack manifest and the module manifest produces consistent code across sessions; given prose it produces three different designs.<br><strong>Golden set before features.</strong> A failing eval is a specification an agent can work against. "Make retrieval better" is not.<br><strong>Boring libraries.</strong> Postgres, FastAPI, Next.js and LangGraph are heavily represented in training data, which matters more than usual when an agent writes most of the code.</p></div>
+  </div>
+</section>
+
+<section id="s13">
+  <div class="sec-head"><span class="sec-num">13</span><div><h2>What will actually go wrong</h2></div></div>
+  <div class="tw"><table>
+    <thead><tr><th>Risk</th><th>Likely</th><th>Early signal</th><th>What you do</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Four extensions is one too many</strong></td><td>Medium</td><td>Insurance pack not started by 17 Oct</td><td>Cut the Insurance pack, not the Alert module. One module plus one pack still demonstrates both axes; two packs and no module demonstrates only one.</td></tr>
+      <tr><td><strong>The 27B is too slow to demo live</strong></td><td>Resolved</td><td>The week-1 benchmark</td><td>No longer on the critical path. The 4B-VL is the demo path and fits on one 8 GB card; the 27B appears in the report as a measured quality comparison.</td></tr>
+      <tr><td><strong>OCR on Singaporean scans is worse than expected</strong></td><td>Medium</td><td>First 20 real documents, week 2</td><td>Quarantine and manual correction are in the design. Report the correction rate as a finding; it is a genuinely interesting result, not an embarrassment.</td></tr>
+      <tr><td><strong>Extraction writes a wrong date into the facts table</strong></td><td>Medium</td><td>Field extraction F1 below 0.85 at run 1</td><td>Raise the confidence floor so uncertain fields quarantine instead of writing. A missing reminder is recoverable; a confidently wrong one is not.</td></tr>
+      <tr><td><strong>Insurance documents are messier than Tax documents</strong></td><td>High</td><td>Extraction F1 gap between the two packs</td><td>Expected, and worth reporting rather than hiding. The gap between a structured pack and an unstructured one is evidence that the contract holds across difficulty, which is the point of building two.</td></tr>
+      <tr><td><strong>Scope creeps back in</strong></td><td>Medium</td><td>"It would be easy to also add…"</td><td>The catalogue in Section 06 exists so ideas have somewhere to go that is not the build.</td></tr>
+      <tr><td><strong>Demo machine fails on the night</strong></td><td>Low</td><td>none</td><td>Record a three-minute screen capture of the full happy path in week 9 and keep it on a USB stick.</td></tr>
+      <tr><td><strong>Report written in the last 48 hours</strong></td><td>High</td><td>Nothing drafted by 27 Oct</td><td>Write the governance artefacts in week 8 as deliverables. Six of the twenty pages are then done before you start writing.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="s14" class="foot">
+  <h4>Sources</h4>
+  <ol>
+    <li>Aditya Mangal, <a href="https://adityamangal98.medium.com/docling-vs-marker-vs-mineru-the-ultimate-open-source-pdf-parser-benchmark-2026-which-is-best-a36ecbb6c6b1">Docling vs Marker vs MinerU: open-source PDF parser benchmark (2026)</a>.</li>
+    <li>AI Singapore, <a href="https://huggingface.co/aisingapore/Qwen-SEA-LION-v4-4B-VL">Qwen-SEA-LION-v4-4B-VL model card</a> — 4B, Qwen3-VL-4B-Instruct base, 256K context, MIT, vision-language.</li>
+    <li>AI Singapore, <a href="https://sea-lion.ai/blog/announcing-qwen-sea-lion-v4-4b-8b-additional-vision-language-models-for-southeast-asia/">Announcing Qwen-SEA-LION-v4 (4B and 8B)</a> — released 4 December 2025, optimised for consumer-grade hardware including laptops.</li>
+    <li><a href="https://willitrunai.com/blog/ollama-multi-gpu-guide">Ollama multi-GPU: official behaviour, layer split and setup (2026)</a> — VRAM pooling and per-GPU efficiency on consumer PCIe.</li>
+    <li>Firecrawl, <a href="https://www.firecrawl.dev/blog/best-vector-databases">Best vector databases in 2026</a>.</li>
+    <li><a href="https://dev.to/lpossamai/building-hybrid-search-for-rag-combining-pgvector-and-full-text-search-with-reciprocal-rank-fusion-6nk">Hybrid search for RAG: pgvector and full-text search with reciprocal rank fusion</a>.</li>
+    <li>LangChain, <a href="https://docs.langchain.com/oss/python/langgraph/persistence">LangGraph persistence: checkpointers and Store</a>.</li>
+    <li>ISO/IEC, <a href="https://cdn.standards.iteh.ai/samples/81118/8e53a667079f4d959e93119fdbe84434/ISO-IEC-5338-2023.pdf">ISO/IEC 5338:2023, AI system life cycle processes</a> — clause structure; processes 6.4.7, 6.4.8, 6.4.14; stages attributed to ISO/IEC 22989.</li>
+    <li>Omnifox, <a href="https://omnifox.io/blog/whatsapp-official-api-vs-unofficial-modified-whatsapp-risks?lang=en">WhatsApp official API vs unofficial: real risks</a>.</li>
+    <li>Pepper Cloud, <a href="https://blog.peppercloud.com/whatsapp-api-pricing-everything-you-need-to-know/">WhatsApp API pricing 2026</a> — free 24-hour service window ends 1 October 2026.</li>
+    <li>QASkills, <a href="https://qaskills.sh/blog/ragas-vs-deepeval-2026">Ragas vs DeepEval (2026)</a> — metric coverage and local judge models via Ollama.</li>
+    <li>ZenML, <a href="https://www.zenml.io/blog/llamaindex-vs-langgraph">LlamaIndex vs LangGraph</a>.</li>
+    <li>Anthropic, <a href="https://www.anthropic.com/engineering/contextual-retrieval">Contextual retrieval</a> — 35% / 49% / 67% reductions in retrieval failure.</li>
+    <li>Ollama, <a href="https://ollama.com/blog/structured-outputs">Structured outputs</a> — JSON-schema-constrained generation.</li>
+    <li><a href="https://docs.ollama.com/gpu">Ollama hardware support</a> — per-device selection and VRAM behaviour.</li>
+    <li>Mixpeek, <a href="https://mixpeek.com/curated-lists/best-rerankers">Best rerankers for RAG in 2026</a> — bge-reranker-v2-m3 as the default self-hosted cross-encoder.</li>
+    <li>BentoML, <a href="https://www.bentoml.com/blog/a-guide-to-open-source-embedding-models">Open-source embedding models in 2026</a> — EmbeddingGemma-300M.</li>
+    <li>IMDA / MDDI, <a href="https://www.imda.gov.sg/resources/press-releases-factsheets-and-speeches/press-releases/2026/new-model-ai-governance-framework-for-agentic-ai">Model AI Governance Framework for Agentic AI</a> — launched 22 January 2026, four dimensions.</li>
+    <li>IMDA, <a href="https://www.imda.gov.sg/-/media/imda/files/news-and-events/media-room/media-releases/2024/05/annex-a-nine-dimensions-of-the-model-ai-governance-framework-for-generative-ai.pdf">Nine dimensions of the Model AI Governance Framework for Generative AI</a> (2024).</li>
+    <li>shadcn/ui, <a href="https://ui.shadcn.com/docs/changelog/2026-06-chat-components">Chat components changelog, June 2026</a>.</li>
+  </ol>
+  <p style="margin-top:18px">Source documents: <em>proposalarchitect.docx</em>, <em>IGD_ILP__AI in Digital Economy_Aug2026_Section1.docx</em>, <em>Virtual assistant.docx</em>, <em>Household_Chatbot_Categories.xlsx</em>.</p>
+</section>
+</main>
+</div>

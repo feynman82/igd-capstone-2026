@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make check)",
+      "Bash(make packs)",
+      "Bash(make fmt)",
+      "Bash(make eval-quick)",
+      "Bash(make corpus-check)",
+      "Bash(python -m packs.build)",
+      "Bash(python -m packs.build --check)",
+      "Bash(python -m corpus.validate:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(uv run ruff:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(graphify query:*)",
+      "Bash(graphify explain:*)",
+      "Bash(graphify path:*)",
+      "Bash(graphify update .)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./corpus/holdout/**)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
