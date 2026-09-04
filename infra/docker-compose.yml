@@ -1,0 +1,26 @@
+name: parrot
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: parrot
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parrot}
+      POSTGRES_DB: parrot
+    ports: ["5432:5432"]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U parrot"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  # Ollama runs on the host, not in a container, so it can see both GPUs directly.
+  # Pin the generator to one card and the small models to the other:
+  #   CUDA_VISIBLE_DEVICES=1 OLLAMA_HOST=127.0.0.1:11434 ollama serve   # RTX 3080, generator
+  #   CUDA_VISIBLE_DEVICES=0 OLLAMA_HOST=127.0.0.1:11435 ollama serve   # RTX 4060, embed+rerank
+
+volumes:
+  pgdata:

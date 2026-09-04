@@ -1,0 +1,24 @@
+# Ownership is how five people and their agents stay out of each other's way.
+# A PR touching a path needs a review from that path's owner.
+# Christian @feynman82 · Yew Mun @yewmun · Siew @siew · Zee @zee · Desmond @desmond
+# Replace the four placeholder handles with real GitHub usernames before the first PR.
+
+*                       @feynman82
+
+/core/contracts.py      @feynman82
+/core/graph/            @feynman82
+/modules/               @feynman82
+/db/migrations/         @feynman82
+
+/core/retrieve/         @yewmun
+/eval/                  @yewmun
+
+/core/adapters/         @feynman82
+/core/ingest/           @feynman82
+/corpus/                @desmond
+
+/packs/                 @zee
+/web/                   @zee
+
+/docs/governance/       @siew
+/eval/sets/adversarial/ @siew

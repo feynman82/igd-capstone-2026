@@ -1,0 +1,10 @@
+id: reminder
+version: 1.0.0
+reads: [obligations]        # typed rows only — modules cannot read chunks
+writes: [schedule]          # its own namespace, never facts
+runs:
+  on: schedule
+  cron: "0 7 * * *"
+  debounce_hours: 24
+surfaces: [today, notification, chat_thread]
+config_schema: modules.reminder.schemas:ReminderConfig

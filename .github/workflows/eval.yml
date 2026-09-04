@@ -1,0 +1,30 @@
+# Runs on the workstation, not on GitHub's runners: the golden set needs Ollama and a GPU.
+# Register the Legion as a self-hosted runner with the label `gpu`, or run `make eval`
+# locally and commit the JSON under eval/results/ — both paths are supported.
+name: Evaluation
+on:
+  workflow_dispatch:
+    inputs:
+      corpus: { description: "Corpus id (a|b|c|holdout)", default: "a" }
+  schedule:
+    - cron: "0 18 * * 5"    # Friday 18:00 UTC, before the weekend check-in
+
+jobs:
+  golden-set:
+    runs-on: [self-hosted, gpu]
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-extras
+      - run: uv run python -m eval.run --corpus ${{ inputs.corpus || 'a' }} --out eval/results
+      - run: uv run python -m eval.report eval/results --markdown > eval/results/latest.md
+      - uses: actions/upload-artifact@v4
+        with: { name: eval-results, path: eval/results/ }
+      - name: Commit results
+        run: |
+          git config user.name  "parrot-eval"
+          git config user.email "eval@parrot.local"
+          git add eval/results
+          git commit -m "eval: run $(date -u +%Y-%m-%d)" || echo "no change"
+          git push || echo "push skipped"

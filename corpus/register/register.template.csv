@@ -1,0 +1,3 @@
+doc_id,doc_type,pack_id,issued_date,subject,tier,field_1_name,field_1_value,field_2_name,field_2_value,field_3_name,field_3_value,field_4_name,field_4_value,field_5_name,field_5_value,notes
+b1-0001,policy_schedule,insurance_agent,2026-03-01,SJ4821B,clean,insurer,Meridian Assurance,policy_no,MV-2026-448120,expiry_date,2027-02-28,annual_premium,742.00,excess,750.00,
+b1-0002,payslip,iras_tax,2026-01-25,adult_1,clean,employer,Harborline Logistics Pte Ltd,period,January 2026,gross_salary,8900.00,cpf_employee,1780.00,net_pay,7120.00,
