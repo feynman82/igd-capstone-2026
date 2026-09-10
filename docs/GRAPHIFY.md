@@ -135,5 +135,19 @@ The post-commit hook keeps the code graph current by itself. Two things it canno
 - **After a refactor that deletes code** — `graphify update . --force`, because the
   rebuild refuses to shrink the graph without it.
 
-Regenerating at the weekly integration session is the habit to keep, in a commit
-containing nothing else.
+### The hook leaves your tree dirty, and that is expected
+
+The post-commit hook rebuilds the graph *after* the commit lands, so `git status` shows
+`graphify-out/` modified immediately after every commit you make. That is the hook working,
+not a mistake. Two ways to live with it:
+
+```bash
+git commit --amend --no-edit -- graphify-out/   # fold the refresh into the commit you just made
+```
+
+or leave it and let the next commit pick it up. Either is fine; what is not fine is
+reverting it, because then the committed graph describes the commit before last.
+
+Regenerating deliberately at the weekly integration session — in a commit containing
+nothing else — is still the habit to keep, because that is when the semantic pass gets
+run as well.

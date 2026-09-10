@@ -1,15 +1,16 @@
-# Graph Report - .  (2026-09-10)
+# Graph Report - igd-capstone-2026  (2026-09-10)
 
 ## Corpus Check
-- cluster-only mode — file stats not available
+- 58 files · ~48,455 words
+- Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 436 nodes · 473 edges · 51 communities (47 shown, 4 thin omitted)
+- 438 nodes · 472 edges · 44 communities (40 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9d49a3a1`
+- Built from commit: `a169eff3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -30,7 +31,6 @@
 - Zee — task list
 - Filling the corpus register
 - Writing a governance artefact
-- First run
 - igd-capstone-2026
 - Zee — Lane D · Domain packs and interface
 - Authoring a domain pack
@@ -38,18 +38,12 @@
 - 0001_init.sql
 - build_team_tasks.py
 - Desmond — Lane E · Corpus and adversarial testing
-- Working agreement for coding agents
 - Integration review
 - Writing an ADR
-- Contributing
 - Graphify — the shared knowledge graph
-- Siew — Lane C · Governance and assurance
-- Yew Mun — Lane B · Retrieval and evaluation
 - The corpus
 - Artefacts
 - Why the prototype is evaluated on synthetic data
-- Christian — Lane A · Integration and product owner
-- The team
 - Project skills
 - Evaluation
 - pull_request_template.md
@@ -89,7 +83,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (51 total, 4 thin omitted)
+## Communities (44 total, 4 thin omitted)
 
 ### Community 0 - "contracts.py"
 Cohesion: 0.09
@@ -100,8 +94,8 @@ Cohesion: 0.09
 Nodes (18): 1. Record architecture decisions, Consequences, Context, Decision, 2. One PostgreSQL instance for everything, Consequences, Context, Decision (+10 more)
 
 ### Community 2 - "README.md"
-Cohesion: 0.16
-Nodes (5): Before you say you are done, Claude Code — read this first, Finding your way around, Skills and commands, The three things agents get wrong here
+Cohesion: 0.06
+Nodes (26): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Also yours (+18 more)
 
 ### Community 3 - "validate"
 Cohesion: 0.22
@@ -140,8 +134,8 @@ Cohesion: 0.18
 Nodes (11): Siew — task list, W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13 (+3 more)
 
 ### Community 12 - "Yew Mun — task list"
-Cohesion: 0.18
-Nodes (11): W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13, W7 — due 2026-10-20 (+3 more)
+Cohesion: 0.10
+Nodes (18): Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation, W10 — due 2026-11-10 (+10 more)
 
 ### Community 13 - "Zee — task list"
 Cohesion: 0.18
@@ -155,13 +149,9 @@ Nodes (9): Batches, Column headings are not yours to choose, Done, per batch, Fi
 Cohesion: 0.20
 Nodes (9): Adversarial Set C, Done, per artefact, Never, Read first, The autonomy statement, The governing rule, The six, Where governance touches the code (+1 more)
 
-### Community 16 - "First run"
-Cohesion: 0.22
-Nodes (8): 1. Push, 2. Turn on the guardrails, while the repo is still empty, 3. Install graphify, 4. The self-hosted runner, when you get to week 3, First run, First three commits, in order, Send these three links on day one, What is already here
-
 ### Community 17 - "igd-capstone-2026"
-Cohesion: 0.22
-Nodes (9): Authoring a pack, igd-capstone-2026, Quick start, The stack, in one table, The three rules that matter, What it is, Where things live, Where to start (+1 more)
+Cohesion: 0.06
+Nodes (29): Before you say you are done, Claude Code — read this first, Finding your way around, Skills and commands, The three things agents get wrong here, Before your first commit, Contributing, Decisions (+21 more)
 
 ### Community 18 - "Zee — Lane D · Domain packs and interface"
 Cohesion: 0.22
@@ -187,10 +177,6 @@ Nodes (7): main(), Path, Generate each member's task list from the master task C
 Cohesion: 0.25
 Nodes (8): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from
 
-### Community 24 - "Working agreement for coding agents"
-Cohesion: 0.29
-Nodes (7): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents
-
 ### Community 25 - "Integration review"
 Cohesion: 0.29
 Nodes (6): How to give the feedback, Integration review, Never, Read first, Reviewing a pull request, The weekly pass — ninety minutes, protected
@@ -199,21 +185,9 @@ Nodes (6): How to give the feedback, Integration review, Never, Read first, Revi
 Cohesion: 0.29
 Nodes (6): Format, Read first, Rules, What does not, What earns an ADR, Writing an ADR
 
-### Community 27 - "Contributing"
-Cohesion: 0.29
-Nodes (7): Before your first commit, Contributing, Decisions, Generated files, If it touches retrieval, extraction or the grounding gate, The loop, When you are unsure
-
 ### Community 28 - "Graphify — the shared knowledge graph"
-Cohesion: 0.29
-Nodes (6): Everyone else, Extraction and what leaves the machine, For CI, Graphify — the shared knowledge graph, One-time setup — Christian only, The rule that prevents constant merge conflicts
-
-### Community 29 - "Siew — Lane C · Governance and assurance"
-Cohesion: 0.29
-Nodes (7): Adversarial Set C, Done, per artefact, Siew — Lane C · Governance and assurance, Starter prompt for your coding agent, The autonomy statement, The six artefacts, Where governance touches the code
-
-### Community 30 - "Yew Mun — Lane B · Retrieval and evaluation"
-Cohesion: 0.29
-Nodes (7): Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation
+Cohesion: 0.22
+Nodes (8): Graphify — the shared knowledge graph, Keeping it fresh, Merge conflicts, solved properly, Setup, once per clone, Two kinds of extraction, and which needs what, Using it, What is committed, and what is not, What leaves the machine
 
 ### Community 31 - "The corpus"
 Cohesion: 0.33
@@ -226,14 +200,6 @@ Nodes (5): A note on the model, Artefacts, Current deliverables, Regenerating, S
 ### Community 33 - "Why the prototype is evaluated on synthetic data"
 Cohesion: 0.33
 Nodes (5): The decision, What synthetic data does not prove, What we do not do, Why, Why the prototype is evaluated on synthetic data
-
-### Community 34 - "Christian — Lane A · Integration and product owner"
-Cohesion: 0.33
-Nodes (6): Also yours, Christian — Lane A · Integration and product owner, Starter prompt for your coding agent, The five things you ship, Week 1, in order, What integration actually means here
-
-### Community 35 - "The team"
-Cohesion: 0.33
-Nodes (6): Everyone, regardless of lane, The dependency that sets the order, The presentation split, The task lists are generated, The team, Why work does not live here
 
 ### Community 36 - "Project skills"
 Cohesion: 0.40
@@ -264,7 +230,7 @@ Cohesion: 0.50
 Nodes (3): npx, filesystem, @modelcontextprotocol/server-filesystem
 
 ## Knowledge Gaps
-- **263 isolated node(s):** `npx`, `@modelcontextprotocol/server-filesystem`, `packs`, `modules`, `traces` (+258 more)
+- **265 isolated node(s):** `W2 · 9–15 Sep 2026`, `W1 · 2–8 Sep 2026`, `Before your first commit`, `The loop`, `Generated files` (+260 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -272,16 +238,16 @@ Nodes (3): npx, filesystem, @modelcontextprotocol/server-filesystem
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Domain packs — start here` connect `Domain packs — start here` to `README.md`?**
-  _High betweenness centrality (0.024) - this node is a cross-community bridge._
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
 - **Why does `Christian — task list` connect `Christian — task list` to `README.md`?**
-  _High betweenness centrality (0.020) - this node is a cross-community bridge._
-- **What connects `npx`, `@modelcontextprotocol/server-filesystem`, `packs` to the rest of the system?**
-  _263 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
+- **What connects `W2 · 9–15 Sep 2026`, `W1 · 2–8 Sep 2026`, `Before your first commit` to the rest of the system?**
+  _265 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `contracts.py` be split into smaller, more focused modules?**
   _Cohesion score 0.08636977058029689 - nodes in this community are weakly interconnected._
 - **Should `NNNN · The decision, as a statement not a question` be split into smaller, more focused modules?**
   _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
+- **Should `README.md` be split into smaller, more focused modules?**
+  _Cohesion score 0.06342780026990553 - nodes in this community are weakly interconnected._
 - **Should `4. Writing `pack.yaml`` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
-- **Should `Project PARROT — team split` be split into smaller, more focused modules?**
-  _Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected._
