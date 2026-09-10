@@ -17,3 +17,13 @@ graphify-out/*
 !graphify-out/graph.json
 !graphify-out/GRAPH_REPORT.md
 .graphify_python
+
+# Word lock and crash artefacts
+~$*
+~WRL*.tmp
+
+# Superseded drop folder. The canonical copies live in docs/artefacts/:
+#   doc/PARROT_Revised_Proposal.docx -> docs/artefacts/PARROT_Revised_Proposal_v3.docx
+#   doc/PARROT_Proposal_Deck.pptx    -> docs/artefacts/PARROT_Proposal_Deck.pptx
+#   doc/PARROT_diagrams.zip          -> docs/artefacts/diagrams/*.png
+/doc/
