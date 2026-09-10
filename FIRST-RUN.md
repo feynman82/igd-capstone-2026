@@ -3,12 +3,17 @@
 Where the repository stands, and what is left to switch on.
 
 **Done:** the repository is on GitHub at `feynman82/igd-capstone-2026` (private), the
-local checkout on `sunshine` mirrors it, the knowledge graph is built and committed, and
-the graphify hooks are installed on that machine.
+local checkout on `sunshine` mirrors it, the knowledge graph is built and committed, the
+graphify hooks are installed on that machine, and the four setup items below are
+configured — collaborators, the branch ruleset, the Actions permission, and the project
+board. The Notion hub (item 5) is a decision, not a setup step, and it has been made: see
+below.
 
-**Not done:** collaborators, branch protection, the Actions permission, the project board,
-and the Notion hub. Those are the five things below, and all but the last are three
-minutes each in GitHub settings.
+**Note on enforcement:** this repo stays on Christian's personal GitHub account rather
+than moving to a Team org, so GitHub does not enforce rulesets here regardless of how they
+are configured — the branch ruleset below is saved and will activate automatically if the
+repo ever moves to a Team org, but for now `main` has no real protection. Treat this as a
+convention the team follows, not a technical guardrail.
 
 ---
 
@@ -19,26 +24,29 @@ minutes each in GitHub settings.
 | Person | GitHub | Role |
 |---|---|---|
 | Yew Mun | `Yewhoo` | Write |
-| Siew | *handle needed* | Write |
-| Zee | *handle needed* | Write |
+| Siew | `nsiewsiew` | Write |
+| Zee | `fjzeetr-smuigd` | Write |
 | Desmond | *handle needed* | Write |
 
-`.github/CODEOWNERS` already carries `@feynman82` and `@Yewhoo`. The other three are still
-the placeholders `@siew`, `@zee`, `@desmond` — **a pull request touching their paths cannot
-request a review until those are real logins**, so replace each one as its handle arrives.
-It is a one-line commit:
+`.github/CODEOWNERS` now carries `@feynman82`, `@Yewhoo`, `@nsiewsiew`, and
+`@fjzeetr-smuigd`. Desmond is still the placeholder `@desmond` — **a pull request touching
+his paths cannot request a review until it is a real login**. It is a one-line commit:
 
 ```bash
-sed -i 's/@zee/@theirRealHandle/g' .github/CODEOWNERS
-git commit -am "CODEOWNERS: Zee's real handle" && git push
+sed -i 's/@desmond/@theirRealHandle/g' .github/CODEOWNERS
+git commit -am "CODEOWNERS: Desmond's real handle" && git push
 ```
+
+Siew and Zee still need collaborator invites sent (their handles were only just
+confirmed) — same **Add people** flow as Yew Mun.
 
 ## 2 · Branch protection
 
 **Settings → Rules → Rulesets → New branch ruleset**, targeting `main`:
 
 - Require a pull request before merging — **1 approval**
-- Require review from **Code Owners**
+- Require review from **Code Owners** — not offered by GitHub's ruleset UI on this plan;
+  skipped, see the enforcement note above
 - Require status checks to pass — add `check` and `web` once CI has run once
 - Require branches to be up to date before merging
 - Block force pushes
@@ -62,13 +70,13 @@ system is the source of truth and why.
 
 ## 5 · The Notion hub
 
-The PARROT page is in Yew Mun's workspace; Christian's Claude connector is authenticated
-to his own. Claude allows one Notion workspace per account, so this needs a decision
-rather than a permission change.
-
-**`docs/NOTION.md` has the three options and the exact steps.** The short version: have
-Yew Mun move the page into Christian's workspace while it is still nearly empty, because
-a cross-workspace move breaks relations and page history and that cost only grows.
+**Decided: the PARROT page stays in Yew Mun's workspace.** Christian's Claude connector
+stays authenticated to his own (Dy L's Space), so Claude cannot read or write the Notion
+page directly. `docs/team-tasks.csv` remains the system of record; Notion is the
+human-facing view, updated by hand each week to match the CSV (see "Keeping the two in
+sync" in `docs/NOTION.md`). `docs/NOTION.md` still writes up Option A (moving the page) as
+the recommended path from before this decision — that section is now historical context,
+not the plan.
 
 ---
 
