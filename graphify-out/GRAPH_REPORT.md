@@ -1,16 +1,16 @@
 # Graph Report - igd-capstone-2026  (2026-09-10)
 
 ## Corpus Check
-- 59 files · ~49,026 words
+- 66 files · ~50,325 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 444 nodes · 464 edges · 44 communities (40 shown, 4 thin omitted)
+- 470 nodes · 483 edges · 51 communities (45 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2fe5efc6`
+- Built from commit: `f0bf41a7`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -38,12 +38,19 @@
 - Household canon
 - 0001_init.sql
 - build_team_tasks.py
+- `core/graph/` — the LangGraph runtime
+- `core/ingest/` — the ingestion worker
 - Integration review
 - Writing an ADR
+- `core/retrieve/` — hybrid retrieval
 - Graphify — the shared knowledge graph
+- `web/` — the interface
+- `api/` — the FastAPI application
 - The corpus
 - Artefacts
 - Why the prototype is evaluated on synthetic data
+- `core/adapters/` — capture adapters
+- README.md
 - Project skills
 - Evaluation
 - pull_request_template.md
@@ -83,7 +90,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (44 total, 4 thin omitted)
+## Communities (51 total, 6 thin omitted)
 
 ### Community 0 - "contracts.py"
 Cohesion: 0.09
@@ -126,12 +133,12 @@ Cohesion: 0.22
 Nodes (8): 1. Push, 2. Turn on the guardrails, while the repo is still empty, 3. Graphify is already set up, 4. The self-hosted runner, when you get to week 3, First run, First three commits, in order, Send these three links on day one, What is already here
 
 ### Community 10 - "Desmond — task list"
-Cohesion: 0.10
-Nodes (19): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from (+11 more)
+Cohesion: 0.25
+Nodes (8): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from
 
 ### Community 11 - "Siew — task list"
-Cohesion: 0.07
-Nodes (25): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Adversarial Set C (+17 more)
+Cohesion: 0.05
+Nodes (36): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Desmond — task list (+28 more)
 
 ### Community 12 - "Yew Mun — task list"
 Cohesion: 0.10
@@ -177,6 +184,14 @@ Nodes (7): chunks, documents, facts, modules, obligations, packs, traces
 Cohesion: 0.39
 Nodes (7): main(), Path, Generate each member's task list from the master task CSV.      python scripts, _read_rows(), _render(), _week_key(), _write()
 
+### Community 23 - "`core/graph/` — the LangGraph runtime"
+Cohesion: 0.40
+Nodes (4): `core/graph/` — the LangGraph runtime, Rules, What belongs here, What does not
+
+### Community 24 - "`core/ingest/` — the ingestion worker"
+Cohesion: 0.50
+Nodes (3): `core/ingest/` — the ingestion worker, Quarantine is two-stage, Rules
+
 ### Community 25 - "Integration review"
 Cohesion: 0.29
 Nodes (6): How to give the feedback, Integration review, Never, Read first, Reviewing a pull request, The weekly pass — ninety minutes, protected
@@ -185,9 +200,17 @@ Nodes (6): How to give the feedback, Integration review, Never, Read first, Revi
 Cohesion: 0.29
 Nodes (6): Format, Read first, Rules, What does not, What earns an ADR, Writing an ADR
 
+### Community 27 - "`core/retrieve/` — hybrid retrieval"
+Cohesion: 0.50
+Nodes (3): `core/retrieve/` — hybrid retrieval, Rules, What belongs here
+
 ### Community 28 - "Graphify — the shared knowledge graph"
 Cohesion: 0.20
 Nodes (9): Graphify — the shared knowledge graph, Keeping it fresh, Merge conflicts, solved properly, Setup, once per clone, The hook leaves your tree dirty, and that is expected, Two kinds of extraction, and which needs what, Using it, What is committed, and what is not (+1 more)
+
+### Community 29 - "`web/` — the interface"
+Cohesion: 0.50
+Nodes (3): Before building any screen, Rules, `web/` — the interface
 
 ### Community 31 - "The corpus"
 Cohesion: 0.33
@@ -229,18 +252,22 @@ Nodes (3): Changelog, W1 · 2–8 Sep 2026, W2 · 9–15 Sep 2026
 Cohesion: 0.50
 Nodes (3): npx, filesystem, @modelcontextprotocol/server-filesystem
 
+### Community 43 - "Governance artefacts"
+Cohesion: 0.50
+Nodes (3): `docs/governance/` — the assurance artefacts, The autonomy statement in one line, The rule that governs all eight
+
 ## Knowledge Gaps
-- **268 isolated node(s):** `What it is`, `Where to start`, `Quick start`, `Where things live`, `The stack, in one table` (+263 more)
+- **281 isolated node(s):** `Rules`, `Rules`, `What belongs here`, `What does not`, `Rules` (+276 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Domain packs — start here` connect `Domain packs — start here` to `Zee — Lane D · Domain packs and interface`?**
-  _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **What connects `What it is`, `Where to start`, `Quick start` to the rest of the system?**
-  _268 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.015) - this node is a cross-community bridge._
+- **What connects `Rules`, `Rules`, `What belongs here` to the rest of the system?**
+  _281 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `contracts.py` be split into smaller, more focused modules?**
   _Cohesion score 0.08636977058029689 - nodes in this community are weakly interconnected._
 - **Should `NNNN · The decision, as a statement not a question` be split into smaller, more focused modules?**

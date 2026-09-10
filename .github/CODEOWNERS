@@ -1,7 +1,10 @@
 # Ownership is how five people and their agents stay out of each other's way.
 # A PR touching a path needs a review from that path's owner.
-# Christian @feynman82 · Yew Mun @yewmun · Siew @siew · Zee @zee · Desmond @desmond
-# Replace the four placeholder handles with real GitHub usernames before the first PR.
+# Christian @feynman82 · Yew Mun @Yewhoo · Siew @siew · Zee @zee · Desmond @desmond
+# Confirmed: @feynman82 (Christian) � @Yewhoo (Yew Mun).
+# STILL PLACEHOLDERS - a PR touching these paths cannot request a review until they are
+# real GitHub logins: @siew  @zee  @desmond
+# Replace each as its handle arrives, in a one-line commit.
 
 *                       @feynman82
 
@@ -10,8 +13,8 @@
 /modules/               @feynman82
 /db/migrations/         @feynman82
 
-/core/retrieve/         @yewmun
-/eval/                  @yewmun
+/core/retrieve/         @Yewhoo
+/eval/                  @Yewhoo
 
 /core/adapters/         @feynman82
 /core/ingest/           @feynman82
@@ -22,7 +25,7 @@
 /web/                   @zee
 
 /team/christian/        @feynman82
-/team/yew-mun/          @yewmun
+/team/yew-mun/          @Yewhoo
 /team/siew/             @siew
 /team/zee/              @zee
 /team/desmond/          @desmond

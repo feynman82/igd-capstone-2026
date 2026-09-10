@@ -6,13 +6,332 @@
     {
       "label": "README.md",
       "file_type": "document",
+      "source_file": "api/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "api_readme",
+      "community": 30,
+      "community_name": "`api/` \u2014 the FastAPI application",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`api/` \u2014 the FastAPI application",
+      "file_type": "document",
+      "source_file": "api/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "api_readme_api_the_fastapi_application",
+      "community": 30,
+      "community_name": "`api/` \u2014 the FastAPI application",
+      "norm_label": "`api/` \u2014 the fastapi application"
+    },
+    {
+      "label": "Rules",
+      "file_type": "document",
+      "source_file": "api/README.md",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "api_readme_rules",
+      "community": 30,
+      "community_name": "`api/` \u2014 the FastAPI application",
+      "norm_label": "rules"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "core/adapters/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_adapters_readme",
+      "community": 34,
+      "community_name": "`core/adapters/` \u2014 capture adapters",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`core/adapters/` \u2014 capture adapters",
+      "file_type": "document",
+      "source_file": "core/adapters/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_adapters_readme_core_adapters_capture_adapters",
+      "community": 34,
+      "community_name": "`core/adapters/` \u2014 capture adapters",
+      "norm_label": "`core/adapters/` \u2014 capture adapters"
+    },
+    {
+      "label": "Rules",
+      "file_type": "document",
+      "source_file": "core/adapters/README.md",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "core_adapters_readme_rules",
+      "community": 34,
+      "community_name": "`core/adapters/` \u2014 capture adapters",
+      "norm_label": "rules"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "core/graph/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_graph_readme",
+      "community": 23,
+      "community_name": "`core/graph/` \u2014 the LangGraph runtime",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`core/graph/` \u2014 the LangGraph runtime",
+      "file_type": "document",
+      "source_file": "core/graph/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_graph_readme_core_graph_the_langgraph_runtime",
+      "community": 23,
+      "community_name": "`core/graph/` \u2014 the LangGraph runtime",
+      "norm_label": "`core/graph/` \u2014 the langgraph runtime"
+    },
+    {
+      "label": "What belongs here",
+      "file_type": "document",
+      "source_file": "core/graph/README.md",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "core_graph_readme_what_belongs_here",
+      "community": 23,
+      "community_name": "`core/graph/` \u2014 the LangGraph runtime",
+      "norm_label": "what belongs here"
+    },
+    {
+      "label": "What does not",
+      "file_type": "document",
+      "source_file": "core/graph/README.md",
+      "source_location": "L19",
+      "_origin": "ast",
+      "id": "core_graph_readme_what_does_not",
+      "community": 23,
+      "community_name": "`core/graph/` \u2014 the LangGraph runtime",
+      "norm_label": "what does not"
+    },
+    {
+      "label": "Rules",
+      "file_type": "document",
+      "source_file": "core/graph/README.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "core_graph_readme_rules",
+      "community": 23,
+      "community_name": "`core/graph/` \u2014 the LangGraph runtime",
+      "norm_label": "rules"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_ingest_readme",
+      "community": 24,
+      "community_name": "`core/ingest/` \u2014 the ingestion worker",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`core/ingest/` \u2014 the ingestion worker",
+      "file_type": "document",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_ingest_readme_core_ingest_the_ingestion_worker",
+      "community": 24,
+      "community_name": "`core/ingest/` \u2014 the ingestion worker",
+      "norm_label": "`core/ingest/` \u2014 the ingestion worker"
+    },
+    {
+      "label": "Quarantine is two-stage",
+      "file_type": "document",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L14",
+      "_origin": "ast",
+      "id": "core_ingest_readme_quarantine_is_two_stage",
+      "community": 24,
+      "community_name": "`core/ingest/` \u2014 the ingestion worker",
+      "norm_label": "quarantine is two-stage"
+    },
+    {
+      "label": "Rules",
+      "file_type": "document",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "core_ingest_readme_rules",
+      "community": 24,
+      "community_name": "`core/ingest/` \u2014 the ingestion worker",
+      "norm_label": "rules"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_retrieve_readme",
+      "community": 27,
+      "community_name": "`core/retrieve/` \u2014 hybrid retrieval",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`core/retrieve/` \u2014 hybrid retrieval",
+      "file_type": "document",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "core_retrieve_readme_core_retrieve_hybrid_retrieval",
+      "community": 27,
+      "community_name": "`core/retrieve/` \u2014 hybrid retrieval",
+      "norm_label": "`core/retrieve/` \u2014 hybrid retrieval"
+    },
+    {
+      "label": "What belongs here",
+      "file_type": "document",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L9",
+      "_origin": "ast",
+      "id": "core_retrieve_readme_what_belongs_here",
+      "community": 27,
+      "community_name": "`core/retrieve/` \u2014 hybrid retrieval",
+      "norm_label": "what belongs here"
+    },
+    {
+      "label": "Rules",
+      "file_type": "document",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L15",
+      "_origin": "ast",
+      "id": "core_retrieve_readme_rules",
+      "community": 27,
+      "community_name": "`core/retrieve/` \u2014 hybrid retrieval",
+      "norm_label": "rules"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_governance_readme",
+      "community": 43,
+      "community_name": "Governance artefacts",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`docs/governance/` \u2014 the assurance artefacts",
+      "file_type": "document",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_governance_readme_docs_governance_the_assurance_artefacts",
+      "community": 43,
+      "community_name": "Governance artefacts",
+      "norm_label": "`docs/governance/` \u2014 the assurance artefacts"
+    },
+    {
+      "label": "The autonomy statement in one line",
+      "file_type": "document",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L17",
+      "_origin": "ast",
+      "id": "docs_governance_readme_the_autonomy_statement_in_one_line",
+      "community": 43,
+      "community_name": "Governance artefacts",
+      "norm_label": "the autonomy statement in one line"
+    },
+    {
+      "label": "The rule that governs all eight",
+      "file_type": "document",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L24",
+      "_origin": "ast",
+      "id": "docs_governance_readme_the_rule_that_governs_all_eight",
+      "community": 43,
+      "community_name": "Governance artefacts",
+      "norm_label": "the rule that governs all eight"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "eval/sets/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "eval_sets_readme",
+      "community": 35,
+      "community_name": "README.md",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`eval/sets/` \u2014 the golden sets",
+      "file_type": "document",
+      "source_file": "eval/sets/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "eval_sets_readme_eval_sets_the_golden_sets",
+      "community": 35,
+      "community_name": "README.md",
+      "norm_label": "`eval/sets/` \u2014 the golden sets"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "web/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "web_readme",
+      "community": 29,
+      "community_name": "`web/` \u2014 the interface",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`web/` \u2014 the interface",
+      "file_type": "document",
+      "source_file": "web/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "web_readme_web_the_interface",
+      "community": 29,
+      "community_name": "`web/` \u2014 the interface",
+      "norm_label": "`web/` \u2014 the interface"
+    },
+    {
+      "label": "Before building any screen",
+      "file_type": "document",
+      "source_file": "web/README.md",
+      "source_location": "L16",
+      "_origin": "ast",
+      "id": "web_readme_before_building_any_screen",
+      "community": 29,
+      "community_name": "`web/` \u2014 the interface",
+      "norm_label": "before building any screen"
+    },
+    {
+      "label": "Rules",
+      "file_type": "document",
+      "source_file": "web/README.md",
+      "source_location": "L22",
+      "_origin": "ast",
+      "id": "web_readme_rules",
+      "community": 29,
+      "community_name": "`web/` \u2014 the interface",
+      "norm_label": "rules"
+    },
+    {
+      "label": "README.md",
+      "file_type": "document",
       "source_file": "README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "readme",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "readme.md"
+      "norm_label": "readme.md",
+      "id": "readme"
     },
     {
       "label": "igd-capstone-2026",
@@ -20,10 +339,10 @@
       "source_file": "README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "readme_igd_capstone_2026",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "igd-capstone-2026"
+      "norm_label": "igd-capstone-2026",
+      "id": "readme_igd_capstone_2026"
     },
     {
       "label": "What it is",
@@ -31,10 +350,10 @@
       "source_file": "README.md",
       "source_location": "L11",
       "_origin": "ast",
-      "id": "readme_what_it_is",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "what it is"
+      "norm_label": "what it is",
+      "id": "readme_what_it_is"
     },
     {
       "label": "Where to start",
@@ -42,10 +361,10 @@
       "source_file": "README.md",
       "source_location": "L33",
       "_origin": "ast",
-      "id": "readme_where_to_start",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "where to start"
+      "norm_label": "where to start",
+      "id": "readme_where_to_start"
     },
     {
       "label": "Quick start",
@@ -53,10 +372,10 @@
       "source_file": "README.md",
       "source_location": "L47",
       "_origin": "ast",
-      "id": "readme_quick_start",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "quick start"
+      "norm_label": "quick start",
+      "id": "readme_quick_start"
     },
     {
       "label": "Where things live",
@@ -64,10 +383,10 @@
       "source_file": "README.md",
       "source_location": "L61",
       "_origin": "ast",
-      "id": "readme_where_things_live",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "where things live"
+      "norm_label": "where things live",
+      "id": "readme_where_things_live"
     },
     {
       "label": "The stack, in one table",
@@ -75,10 +394,10 @@
       "source_file": "README.md",
       "source_location": "L85",
       "_origin": "ast",
-      "id": "readme_the_stack_in_one_table",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the stack, in one table"
+      "norm_label": "the stack, in one table",
+      "id": "readme_the_stack_in_one_table"
     },
     {
       "label": "Authoring a pack",
@@ -86,10 +405,10 @@
       "source_file": "README.md",
       "source_location": "L105",
       "_origin": "ast",
-      "id": "readme_authoring_a_pack",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "authoring a pack"
+      "norm_label": "authoring a pack",
+      "id": "readme_authoring_a_pack"
     },
     {
       "label": "The three rules that matter",
@@ -97,10 +416,10 @@
       "source_file": "README.md",
       "source_location": "L125",
       "_origin": "ast",
-      "id": "readme_the_three_rules_that_matter",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the three rules that matter"
+      "norm_label": "the three rules that matter",
+      "id": "readme_the_three_rules_that_matter"
     },
     {
       "label": "Working with agents",
@@ -108,10 +427,10 @@
       "source_file": "README.md",
       "source_location": "L136",
       "_origin": "ast",
-      "id": "readme_working_with_agents",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "working with agents"
+      "norm_label": "working with agents",
+      "id": "readme_working_with_agents"
     },
     {
       "label": "NOTION.md",
@@ -119,10 +438,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_notion",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "notion.md"
+      "norm_label": "notion.md",
+      "id": "docs_notion"
     },
     {
       "label": "Notion",
@@ -130,10 +449,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_notion_notion",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "notion"
+      "norm_label": "notion",
+      "id": "docs_notion_notion"
     },
     {
       "label": "Importing the task database",
@@ -141,10 +460,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L7",
       "_origin": "ast",
-      "id": "docs_notion_importing_the_task_database",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "importing the task database"
+      "norm_label": "importing the task database",
+      "id": "docs_notion_importing_the_task_database"
     },
     {
       "label": "Keeping the two in sync",
@@ -152,10 +471,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L30",
       "_origin": "ast",
-      "id": "docs_notion_keeping_the_two_in_sync",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "keeping the two in sync"
+      "norm_label": "keeping the two in sync",
+      "id": "docs_notion_keeping_the_two_in_sync"
     },
     {
       "label": "Claude's access to the Notion page",
@@ -163,10 +482,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L45",
       "_origin": "ast",
-      "id": "docs_notion_claude_s_access_to_the_notion_page",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "claude's access to the notion page"
+      "norm_label": "claude's access to the notion page",
+      "id": "docs_notion_claude_s_access_to_the_notion_page"
     },
     {
       "label": "README.md",
@@ -174,10 +493,10 @@
       "source_file": "team/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "team_readme",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "readme.md"
+      "norm_label": "readme.md",
+      "id": "team_readme"
     },
     {
       "label": "The team",
@@ -185,10 +504,10 @@
       "source_file": "team/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "team_readme_the_team",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the team"
+      "norm_label": "the team",
+      "id": "team_readme_the_team"
     },
     {
       "label": "The dependency that sets the order",
@@ -196,10 +515,10 @@
       "source_file": "team/README.md",
       "source_location": "L23",
       "_origin": "ast",
-      "id": "team_readme_the_dependency_that_sets_the_order",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the dependency that sets the order"
+      "norm_label": "the dependency that sets the order",
+      "id": "team_readme_the_dependency_that_sets_the_order"
     },
     {
       "label": "Why work does not live here",
@@ -207,10 +526,10 @@
       "source_file": "team/README.md",
       "source_location": "L50",
       "_origin": "ast",
-      "id": "team_readme_why_work_does_not_live_here",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "why work does not live here"
+      "norm_label": "why work does not live here",
+      "id": "team_readme_why_work_does_not_live_here"
     },
     {
       "label": "The task lists are generated",
@@ -218,10 +537,10 @@
       "source_file": "team/README.md",
       "source_location": "L67",
       "_origin": "ast",
-      "id": "team_readme_the_task_lists_are_generated",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the task lists are generated"
+      "norm_label": "the task lists are generated",
+      "id": "team_readme_the_task_lists_are_generated"
     },
     {
       "label": "Everyone, regardless of lane",
@@ -229,10 +548,10 @@
       "source_file": "team/README.md",
       "source_location": "L85",
       "_origin": "ast",
-      "id": "team_readme_everyone_regardless_of_lane",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "everyone, regardless of lane"
+      "norm_label": "everyone, regardless of lane",
+      "id": "team_readme_everyone_regardless_of_lane"
     },
     {
       "label": "The presentation split",
@@ -240,10 +559,10 @@
       "source_file": "team/README.md",
       "source_location": "L101",
       "_origin": "ast",
-      "id": "team_readme_the_presentation_split",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the presentation split"
+      "norm_label": "the presentation split",
+      "id": "team_readme_the_presentation_split"
     },
     {
       "label": "GRAPHIFY.md",
@@ -3418,39 +3737,6 @@
       "id": "docs_artefacts_team_split_narrative_swap_rules"
     },
     {
-      "label": "README.md",
-      "file_type": "document",
-      "source_file": "docs/governance/README.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "Governance artefacts",
-      "norm_label": "readme.md",
-      "id": "docs_governance_readme"
-    },
-    {
-      "label": "Governance artefacts",
-      "file_type": "document",
-      "source_file": "docs/governance/README.md",
-      "source_location": "L1",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "Governance artefacts",
-      "norm_label": "governance artefacts",
-      "id": "docs_governance_readme_governance_artefacts"
-    },
-    {
-      "label": "The autonomy statement in one line",
-      "file_type": "document",
-      "source_file": "docs/governance/README.md",
-      "source_location": "L16",
-      "_origin": "ast",
-      "community": 43,
-      "community_name": "Governance artefacts",
-      "norm_label": "the autonomy statement in one line",
-      "id": "docs_governance_readme_the_autonomy_statement_in_one_line"
-    },
-    {
       "label": "synthetic-data-case.md",
       "file_type": "document",
       "source_file": "docs/governance/synthetic-data-case.md",
@@ -3995,8 +4281,8 @@
       "source_file": "team/desmond/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "readme.md",
       "id": "team_desmond_readme"
     },
@@ -4094,8 +4380,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "tasks.md",
       "id": "team_desmond_tasks"
     },
@@ -4105,8 +4391,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "desmond \u2014 task list",
       "id": "team_desmond_tasks_desmond_task_list"
     },
@@ -4116,8 +4402,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w1 \u2014 due 2026-09-08",
       "id": "team_desmond_tasks_w1_due_2026_09_08"
     },
@@ -4127,8 +4413,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L26",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w2 \u2014 due 2026-09-15",
       "id": "team_desmond_tasks_w2_due_2026_09_15"
     },
@@ -4138,8 +4424,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L37",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w3 \u2014 due 2026-09-22",
       "id": "team_desmond_tasks_w3_due_2026_09_22"
     },
@@ -4149,8 +4435,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L51",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w4 \u2014 due 2026-09-29",
       "id": "team_desmond_tasks_w4_due_2026_09_29"
     },
@@ -4160,8 +4446,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L61",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w5 \u2014 due 2026-10-06",
       "id": "team_desmond_tasks_w5_due_2026_10_06"
     },
@@ -4171,8 +4457,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L70",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w6 \u2014 due 2026-10-13",
       "id": "team_desmond_tasks_w6_due_2026_10_13"
     },
@@ -4182,8 +4468,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L79",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w7 \u2014 due 2026-10-20",
       "id": "team_desmond_tasks_w7_due_2026_10_20"
     },
@@ -4193,8 +4479,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L86",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w8 \u2014 due 2026-10-27",
       "id": "team_desmond_tasks_w8_due_2026_10_27"
     },
@@ -4204,8 +4490,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L93",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w9 \u2014 due 2026-11-03",
       "id": "team_desmond_tasks_w9_due_2026_11_03"
     },
@@ -4215,8 +4501,8 @@
       "source_file": "team/desmond/tasks.md",
       "source_location": "L105",
       "_origin": "ast",
-      "community": 10,
-      "community_name": "Desmond \u2014 task list",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w10 \u2014 due 2026-11-10",
       "id": "team_desmond_tasks_w10_due_2026_11_10"
     },
@@ -4905,14 +5191,224 @@
   ],
   "links": [
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "api/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "api_readme",
+      "target": "api_readme_api_the_fastapi_application",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "api/README.md",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "api_readme_api_the_fastapi_application",
+      "target": "api_readme_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/adapters/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "core_adapters_readme",
+      "target": "core_adapters_readme_core_adapters_capture_adapters",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/adapters/README.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "core_adapters_readme_core_adapters_capture_adapters",
+      "target": "core_adapters_readme_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/graph/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "core_graph_readme",
+      "target": "core_graph_readme_core_graph_the_langgraph_runtime",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/graph/README.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "core_graph_readme_core_graph_the_langgraph_runtime",
+      "target": "core_graph_readme_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/graph/README.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "core_graph_readme_core_graph_the_langgraph_runtime",
+      "target": "core_graph_readme_what_belongs_here",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/graph/README.md",
+      "source_location": "L19",
+      "weight": 1.0,
+      "source": "core_graph_readme_core_graph_the_langgraph_runtime",
+      "target": "core_graph_readme_what_does_not",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "core_ingest_readme",
+      "target": "core_ingest_readme_core_ingest_the_ingestion_worker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L14",
+      "weight": 1.0,
+      "source": "core_ingest_readme_core_ingest_the_ingestion_worker",
+      "target": "core_ingest_readme_quarantine_is_two_stage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/ingest/README.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "core_ingest_readme_core_ingest_the_ingestion_worker",
+      "target": "core_ingest_readme_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "core_retrieve_readme",
+      "target": "core_retrieve_readme_core_retrieve_hybrid_retrieval",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L15",
+      "weight": 1.0,
+      "source": "core_retrieve_readme_core_retrieve_hybrid_retrieval",
+      "target": "core_retrieve_readme_rules",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "core/retrieve/README.md",
+      "source_location": "L9",
+      "weight": 1.0,
+      "source": "core_retrieve_readme_core_retrieve_hybrid_retrieval",
+      "target": "core_retrieve_readme_what_belongs_here",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_governance_readme",
+      "target": "docs_governance_readme_docs_governance_the_assurance_artefacts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L17",
+      "weight": 1.0,
+      "source": "docs_governance_readme_docs_governance_the_assurance_artefacts",
+      "target": "docs_governance_readme_the_autonomy_statement_in_one_line",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/governance/README.md",
+      "source_location": "L24",
+      "weight": 1.0,
+      "source": "docs_governance_readme_docs_governance_the_assurance_artefacts",
+      "target": "docs_governance_readme_the_rule_that_governs_all_eight",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "eval/sets/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "eval_sets_readme",
+      "target": "eval_sets_readme_eval_sets_the_golden_sets",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "web/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "web_readme",
+      "target": "web_readme_web_the_interface",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "web/README.md",
+      "source_location": "L16",
+      "weight": 1.0,
+      "source": "web_readme_web_the_interface",
+      "target": "web_readme_before_building_any_screen",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "web/README.md",
+      "source_location": "L22",
+      "weight": 1.0,
+      "source": "web_readme_web_the_interface",
+      "target": "web_readme_rules",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
       "source_location": "L42",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme",
-      "target": "docs_notion",
-      "confidence_score": 1.0
+      "target": "docs_notion"
     },
     {
       "relation": "contains",
@@ -4920,9 +5416,9 @@
       "source_file": "README.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme",
-      "target": "readme_igd_capstone_2026",
-      "confidence_score": 1.0
+      "target": "readme_igd_capstone_2026"
     },
     {
       "relation": "references",
@@ -4930,9 +5426,9 @@
       "source_file": "README.md",
       "source_location": "L39",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme",
-      "target": "team_readme",
-      "confidence_score": 1.0
+      "target": "team_readme"
     },
     {
       "relation": "contains",
@@ -4940,9 +5436,9 @@
       "source_file": "README.md",
       "source_location": "L105",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_authoring_a_pack",
-      "confidence_score": 1.0
+      "target": "readme_authoring_a_pack"
     },
     {
       "relation": "contains",
@@ -4950,9 +5446,9 @@
       "source_file": "README.md",
       "source_location": "L47",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_quick_start",
-      "confidence_score": 1.0
+      "target": "readme_quick_start"
     },
     {
       "relation": "contains",
@@ -4960,9 +5456,9 @@
       "source_file": "README.md",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_the_stack_in_one_table",
-      "confidence_score": 1.0
+      "target": "readme_the_stack_in_one_table"
     },
     {
       "relation": "contains",
@@ -4970,9 +5466,9 @@
       "source_file": "README.md",
       "source_location": "L125",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_the_three_rules_that_matter",
-      "confidence_score": 1.0
+      "target": "readme_the_three_rules_that_matter"
     },
     {
       "relation": "contains",
@@ -4980,9 +5476,9 @@
       "source_file": "README.md",
       "source_location": "L11",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_what_it_is",
-      "confidence_score": 1.0
+      "target": "readme_what_it_is"
     },
     {
       "relation": "contains",
@@ -4990,9 +5486,9 @@
       "source_file": "README.md",
       "source_location": "L61",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_where_things_live",
-      "confidence_score": 1.0
+      "target": "readme_where_things_live"
     },
     {
       "relation": "contains",
@@ -5000,9 +5496,9 @@
       "source_file": "README.md",
       "source_location": "L33",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_where_to_start",
-      "confidence_score": 1.0
+      "target": "readme_where_to_start"
     },
     {
       "relation": "contains",
@@ -5010,9 +5506,9 @@
       "source_file": "README.md",
       "source_location": "L136",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "readme_igd_capstone_2026",
-      "target": "readme_working_with_agents",
-      "confidence_score": 1.0
+      "target": "readme_working_with_agents"
     },
     {
       "relation": "contains",
@@ -5020,9 +5516,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion",
-      "target": "docs_notion_notion",
-      "confidence_score": 1.0
+      "target": "docs_notion_notion"
     },
     {
       "relation": "references",
@@ -5030,9 +5526,9 @@
       "source_file": "team/README.md",
       "source_location": "L80",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme",
-      "target": "docs_notion",
-      "confidence_score": 1.0
+      "target": "docs_notion"
     },
     {
       "relation": "contains",
@@ -5040,9 +5536,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_notion",
-      "target": "docs_notion_claude_s_access_to_the_notion_page",
-      "confidence_score": 1.0
+      "target": "docs_notion_claude_s_access_to_the_notion_page"
     },
     {
       "relation": "contains",
@@ -5050,9 +5546,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L7",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_notion",
-      "target": "docs_notion_importing_the_task_database",
-      "confidence_score": 1.0
+      "target": "docs_notion_importing_the_task_database"
     },
     {
       "relation": "contains",
@@ -5060,9 +5556,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L30",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_notion",
-      "target": "docs_notion_keeping_the_two_in_sync",
-      "confidence_score": 1.0
+      "target": "docs_notion_keeping_the_two_in_sync"
     },
     {
       "relation": "references",
@@ -5090,9 +5586,9 @@
       "source_file": "team/README.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme",
-      "target": "team_readme_the_team",
-      "confidence_score": 1.0
+      "target": "team_readme_the_team"
     },
     {
       "relation": "contains",
@@ -5100,9 +5596,9 @@
       "source_file": "team/README.md",
       "source_location": "L85",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme_the_team",
-      "target": "team_readme_everyone_regardless_of_lane",
-      "confidence_score": 1.0
+      "target": "team_readme_everyone_regardless_of_lane"
     },
     {
       "relation": "contains",
@@ -5110,9 +5606,9 @@
       "source_file": "team/README.md",
       "source_location": "L23",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme_the_team",
-      "target": "team_readme_the_dependency_that_sets_the_order",
-      "confidence_score": 1.0
+      "target": "team_readme_the_dependency_that_sets_the_order"
     },
     {
       "relation": "contains",
@@ -5120,9 +5616,9 @@
       "source_file": "team/README.md",
       "source_location": "L101",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme_the_team",
-      "target": "team_readme_the_presentation_split",
-      "confidence_score": 1.0
+      "target": "team_readme_the_presentation_split"
     },
     {
       "relation": "contains",
@@ -5130,9 +5626,9 @@
       "source_file": "team/README.md",
       "source_location": "L67",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme_the_team",
-      "target": "team_readme_the_task_lists_are_generated",
-      "confidence_score": 1.0
+      "target": "team_readme_the_task_lists_are_generated"
     },
     {
       "relation": "contains",
@@ -5140,9 +5636,9 @@
       "source_file": "team/README.md",
       "source_location": "L50",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "team_readme_the_team",
-      "target": "team_readme_why_work_does_not_live_here",
-      "confidence_score": 1.0
+      "target": "team_readme_why_work_does_not_live_here"
     },
     {
       "relation": "contains",
@@ -8338,26 +8834,6 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
-      "source_file": "docs/governance/README.md",
-      "source_location": "L1",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_governance_readme",
-      "target": "docs_governance_readme_governance_artefacts"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "docs/governance/README.md",
-      "source_location": "L16",
-      "weight": 1.0,
-      "confidence_score": 1.0,
-      "source": "docs_governance_readme_governance_artefacts",
-      "target": "docs_governance_readme_the_autonomy_statement_in_one_line"
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
       "source_file": "docs/governance/synthetic-data-case.md",
       "source_location": "L1",
       "weight": 1.0,
@@ -9597,5 +10073,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2fe5efc669ce2a1d718a9c6e1228a32f4c0ed614"
+  "built_at_commit": "f0bf41a7080fe907a7e4e4f3eb2e248d6f4dbd18"
 }
