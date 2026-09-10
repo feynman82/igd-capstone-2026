@@ -21,24 +21,15 @@ convention the team follows, not a technical guardrail.
 
 **Settings → Collaborators and teams → Add people.**
 
-| Person | GitHub | Role |
-|---|---|---|
-| Yew Mun | `Yewhoo` | Write |
-| Siew | `nsiewsiew` | Write |
-| Zee | `fjzeetr-smuigd` | Write |
-| Desmond | *handle needed* | Write |
+| Person | GitHub | Role | Status |
+|---|---|---|---|
+| Yew Mun | `Yewhoo` | Write | Collaborator (accepted) |
+| Zee | `fjzeetr-smuigd` | Write | Collaborator (accepted) |
+| Siew | `nsiewsiew` | Write | Invite sent, pending |
+| Desmond | `strawberries2026` | Write | Invite not yet sent |
 
-`.github/CODEOWNERS` now carries `@feynman82`, `@Yewhoo`, `@nsiewsiew`, and
-`@fjzeetr-smuigd`. Desmond is still the placeholder `@desmond` — **a pull request touching
-his paths cannot request a review until it is a real login**. It is a one-line commit:
-
-```bash
-sed -i 's/@desmond/@theirRealHandle/g' .github/CODEOWNERS
-git commit -am "CODEOWNERS: Desmond's real handle" && git push
-```
-
-Siew and Zee still need collaborator invites sent (their handles were only just
-confirmed) — same **Add people** flow as Yew Mun.
+`.github/CODEOWNERS` now carries all five real logins — `@feynman82`, `@Yewhoo`,
+`@nsiewsiew`, `@fjzeetr-smuigd`, and `@strawberries2026`. No placeholders remain.
 
 ## 2 · Branch protection
 
