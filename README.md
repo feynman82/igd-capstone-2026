@@ -34,10 +34,11 @@ demonstrates both axes.
 
 | You are | Read |
 |---|---|
-| Any agent working here | [`AGENTS.md`](AGENTS.md), then [`CLAUDE.md`](CLAUDE.md) |
+| Any agent working here | [`AGENTS.md`](AGENTS.md), then [`CLAUDE.md`](CLAUDE.md) — or just run `/orient` |
 | New to the project | [`docs/artefacts/architecture-review.html`](docs/artefacts/architecture-review.html) — open it in a browser |
-| Looking for your tasks | [`docs/lanes/`](docs/lanes/) and [`docs/team-tasks.csv`](docs/team-tasks.csv) |
-| Zee | [`packs/README.md`](packs/README.md) |
+| Looking for your brief and tasks | [`team/`](team/README.md) |
+| Zee | [`team/zee/README.md`](team/zee/README.md), then [`packs/README.md`](packs/README.md) |
+| About to open a PR | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | Setting up a machine | [`FIRST-RUN.md`](FIRST-RUN.md) |
 
 ---
@@ -72,7 +73,9 @@ make dev                                             # api on :8000, web on :300
 | `corpus/` | The document register (ground truth) and its validator | Desmond |
 | `eval/` | Golden sets, Ragas harness, committed results | Yew Mun |
 | `docs/governance/` | PDPA, ISO, IMDA artefacts | Siew |
-| `docs/lanes/` | What each person does, in order, with an agent prompt | — |
+| `team/<name>/` | Each person's brief and their generated task list | — |
+| `.claude/` | Project skills and slash commands every session loads | Christian |
+| `scripts/` | Repository generators — currently the task-list builder | Christian |
 | `docs/artefacts/` | Proposal, deck, diagrams, review, source material | Christian |
 | `docs/adr/` | Architecture decision records — one per non-obvious choice | anyone |
 
@@ -105,8 +108,9 @@ detail in `docs/PACK_AUTHORING.md`. In short: edit one YAML, run `python -m pack
 commit the source and the generated files together.
 
 ```bash
-python -m packs.build          # regenerate schemas, register headers, field dictionary
-python -m packs.build --check  # CI gate: fails if anything is stale
+python -m packs.build                        # schemas, register headers, field dictionary
+python scripts/build_team_tasks.py           # per-member task lists from the master CSV
+make check                                   # both staleness gates, plus lint, types, tests
 ```
 
 A field name written in `pack.yaml` becomes three things at once: the attribute on the
@@ -123,5 +127,14 @@ evaluation score in week 8.
    own PR, reviewed before any code depends on it.
 2. **Numbers come from Postgres, never from the model.** Dates, amounts and policy
    numbers are read from typed columns. The model phrases the sentence around them.
-3. **`pack.yaml` is the only place a field name is written down.** Everything else is
-   generated from it.
+3. **`pack.yaml` is the only place a field name is written down**, and
+   `docs/team-tasks.csv` the only place a task is. Everything else is generated from them.
+
+---
+
+## Working with agents
+
+Every session loads `AGENTS.md` and the skills in `.claude/skills/`, so a Claude Code
+session run by any of the five of us behaves the same way. Start with `/orient`; finish
+with `/check`. `docs/GRAPHIFY.md` sets up the shared knowledge graph that lets a session
+find the relevant part of a five-person repository without reading all of it.

@@ -1,7 +1,10 @@
-# Lane A — Integration and product
+# Christian — Lane A · Integration and product owner
 
 **Owner: Christian.** Directories: `core/contracts.py`, `core/graph/`, `core/adapters/`,
 `core/ingest/`, `modules/`, `db/migrations/`, and the merge queue.
+
+> **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
+> **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
 
 Deliberately the lane with the least new feature code. An integrator who is also
 mid-feature stops integrating, and the failure mode of five people and their agents on
@@ -56,7 +59,7 @@ pastes its numbers into the pull request with one line on why they moved.
 ## Starter prompt for your coding agent
 
 > Read `AGENTS.md`, `core/contracts.py`, `db/migrations/0001_init.sql` and
-> `docs/lanes/lane-a-integration.md` completely before writing anything.
+> `team/christian/README.md` completely before writing anything.
 >
 > Task: [one vertical slice, e.g. "implement the Telegram capture adapter satisfying the
 > `receive(bytes, mime, sender, ts) → ingest_job` contract, with media fetched, written

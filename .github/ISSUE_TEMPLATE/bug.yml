@@ -1,0 +1,27 @@
+name: Bug
+description: Something behaves differently from what the contract says
+labels: ["bug"]
+body:
+  - type: textarea
+    id: expected
+    attributes:
+      label: What the contract says should happen
+      description: Point at the file — core/contracts.py, a pack.yaml, AGENTS.md, a migration.
+    validations: { required: true }
+  - type: textarea
+    id: actual
+    attributes:
+      label: What actually happened
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce
+      description: Prefer a corpus fixture with known ground truth over a live document.
+      render: shell
+    validations: { required: true }
+  - type: input
+    id: scores
+    attributes:
+      label: Evaluation impact, if any
+      placeholder: "Set B abstention fell 0.95 → 0.71 at run 2"

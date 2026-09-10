@@ -1,12 +1,17 @@
-.PHONY: check dev packs corpus-check eval eval-quick fmt
+.PHONY: check dev packs tasks corpus-check eval eval-quick fmt
 
 check:
 	uv run python -m packs.build --check
+	uv run python scripts/build_team_tasks.py --check
 	uv run ruff check . && uv run ruff format --check . && uv run mypy core modules corpus && uv run pytest -q
 
 # Regenerate schemas.py, the register column headers and the field dictionary from pack.yaml.
 packs:
 	uv run python -m packs.build
+
+# Regenerate each member's task list from docs/team-tasks.csv.
+tasks:
+	uv run python scripts/build_team_tasks.py
 
 fmt:
 	uv run ruff format . && uv run ruff check --fix .

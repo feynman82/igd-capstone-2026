@@ -1,0 +1,10 @@
+{
+  "_comment": "Project-scoped MCP servers. Claude Code prompts each person to approve these on first use; nothing here carries a secret. Personal servers stay in your user settings, not in this file.",
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "env": {}
+    }
+  }
+}

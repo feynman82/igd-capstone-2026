@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Working agreement
+    url: https://github.com/feynman82/igd-capstone-2026/blob/main/AGENTS.md
+    about: The rules every agent and person in this repository follows. Read before filing.
+  - name: Your lane brief
+    url: https://github.com/feynman82/igd-capstone-2026/blob/main/team/README.md
+    about: What you own, what you ship, and your task list.

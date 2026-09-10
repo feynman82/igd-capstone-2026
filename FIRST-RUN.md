@@ -78,7 +78,8 @@ supports both paths.
 | `docs/TEAM.md` | The five lanes, the presentation split, the swap rules. |
 | `docs/team-tasks.csv` | 80 tasks, ready to import into Notion. |
 | `docs/adr/` | Two decision records to start. Add one per non-obvious choice. |
-| `docs/lanes/` | What each person does on Monday, in order, with a starter prompt for their coding agent. |
+| `team/` | One folder per person: their brief, and a task list generated from `docs/team-tasks.csv`. |
+| `.claude/skills/`, `.claude/commands/` | Six project skills and four slash commands, so every session behaves the same. Start any session with `/orient`. |
 | `packs/README.md` | Zee's lane, written for a non-technical author. This is the file to send her. |
 | `docs/GRAPHIFY.md` | The shared knowledge graph: setup, the one-committer rule, what leaves the machine. |
 | `docs/artefacts/` | The proposal, the deck, the architecture review, the interface pack, the diagrams and the original source material. |
@@ -97,6 +98,8 @@ supports both paths.
 
 ## Send these three links on day one
 
-- Zee → `packs/README.md`
-- Desmond → `docs/lanes/lane-e-corpus.md`
-- Yew Mun → `docs/lanes/lane-b-retrieval-eval.md`, Siew → `docs/lanes/lane-c-governance.md`
+- Zee → `team/zee/README.md`
+- Desmond → `team/desmond/README.md`
+- Yew Mun → `team/yew-mun/README.md`, Siew → `team/siew/README.md`
+
+Each of those sits beside a `tasks.md` with only their tasks in it.

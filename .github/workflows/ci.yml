@@ -24,6 +24,8 @@ jobs:
       # Fails if a pack.yaml was edited without regenerating. This is what stops Zee's field
       # names and Desmond's register columns drifting apart.
       - run: uv run python -m packs.build --check
+      # Fails if docs/team-tasks.csv was edited without regenerating the per-member lists.
+      - run: uv run python scripts/build_team_tasks.py --check
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy core modules corpus

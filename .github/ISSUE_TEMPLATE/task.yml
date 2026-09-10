@@ -1,0 +1,38 @@
+name: Task
+description: A unit of work in one lane
+labels: ["task"]
+body:
+  - type: dropdown
+    id: lane
+    attributes:
+      label: Lane
+      options:
+        - A · Integration and product (Christian)
+        - B · Retrieval and evaluation (Yew Mun)
+        - C · Governance and assurance (Siew)
+        - D · Domain packs and interface (Zee)
+        - E · Corpus and adversarial testing (Desmond)
+    validations: { required: true }
+  - type: input
+    id: week
+    attributes:
+      label: Target week
+      placeholder: W4
+    validations: { required: true }
+  - type: textarea
+    id: done_when
+    attributes:
+      label: Done when
+      description: A condition that is either true or false. Not "finished the pack" but "packs.build --check passes and the register columns are readable".
+    validations: { required: true }
+  - type: textarea
+    id: blocked_by
+    attributes:
+      label: Blocked by
+      description: What has to land first. Leave empty if nothing.
+  - type: markdown
+    attributes:
+      value: |
+        If this task belongs in the plan rather than as a one-off, add it to
+        `docs/team-tasks.csv` and regenerate — that file is the source of truth and the
+        one imported into Notion.

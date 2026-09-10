@@ -1,6 +1,9 @@
-# Lane B — Retrieval and evaluation
+# Yew Mun — Lane B · Retrieval and evaluation
 
 **Owner: Yew Mun.** Directories: `core/retrieve/`, `eval/`.
+
+> **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
+> **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
 
 You own the numbers that carry the grade. The report's strongest claim is not that the
 system works but that we measured it, three times, and can say what moved and why.
@@ -88,7 +91,7 @@ preference, and Siew's data inventory says so.
 
 ## Starter prompt for your coding agent
 
-> Read `AGENTS.md`, `docs/lanes/lane-b-retrieval-eval.md`, `core/contracts.py` and
+> Read `AGENTS.md`, `team/yew-mun/README.md`, `core/contracts.py` and
 > `db/migrations/0001_init.sql` completely before writing anything.
 >
 > I own `core/retrieve/` and `eval/`. Do not modify anything outside those two

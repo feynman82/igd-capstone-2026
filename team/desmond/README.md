@@ -1,6 +1,9 @@
-# Lane E — Corpus and adversarial testing
+# Desmond — Lane E · Corpus and adversarial testing
 
 **Owner: Desmond.** Directory: `corpus/`.
+
+> **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
+> **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
 
 Your lane is the input to every other lane, which is why it starts in week 1 and why it
 must never become the thing everyone is waiting on. It is also the lane with the most
@@ -118,7 +121,7 @@ a presentation segment.
 Most of this lane is not coding. Use an AI tool for the templates and mail merge in your
 own way. Where an agent helps in this repository is validation and batch bookkeeping:
 
-> Read `AGENTS.md`, `docs/lanes/lane-e-corpus.md` and `corpus/validate.py` completely
+> Read `AGENTS.md`, `team/desmond/README.md` and `corpus/validate.py` completely
 > before doing anything.
 >
 > I own `corpus/`. Never write code that generates corpus documents — `AGENTS.md` rule:

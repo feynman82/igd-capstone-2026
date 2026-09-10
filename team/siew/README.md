@@ -1,6 +1,9 @@
-# Lane C — Governance and assurance
+# Siew — Lane C · Governance and assurance
 
 **Owner: Siew.** Directory: `docs/governance/`, plus `eval/sets/adversarial/`.
+
+> **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
+> **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
 
 This is not a documentation lane. Six artefacts, each of which is a chapter of the
 report, plus the consent protocol that makes the holdout corpus lawful to collect at all.
@@ -73,7 +76,7 @@ points at policy.
 
 ## Starter prompt for your coding agent
 
-> Read `AGENTS.md`, `docs/lanes/lane-c-governance.md`, `db/migrations/0001_init.sql` and
+> Read `AGENTS.md`, `team/siew/README.md`, `db/migrations/0001_init.sql` and
 > `core/contracts.py` completely before writing anything.
 >
 > I own `docs/governance/` and `eval/sets/adversarial/`. Do not modify code anywhere in
