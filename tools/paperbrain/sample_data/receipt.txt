@@ -1,0 +1,10 @@
+TAX INVOICE / RECEIPT
+Cold Storage Great World
+Date: 14/03/2026
+Order No: CS-882401
+
+Groceries        48.20
+Household        12.90
+Subtotal         61.10
+GST 9%            5.50
+Amount Paid      66.60  (Visa ****4412)
