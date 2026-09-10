@@ -1,16 +1,16 @@
 # Graph Report - igd-capstone-2026  (2026-09-10)
 
 ## Corpus Check
-- 66 files · ~50,325 words
+- 66 files · ~50,814 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 470 nodes · 483 edges · 51 communities (45 shown, 6 thin omitted)
+- 475 nodes · 488 edges · 52 communities (46 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f0bf41a7`
+- Built from commit: `75eb1c85`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -62,6 +62,7 @@
 - __init__.py
 - __init__.py
 - parrot
+- Siew — task list
 
 ## God Nodes (most connected - your core abstractions)
 1. `Strict` - 14 edges
@@ -72,8 +73,8 @@
 6. `Siew — task list` - 11 edges
 7. `Yew Mun — task list` - 11 edges
 8. `Zee — task list` - 11 edges
-9. `Running the evaluation harness` - 10 edges
-10. `Domain packs — start here` - 10 edges
+9. `First run` - 10 edges
+10. `Running the evaluation harness` - 10 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `load()` --references--> `PackManifest`  [EXTRACTED]
@@ -90,7 +91,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (51 total, 6 thin omitted)
+## Communities (52 total, 6 thin omitted)
 
 ### Community 0 - "contracts.py"
 Cohesion: 0.09
@@ -129,20 +130,20 @@ Cohesion: 0.18
 Nodes (10): Commands, Done, Never overwrite a result, One variable per run, Read first, Reporting a change, Running the evaluation harness, Staying in lane (+2 more)
 
 ### Community 9 - "Christian — task list"
-Cohesion: 0.22
-Nodes (8): 1. Push, 2. Turn on the guardrails, while the repo is still empty, 3. Graphify is already set up, 4. The self-hosted runner, when you get to week 3, First run, First three commits, in order, Send these three links on day one, What is already here
+Cohesion: 0.18
+Nodes (10): 1 · Collaborators, 2 · Branch protection, 3 · Actions permissions, 4 · Project board, 5 · The Notion hub, First run, Send these on day one, Setting up a second machine (+2 more)
 
 ### Community 10 - "Desmond — task list"
-Cohesion: 0.25
-Nodes (8): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from
+Cohesion: 0.10
+Nodes (19): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from (+11 more)
 
 ### Community 11 - "Siew — task list"
-Cohesion: 0.05
-Nodes (36): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Desmond — task list (+28 more)
+Cohesion: 0.08
+Nodes (21): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Adversarial Set C (+13 more)
 
 ### Community 12 - "Yew Mun — task list"
-Cohesion: 0.10
-Nodes (18): Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation, W10 — due 2026-11-10 (+10 more)
+Cohesion: 0.18
+Nodes (11): W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13, W7 — due 2026-10-20 (+3 more)
 
 ### Community 13 - "Zee — task list"
 Cohesion: 0.25
@@ -161,8 +162,8 @@ Cohesion: 0.33
 Nodes (5): Before you say you are done, Claude Code — read this first, Finding your way around, Skills and commands, The three things agents get wrong here
 
 ### Community 17 - "igd-capstone-2026"
-Cohesion: 0.10
-Nodes (19): Claude's access to the Notion page, Importing the task database, Keeping the two in sync, Notion, Authoring a pack, igd-capstone-2026, Quick start, The stack, in one table (+11 more)
+Cohesion: 0.08
+Nodes (22): Importing the task database, Keeping the two in sync, Notion, Option A — move the hub into Christian's workspace ✅ recommended, Option B — Christian switches his connector to Yew Mun's workspace, Option C — leave Notion as a human-only view, The access problem, and the one decision that fixes it, Authoring a pack (+14 more)
 
 ### Community 18 - "Zee — Lane D · Domain packs and interface"
 Cohesion: 0.09
@@ -256,8 +257,12 @@ Nodes (3): npx, filesystem, @modelcontextprotocol/server-filesystem
 Cohesion: 0.50
 Nodes (3): `docs/governance/` — the assurance artefacts, The autonomy statement in one line, The rule that governs all eight
 
+### Community 51 - "Siew — task list"
+Cohesion: 0.18
+Nodes (11): Siew — task list, W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13 (+3 more)
+
 ## Knowledge Gaps
-- **281 isolated node(s):** `Rules`, `Rules`, `What belongs here`, `What does not`, `Rules` (+276 more)
+- **285 isolated node(s):** `1 · Collaborators`, `2 · Branch protection`, `3 · Actions permissions`, `4 · Project board`, `5 · The Notion hub` (+280 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -266,8 +271,8 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Domain packs — start here` connect `Domain packs — start here` to `Zee — Lane D · Domain packs and interface`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **What connects `Rules`, `Rules`, `What belongs here` to the rest of the system?**
-  _281 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `1 · Collaborators`, `2 · Branch protection`, `3 · Actions permissions` to the rest of the system?**
+  _285 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `contracts.py` be split into smaller, more focused modules?**
   _Cohesion score 0.08636977058029689 - nodes in this community are weakly interconnected._
 - **Should `NNNN · The decision, as a statement not a question` be split into smaller, more focused modules?**
