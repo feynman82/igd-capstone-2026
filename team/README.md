@@ -77,6 +77,9 @@ python scripts/build_team_tasks.py --check  # CI gate: fails if stale
 To change a task, edit the CSV and regenerate. Editing `tasks.md` directly gets
 overwritten and fails CI, for the same reason hand-editing `schemas.py` does.
 
+The same CSV is what gets imported into Notion — see [`docs/NOTION.md`](../docs/NOTION.md)
+for the property mapping and the weekly sync loop.
+
 ---
 
 ## Everyone, regardless of lane
