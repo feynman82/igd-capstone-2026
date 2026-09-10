@@ -1,104 +1,139 @@
 # Graphify — the shared knowledge graph
 
-Graphify builds a knowledge graph of this repository so that any coding agent — Claude
-Code, Antigravity, Cursor — can find the relevant part of a five-person project without
-reading all of it. It is how a session that has never seen `core/contracts.py` still
-knows that a field name in `packs/*/pack.yaml` reaches `corpus/register/` and
-`docs/field-dictionary.md`.
+Graphify builds a knowledge graph of this repository so a coding agent can find the
+relevant part of a five-person project without reading all of it. It is how a session
+that has never opened `core/contracts.py` still knows that a field name in
+`packs/*/pack.yaml` reaches `corpus/register/` and `docs/field-dictionary.md`.
 
-**It must be run from a local checkout.** It parses files on disk and installs git hooks,
-so it cannot be started through the GitHub web interface or the API. Someone with the
-repository cloned has to run it. That someone is Christian.
+**It is already set up.** The graph is built, committed, and the git hooks are installed
+on the integration machine. This page is what everyone else needs to do, and how the
+thing works.
 
----
-
-## One-time setup — Christian only
-
-```bash
-uv tool install graphifyy       # or: pip install graphifyy
-cd igd-capstone-2026
-
-graphify install                # writes agent skill files — see the warning below
-graphify .                      # first full build
-graphify hook install           # post-commit and post-checkout hooks
-```
-
-> **Warning before you run `graphify install`.** It writes platform skill files including
-> `CLAUDE.md` and, on some versions, appends to `AGENTS.md`. Our `AGENTS.md` is curated
-> and its eight hard rules are load-bearing. Check `git diff AGENTS.md` immediately
-> afterwards and revert anything it overwrote. If it wants to add its own guidance, let
-> it live in `CLAUDE.md` instead.
-
-After the first build you will have:
-
-```
-graphify-out/
-  graph.json          the queryable graph        ← committed
-  GRAPH_REPORT.md     key concepts and links     ← committed
-  graph.html          interactive visualisation  ← not committed, regenerate locally
-  cache/              extraction cache           ← not committed
-  manifest.json       build metadata             ← not committed
-```
+Current graph: **436 nodes · 473 edges · 51 communities**, built from commit `9d49a3a`.
 
 ---
 
-## Everyone else
+## Setup, once per clone
 
 ```bash
-git pull
-uv tool install graphifyy
-graphify update .          # re-extracts only what changed since the last build
+uv tool install graphifyy         # or: pip install graphifyy
+graphify install --platform claude   # installs the skill into ~/.claude/skills/graphify/
+make graph-setup                     # registers the merge driver — see below
+graphify hook install                # post-commit and post-checkout hooks
 ```
 
-Then use it from your agent session:
+`graphify install` writes into **your user config**, not into this repository — it does
+not touch our `AGENTS.md` or `CLAUDE.md`. Use `--platform antigravity` or `--platform
+cursor` instead if that is what you drive.
+
+---
+
+## Using it
 
 ```bash
 graphify query "how does a field name in pack.yaml reach the corpus register"
-graphify path "PackManifest" "corpus/validate.py"
 graphify explain "FieldSpec"
+graphify path "PackManifest" "corpus/validate.py"
+graphify affected "FieldSpec"          # what breaks if I change this
 ```
 
-Those three commands are worth putting at the top of a session when you are working in a
-part of the repository you did not write.
+Those are worth running at the top of a session in a part of the repository you did not
+write. `/orient` will remind you.
+
+`graphify-out/graph.html` is an interactive force-directed view — open it in a browser.
+It is not committed (320 KB, and regenerated locally by any of the commands above).
 
 ---
 
-## The rule that prevents constant merge conflicts
+## Two kinds of extraction, and which needs what
 
-**Only Christian commits `graphify-out/`.** It is regenerated at the weekly
-ninety-minute integration session, in a commit that contains nothing else.
+| | How | Cost | When |
+|---|---|---|---|
+| **Code** | tree-sitter AST parsing | Free, fully local, no model involved | `graphify update .` — after any code change |
+| **Docs, PDFs, images** | a model reads them | Uses whichever backend you configure | `/graphify .` inside Claude Code |
+| **Community names** | a model names each cluster | Same | `graphify label . --backend=claude-cli` |
 
-`graph.json` is a large generated file that changes whenever anything changes. Three
-people committing it means a conflict in it on nearly every pull request, and merging two
-versions of a generated graph is meaningless work. Everyone else runs `graphify update .`
-locally and leaves the result uncommitted — `git status` should never show
-`graphify-out/` in anybody else's working tree at commit time.
+The post-commit hook runs the free code pass automatically. The semantic pass over
+markdown — the lane briefs, `AGENTS.md`, the pack guide — is the part that makes the
+graph *useful* rather than merely structural, and it runs through your own Claude Code
+session: type `/graphify .` in Claude Code at the repository root.
 
-If you do hit a conflict in `graphify-out/`, do not merge it. Take either side, then
-regenerate:
+We use the `claude-cli` backend so it runs on the existing Claude Code subscription. No
+API key is set on the integration machine and none is needed.
+
+---
+
+## Merge conflicts, solved properly
+
+`graph.json` is regenerated on every commit, so two people committing in the same week
+will always touch it. Graphify ships a **union merge driver** for exactly this, and
+`.gitattributes` already declares it:
+
+```
+graphify-out/graph.json merge=graphify -diff linguist-generated
+```
+
+Git will not use a driver it has not been told about, and that registration is per-clone
+config rather than something the repository can carry. So run it once:
 
 ```bash
-git checkout --theirs graphify-out/ && graphify update . 
+make graph-setup
 ```
 
+which is just:
+
+```bash
+git config merge.graphify.driver "graphify merge-driver %O %A %B"
+```
+
+With that set, two people's graph updates union-merge silently. **Without it**, you get an
+ordinary conflict in a 300 KB generated file. Do not hand-merge that — take either side
+and rebuild:
+
+```bash
+git checkout --theirs graphify-out/graph.json && graphify update .
+```
+
+`-diff linguist-generated` keeps the graph out of pull-request diffs and out of the
+repository's language statistics, so a PR that touches it still reads as a two-file change.
+
 ---
 
-## Extraction and what leaves the machine
+## What is committed, and what is not
 
-Code extraction is local — tree-sitter AST parsing, no model involved. Semantic
-extraction of documentation, PDFs and images calls whichever model backend you have
-configured, through your own IDE session or API key.
-
-This matters for Siew's data inventory: **the repository contains no personal data**, so
-graphify's semantic pass sends only project documentation to a model provider. The
-household corpus lives in `corpus/batches/`, which is gitignored and never enters the
-graph. Keep it that way — `.graphifyignore` excludes it explicitly, and the same applies
-to the 40-document real holdout, which must never be committed to this repository at all.
+| Path | Committed | Why |
+|---|---|---|
+| `graphify-out/graph.json` | yes | The graph everyone queries |
+| `graphify-out/GRAPH_REPORT.md` | yes | Key concepts and surprising connections, readable |
+| `graphify-out/.graphify_labels.json` | yes | Community names — a model call to regenerate |
+| `graphify-out/.graphify_analysis.json` | yes | Clustering analysis |
+| `graphify-out/graph.html` | no | 320 KB, regenerated locally in seconds |
+| `graphify-out/cache/`, `converted/`, dated backup folders | no | Machine-local working state |
 
 ---
 
-## For CI
+## What leaves the machine
 
-`graphify extract .` is the headless form, for a workflow rather than a terminal. We are
-not wiring it into CI for the capstone — the weekly regeneration is enough, and a CI job
-that calls a model on every pull request is cost with no reader.
+Code extraction is local: tree-sitter, no model. The semantic pass sends **documentation
+and markdown** to whichever backend you have configured — for us, Claude Code.
+
+This matters for Siew's data inventory, so state it precisely: **the repository contains
+no personal data.** The household corpus lives in `corpus/batches/` and the redacted
+holdout in `corpus/holdout/`; both are gitignored, and `.graphifyignore` excludes them
+from extraction as a second lock. The holdout must never be committed to this repository
+at all — see `NOTICE.md`.
+
+---
+
+## Keeping it fresh
+
+The post-commit hook keeps the code graph current by itself. Two things it cannot do:
+
+- **After editing markdown** — a lane brief, `AGENTS.md`, a skill — run `/graphify .` in
+  Claude Code so the semantic layer catches up. The report's **Graph Freshness** section
+  names the commit the graph was built from; compare it to `git rev-parse HEAD`.
+- **After a refactor that deletes code** — `graphify update . --force`, because the
+  rebuild refuses to shrink the graph without it.
+
+Regenerating at the weekly integration session is the habit to keep, in a commit
+containing nothing else.

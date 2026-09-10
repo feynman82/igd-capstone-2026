@@ -41,22 +41,21 @@ evaluation workflow can commit its results.
 Desmond). Group by owner for standups, by week for the plan view. The 80 tasks are in
 `docs/team-tasks.csv`.
 
-## 3. Install graphify
+## 3. Graphify is already set up
 
-Only you do this, and only from a local checkout — it parses files on disk and installs
-git hooks, so it cannot be started from the GitHub web interface or the API.
+The graph is built and committed (436 nodes, 473 edges, 51 communities) and the hooks are
+installed on this machine. Everyone else runs, once per clone:
 
 ```bash
 uv tool install graphifyy
-graphify install     # then check `git diff AGENTS.md` and revert anything it overwrote
-graphify .
+graphify install --platform claude
+make graph-setup            # registers the union merge driver for graph.json
 graphify hook install
-git add graphify-out/graph.json graphify-out/GRAPH_REPORT.md
-git commit -m "Add knowledge graph"
 ```
 
-Everyone else runs `graphify update .` locally and leaves the output uncommitted. Full
-detail, including why only one person commits it, is in `docs/GRAPHIFY.md`.
+After editing markdown, run `/graphify .` inside Claude Code so the semantic layer catches
+up — the code pass is automatic via the post-commit hook, but the docs pass is not.
+Full detail in `docs/GRAPHIFY.md`.
 
 ## 4. The self-hosted runner, when you get to week 3
 

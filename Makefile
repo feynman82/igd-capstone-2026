@@ -1,4 +1,4 @@
-.PHONY: check dev packs tasks corpus-check eval eval-quick fmt
+.PHONY: check dev packs tasks graph graph-setup corpus-check eval eval-quick fmt
 
 check:
 	uv run python -m packs.build --check
@@ -12,6 +12,17 @@ packs:
 # Regenerate each member's task list from docs/team-tasks.csv.
 tasks:
 	uv run python scripts/build_team_tasks.py
+
+# Run once per clone: teaches git the union merge driver for graphify-out/graph.json,
+# which .gitattributes already asks for. Without it, two people's graph updates conflict.
+graph-setup:
+	git config merge.graphify.driver "graphify merge-driver %O %A %B"
+	git config merge.graphify.name "graphify union merge for graph.json"
+	@echo "merge driver registered. Now: graphify install --platform claude && graphify hook install"
+
+# Refresh the code graph (free, local). For docs and markdown run /graphify . in Claude Code.
+graph:
+	graphify update .
 
 fmt:
 	uv run ruff format . && uv run ruff check --fix .

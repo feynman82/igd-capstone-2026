@@ -12,6 +12,8 @@ Format: what landed, what moved the numbers, what we decided, what slipped.
 - Repository framework: per-member briefs and generated task lists under `team/`
 - Six project skills and four slash commands in `.claude/`, so every session behaves the same
 - Contributing guide, ADR index and template, issue templates
+- Knowledge graph built and committed; union merge driver wired so graph.json does not
+  conflict between committers
 
 **Decided**
 - Member folders hold briefs and task lists only; work stays in the functional
@@ -19,7 +21,8 @@ Format: what landed, what moved the numbers, what we decided, what slipped.
 - Task lists are generated from `docs/team-tasks.csv`, the same file imported into Notion
 
 **Slipped**
-- Nothing yet.
+- Semantic (markdown) pass over the graph still to run — the committed graph is the
+  free code pass plus community labels.
 
 ## W1 · 2–8 Sep 2026
 

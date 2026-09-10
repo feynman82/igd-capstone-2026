@@ -16,6 +16,8 @@ inbox/
 graphify-out/*
 !graphify-out/graph.json
 !graphify-out/GRAPH_REPORT.md
+!graphify-out/.graphify_labels.json
+!graphify-out/.graphify_analysis.json
 .graphify_python
 
 # Word lock and crash artefacts

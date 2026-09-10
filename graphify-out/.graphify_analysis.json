@@ -1,0 +1,741 @@
+{
+  "communities": {
+    "0": [
+      "basemodel",
+      "core_contracts",
+      "core_contracts_alertconfig",
+      "core_contracts_documenttypespec",
+      "core_contracts_fieldspec",
+      "core_contracts_grounding",
+      "core_contracts_guardrails",
+      "core_contracts_modulemanifest",
+      "core_contracts_moduletrigger",
+      "core_contracts_packmanifest",
+      "core_contracts_packmanifest_field_index",
+      "core_contracts_persona",
+      "core_contracts_rationale_1",
+      "core_contracts_rationale_144",
+      "core_contracts_rationale_156",
+      "core_contracts_rationale_28",
+      "core_contracts_rationale_85",
+      "core_contracts_rationale_97",
+      "core_contracts_registrations",
+      "core_contracts_reminderconfig",
+      "core_contracts_strict",
+      "core_contracts_trackerconfig",
+      "packs_build",
+      "packs_build_class_name",
+      "packs_build_load",
+      "packs_build_main",
+      "packs_build_py_path",
+      "packs_build_rationale_1",
+      "packs_build_rationale_122",
+      "packs_build_render_dictionary",
+      "packs_build_render_register_columns",
+      "packs_build_render_schemas",
+      "packs_build_write",
+      "tests_test_contracts",
+      "tests_test_contracts_rationale_1",
+      "tests_test_contracts_rationale_25",
+      "tests_test_contracts_test_a_pack_cannot_opt_out_of_never_acts",
+      "tests_test_contracts_test_generated_files_are_in_sync",
+      "tests_test_contracts_test_template_pack_validates"
+    ],
+    "1": [
+      "docs_adr_0001_record_architecture_decisions",
+      "docs_adr_0001_record_architecture_decisions_1_record_architecture_decisions",
+      "docs_adr_0001_record_architecture_decisions_consequences",
+      "docs_adr_0001_record_architecture_decisions_context",
+      "docs_adr_0001_record_architecture_decisions_decision",
+      "docs_adr_0002_one_postgres",
+      "docs_adr_0002_one_postgres_2_one_postgresql_instance_for_everything",
+      "docs_adr_0002_one_postgres_consequences",
+      "docs_adr_0002_one_postgres_context",
+      "docs_adr_0002_one_postgres_decision",
+      "docs_adr_0002_one_postgres_rejected",
+      "docs_adr_readme",
+      "docs_adr_readme_architecture_decision_records",
+      "docs_adr_readme_index",
+      "docs_adr_readme_writing_one",
+      "docs_adr_template",
+      "docs_adr_template_alternatives_considered",
+      "docs_adr_template_consequences",
+      "docs_adr_template_context",
+      "docs_adr_template_decision",
+      "docs_adr_template_nnnn_the_decision_as_a_statement_not_a_question",
+      "docs_adr_template_revisit_when"
+    ],
+    "2": [
+      "agents",
+      "claude",
+      "claude_before_you_say_you_are_done",
+      "claude_claude_code_read_this_first",
+      "claude_finding_your_way_around",
+      "claude_skills_and_commands",
+      "claude_the_three_things_agents_get_wrong_here",
+      "contributing",
+      "packs_readme",
+      "readme",
+      "team_christian_readme",
+      "team_christian_tasks",
+      "team_desmond_readme",
+      "team_desmond_tasks",
+      "team_readme",
+      "team_siew_readme",
+      "team_siew_tasks",
+      "team_yew_mun_readme",
+      "team_yew_mun_tasks",
+      "team_zee_readme",
+      "team_zee_tasks"
+    ],
+    "3": [
+      "corpus_validate",
+      "corpus_validate_as_date",
+      "corpus_validate_fields",
+      "corpus_validate_known_doc_types",
+      "corpus_validate_known_fields",
+      "corpus_validate_main",
+      "corpus_validate_py_path",
+      "corpus_validate_rationale_1",
+      "corpus_validate_rationale_19",
+      "corpus_validate_validate",
+      "date",
+      "tests_test_register_validation",
+      "tests_test_register_validation_py_path",
+      "tests_test_register_validation_rationale_1",
+      "tests_test_register_validation_test_a_row_with_no_fields_carries_no_ground_truth",
+      "tests_test_register_validation_test_duplicate_ids_are_caught",
+      "tests_test_register_validation_test_expiry_before_start_is_caught",
+      "tests_test_register_validation_test_template_register_is_clean",
+      "tests_test_register_validation_test_the_same_policy_must_look_identical_everywhere",
+      "tests_test_register_validation_write"
+    ],
+    "4": [
+      "docs_pack_authoring",
+      "docs_pack_authoring_1_what_a_pack_is",
+      "docs_pack_authoring_2_the_one_thing_to_understand_before_you_start",
+      "docs_pack_authoring_3_the_workflow",
+      "docs_pack_authoring_4_writing_pack_yaml",
+      "docs_pack_authoring_5_the_grounding_corpus",
+      "docs_pack_authoring_6_definition_of_done",
+      "docs_pack_authoring_7_where_to_ask",
+      "docs_pack_authoring_authoring_a_domain_pack",
+      "docs_pack_authoring_descriptions_are_prompts",
+      "docs_pack_authoring_document_types",
+      "docs_pack_authoring_field_types",
+      "docs_pack_authoring_guardrails",
+      "docs_pack_authoring_how_many_fields",
+      "docs_pack_authoring_persona",
+      "docs_pack_authoring_registering_with_capability_modules"
+    ],
+    "5": [
+      "docs_artefacts_team_split_narrative",
+      "docs_artefacts_team_split_narrative_a_integration_and_product_owner_christian_builder",
+      "docs_artefacts_team_split_narrative_b_retrieval_and_evaluation_yew_mun_the_data_scientist_builder",
+      "docs_artefacts_team_split_narrative_c_governance_and_assurance_siew_the_data_governance_officer",
+      "docs_artefacts_team_split_narrative_d_domain_packs_and_interface_zee_the_commercial_member_builder",
+      "docs_artefacts_team_split_narrative_e_corpus_and_adversarial_testing_desmond_the_police_officer",
+      "docs_artefacts_team_split_narrative_everyone_regardless_of_lane",
+      "docs_artefacts_team_split_narrative_how_the_code_gets_written",
+      "docs_artefacts_team_split_narrative_presentation_split",
+      "docs_artefacts_team_split_narrative_project_parrot_team_split",
+      "docs_artefacts_team_split_narrative_swap_rules",
+      "docs_artefacts_team_split_narrative_the_five_lanes",
+      "docs_artefacts_team_split_narrative_the_one_process_change_that_matters",
+      "docs_artefacts_team_split_narrative_two_rules_for_the_corpus"
+    ],
+    "6": [
+      "docs_team",
+      "docs_team_a_integration_and_product_owner_christian_builder",
+      "docs_team_b_retrieval_and_evaluation_yew_mun_the_data_scientist_builder",
+      "docs_team_c_governance_and_assurance_siew_the_data_governance_officer",
+      "docs_team_d_domain_packs_and_interface_zee_the_commercial_member_builder",
+      "docs_team_e_corpus_and_adversarial_testing_desmond_the_police_officer",
+      "docs_team_everyone_regardless_of_lane",
+      "docs_team_how_the_code_gets_written",
+      "docs_team_presentation_split",
+      "docs_team_project_parrot_team_split",
+      "docs_team_swap_rules",
+      "docs_team_the_five_lanes",
+      "docs_team_the_one_process_change_that_matters",
+      "docs_team_two_rules_for_the_corpus"
+    ],
+    "7": [
+      "packs_readme_1_what_we_are_building_in_one_paragraph",
+      "packs_readme_2_what_a_domain_pack_actually_is",
+      "packs_readme_3_the_one_thing_that_matters_most",
+      "packs_readme_4_what_you_do_step_by_step",
+      "packs_readme_5_how_your_output_lets_desmond_continue",
+      "packs_readme_6_persona_and_guardrails",
+      "packs_readme_7_grounding_the_optional_second_half",
+      "packs_readme_8_starter_prompt_for_claude_code",
+      "packs_readme_9_what_done_looks_like_for_a_pack",
+      "packs_readme_domain_packs_start_here",
+      "packs_readme_if_something_goes_wrong",
+      "packs_readme_the_field_types_you_can_use",
+      "packs_readme_the_rules_for_a_field"
+    ],
+    "8": [
+      "claude_skills_running_the_eval_harness_skill",
+      "claude_skills_running_the_eval_harness_skill_commands",
+      "claude_skills_running_the_eval_harness_skill_done",
+      "claude_skills_running_the_eval_harness_skill_never_overwrite_a_result",
+      "claude_skills_running_the_eval_harness_skill_one_variable_per_run",
+      "claude_skills_running_the_eval_harness_skill_read_first",
+      "claude_skills_running_the_eval_harness_skill_reporting_a_change",
+      "claude_skills_running_the_eval_harness_skill_running_the_evaluation_harness",
+      "claude_skills_running_the_eval_harness_skill_staying_in_lane",
+      "claude_skills_running_the_eval_harness_skill_targets",
+      "claude_skills_running_the_eval_harness_skill_the_three_sets"
+    ],
+    "9": [
+      "team_christian_tasks_christian_task_list",
+      "team_christian_tasks_w10_due_2026_11_10",
+      "team_christian_tasks_w1_due_2026_09_08",
+      "team_christian_tasks_w2_due_2026_09_15",
+      "team_christian_tasks_w3_due_2026_09_22",
+      "team_christian_tasks_w4_due_2026_09_29",
+      "team_christian_tasks_w5_due_2026_10_06",
+      "team_christian_tasks_w6_due_2026_10_13",
+      "team_christian_tasks_w7_due_2026_10_20",
+      "team_christian_tasks_w8_due_2026_10_27",
+      "team_christian_tasks_w9_due_2026_10_28"
+    ],
+    "10": [
+      "team_desmond_tasks_desmond_task_list",
+      "team_desmond_tasks_w10_due_2026_11_10",
+      "team_desmond_tasks_w1_due_2026_09_08",
+      "team_desmond_tasks_w2_due_2026_09_15",
+      "team_desmond_tasks_w3_due_2026_09_22",
+      "team_desmond_tasks_w4_due_2026_09_29",
+      "team_desmond_tasks_w5_due_2026_10_06",
+      "team_desmond_tasks_w6_due_2026_10_13",
+      "team_desmond_tasks_w7_due_2026_10_20",
+      "team_desmond_tasks_w8_due_2026_10_27",
+      "team_desmond_tasks_w9_due_2026_11_03"
+    ],
+    "11": [
+      "team_siew_tasks_siew_task_list",
+      "team_siew_tasks_w10_due_2026_11_10",
+      "team_siew_tasks_w1_due_2026_09_08",
+      "team_siew_tasks_w2_due_2026_09_15",
+      "team_siew_tasks_w3_due_2026_09_22",
+      "team_siew_tasks_w4_due_2026_09_29",
+      "team_siew_tasks_w5_due_2026_10_06",
+      "team_siew_tasks_w6_due_2026_10_13",
+      "team_siew_tasks_w7_due_2026_10_20",
+      "team_siew_tasks_w8_due_2026_10_27",
+      "team_siew_tasks_w9_due_2026_11_03"
+    ],
+    "12": [
+      "team_yew_mun_tasks_w10_due_2026_11_10",
+      "team_yew_mun_tasks_w1_due_2026_09_08",
+      "team_yew_mun_tasks_w2_due_2026_09_15",
+      "team_yew_mun_tasks_w3_due_2026_09_22",
+      "team_yew_mun_tasks_w4_due_2026_09_29",
+      "team_yew_mun_tasks_w5_due_2026_10_06",
+      "team_yew_mun_tasks_w6_due_2026_10_13",
+      "team_yew_mun_tasks_w7_due_2026_10_20",
+      "team_yew_mun_tasks_w8_due_2026_10_27",
+      "team_yew_mun_tasks_w9_due_2026_11_03",
+      "team_yew_mun_tasks_yew_mun_task_list"
+    ],
+    "13": [
+      "team_zee_tasks_w10_due_2026_11_10",
+      "team_zee_tasks_w1_due_2026_09_08",
+      "team_zee_tasks_w2_due_2026_09_15",
+      "team_zee_tasks_w3_due_2026_09_22",
+      "team_zee_tasks_w4_due_2026_09_29",
+      "team_zee_tasks_w5_due_2026_10_06",
+      "team_zee_tasks_w6_due_2026_10_13",
+      "team_zee_tasks_w7_due_2026_10_20",
+      "team_zee_tasks_w8_due_2026_10_27",
+      "team_zee_tasks_w9_due_2026_11_03",
+      "team_zee_tasks_zee_task_list"
+    ],
+    "14": [
+      "claude_skills_filling_the_corpus_register_skill",
+      "claude_skills_filling_the_corpus_register_skill_batches",
+      "claude_skills_filling_the_corpus_register_skill_column_headings_are_not_yours_to_choose",
+      "claude_skills_filling_the_corpus_register_skill_done_per_batch",
+      "claude_skills_filling_the_corpus_register_skill_filling_the_corpus_register",
+      "claude_skills_filling_the_corpus_register_skill_read_first",
+      "claude_skills_filling_the_corpus_register_skill_the_adversarial_half_from_week_7",
+      "claude_skills_filling_the_corpus_register_skill_the_order_which_is_not_the_obvious_one",
+      "claude_skills_filling_the_corpus_register_skill_two_rules_that_cannot_bend",
+      "claude_skills_filling_the_corpus_register_skill_validate_before_handing_over"
+    ],
+    "15": [
+      "claude_skills_writing_a_governance_artefact_skill",
+      "claude_skills_writing_a_governance_artefact_skill_adversarial_set_c",
+      "claude_skills_writing_a_governance_artefact_skill_done_per_artefact",
+      "claude_skills_writing_a_governance_artefact_skill_never",
+      "claude_skills_writing_a_governance_artefact_skill_read_first",
+      "claude_skills_writing_a_governance_artefact_skill_the_autonomy_statement",
+      "claude_skills_writing_a_governance_artefact_skill_the_governing_rule",
+      "claude_skills_writing_a_governance_artefact_skill_the_six",
+      "claude_skills_writing_a_governance_artefact_skill_where_governance_touches_the_code",
+      "claude_skills_writing_a_governance_artefact_skill_writing_a_governance_artefact"
+    ],
+    "16": [
+      "first_run",
+      "first_run_1_push",
+      "first_run_2_turn_on_the_guardrails_while_the_repo_is_still_empty",
+      "first_run_3_install_graphify",
+      "first_run_4_the_self_hosted_runner_when_you_get_to_week_3",
+      "first_run_first_run",
+      "first_run_first_three_commits_in_order",
+      "first_run_send_these_three_links_on_day_one",
+      "first_run_what_is_already_here"
+    ],
+    "17": [
+      "readme_authoring_a_pack",
+      "readme_igd_capstone_2026",
+      "readme_quick_start",
+      "readme_the_stack_in_one_table",
+      "readme_the_three_rules_that_matter",
+      "readme_what_it_is",
+      "readme_where_things_live",
+      "readme_where_to_start",
+      "readme_working_with_agents"
+    ],
+    "18": [
+      "team_zee_readme_half_one_domain_packs_weeks_1_to_7",
+      "team_zee_readme_half_two_the_interface_weeks_4_to_8",
+      "team_zee_readme_read_this_first",
+      "team_zee_readme_rules_that_apply_to_you_specifically",
+      "team_zee_readme_the_two_halves_of_this_lane",
+      "team_zee_readme_what_done_looks_like",
+      "team_zee_readme_what_you_present",
+      "team_zee_readme_your_claude_code_skills",
+      "team_zee_readme_zee_lane_d_domain_packs_and_interface"
+    ],
+    "19": [
+      "claude_skills_authoring_a_domain_pack_skill",
+      "claude_skills_authoring_a_domain_pack_skill_authoring_a_domain_pack",
+      "claude_skills_authoring_a_domain_pack_skill_before_anything_else",
+      "claude_skills_authoring_a_domain_pack_skill_done",
+      "claude_skills_authoring_a_domain_pack_skill_grounding_when_the_pack_needs_it",
+      "claude_skills_authoring_a_domain_pack_skill_never",
+      "claude_skills_authoring_a_domain_pack_skill_the_rule_that_governs_everything",
+      "claude_skills_authoring_a_domain_pack_skill_work_in_this_order_stopping_for_the_author_at_each_step"
+    ],
+    "20": [
+      "corpus_canon_template",
+      "corpus_canon_template_address",
+      "corpus_canon_template_employment",
+      "corpus_canon_template_household_canon",
+      "corpus_canon_template_life_events_that_documents_must_reflect",
+      "corpus_canon_template_people",
+      "corpus_canon_template_policies",
+      "corpus_canon_template_vehicles"
+    ],
+    "21": [
+      "db_migrations_0001_init",
+      "db_migrations_0001_init_chunks",
+      "db_migrations_0001_init_documents",
+      "db_migrations_0001_init_facts",
+      "db_migrations_0001_init_modules",
+      "db_migrations_0001_init_obligations",
+      "db_migrations_0001_init_packs",
+      "db_migrations_0001_init_traces"
+    ],
+    "22": [
+      "scripts_build_team_tasks",
+      "scripts_build_team_tasks_main",
+      "scripts_build_team_tasks_py_path",
+      "scripts_build_team_tasks_rationale_1",
+      "scripts_build_team_tasks_read_rows",
+      "scripts_build_team_tasks_render",
+      "scripts_build_team_tasks_week_key",
+      "scripts_build_team_tasks_write"
+    ],
+    "23": [
+      "team_desmond_readme_desmond_lane_e_corpus_and_adversarial_testing",
+      "team_desmond_readme_done_per_batch",
+      "team_desmond_readme_starter_prompt_for_your_coding_agent",
+      "team_desmond_readme_the_one_rule_that_changes_everything_register_first",
+      "team_desmond_readme_the_second_half_adversarial_testing",
+      "team_desmond_readme_two_rules_you_cannot_bend",
+      "team_desmond_readme_volumes",
+      "team_desmond_readme_where_the_column_headings_come_from"
+    ],
+    "24": [
+      "agents_before_you_read_files_at_random",
+      "agents_definition_of_done",
+      "agents_hard_rules",
+      "agents_stack_do_not_substitute",
+      "agents_style",
+      "agents_what_to_do_when_you_are_unsure",
+      "agents_working_agreement_for_coding_agents"
+    ],
+    "25": [
+      "claude_skills_integration_review_skill",
+      "claude_skills_integration_review_skill_how_to_give_the_feedback",
+      "claude_skills_integration_review_skill_integration_review",
+      "claude_skills_integration_review_skill_never",
+      "claude_skills_integration_review_skill_read_first",
+      "claude_skills_integration_review_skill_reviewing_a_pull_request",
+      "claude_skills_integration_review_skill_the_weekly_pass_ninety_minutes_protected"
+    ],
+    "26": [
+      "claude_skills_writing_an_adr_skill",
+      "claude_skills_writing_an_adr_skill_format",
+      "claude_skills_writing_an_adr_skill_read_first",
+      "claude_skills_writing_an_adr_skill_rules",
+      "claude_skills_writing_an_adr_skill_what_does_not",
+      "claude_skills_writing_an_adr_skill_what_earns_an_adr",
+      "claude_skills_writing_an_adr_skill_writing_an_adr"
+    ],
+    "27": [
+      "contributing_before_your_first_commit",
+      "contributing_contributing",
+      "contributing_decisions",
+      "contributing_generated_files",
+      "contributing_if_it_touches_retrieval_extraction_or_the_grounding_gate",
+      "contributing_the_loop",
+      "contributing_when_you_are_unsure"
+    ],
+    "28": [
+      "docs_graphify",
+      "docs_graphify_everyone_else",
+      "docs_graphify_extraction_and_what_leaves_the_machine",
+      "docs_graphify_for_ci",
+      "docs_graphify_graphify_the_shared_knowledge_graph",
+      "docs_graphify_one_time_setup_christian_only",
+      "docs_graphify_the_rule_that_prevents_constant_merge_conflicts"
+    ],
+    "29": [
+      "team_siew_readme_adversarial_set_c",
+      "team_siew_readme_done_per_artefact",
+      "team_siew_readme_siew_lane_c_governance_and_assurance",
+      "team_siew_readme_starter_prompt_for_your_coding_agent",
+      "team_siew_readme_the_autonomy_statement",
+      "team_siew_readme_the_six_artefacts",
+      "team_siew_readme_where_governance_touches_the_code"
+    ],
+    "30": [
+      "team_yew_mun_readme_done",
+      "team_yew_mun_readme_order_of_work",
+      "team_yew_mun_readme_starter_prompt_for_your_coding_agent",
+      "team_yew_mun_readme_targets",
+      "team_yew_mun_readme_the_three_golden_sets",
+      "team_yew_mun_readme_what_you_own",
+      "team_yew_mun_readme_yew_mun_lane_b_retrieval_and_evaluation"
+    ],
+    "31": [
+      "corpus_readme",
+      "corpus_readme_the_corpus",
+      "corpus_readme_the_order_matters",
+      "corpus_readme_tiers",
+      "corpus_readme_two_rules",
+      "corpus_readme_validate_before_handing_over"
+    ],
+    "32": [
+      "docs_artefacts_readme",
+      "docs_artefacts_readme_a_note_on_the_model",
+      "docs_artefacts_readme_artefacts",
+      "docs_artefacts_readme_current_deliverables",
+      "docs_artefacts_readme_regenerating",
+      "docs_artefacts_readme_source_material"
+    ],
+    "33": [
+      "docs_governance_synthetic_data_case",
+      "docs_governance_synthetic_data_case_the_decision",
+      "docs_governance_synthetic_data_case_what_synthetic_data_does_not_prove",
+      "docs_governance_synthetic_data_case_what_we_do_not_do",
+      "docs_governance_synthetic_data_case_why",
+      "docs_governance_synthetic_data_case_why_the_prototype_is_evaluated_on_synthetic_data"
+    ],
+    "34": [
+      "team_christian_readme_also_yours",
+      "team_christian_readme_christian_lane_a_integration_and_product_owner",
+      "team_christian_readme_starter_prompt_for_your_coding_agent",
+      "team_christian_readme_the_five_things_you_ship",
+      "team_christian_readme_week_1_in_order",
+      "team_christian_readme_what_integration_actually_means_here"
+    ],
+    "35": [
+      "team_readme_everyone_regardless_of_lane",
+      "team_readme_the_dependency_that_sets_the_order",
+      "team_readme_the_presentation_split",
+      "team_readme_the_task_lists_are_generated",
+      "team_readme_the_team",
+      "team_readme_why_work_does_not_live_here"
+    ],
+    "36": [
+      "claude_skills_readme",
+      "claude_skills_readme_changing_them",
+      "claude_skills_readme_project_skills",
+      "claude_skills_readme_slash_commands",
+      "claude_skills_readme_using_them"
+    ],
+    "37": [
+      "eval_readme",
+      "eval_readme_evaluation",
+      "eval_readme_ground_truth_comes_free",
+      "eval_readme_the_honesty_check",
+      "eval_readme_writing_questions"
+    ],
+    "38": [
+      "github_pull_request_template",
+      "github_pull_request_template_checks",
+      "github_pull_request_template_evaluation",
+      "github_pull_request_template_lane",
+      "github_pull_request_template_what_this_changes"
+    ],
+    "39": [
+      "grounding_readme",
+      "grounding_readme_grounding_corpora",
+      "grounding_readme_owner",
+      "grounding_readme_rules",
+      "grounding_readme_structure"
+    ],
+    "40": [
+      "notice",
+      "notice_notice",
+      "notice_third_party_components",
+      "notice_this_repository_contains_no_personal_data",
+      "notice_use"
+    ],
+    "41": [
+      "changelog",
+      "changelog_changelog",
+      "changelog_w1_2_8_sep_2026",
+      "changelog_w2_9_15_sep_2026"
+    ],
+    "42": [
+      "mcp",
+      "mcp_command_npx",
+      "mcp_mcp_server_filesystem",
+      "mcp_package_modelcontextprotocol_server_filesystem"
+    ],
+    "43": [
+      "docs_governance_readme",
+      "docs_governance_readme_governance_artefacts",
+      "docs_governance_readme_the_autonomy_statement_in_one_line"
+    ],
+    "44": [
+      "corpus_init",
+      "corpus_init_rationale_1"
+    ],
+    "45": [
+      "packs_init",
+      "packs_init_rationale_1"
+    ],
+    "46": [
+      "claude_commands_check"
+    ],
+    "47": [
+      "claude_commands_handover"
+    ],
+    "48": [
+      "claude_commands_orient"
+    ],
+    "49": [
+      "claude_commands_weekly"
+    ],
+    "50": [
+      "pkg_parrot"
+    ]
+  },
+  "cohesion": {
+    "0": 0.08636977058029689,
+    "1": 0.09090909090909091,
+    "2": 0.1619047619047619,
+    "3": 0.21578947368421053,
+    "4": 0.125,
+    "5": 0.14285714285714285,
+    "6": 0.14285714285714285,
+    "7": 0.15384615384615385,
+    "8": 0.18181818181818182,
+    "9": 0.18181818181818182,
+    "10": 0.18181818181818182,
+    "11": 0.18181818181818182,
+    "12": 0.18181818181818182,
+    "13": 0.18181818181818182,
+    "14": 0.2,
+    "15": 0.2,
+    "16": 0.2222222222222222,
+    "17": 0.2222222222222222,
+    "18": 0.2222222222222222,
+    "19": 0.25,
+    "20": 0.25,
+    "21": 0.35714285714285715,
+    "22": 0.39285714285714285,
+    "23": 0.25,
+    "24": 0.2857142857142857,
+    "25": 0.2857142857142857,
+    "26": 0.2857142857142857,
+    "27": 0.2857142857142857,
+    "28": 0.2857142857142857,
+    "29": 0.2857142857142857,
+    "30": 0.2857142857142857,
+    "31": 0.3333333333333333,
+    "32": 0.3333333333333333,
+    "33": 0.3333333333333333,
+    "34": 0.3333333333333333,
+    "35": 0.3333333333333333,
+    "36": 0.4,
+    "37": 0.4,
+    "38": 0.4,
+    "39": 0.4,
+    "40": 0.4,
+    "41": 0.5,
+    "42": 0.5,
+    "43": 0.6666666666666666,
+    "44": 1.0,
+    "45": 1.0,
+    "46": 1.0,
+    "47": 1.0,
+    "48": 1.0,
+    "49": 1.0,
+    "50": 1.0
+  },
+  "gods": [
+    {
+      "id": "core_contracts_strict",
+      "label": "Strict",
+      "degree": 14
+    },
+    {
+      "id": "corpus_validate_validate",
+      "label": "validate()",
+      "degree": 13
+    },
+    {
+      "id": "core_contracts_packmanifest",
+      "label": "PackManifest",
+      "degree": 11
+    },
+    {
+      "id": "team_christian_tasks_christian_task_list",
+      "label": "Christian — task list",
+      "degree": 11
+    },
+    {
+      "id": "team_desmond_tasks_desmond_task_list",
+      "label": "Desmond — task list",
+      "degree": 11
+    },
+    {
+      "id": "team_siew_tasks_siew_task_list",
+      "label": "Siew — task list",
+      "degree": 11
+    },
+    {
+      "id": "team_yew_mun_tasks_yew_mun_task_list",
+      "label": "Yew Mun — task list",
+      "degree": 11
+    },
+    {
+      "id": "team_zee_tasks_zee_task_list",
+      "label": "Zee — task list",
+      "degree": 11
+    },
+    {
+      "id": "claude_skills_running_the_eval_harness_skill_running_the_evaluation_harness",
+      "label": "Running the evaluation harness",
+      "degree": 10
+    },
+    {
+      "id": "packs_readme_domain_packs_start_here",
+      "label": "Domain packs — start here",
+      "degree": 10
+    }
+  ],
+  "surprises": [
+    {
+      "source": "load()",
+      "target": "PackManifest",
+      "source_files": [
+        "packs/build.py",
+        "core/contracts.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "render_dictionary()",
+      "target": "PackManifest",
+      "source_files": [
+        "packs/build.py",
+        "core/contracts.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "render_register_columns()",
+      "target": "PackManifest",
+      "source_files": [
+        "packs/build.py",
+        "core/contracts.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "render_schemas()",
+      "target": "PackManifest",
+      "source_files": [
+        "packs/build.py",
+        "core/contracts.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "connects across different repos/directories"
+    },
+    {
+      "source": "test_a_row_with_no_fields_carries_no_ground_truth()",
+      "target": "validate()",
+      "source_files": [
+        "tests/test_register_validation.py",
+        "corpus/validate.py"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "calls",
+      "why": "connects across different repos/directories"
+    }
+  ],
+  "questions": [
+    {
+      "type": "bridge_node",
+      "question": "Why does `Domain packs — start here` connect `Domain packs — start here` to `README.md`?",
+      "why": "High betweenness centrality (0.024) - this node is a cross-community bridge."
+    },
+    {
+      "type": "bridge_node",
+      "question": "Why does `Christian — task list` connect `Christian — task list` to `README.md`?",
+      "why": "High betweenness centrality (0.020) - this node is a cross-community bridge."
+    },
+    {
+      "type": "isolated_nodes",
+      "question": "What connects `npx`, `@modelcontextprotocol/server-filesystem`, `packs` to the rest of the system?",
+      "why": "263 weakly-connected nodes found - possible documentation gaps or missing edges."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `contracts.py` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.08636977058029689 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `NNNN · The decision, as a statement not a question` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `4. Writing `pack.yaml`` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.125 - nodes in this community are weakly interconnected."
+    },
+    {
+      "type": "low_cohesion",
+      "question": "Should `Project PARROT — team split` be split into smaller, more focused modules?",
+      "why": "Cohesion score 0.14285714285714285 - nodes in this community are weakly interconnected."
+    }
+  ]
+}

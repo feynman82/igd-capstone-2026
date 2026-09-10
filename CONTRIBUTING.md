@@ -11,7 +11,8 @@ should you. This file is the human-facing short version.
 1. Read `AGENTS.md`.
 2. Read your brief in [`team/`](team/README.md) and your task list beside it.
 3. Run `make check` on a clean checkout, so you know what green looks like.
-4. In a Claude Code session, run `/orient`.
+4. Set up the knowledge graph: `make graph-setup`, then follow `docs/GRAPHIFY.md`.
+5. In a Claude Code session, run `/orient`.
 
 ## The loop
 
