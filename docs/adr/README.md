@@ -12,6 +12,7 @@ the difference matters when a supervisor asks.
 |---|---|---|
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
 | [0002](0002-one-postgres.md) | One PostgreSQL instance for chunks, facts and state | Accepted |
+| [0003](0003-paperbrain-pattern-not-module.md) | PaperBrain informs core/retrieve/'s pattern; it is not the core module | Accepted |
 
 Add a row when you add a record.
 

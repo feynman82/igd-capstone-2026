@@ -1,16 +1,16 @@
 # Graph Report - igd-capstone-2026  (2026-09-10)
 
 ## Corpus Check
-- 66 files · ~50,814 words
+- 67 files · ~51,336 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 475 nodes · 488 edges · 52 communities (46 shown, 6 thin omitted)
+- 481 nodes · 493 edges · 53 communities (47 shown, 6 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `75eb1c85`
+- Built from commit: `fa22c956`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -63,6 +63,7 @@
 - __init__.py
 - parrot
 - Siew — task list
+- `docs/report/` — the final report
 
 ## God Nodes (most connected - your core abstractions)
 1. `Strict` - 14 edges
@@ -91,7 +92,7 @@
 ## Import Cycles
 - None detected.
 
-## Communities (52 total, 6 thin omitted)
+## Communities (53 total, 6 thin omitted)
 
 ### Community 0 - "contracts.py"
 Cohesion: 0.09
@@ -138,12 +139,12 @@ Cohesion: 0.10
 Nodes (19): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from (+11 more)
 
 ### Community 11 - "Siew — task list"
-Cohesion: 0.08
-Nodes (21): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Adversarial Set C (+13 more)
+Cohesion: 0.06
+Nodes (25): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Adversarial Set C (+17 more)
 
 ### Community 12 - "Yew Mun — task list"
-Cohesion: 0.18
-Nodes (11): W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13, W7 — due 2026-10-20 (+3 more)
+Cohesion: 0.10
+Nodes (18): Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation, W10 — due 2026-11-10 (+10 more)
 
 ### Community 13 - "Zee — task list"
 Cohesion: 0.25
@@ -166,8 +167,8 @@ Cohesion: 0.08
 Nodes (22): Importing the task database, Keeping the two in sync, Notion, Option A — move the hub into Christian's workspace ✅ recommended, Option B — Christian switches his connector to Yew Mun's workspace, Option C — leave Notion as a human-only view, The access problem, and the one decision that fixes it, Authoring a pack (+14 more)
 
 ### Community 18 - "Zee — Lane D · Domain packs and interface"
-Cohesion: 0.09
-Nodes (20): Half one — domain packs (weeks 1 to 7), Half two — the interface (weeks 4 to 8), Read this first, Rules that apply to you specifically, The two halves of this lane, What "done" looks like, What you present, Your Claude Code skills (+12 more)
+Cohesion: 0.22
+Nodes (9): Half one — domain packs (weeks 1 to 7), Half two — the interface (weeks 4 to 8), Read this first, Rules that apply to you specifically, The two halves of this lane, What "done" looks like, What you present, Your Claude Code skills (+1 more)
 
 ### Community 19 - "Authoring a domain pack"
 Cohesion: 0.25
@@ -261,18 +262,22 @@ Nodes (3): `docs/governance/` — the assurance artefacts, The autonomy statemen
 Cohesion: 0.18
 Nodes (11): Siew — task list, W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13 (+3 more)
 
+### Community 52 - "`docs/report/` — the final report"
+Cohesion: 0.33
+Nodes (5): `docs/report/` — the final report, Ownership, The rule that keeps it honest, The thing to understand before you write a word, Three questions for the supervisors, at the 6 October mid-term
+
 ## Knowledge Gaps
-- **285 isolated node(s):** `1 · Collaborators`, `2 · Branch protection`, `3 · Actions permissions`, `4 · Project board`, `5 · The Notion hub` (+280 more)
+- **289 isolated node(s):** `The thing to understand before you write a word`, `Ownership`, `The rule that keeps it honest`, `Three questions for the supervisors, at the 6 October mid-term`, `1 · Collaborators` (+284 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **6 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Domain packs — start here` connect `Domain packs — start here` to `Zee — Lane D · Domain packs and interface`?**
+- **Why does `Domain packs — start here` connect `Domain packs — start here` to `Siew — task list`?**
   _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **What connects `1 · Collaborators`, `2 · Branch protection`, `3 · Actions permissions` to the rest of the system?**
-  _285 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `The thing to understand before you write a word`, `Ownership`, `The rule that keeps it honest` to the rest of the system?**
+  _289 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `contracts.py` be split into smaller, more focused modules?**
   _Cohesion score 0.08636977058029689 - nodes in this community are weakly interconnected._
 - **Should `NNNN · The decision, as a statement not a question` be split into smaller, more focused modules?**

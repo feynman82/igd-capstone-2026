@@ -4,15 +4,81 @@
   "graph": {},
   "nodes": [
     {
+      "label": "README.md",
+      "file_type": "document",
+      "source_file": "docs/report/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_report_readme",
+      "community": 52,
+      "community_name": "`docs/report/` \u2014 the final report",
+      "norm_label": "readme.md"
+    },
+    {
+      "label": "`docs/report/` \u2014 the final report",
+      "file_type": "document",
+      "source_file": "docs/report/README.md",
+      "source_location": "L1",
+      "_origin": "ast",
+      "id": "docs_report_readme_docs_report_the_final_report",
+      "community": 52,
+      "community_name": "`docs/report/` \u2014 the final report",
+      "norm_label": "`docs/report/` \u2014 the final report"
+    },
+    {
+      "label": "The thing to understand before you write a word",
+      "file_type": "document",
+      "source_file": "docs/report/README.md",
+      "source_location": "L8",
+      "_origin": "ast",
+      "id": "docs_report_readme_the_thing_to_understand_before_you_write_a_word",
+      "community": 52,
+      "community_name": "`docs/report/` \u2014 the final report",
+      "norm_label": "the thing to understand before you write a word"
+    },
+    {
+      "label": "Ownership",
+      "file_type": "document",
+      "source_file": "docs/report/README.md",
+      "source_location": "L28",
+      "_origin": "ast",
+      "id": "docs_report_readme_ownership",
+      "community": 52,
+      "community_name": "`docs/report/` \u2014 the final report",
+      "norm_label": "ownership"
+    },
+    {
+      "label": "The rule that keeps it honest",
+      "file_type": "document",
+      "source_file": "docs/report/README.md",
+      "source_location": "L44",
+      "_origin": "ast",
+      "id": "docs_report_readme_the_rule_that_keeps_it_honest",
+      "community": 52,
+      "community_name": "`docs/report/` \u2014 the final report",
+      "norm_label": "the rule that keeps it honest"
+    },
+    {
+      "label": "Three questions for the supervisors, at the 6 October mid-term",
+      "file_type": "document",
+      "source_file": "docs/report/README.md",
+      "source_location": "L55",
+      "_origin": "ast",
+      "id": "docs_report_readme_three_questions_for_the_supervisors_at_the_6_october_mid_term",
+      "community": 52,
+      "community_name": "`docs/report/` \u2014 the final report",
+      "norm_label": "three questions for the supervisors, at the 6 october mid-term"
+    },
+    {
       "label": "FIRST-RUN.md",
       "file_type": "document",
       "source_file": "FIRST-RUN.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "first_run",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "first-run.md"
+      "norm_label": "first-run.md",
+      "id": "first_run"
     },
     {
       "label": "First run",
@@ -20,10 +86,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "first_run_first_run",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "first run"
+      "norm_label": "first run",
+      "id": "first_run_first_run"
     },
     {
       "label": "1 \u00b7 Collaborators",
@@ -31,10 +97,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L15",
       "_origin": "ast",
-      "id": "first_run_1_collaborators",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "1 \u00b7 collaborators"
+      "norm_label": "1 \u00b7 collaborators",
+      "id": "first_run_1_collaborators"
     },
     {
       "label": "2 \u00b7 Branch protection",
@@ -42,10 +108,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L36",
       "_origin": "ast",
-      "id": "first_run_2_branch_protection",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "2 \u00b7 branch protection"
+      "norm_label": "2 \u00b7 branch protection",
+      "id": "first_run_2_branch_protection"
     },
     {
       "label": "3 \u00b7 Actions permissions",
@@ -53,10 +119,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L49",
       "_origin": "ast",
-      "id": "first_run_3_actions_permissions",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "3 \u00b7 actions permissions"
+      "norm_label": "3 \u00b7 actions permissions",
+      "id": "first_run_3_actions_permissions"
     },
     {
       "label": "4 \u00b7 Project board",
@@ -64,10 +130,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L54",
       "_origin": "ast",
-      "id": "first_run_4_project_board",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "4 \u00b7 project board"
+      "norm_label": "4 \u00b7 project board",
+      "id": "first_run_4_project_board"
     },
     {
       "label": "5 \u00b7 The Notion hub",
@@ -75,10 +141,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L63",
       "_origin": "ast",
-      "id": "first_run_5_the_notion_hub",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "5 \u00b7 the notion hub"
+      "norm_label": "5 \u00b7 the notion hub",
+      "id": "first_run_5_the_notion_hub"
     },
     {
       "label": "Setting up a second machine",
@@ -86,10 +152,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L75",
       "_origin": "ast",
-      "id": "first_run_setting_up_a_second_machine",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "setting up a second machine"
+      "norm_label": "setting up a second machine",
+      "id": "first_run_setting_up_a_second_machine"
     },
     {
       "label": "What is already here",
@@ -97,10 +163,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L102",
       "_origin": "ast",
-      "id": "first_run_what_is_already_here",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "what is already here"
+      "norm_label": "what is already here",
+      "id": "first_run_what_is_already_here"
     },
     {
       "label": "The first three commits that matter",
@@ -108,10 +174,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L123",
       "_origin": "ast",
-      "id": "first_run_the_first_three_commits_that_matter",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "the first three commits that matter"
+      "norm_label": "the first three commits that matter",
+      "id": "first_run_the_first_three_commits_that_matter"
     },
     {
       "label": "Send these on day one",
@@ -119,10 +185,10 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L132",
       "_origin": "ast",
-      "id": "first_run_send_these_on_day_one",
       "community": 9,
       "community_name": "Christian \u2014 task list",
-      "norm_label": "send these on day one"
+      "norm_label": "send these on day one",
+      "id": "first_run_send_these_on_day_one"
     },
     {
       "label": "NOTION.md",
@@ -130,10 +196,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_notion",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "notion.md"
+      "norm_label": "notion.md",
+      "id": "docs_notion"
     },
     {
       "label": "Notion",
@@ -141,10 +207,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L1",
       "_origin": "ast",
-      "id": "docs_notion_notion",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "notion"
+      "norm_label": "notion",
+      "id": "docs_notion_notion"
     },
     {
       "label": "The access problem, and the one decision that fixes it",
@@ -152,10 +218,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L9",
       "_origin": "ast",
-      "id": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "the access problem, and the one decision that fixes it"
+      "norm_label": "the access problem, and the one decision that fixes it",
+      "id": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it"
     },
     {
       "label": "Option A \u2014 move the hub into Christian's workspace \u2705 recommended",
@@ -163,10 +229,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L21",
       "_origin": "ast",
-      "id": "docs_notion_option_a_move_the_hub_into_christian_s_workspace_recommended",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "option a \u2014 move the hub into christian's workspace \u2705 recommended"
+      "norm_label": "option a \u2014 move the hub into christian's workspace \u2705 recommended",
+      "id": "docs_notion_option_a_move_the_hub_into_christian_s_workspace_recommended"
     },
     {
       "label": "Option B \u2014 Christian switches his connector to Yew Mun's workspace",
@@ -174,10 +240,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L45",
       "_origin": "ast",
-      "id": "docs_notion_option_b_christian_switches_his_connector_to_yew_mun_s_workspace",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "option b \u2014 christian switches his connector to yew mun's workspace"
+      "norm_label": "option b \u2014 christian switches his connector to yew mun's workspace",
+      "id": "docs_notion_option_b_christian_switches_his_connector_to_yew_mun_s_workspace"
     },
     {
       "label": "Option C \u2014 leave Notion as a human-only view",
@@ -185,10 +251,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L54",
       "_origin": "ast",
-      "id": "docs_notion_option_c_leave_notion_as_a_human_only_view",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "option c \u2014 leave notion as a human-only view"
+      "norm_label": "option c \u2014 leave notion as a human-only view",
+      "id": "docs_notion_option_c_leave_notion_as_a_human_only_view"
     },
     {
       "label": "Importing the task database",
@@ -196,10 +262,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L62",
       "_origin": "ast",
-      "id": "docs_notion_importing_the_task_database",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "importing the task database"
+      "norm_label": "importing the task database",
+      "id": "docs_notion_importing_the_task_database"
     },
     {
       "label": "Keeping the two in sync",
@@ -207,10 +273,10 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L89",
       "_origin": "ast",
-      "id": "docs_notion_keeping_the_two_in_sync",
       "community": 17,
       "community_name": "igd-capstone-2026",
-      "norm_label": "keeping the two in sync"
+      "norm_label": "keeping the two in sync",
+      "id": "docs_notion_keeping_the_two_in_sync"
     },
     {
       "label": "README.md",
@@ -3973,8 +4039,8 @@
       "source_file": "packs/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "readme.md",
       "id": "packs_readme"
     },
@@ -4787,8 +4853,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "readme.md",
       "id": "team_yew_mun_readme"
     },
@@ -4798,8 +4864,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "yew mun \u2014 lane b \u00b7 retrieval and evaluation",
       "id": "team_yew_mun_readme_yew_mun_lane_b_retrieval_and_evaluation"
     },
@@ -4809,8 +4875,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L13",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "what you own",
       "id": "team_yew_mun_readme_what_you_own"
     },
@@ -4820,8 +4886,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L28",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "order of work",
       "id": "team_yew_mun_readme_order_of_work"
     },
@@ -4831,8 +4897,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L55",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "the three golden sets",
       "id": "team_yew_mun_readme_the_three_golden_sets"
     },
@@ -4842,8 +4908,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L74",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "targets",
       "id": "team_yew_mun_readme_targets"
     },
@@ -4853,8 +4919,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L92",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "starter prompt for your coding agent",
       "id": "team_yew_mun_readme_starter_prompt_for_your_coding_agent"
     },
@@ -4864,8 +4930,8 @@
       "source_file": "team/yew-mun/README.md",
       "source_location": "L116",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "done",
       "id": "team_yew_mun_readme_done"
     },
@@ -4875,8 +4941,8 @@
       "source_file": "team/yew-mun/tasks.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 11,
-      "community_name": "Siew \u2014 task list",
+      "community": 12,
+      "community_name": "Yew Mun \u2014 task list",
       "norm_label": "tasks.md",
       "id": "team_yew_mun_tasks"
     },
@@ -5007,8 +5073,8 @@
       "source_file": "team/zee/README.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "readme.md",
       "id": "team_zee_readme"
     },
@@ -5117,8 +5183,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L1",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "tasks.md",
       "id": "team_zee_tasks"
     },
@@ -5128,8 +5194,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L3",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "zee \u2014 task list",
       "id": "team_zee_tasks_zee_task_list"
     },
@@ -5139,8 +5205,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L10",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w1 \u2014 due 2026-09-08",
       "id": "team_zee_tasks_w1_due_2026_09_08"
     },
@@ -5150,8 +5216,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L20",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w2 \u2014 due 2026-09-15",
       "id": "team_zee_tasks_w2_due_2026_09_15"
     },
@@ -5161,8 +5227,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L29",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w3 \u2014 due 2026-09-22",
       "id": "team_zee_tasks_w3_due_2026_09_22"
     },
@@ -5172,8 +5238,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L41",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w4 \u2014 due 2026-09-29",
       "id": "team_zee_tasks_w4_due_2026_09_29"
     },
@@ -5183,8 +5249,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L47",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w5 \u2014 due 2026-10-06",
       "id": "team_zee_tasks_w5_due_2026_10_06"
     },
@@ -5194,8 +5260,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L56",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w6 \u2014 due 2026-10-13",
       "id": "team_zee_tasks_w6_due_2026_10_13"
     },
@@ -5205,8 +5271,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L62",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w7 \u2014 due 2026-10-20",
       "id": "team_zee_tasks_w7_due_2026_10_20"
     },
@@ -5216,8 +5282,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L71",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w8 \u2014 due 2026-10-27",
       "id": "team_zee_tasks_w8_due_2026_10_27"
     },
@@ -5227,8 +5293,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L80",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w9 \u2014 due 2026-11-03",
       "id": "team_zee_tasks_w9_due_2026_11_03"
     },
@@ -5238,8 +5304,8 @@
       "source_file": "team/zee/tasks.md",
       "source_location": "L92",
       "_origin": "ast",
-      "community": 18,
-      "community_name": "Zee \u2014 Lane D \u00b7 Domain packs and interface",
+      "community": 11,
+      "community_name": "Siew \u2014 task list",
       "norm_label": "w10 \u2014 due 2026-11-10",
       "id": "team_zee_tasks_w10_due_2026_11_10"
     }
@@ -5248,12 +5314,62 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "docs/report/README.md",
+      "source_location": "L1",
+      "weight": 1.0,
+      "source": "docs_report_readme",
+      "target": "docs_report_readme_docs_report_the_final_report",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/report/README.md",
+      "source_location": "L28",
+      "weight": 1.0,
+      "source": "docs_report_readme_docs_report_the_final_report",
+      "target": "docs_report_readme_ownership",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/report/README.md",
+      "source_location": "L44",
+      "weight": 1.0,
+      "source": "docs_report_readme_docs_report_the_final_report",
+      "target": "docs_report_readme_the_rule_that_keeps_it_honest",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/report/README.md",
+      "source_location": "L8",
+      "weight": 1.0,
+      "source": "docs_report_readme_docs_report_the_final_report",
+      "target": "docs_report_readme_the_thing_to_understand_before_you_write_a_word",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "docs/report/README.md",
+      "source_location": "L55",
+      "weight": 1.0,
+      "source": "docs_report_readme_docs_report_the_final_report",
+      "target": "docs_report_readme_three_questions_for_the_supervisors_at_the_6_october_mid_term",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "FIRST-RUN.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run",
-      "target": "first_run_first_run",
-      "confidence_score": 1.0
+      "target": "first_run_first_run"
     },
     {
       "relation": "contains",
@@ -5261,9 +5377,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L15",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_1_collaborators",
-      "confidence_score": 1.0
+      "target": "first_run_1_collaborators"
     },
     {
       "relation": "contains",
@@ -5271,9 +5387,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L36",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_2_branch_protection",
-      "confidence_score": 1.0
+      "target": "first_run_2_branch_protection"
     },
     {
       "relation": "contains",
@@ -5281,9 +5397,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L49",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_3_actions_permissions",
-      "confidence_score": 1.0
+      "target": "first_run_3_actions_permissions"
     },
     {
       "relation": "contains",
@@ -5291,9 +5407,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_4_project_board",
-      "confidence_score": 1.0
+      "target": "first_run_4_project_board"
     },
     {
       "relation": "contains",
@@ -5301,9 +5417,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L63",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_5_the_notion_hub",
-      "confidence_score": 1.0
+      "target": "first_run_5_the_notion_hub"
     },
     {
       "relation": "contains",
@@ -5311,9 +5427,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L132",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_send_these_on_day_one",
-      "confidence_score": 1.0
+      "target": "first_run_send_these_on_day_one"
     },
     {
       "relation": "contains",
@@ -5321,9 +5437,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L75",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_setting_up_a_second_machine",
-      "confidence_score": 1.0
+      "target": "first_run_setting_up_a_second_machine"
     },
     {
       "relation": "contains",
@@ -5331,9 +5447,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L123",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_the_first_three_commits_that_matter",
-      "confidence_score": 1.0
+      "target": "first_run_the_first_three_commits_that_matter"
     },
     {
       "relation": "contains",
@@ -5341,9 +5457,9 @@
       "source_file": "FIRST-RUN.md",
       "source_location": "L102",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "first_run_first_run",
-      "target": "first_run_what_is_already_here",
-      "confidence_score": 1.0
+      "target": "first_run_what_is_already_here"
     },
     {
       "relation": "contains",
@@ -5351,9 +5467,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L1",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion",
-      "target": "docs_notion_notion",
-      "confidence_score": 1.0
+      "target": "docs_notion_notion"
     },
     {
       "relation": "references",
@@ -5381,9 +5497,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L62",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_notion",
-      "target": "docs_notion_importing_the_task_database",
-      "confidence_score": 1.0
+      "target": "docs_notion_importing_the_task_database"
     },
     {
       "relation": "contains",
@@ -5391,9 +5507,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L89",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_notion",
-      "target": "docs_notion_keeping_the_two_in_sync",
-      "confidence_score": 1.0
+      "target": "docs_notion_keeping_the_two_in_sync"
     },
     {
       "relation": "contains",
@@ -5401,9 +5517,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L9",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_notion",
-      "target": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it",
-      "confidence_score": 1.0
+      "target": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it"
     },
     {
       "relation": "contains",
@@ -5411,9 +5527,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L21",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it",
-      "target": "docs_notion_option_a_move_the_hub_into_christian_s_workspace_recommended",
-      "confidence_score": 1.0
+      "target": "docs_notion_option_a_move_the_hub_into_christian_s_workspace_recommended"
     },
     {
       "relation": "contains",
@@ -5421,9 +5537,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L45",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it",
-      "target": "docs_notion_option_b_christian_switches_his_connector_to_yew_mun_s_workspace",
-      "confidence_score": 1.0
+      "target": "docs_notion_option_b_christian_switches_his_connector_to_yew_mun_s_workspace"
     },
     {
       "relation": "contains",
@@ -5431,9 +5547,9 @@
       "source_file": "docs/NOTION.md",
       "source_location": "L54",
       "weight": 1.0,
+      "confidence_score": 1.0,
       "source": "docs_notion_the_access_problem_and_the_one_decision_that_fixes_it",
-      "target": "docs_notion_option_c_leave_notion_as_a_human_only_view",
-      "confidence_score": 1.0
+      "target": "docs_notion_option_c_leave_notion_as_a_human_only_view"
     },
     {
       "relation": "contains",
@@ -10178,5 +10294,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "75eb1c853b6b0376e10c7b8a891b42ecf642ad87"
+  "built_at_commit": "fa22c956b6f75697c1431efcb2514467274801ef"
 }
