@@ -1,16 +1,16 @@
 # Graph Report - igd-capstone-2026  (2026-09-10)
 
 ## Corpus Check
-- 58 files · ~48,566 words
+- 59 files · ~49,026 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 439 nodes · 473 edges · 44 communities (40 shown, 4 thin omitted)
+- 444 nodes · 464 edges · 44 communities (40 shown, 4 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 1 edges (avg confidence: 0.5)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `d700cfc1`
+- Built from commit: `2fe5efc6`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -94,8 +94,8 @@ Cohesion: 0.09
 Nodes (18): 1. Record architecture decisions, Consequences, Context, Decision, 2. One PostgreSQL instance for everything, Consequences, Context, Decision (+10 more)
 
 ### Community 2 - "README.md"
-Cohesion: 0.05
-Nodes (34): Also yours, Christian — Lane A · Integration and product owner, Starter prompt for your coding agent, The five things you ship, Week 1, in order, What integration actually means here, Christian — task list, W10 — due 2026-11-10 (+26 more)
+Cohesion: 0.11
+Nodes (17): Also yours, Christian — Lane A · Integration and product owner, Starter prompt for your coding agent, The five things you ship, Week 1, in order, What integration actually means here, Christian — task list, W10 — due 2026-11-10 (+9 more)
 
 ### Community 3 - "validate"
 Cohesion: 0.22
@@ -130,8 +130,8 @@ Cohesion: 0.10
 Nodes (19): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Starter prompt for your coding agent, The one rule that changes everything: register first, The second half: adversarial testing, Two rules you cannot bend, Volumes, Where the column headings come from (+11 more)
 
 ### Community 11 - "Siew — task list"
-Cohesion: 0.18
-Nodes (11): Siew — task list, W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13 (+3 more)
+Cohesion: 0.07
+Nodes (25): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Adversarial Set C (+17 more)
 
 ### Community 12 - "Yew Mun — task list"
 Cohesion: 0.10
@@ -150,16 +150,16 @@ Cohesion: 0.20
 Nodes (9): Adversarial Set C, Done, per artefact, Never, Read first, The autonomy statement, The governing rule, The six, Where governance touches the code (+1 more)
 
 ### Community 16 - "Siew — Lane C · Governance and assurance"
-Cohesion: 0.29
-Nodes (7): Adversarial Set C, Done, per artefact, Siew — Lane C · Governance and assurance, Starter prompt for your coding agent, The autonomy statement, The six artefacts, Where governance touches the code
+Cohesion: 0.33
+Nodes (5): Before you say you are done, Claude Code — read this first, Finding your way around, Skills and commands, The three things agents get wrong here
 
 ### Community 17 - "igd-capstone-2026"
-Cohesion: 0.08
-Nodes (21): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents, Before you say you are done (+13 more)
+Cohesion: 0.10
+Nodes (19): Claude's access to the Notion page, Importing the task database, Keeping the two in sync, Notion, Authoring a pack, igd-capstone-2026, Quick start, The stack, in one table (+11 more)
 
 ### Community 18 - "Zee — Lane D · Domain packs and interface"
-Cohesion: 0.22
-Nodes (9): Half one — domain packs (weeks 1 to 7), Half two — the interface (weeks 4 to 8), Read this first, Rules that apply to you specifically, The two halves of this lane, What "done" looks like, What you present, Your Claude Code skills (+1 more)
+Cohesion: 0.09
+Nodes (20): Half one — domain packs (weeks 1 to 7), Half two — the interface (weeks 4 to 8), Read this first, Rules that apply to you specifically, The two halves of this lane, What "done" looks like, What you present, Your Claude Code skills (+12 more)
 
 ### Community 19 - "Authoring a domain pack"
 Cohesion: 0.25
@@ -230,23 +230,23 @@ Cohesion: 0.50
 Nodes (3): npx, filesystem, @modelcontextprotocol/server-filesystem
 
 ## Knowledge Gaps
-- **265 isolated node(s):** `Setup, once per clone`, `Using it`, `Two kinds of extraction, and which needs what`, `Merge conflicts, solved properly`, `What is committed, and what is not` (+260 more)
+- **268 isolated node(s):** `What it is`, `Where to start`, `Quick start`, `Where things live`, `The stack, in one table` (+263 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **4 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Domain packs — start here` connect `Domain packs — start here` to `README.md`?**
-  _High betweenness centrality (0.021) - this node is a cross-community bridge._
-- **What connects `Setup, once per clone`, `Using it`, `Two kinds of extraction, and which needs what` to the rest of the system?**
-  _265 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **Why does `Domain packs — start here` connect `Domain packs — start here` to `Zee — Lane D · Domain packs and interface`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **What connects `What it is`, `Where to start`, `Quick start` to the rest of the system?**
+  _268 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `contracts.py` be split into smaller, more focused modules?**
   _Cohesion score 0.08636977058029689 - nodes in this community are weakly interconnected._
 - **Should `NNNN · The decision, as a statement not a question` be split into smaller, more focused modules?**
   _Cohesion score 0.09090909090909091 - nodes in this community are weakly interconnected._
 - **Should `README.md` be split into smaller, more focused modules?**
-  _Cohesion score 0.05230496453900709 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.10526315789473684 - nodes in this community are weakly interconnected._
 - **Should `4. Writing `pack.yaml`` be split into smaller, more focused modules?**
   _Cohesion score 0.125 - nodes in this community are weakly interconnected._
 - **Should `Project PARROT — team split` be split into smaller, more focused modules?**
