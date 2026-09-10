@@ -1,10 +1,7 @@
 # Ownership is how five people and their agents stay out of each other's way.
 # A PR touching a path needs a review from that path's owner.
-# Christian @feynman82 Â· Yew Mun @Yewhoo Â· Siew @nsiewsiew Â· Zee @fjzeetr-smuigd Â· Desmond @desmond
-# Confirmed: @feynman82 (Christian) · @Yewhoo (Yew Mun) · @nsiewsiew (Siew) · @fjzeetr-smuigd (Zee).
-# STILL PLACEHOLDER - a PR touching these paths cannot request a review until it is
-# a real GitHub login: @desmond
-# Replace it as the handle arrives, in a one-line commit.
+# Christian @feynman82 Â· Yew Mun @Yewhoo Â· Siew @nsiewsiew Â· Zee @fjzeetr-smuigd Â· Desmond @strawberries2026
+# Confirmed: @feynman82 (Christian) · @Yewhoo (Yew Mun) · @nsiewsiew (Siew) · @fjzeetr-smuigd (Zee) · @strawberries2026 (Desmond).
 
 *                       @feynman82
 
@@ -18,7 +15,7 @@
 
 /core/adapters/         @feynman82
 /core/ingest/           @feynman82
-/corpus/                @desmond
+/corpus/                @strawberries2026
 
 /packs/                 @fjzeetr-smuigd
 /grounding/             @fjzeetr-smuigd @nsiewsiew
@@ -28,7 +25,7 @@
 /team/yew-mun/          @Yewhoo
 /team/siew/             @nsiewsiew
 /team/zee/              @fjzeetr-smuigd
-/team/desmond/          @desmond
+/team/desmond/          @strawberries2026
 /docs/team-tasks.csv    @feynman82
 /scripts/               @feynman82
 /.claude/               @feynman82
