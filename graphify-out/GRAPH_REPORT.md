@@ -1,16 +1,16 @@
 # Graph Report - igd-capstone-2026  (2026-09-11)
 
 ## Corpus Check
-- 140 files · ~89,108 words
+- 140 files · ~89,335 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1211 nodes · 2225 edges · 111 communities (96 shown, 15 thin omitted)
-- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 160 edges (avg confidence: 0.53)
+- 1216 nodes · 2213 edges · 98 communities (82 shown, 16 thin omitted)
+- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 152 edges (avg confidence: 0.53)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `04e821b2`
+- Built from commit: `c0f3f1c4`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -76,9 +76,6 @@
 - extract
 - pipeline.py
 - FolderAdapter
-- IngestJob
-- Ollama
-- test_ingest_pipeline.py
 - ParsedPage
 - Ollama
 - ingest.py
@@ -104,22 +101,12 @@
 - 1. Record architecture decisions
 - 4. Local setup can run before the household assistant is ready
 - 6. pypdfium2 renders the page images the quarantine second pass reads
-- Parser
 - Home Contents Insurance Policy
 - __init__.py
 - __init__.py
 - __init__.py
 - __init__.py
 - setup.sh
-- Cursor
-- ask.py
-- 5. The watched folder is polled for stability, not subscribed to for events
-- Architecture decision records
-- __init__.py
-- Alert
-- Ollama
-- Cursor
-- ask.py
 
 ## God Nodes (most connected - your core abstractions)
 1. `Ollama` - 36 edges
@@ -128,7 +115,7 @@
 4. `ModelUnavailable` - 30 edges
 5. `Settings` - 29 edges
 6. `AnswerGraph` - 26 edges
-7. `InstalledPack` - 25 edges
+7. `InstalledPack` - 21 edges
 8. `IngestJob` - 20 edges
 9. `extract()` - 20 edges
 10. `Claim` - 19 edges
@@ -136,23 +123,23 @@
 ## Surprising Connections (you probably didn't know these)
 - `main()` --indirect_call--> `sha256()`  [INFERRED]
   scripts/quarantine.py → core/adapters/base.py
-- `FakeRegistrar` --uses--> `FolderSettings`  [INFERRED]
-  tests/test_folder_capture.py → core/adapters/folder.py
-- `Alert` --uses--> `AlertConfig`  [INFERRED]
-  modules/alert/__init__.py → core/contracts.py
-- `Measurement` --uses--> `AlertConfig`  [INFERRED]
-  modules/alert/__init__.py → core/contracts.py
-- `FakeCursor` --uses--> `AlertConfig`  [INFERRED]
-  tests/test_modules.py → core/contracts.py
+- `FakeOllama` --uses--> `ParsedPage`  [INFERRED]
+  tests/test_ingest_pipeline.py → core/ingest/parse.py
+- `FakeRegistrar` --uses--> `Registration`  [INFERRED]
+  tests/test_folder_capture.py → core/ingest/register.py
+- `FixedRetriever` --uses--> `ModelUnavailable`  [INFERRED]
+  tests/test_answer_graph.py → core/runtime/ollama.py
+- `PassThroughReranker` --uses--> `ModelUnavailable`  [INFERRED]
+  tests/test_answer_graph.py → core/runtime/ollama.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (111 total, 15 thin omitted)
+## Communities (98 total, 16 thin omitted)
 
 ### Community 0 - "contracts.py"
-Cohesion: 0.12
-Nodes (20): PackManifest, A domain pack, authored as one YAML file., (document_type, field_name) -> FieldSpec. Used by the extractor and the scorer., _class_name(), _docstring(), _field_line(), load(), main() (+12 more)
+Cohesion: 0.07
+Nodes (39): BaseModel, FieldSpec, Grounding, Guardrails, ModuleManifest, ModuleTrigger, PackManifest, Persona (+31 more)
 
 ### Community 1 - "NNNN · The decision, as a statement not a question"
 Cohesion: 0.18
@@ -164,7 +151,7 @@ Nodes (11): Christian — task list, W10 — due 2026-11-10, W1 — due 2026-09-
 
 ### Community 3 - "validate"
 Cohesion: 0.22
-Nodes (18): _as_date(), _fields(), _known_doc_types(), _known_fields(), main(), date, Path, Validate a document register before it is handed over.      python -m corpus.v (+10 more)
+Nodes (18): _as_date(), _fields(), _known_doc_types(), _known_fields(), main(), date, Validate a document register before it is handed over.      python -m corpus.val, Derived from the pack manifests, never hardcoded.      A register row can only n (+10 more)
 
 ### Community 4 - "4. Writing `pack.yaml`"
 Cohesion: 0.12
@@ -323,80 +310,56 @@ Cohesion: 0.33
 Nodes (5): `docs/report/` — the final report, Ownership, The rule that keeps it honest, The thing to understand before you write a word, Three questions for the supervisors, at the 6 October mid-term
 
 ### Community 53 - "Passage"
-Cohesion: 0.05
-Nodes (64): Answer, AnswerGraph, _numbered(), _pack_for(), Any, Ollama, Router → retrieve → rerank → grounding gate → answer or abstain.  A LangGraph, Whichever pack owns the most of the evidence. Its guardrails govern the answer. (+56 more)
+Cohesion: 0.07
+Nodes (47): Answer, AnswerGraph, _numbered(), _pack_for(), Any, Ollama, Router → retrieve → rerank → grounding gate → answer or abstain.  A LangGraph, Whichever pack owns the most of the evidence. Its guardrails govern the answer. (+39 more)
 
 ### Community 54 - "test_modules.py"
-Cohesion: 0.19
-Nodes (23): AlertConfig, Decimal, FakeConn, FakePack, obligation_row(), date, datetime, Reminder and Alert: what fires, once, and with what behind it.  Both modules a (+15 more)
+Cohesion: 0.07
+Nodes (44): AlertConfig, Decimal, already_said(), current_lead(), Due, overdue(), Any, date (+36 more)
 
 ### Community 55 - "Settings"
-Cohesion: 0.11
-Nodes (37): create_app(), Diagnostic API. Liveness is intentionally separate from assistant readiness., AsyncClient, capture_check(), Check, collect_checks(), database_check(), model_check() (+29 more)
+Cohesion: 0.05
+Nodes (73): create_app(), Diagnostic API. Liveness is intentionally separate from assistant readiness., AsyncClient, DenseRetriever, NoReranker, A dense-only retriever, so the graph can be run and tested before Lane B's hybri, Keeps the top `keep` in the order retrieval gave them. Lane B replaces this with, The reportable line. Deliberately a rate and a count, because a rate over three (+65 more)
 
 ### Community 56 - "Registrar"
-Cohesion: 0.10
-Nodes (24): _attachment(), Any, Client, datetime, RuntimeError, The Telegram capture adapter.  Same interface as the folder: `receive(payload,, Confirm the token works before anything else is attempted., One `getUpdates` round. Returns what was captured; replies with what was receive (+16 more)
+Cohesion: 0.06
+Nodes (57): IngestJob, Magic bytes first, filename suffix second, `application/octet-stream` last., What a capture returns: a registered document, and whether we had seen it before, sniff_mime(), FolderAdapter, FolderSettings, _Pending, datetime (+49 more)
 
 ### Community 57 - "retrieve.py"
-Cohesion: 0.13
-Nodes (21): BaseModel, DocumentTypeSpec, FieldSpec, Grounding, Guardrails, ModuleManifest, ModuleTrigger, Persona (+13 more)
+Cohesion: 0.11
+Nodes (23): DocumentTypeSpec, One kind of document this pack recognises., Classification, classify(), _prompt(), Ollama, Decide which pack's document type a captured document is, or decline to.  The, Never raises. An unavailable model is a classification failure, so it quarantine (+15 more)
 
 ### Community 58 - "cli.py"
-Cohesion: 0.15
-Nodes (22): Connection, Just enough of `psycopg.Connection` to register a document and to be faked in a, ndarray, load_matrix(), pack(), SQLite storage: documents, chunks, FTS5 keyword index, and dense vectors.  Des, Return (N x D matrix of normalised embeddings, chunk ids)., stats() (+14 more)
+Cohesion: 0.05
+Nodes (67): ArgumentParser, Connection, Cursor, Protocol, Just enough of `psycopg.Connection` to register a document and to be faked in a, ndarray, answer(), build_context() (+59 more)
 
 ### Community 59 - "register_document"
-Cohesion: 0.14
-Nodes (21): CaptureAdapter, datetime, Protocol, The one interface every capture channel satisfies.      receive(payload, mime, s, The idempotency key for the whole platform. Bytes, not hex: `documents.sha256` i, Folder, Telegram, and post-MVP WhatsApp and Drive, all reduced to one call., sha256(), Capture adapters.  Every channel a document can arrive through satisfies one int (+13 more)
+Cohesion: 0.07
+Nodes (34): CaptureAdapter, datetime, Protocol, The one interface every capture channel satisfies.      receive(payload, mime, s, The idempotency key for the whole platform. Bytes, not hex: `documents.sha256` i, Folder, Telegram, and post-MVP WhatsApp and Drive, all reduced to one call., sha256(), Capture adapters.  Every channel a document can arrive through satisfies one int (+26 more)
 
 ### Community 60 - "FolderCapture"
-Cohesion: 0.12
-Nodes (18): FolderSettings, FolderCapture, Run the folder capture loop in a background thread, beside the local server., A daemon thread that polls the watched folder until `stop()` or process exit., Begin watching. Returns False, with a logged reason, when it cannot., connect(), DatabaseUnavailable, Any (+10 more)
-
-### Community 61 - "InstalledPack"
-Cohesion: 0.18
-Nodes (9): installed_packs(), InstalledPack, _load_one(), Path, Every pack directory holding a pack.yaml, in a stable order.      Directories, test_every_document_type_has_a_generated_model(), test_the_template_directory_is_not_an_installed_pack(), A pack naming a metric nobody implemented is a silent no-op, so it is caught her (+1 more)
+Cohesion: 0.17
+Nodes (11): Generated, ModelUnavailable, Any, Client, RuntimeError, The one client that talks to Ollama.  Everything the platform infers goes throug, Generate against a JSON schema. This is how extraction is held to a pack's field, Safe to show: names what could not be done, never the document it was doing it t (+3 more)
 
 ### Community 62 - "extract"
-Cohesion: 0.16
-Nodes (21): classify(), Ollama, Never raises. An unavailable model is a classification failure, so it quarantine, extract(), Ollama, Never raises. A failure is a reason, and a reason routes the document to quarant, FakeOllama, iras() (+13 more)
-
-### Community 63 - "pipeline.py"
-Cohesion: 0.17
-Nodes (15): Chunk, Extraction, The ingestion worker.  Capture registers a document; this package turns it int, ParsedDocument, commit_both_lanes(), Outcome, process(), Any (+7 more)
-
-### Community 64 - "FolderAdapter"
-Cohesion: 0.26
-Nodes (20): FolderAdapter, Satisfies `CaptureAdapter`. Holds no database handle — it is given a `Registrar`, FakeRegistrar, datetime, Path, The watched folder: debounce, mime sniffing, and what happens the second time., Poll until the stability window has passed and something comes out., The `documents` table, reduced to the one thing it guarantees: sha256 is unique. (+12 more)
-
-### Community 65 - "IngestJob"
-Cohesion: 0.16
-Nodes (13): IngestJob, Magic bytes first, filename suffix second, `application/octet-stream` last., What a capture returns: a registered document, and whether we had seen it before, sniff_mime(), _Pending, datetime, Path, The watched-folder capture adapter.  A person drops a scan into a folder and i (+5 more)
-
-### Community 66 - "Ollama"
-Cohesion: 0.13
-Nodes (17): already_said(), current_lead(), Due, overdue(), Any, date, datetime, The Reminder module: a nightly sweep of obligations, and nothing fires twice. (+9 more)
-
-### Community 67 - "test_ingest_pipeline.py"
-Cohesion: 0.16
-Nodes (13): _coerce(), find_page(), _normalise(), _prepare(), Any, date, Extract a pack's declared fields, and attribute every one of them to a page., Put the value in the one `facts` column its declared type maps to, or reject it. (+5 more)
+Cohesion: 0.12
+Nodes (27): extract(), find_page(), _normalise(), Ollama, Extract a pack's declared fields, and attribute every one of them to a page., Never raises. A failure is a reason, and a reason routes the document to quarant, The first page whose text contains this value. None means no page supports it., parse() (+19 more)
 
 ### Community 68 - "ParsedPage"
-Cohesion: 0.23
-Nodes (11): Chunk, chunk_pages(), _pack(), _paragraphs(), Split parsed pages into retrieval-sized chunks that still know their page number, What is actually embedded: the prefix plus the text, matching the tsvector colum, Greedily fill chunks up to the target, then carry a little tail into the next on, One flat list of chunks, ordinal running across the whole document. (+3 more)
+Cohesion: 0.11
+Nodes (17): Chunk, chunk_pages(), _pack(), _paragraphs(), Split parsed pages into retrieval-sized chunks that still know their page number, What is actually embedded: the prefix plus the text, matching the tsvector colum, Greedily fill chunks up to the target, then carry a little tail into the next on, One flat list of chunks, ordinal running across the whole document. (+9 more)
 
 ### Community 69 - "Ollama"
-Cohesion: 0.18
-Nodes (17): page_images(), Any, Ollama, QuarantinedDocument, The second stage of quarantine: the page image, read by the vision-language mode, Base64 page images, in page order. Empty when this document cannot be rendered., Ask the vision-language model to read the pages. One request per page, so a page, Send the pages as images and try the whole pack pipeline again on what comes bac (+9 more)
+Cohesion: 0.21
+Nodes (15): ParsedDocument, page_images(), Any, Ollama, QuarantinedDocument, queue(), The second stage of quarantine: the page image, read by the vision-language mode, Base64 page images, in page order. Empty when this document cannot be rendered. (+7 more)
 
 ### Community 71 - "ingest.py"
-Cohesion: 0.23
-Nodes (17): _citations(), cpf_contributions_ytd(), days_uncovered(), _debounced(), donations_ytd(), Measurement, Any, date (+9 more)
+Cohesion: 0.15
+Nodes (21): AlertConfig, Any, datetime, InstalledPack, Alert, _citations(), cpf_contributions_ytd(), days_uncovered() (+13 more)
 
 ### Community 72 - "obligations.py"
-Cohesion: 0.18
-Nodes (12): ReminderConfig, ExtractedFact, fixed(), from_facts(), _label(), Any, date, Turn a dated fact into a commitment to do something about it.  A fact is a state (+4 more)
+Cohesion: 0.14
+Nodes (19): Chunk, ReminderConfig, ExtractedFact, Extraction, fixed(), from_facts(), _label(), Any (+11 more)
 
 ### Community 73 - "extract.py"
 Cohesion: 0.36
@@ -409,10 +372,6 @@ Nodes (12): Access and privacy, Asking a question, Dropping a document in, First
 ### Community 75 - "RUNNING.md"
 Cohesion: 0.18
 Nodes (8): 5. The watched folder is polled for stability, not subscribed to for events, Consequences, Context, Decision, 7. The answer graph ships before hybrid retrieval and before a checkpoint table, Consequences, Context, Decision
-
-### Community 76 - "DoclingParser"
-Cohesion: 0.10
-Nodes (13): DoclingParser, _pages_from(), parse(), Parser, PlainTextParser, Protocol, Turn captured bytes into pages of text, or say why it could not be done.  Every, Group Docling's items by the page they were found on.      Docling's markdown ex (+5 more)
 
 ### Community 77 - "Notion"
 Cohesion: 0.29
@@ -482,48 +441,20 @@ Nodes (4): 4. Local setup can run before the household assistant is ready, Conse
 Cohesion: 0.40
 Nodes (4): 6. pypdfium2 renders the page images the quarantine second pass reads, Consequences, Context, Decision
 
-### Community 94 - "Parser"
-Cohesion: 0.27
-Nodes (11): queue(), The reportable line. Deliberately a rate and a count, because a rate over three, What is waiting for a person's eyes, oldest first., recovery_rate(), _index_folder(), main(), _path_for(), Any (+3 more)
-
-### Community 102 - "Cursor"
-Cohesion: 0.29
-Nodes (5): Intake, What every capture channel hands a document to.  An adapter's job ends at "these, An already-indexed document is not re-parsed. Re-parsing it would burn a minute, The row as it now stands, plus whether this call is the one that created it., Registration
-
-### Community 104 - "5. The watched folder is polled for stability, not subscribed to for events"
-Cohesion: 0.21
-Nodes (18): ArgumentParser, build_parser(), _client(), cmd_add(), cmd_ask(), cmd_docs(), cmd_doctor(), cmd_ingest() (+10 more)
-
-### Community 105 - "Architecture decision records"
-Cohesion: 0.24
-Nodes (13): Chunk, chunk_pages(), clean(), Split extracted text into retrieval-sized chunks.  Paperwork is short and stru, _split_page(), discover(), guess_date(), guess_type() (+5 more)
-
-### Community 108 - "Ollama"
-Cohesion: 0.24
-Nodes (5): Ollama, OllamaUnavailable, RuntimeError, Minimal Ollama client over stdlib urllib — no third-party HTTP dependency.  Ta, Batch embeddings. Falls back to the legacy endpoint on old servers.
-
-### Community 109 - "Cursor"
-Cohesion: 0.29
-Nodes (3): Cursor, Any, Protocol
-
-### Community 110 - "ask.py"
-Cohesion: 0.48
-Nodes (6): answer(), build_context(), format_sources(), Ollama, Answer a question from retrieved chunks, with citations back to the file.  The, Hit
-
 ## Knowledge Gaps
 - **334 isolated node(s):** `1. What we are building, in one paragraph`, `The field types you can use`, `The rules for a field`, `3. The one thing that matters most`, `4. What you do, step by step` (+329 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **16 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Connection` connect `cli.py` to `5. The watched folder is polled for stability, not subscribed to for events`, `Architecture decision records`, `register_document`, `Cursor`?**
-  _High betweenness centrality (0.088) - this node is a cross-community bridge._
-- **Why does `Ollama` connect `Passage` to `test_ingest_pipeline.py`, `Ollama`, `Cursor`, `obligations.py`, `Settings`, `Registrar`, `retrieve.py`, `FolderCapture`, `Parser`, `pipeline.py`?**
-  _High betweenness centrality (0.070) - this node is a cross-community bridge._
-- **Why does `register_document()` connect `register_document` to `cli.py`, `Cursor`, `Cursor`, `pipeline.py`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `Connection` connect `cli.py` to `register_document`?**
+  _High betweenness centrality (0.087) - this node is a cross-community bridge._
+- **Why does `Ollama` connect `Settings` to `Ollama`, `obligations.py`, `Passage`, `Registrar`, `retrieve.py`, `register_document`, `FolderCapture`, `extract`?**
+  _High betweenness centrality (0.066) - this node is a cross-community bridge._
+- **Why does `register_document()` connect `register_document` to `cli.py`?**
+  _High betweenness centrality (0.046) - this node is a cross-community bridge._
 - **Are the 14 inferred relationships involving `Ollama` (e.g. with `Answer` and `AnswerGraph`) actually correct?**
   _`Ollama` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 4 inferred relationships involving `FolderAdapter` (e.g. with `IngestJob` and `Registrar`) actually correct?**
