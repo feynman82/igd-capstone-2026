@@ -279,44 +279,123 @@ as a technical one.
 Open a terminal in this repository, run `claude`, and paste this in. Replace the two
 bracketed parts.
 
-> I am working on the domain packs lane of this repository. I am not a programmer, so
-> explain what you are doing in plain language and ask me before doing anything I have
-> not asked for.
->
-> First, read these three files completely, in this order:
-> `packs/README.md`, `packs/iras_tax/pack.yaml`, `docs/PACK_AUTHORING.md`.
-> Then read `AGENTS.md` for the repository's working rules.
->
-> I want to author a new domain pack for **[DOMAIN, e.g. household utilities and
-> telecoms]**. The document types I have in mind are **[LIST, e.g. an electricity bill,
-> a water bill, a mobile phone bill, a broadband contract]** — challenge that list if
-> you think it is wrong, and tell me if two of them are really the same shape.
->
-> Work like this, and stop for my answer at each numbered step rather than running to
-> the end:
->
-> 1. Propose the document types and, for each, the fields you think are printed on it.
->    Show me the field name, the type, and one sentence on where it appears on the
->    document. Do not write any file yet.
-> 2. When I have agreed the list, create `packs/<pack_id>/pack.yaml` by copying the
->    structure of `packs/iras_tax/pack.yaml`. Every field needs a `description` of at
->    least eight characters and a realistic Singaporean `example`.
-> 3. Draft the `persona` and the `disclaimer` for me to approve. Leave `must_cite`,
->    `abstain_below` and `never_acts` exactly as they are in the existing packs.
-> 4. Run `python -m packs.build` and show me what it generated. If it errors, explain
->    the error in plain language and fix the YAML — never edit a generated file.
-> 5. Run `python -m packs.build --check` to confirm everything is in sync, then show me
->    the new columns in `corpus/register/<pack_id>_columns.csv`, because that spreadsheet
->    is the brief for a teammate and I want to check it reads sensibly to a person.
-> 6. Stage `pack.yaml` and every generated file together and propose a commit message.
->    Do not commit until I say so.
->
-> Rules you must follow: `pack.yaml` is the only file I author — everything else in
-> `packs/` is generated. Never hand-edit `schemas.py`, the register CSV or
-> `docs/field-dictionary.md`. Do not touch anything outside `packs/` and `grounding/`.
-> Do not add dependencies. If you are unsure about a field name, ask me rather than
-> guessing, because a field name here becomes a column heading in someone else's
-> spreadsheet and renaming it later is expensive.
+The benchmark it points at is **`packs/insurance_agent/pack.yaml`**. Every rule below
+carries the real defect it was written against, because an agent that knows *why*
+`policy_type` was deleted behaves differently from one that only knows it was.
+
+````markdown
+I work in Lane D of this repository — domain packs and interface. I am not a
+programmer. Explain things in plain language and ask me before doing anything I
+have not asked for.
+
+Read these completely, in this order, before you say anything:
+1. `packs/README.md`
+2. `packs/insurance_agent/pack.yaml`  ← the benchmark. Every later pack copies its shape.
+3. `AGENTS.md`
+Then invoke the `/authoring-a-domain-pack` skill and follow it.
+
+I want to author a domain pack for **[DOMAIN, e.g. MOE teacher employment, or
+tax advisers]**. The document types I have in mind are **[LIST]**. Challenge that
+list — tell me if two of them are really one shape, or if one of them does not
+belong in a household filing cabinet.
+
+## Work in stages and STOP for my answer at each one
+
+Do not run to the end. Stage 1 is a proposal with no files written.
+
+1. **Propose.** A table per document type: field name, type, and one sentence on
+   where on the paper the value appears. Write nothing.
+2. **Write** `packs/<pack_id>/pack.yaml` once I have agreed the list.
+3. **Draft** the persona and disclaimer for my approval, separately.
+4. **Generate**: `python -m packs.build`.
+5. **Check**: `python -m packs.build --check`, then `make check`, then show me
+   `corpus/register/<pack_id>_columns.csv`.
+6. **Propose** a commit. Do not commit until I say so.
+
+## The four tests every field must pass
+
+Apply these out loud, field by field. They are what the insurance pack was fixed
+against, and each one caught a real defect there.
+
+1. **Is it PRINTED?** Would Desmond fill this column by *reading* the document, or
+   by *judging* it? If judging, delete it.
+   *The insurance pack had `policy_type` as an enum of motor/home/life. No schedule
+   anywhere prints the word "motor" — it prints "Private Car Insurance Policy". It
+   was replaced with `product_name`, a printed string. Anything downstream that
+   wants a category derives one; that is not the pack's job.*
+
+2. **Does the NAME assert something the paper does not?** The column heading must
+   mean the same thing to me as to the extractor.
+   *`annual_premium` on a policy schedule was wrong: the paper prints "Total Premium
+   Payable" for the period of insurance, which is only annual on a 1-year policy. It
+   became `premium_payable`. It kept the name `annual_premium` on the documents where
+   it genuinely is annual.*
+
+3. **Is the MOST ACTIONABLE date on the document actually captured?** Not just the
+   obvious one.
+   *The renewal notice captured `expiry_date` but not `payment_due_date` — the
+   "please pay by" date, which falls 7–14 days earlier and is the date the household
+   must act on.*
+
+4. **Is a document type earning its place?** A type whose fields mostly duplicate
+   another type, or whose interesting numbers are *projections* rather than printed
+   facts, is weak. Say so and propose a better one.
+
+## Registers — do not accept the defaults
+
+- **`reminder.lead_days`**: every window must map to a distinct thing the household
+  *does*. Say what each one is for. If a window fires after the deadline it is
+  warning about, it is wrong.
+  *Insurance went 60/30/7 → 60/30/14/1: shop, read the notice, pay, cover ends
+  tomorrow. The old 7-day window fired after the typical pay-by date, and there was
+  no reminder on the day cover lapsed.*
+
+- **`alert.metric`**: metrics are NOT fields. Open `modules/alert/queries.py` and
+  `modules/alert/__init__.py`, read the actual SQL, and tell me in one plain sentence
+  what it computes — then ask me whether that is what I meant. Do not assume.
+  *`days_uncovered` groups by insured person only, so one live travel policy masks a
+  motor policy that lapsed three months ago. The metric reports "0 days uncovered"
+  for an uninsured car.*
+  Any fix there is in `modules/` — Christian's lane, not mine. Raise it, don't edit it.
+
+## Grounding — real or null, never in between
+
+Official issuers only (IRAS, CPF Board, MAS, MOH, a named regulator), every source
+recorded in `grounding/<corpus>/sources.yaml` with its retrieval date.
+
+An empty corpus directory with `top_k: 6` is a lie the pack tells. If there are no
+real sources yet, set `corpus: null, top_k: 0` and say so in a comment — section 7
+of `packs/README.md` calls that a designed guardrail, not a gap.
+
+Also check the corpus actually answers the question the pack gets asked. *The
+insurance pack pointed at the MAS Fair Dealing Guidelines, which govern how insurers
+must behave — they cannot answer "am I covered for flood damage".*
+
+## Hard rules
+
+- **`pack.yaml` is the only file I author.** `schemas.py`, `corpus/register/*_columns.csv`
+  and `docs/field-dictionary.md` are generated by `python -m packs.build`. Never
+  hand-edit one. If one looks wrong, the YAML is wrong.
+- **Stay in `packs/`, `grounding/`, `web/`.** If a rename breaks something in
+  `corpus/` or `modules/`, stop and tell me — do not quietly fix it in someone
+  else's lane. *(A rename in the insurance pack broke one token in
+  `corpus/register/register.template.csv`. That needed Desmond's review.)*
+- **`must_cite`, `abstain_below`, `never_acts` are not mine to change.** The persona
+  and the disclaimer are. Siew reviews the disclaimer.
+- **Renaming a field is free this week and expensive in week six** — it is a column
+  heading in Desmond's spreadsheet. If you are unsure of a name, ask me. Never invent
+  one I did not agree to.
+- Bump `version:` when field names change.
+- **Quote every `example:`** for a date, month, money or boolean — bare `2026-03-01`
+  becomes a date object and fails validation.
+- No new dependencies.
+
+## Shape to aim for
+
+3–5 document types, 4–8 fields each (the contract allows up to 12; going over 8
+should be a decision, not an accident). Every description says *where on the paper*
+the value appears. Every example realistically Singaporean.
+````
 
 ### If something goes wrong
 
