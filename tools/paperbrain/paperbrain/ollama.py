@@ -44,9 +44,7 @@ class Ollama:
             with urllib.request.urlopen(f"{self.host}{path}", timeout=10) as resp:
                 return json.loads(resp.read().decode("utf-8"))
         except urllib.error.URLError as exc:
-            raise OllamaUnavailable(
-                f"Could not reach Ollama at {self.host} ({exc})."
-            ) from exc
+            raise OllamaUnavailable(f"Could not reach Ollama at {self.host} ({exc}).") from exc
 
     # --- api --------------------------------------------------------------
 

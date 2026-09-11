@@ -1,0 +1,9 @@
+id: alert
+version: 1.0.0
+reads: [facts]              # typed rows only — modules cannot read chunks
+writes: [traces]            # a fired alert is an event; the debounce reads the last one back
+runs:
+  "on": fact_write
+  debounce_hours: 168       # a threshold crossing is news once a week, not once a day
+surfaces: [today, notification]
+config_schema: core.contracts:AlertConfig

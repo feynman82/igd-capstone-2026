@@ -9,13 +9,14 @@ needing calibrated scores from either.
 
 from __future__ import annotations
 
+import contextlib
 import re
 import sqlite3
 from dataclasses import dataclass
 
 import numpy as np
 
-from .db import load_matrix, pack, unpack
+from .db import load_matrix, pack
 from .ollama import Ollama
 
 _FTS_SAFE = re.compile(r'[^\w\s"$.\-/]')
@@ -74,7 +75,7 @@ def vector_search(
     if qvec.shape[0] != matrix.shape[1]:
         # Embedding model changed since ingest — keyword search still works.
         return []
-    scores = matrix @ qvec          # both sides are L2-normalised => cosine
+    scores = matrix @ qvec  # both sides are L2-normalised => cosine
     top = np.argsort(-scores)[:limit]
     return [ids[i] for i in top]
 
@@ -133,10 +134,6 @@ def search(
 ) -> list[Hit]:
     top_k = top_k or cfg.top_k
     rankings = [keyword_search(conn, question, cfg.candidates)]
-    try:
-        rankings.append(
-            vector_search(conn, client, cfg.embed_model, question, cfg.candidates)
-        )
-    except Exception:
-        pass  # keyword-only is a fine degraded mode
+    with contextlib.suppress(Exception):  # keyword-only is a fine degraded mode
+        rankings.append(vector_search(conn, client, cfg.embed_model, question, cfg.candidates))
     return hydrate(conn, fuse(rankings, cfg.rrf_k)[:top_k])

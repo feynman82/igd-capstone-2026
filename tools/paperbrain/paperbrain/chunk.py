@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from itertools import pairwise
 
 _WS = re.compile(r"[ \t]+")
 _BLANKS = re.compile(r"\n{3,}")
@@ -67,7 +68,7 @@ def _split_page(text: str, size: int, overlap: int) -> list[str]:
     # Stitch a little context from the previous chunk onto each chunk.
     if overlap > 0 and len(out) > 1:
         stitched = [out[0]]
-        for prev, cur in zip(out, out[1:]):
+        for prev, cur in pairwise(out):
             tail = prev[-overlap:]
             stitched.append(f"{tail}\n\n{cur}" if tail.strip() else cur)
         out = stitched

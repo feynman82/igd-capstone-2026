@@ -115,7 +115,7 @@ def pack(vec) -> bytes:
     arr = np.asarray(vec, dtype=np.float32)
     norm = np.linalg.norm(arr)
     if norm > 0:
-        arr = arr / norm          # store normalised: cosine becomes a dot product
+        arr = arr / norm  # store normalised: cosine becomes a dot product
     return arr.tobytes()
 
 
@@ -133,7 +133,7 @@ def load_matrix(conn: sqlite3.Connection) -> tuple[np.ndarray, list[int]]:
     dim = rows[0]["dim"]
     ids, vecs = [], []
     for r in rows:
-        if r["dim"] != dim:          # embedding model changed mid-flight
+        if r["dim"] != dim:  # embedding model changed mid-flight
             continue
         ids.append(r["id"])
         vecs.append(unpack(r["embedding"]))

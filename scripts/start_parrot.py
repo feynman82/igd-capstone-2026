@@ -18,8 +18,6 @@ def startup_gaps(root: Path) -> list[str]:
     gaps = []
     if not python.is_file():
         gaps.append("Python environment: install Python 3.12 and uv; run uv sync --extra dev.")
-    if not (root / ".env").is_file():
-        gaps.append("Local configuration: copy infra/.env.example to .env and review it.")
     if not (root / "scripts/run_parrot.py").is_file():
         gaps.append(
             "Application runtime is not built yet. This checkout contains startup diagnostics only."
@@ -81,7 +79,7 @@ def main(argv: list[str] | None = None) -> int:
         print("See docs/RUNNING.md for the current build stage and next steps.")
         return 2
     if args.check_only:
-        print("\nStartup files are present. Runtime health has not been checked.")
+        print("\nSetup server files are present. Runtime health has not been checked.")
         return 0
     python = ROOT / (".venv/Scripts/python.exe" if sys.platform == "win32" else ".venv/bin/python")
     # No settings are evaluated as code; only the project-owned supervisor is executed.

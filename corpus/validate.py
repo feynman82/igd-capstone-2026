@@ -15,6 +15,7 @@ from collections import defaultdict
 from datetime import date, datetime
 from pathlib import Path
 
+
 def _known_doc_types() -> dict[str, set[str]]:
     """Derived from the pack manifests, never hardcoded.
 

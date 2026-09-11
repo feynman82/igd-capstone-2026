@@ -81,9 +81,9 @@ cd igd-capstone-2026
 
 cp infra/.env.example .env
 docker compose -f infra/docker-compose.yml up -d     # postgres+pgvector, redis
-uv sync
+uv sync --python 3.12 --extra dev
 psql "$DATABASE_URL" -f db/migrations/0001_init.sql
-ollama pull hf.co/aisingapore/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
+ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
 
 # knowledge graph
 uv tool install graphifyy

@@ -1,12 +1,12 @@
 """PaperBrain command line.
 
-    pb init                       one-time setup, checks Ollama
-    pb add ~/Documents/Paperwork  register a folder in the library
-    pb ingest [path ...]          extract + chunk + embed (idempotent)
-    pb search "water damage"      show matching excerpts, no model needed
-    pb ask "when is my policy due"  retrieval-augmented answer with citations
-    pb docs                       list what's in the library
-    pb stats / pb doctor          health checks
+pb init                       one-time setup, checks Ollama
+pb add ~/Documents/Paperwork  register a folder in the library
+pb ingest [path ...]          extract + chunk + embed (idempotent)
+pb search "water damage"      show matching excerpts, no model needed
+pb ask "when is my policy due"  retrieval-augmented answer with citations
+pb docs                       list what's in the library
+pb stats / pb doctor          health checks
 """
 
 from __future__ import annotations
@@ -70,8 +70,7 @@ def cmd_doctor(args, cfg: Config) -> int:
 
         print("  ocr      ok (pytesseract)")
     except ImportError:
-        print(f"  ocr      {DIM}not installed — scanned PDFs and photos will be "
-              f"skipped{RESET}")
+        print(f"  ocr      {DIM}not installed — scanned PDFs and photos will be skipped{RESET}")
     return 0 if ok else 1
 
 
@@ -105,8 +104,7 @@ def cmd_ingest(args, cfg: Config) -> int:
         result = ingest_file(conn, cfg, path)
         counts[result.status] = counts.get(result.status, 0) + 1
         if result.status in ("added", "updated"):
-            print(f"  [{i}/{len(files)}] {result.status:8} {path.name} "
-                  f"({result.chunks} chunks)")
+            print(f"  [{i}/{len(files)}] {result.status:8} {path.name} ({result.chunks} chunks)")
         elif result.status in ("error", "empty"):
             print(f"  [{i}/{len(files)}] {result.status:8} {path.name} — {result.note}")
         if result.note and result.status in ("added", "updated"):
@@ -176,8 +174,10 @@ def cmd_docs(args, cfg: Config) -> int:
     print(f"{BOLD}{'date':<12}{'type':<12}{'chunks':<8}file{RESET}")
     for r in rows:
         ocr = " (ocr)" if r["ocr_used"] else ""
-        print(f"{(r['doc_date'] or '—'):<12}{(r['doc_type'] or '—'):<12}"
-              f"{r['chunks']:<8}{r['filename']}{ocr}")
+        print(
+            f"{(r['doc_date'] or '—'):<12}{(r['doc_type'] or '—'):<12}"
+            f"{r['chunks']:<8}{r['filename']}{ocr}"
+        )
     conn.close()
     return 0
 

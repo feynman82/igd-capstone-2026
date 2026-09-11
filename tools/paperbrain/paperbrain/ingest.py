@@ -35,14 +35,27 @@ DATE_PATTERNS = [
     r"\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+(\d{4})\b",
 ]
 
-MONTHS = {m: i for i, m in enumerate(
-    "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split(), start=1)}
+MONTH_NAMES = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+]
+MONTHS = {m: i for i, m in enumerate(MONTH_NAMES, start=1)}
 
 
 @dataclass
 class IngestResult:
     path: str
-    status: str            # added / updated / skipped / empty / error
+    status: str  # added / updated / skipped / empty / error
     chunks: int = 0
     note: str = ""
 
@@ -104,9 +117,7 @@ def discover(roots: list[str]) -> list[Path]:
     return found
 
 
-def embed_chunks(
-    conn: sqlite3.Connection, client: Ollama, model: str, batch: int = 16
-) -> int:
+def embed_chunks(conn: sqlite3.Connection, client: Ollama, model: str, batch: int = 16) -> int:
     """Embed every chunk that doesn't have a vector yet."""
     done = 0
     while True:
@@ -116,7 +127,7 @@ def embed_chunks(
         if not rows:
             break
         vectors = client.embed(model, [r["text"] for r in rows])
-        for row, vec in zip(rows, vectors):
+        for row, vec in zip(rows, vectors, strict=True):
             blob = pack(vec)
             conn.execute(
                 "UPDATE chunks SET embedding=?, dim=? WHERE id=?",

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import os
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 # Where PaperBrain keeps its own state (database, cached OCR text, logs).
@@ -37,9 +37,9 @@ class Config:
     chunk_overlap: int = 200
 
     # --- retrieval ---------------------------------------------------------
-    top_k: int = 8           # chunks handed to the model
-    candidates: int = 40     # per-retriever candidate pool before fusion
-    rrf_k: int = 60          # reciprocal-rank-fusion constant
+    top_k: int = 8  # chunks handed to the model
+    candidates: int = 40  # per-retriever candidate pool before fusion
+    rrf_k: int = 60  # reciprocal-rank-fusion constant
 
     # --- ingestion ---------------------------------------------------------
     ocr_enabled: bool = True
@@ -52,7 +52,7 @@ class Config:
         CONFIG_PATH.write_text(json.dumps(asdict(self), indent=2))
 
     @classmethod
-    def load(cls) -> "Config":
+    def load(cls) -> Config:
         cfg = cls()
         if CONFIG_PATH.exists():
             data = json.loads(CONFIG_PATH.read_text())

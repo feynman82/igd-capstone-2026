@@ -53,16 +53,16 @@ class ModuleTrigger(Strict):
 
 
 FieldType = Literal[
-    "string",      # free text                     -> str        -> facts.value_text
-    "identifier",  # policy no, receipt no          -> str        -> facts.value_text (exact match, never normalised)
-    "person",      # names the family member        -> str        -> facts.value_text AND facts.subject
-    "money",       # SGD, two decimal places        -> Decimal    -> facts.value_num
-    "integer",     # counts, mileage                -> int        -> facts.value_num
-    "percent",     # 0-100                          -> float      -> facts.value_num
-    "date",        # ISO YYYY-MM-DD                 -> date       -> facts.value_date
-    "month",       # YYYY-MM                        -> str        -> facts.value_text
-    "enum",        # one of `values`                -> str        -> facts.value_text
-    "boolean",     # true / false                   -> bool       -> facts.value_text
+    "string",  # free text                     -> str        -> facts.value_text
+    "identifier",  # policy no, receipt no      -> str      -> facts.value_text, never normalised
+    "person",  # names a family member       -> str      -> facts.value_text + facts.subject
+    "money",  # SGD, two decimal places        -> Decimal    -> facts.value_num
+    "integer",  # counts, mileage                -> int        -> facts.value_num
+    "percent",  # 0-100                          -> float      -> facts.value_num
+    "date",  # ISO YYYY-MM-DD                 -> date       -> facts.value_date
+    "month",  # YYYY-MM                        -> str        -> facts.value_text
+    "enum",  # one of `values`                -> str        -> facts.value_text
+    "boolean",  # true / false                   -> bool       -> facts.value_text
 ]
 
 # Which column of `facts` each type lands in. The extractor and the evaluation both read
@@ -89,27 +89,27 @@ class FieldSpec(Strict):
     type: FieldType
     required: bool = True
     description: str = Field(min_length=8, max_length=200)
-    values: list[str] | None = None      # required when type == "enum"
-    example: str | None = None           # shown to the extraction model and to the corpus author
+    values: list[str] | None = None  # required when type == "enum"
+    example: str | None = None  # shown to the extraction model and to the corpus author
 
 
 class DocumentTypeSpec(Strict):
     """One kind of document this pack recognises."""
 
     description: str = Field(min_length=8, max_length=240)
-    subject_field: Slug | None = None    # which field says whose document this is
+    subject_field: Slug | None = None  # which field says whose document this is
     fields: list[FieldSpec] = Field(min_length=1, max_length=12)
 
 
 class Grounding(Strict):
-    corpus: str | None = None            # null = answer only from the user's own documents
+    corpus: str | None = None  # null = answer only from the user's own documents
     top_k: int = Field(default=6, ge=0, le=20)
 
 
 class ReminderConfig(Strict):
     key: Slug
-    from_field: Slug | None = None       # a date field on one of this pack's document types
-    on_date: _Date | None = None         # or a fixed calendar date, e.g. a filing deadline
+    from_field: Slug | None = None  # a date field on one of this pack's document types
+    on_date: _Date | None = None  # or a fixed calendar date, e.g. a filing deadline
     lead_days: list[int] = Field(min_length=1)
 
 
@@ -136,7 +136,7 @@ class Persona(Strict):
 class Guardrails(Strict):
     must_cite: bool = True
     abstain_below: float = Field(default=0.42, ge=0.0, le=1.0)
-    never_acts: Literal[True] = True     # v1 advises; the type makes it un-overridable
+    never_acts: Literal[True] = True  # v1 advises; the type makes it un-overridable
     disclaimer: str = Field(min_length=20, max_length=800)
 
 
@@ -154,11 +154,7 @@ class PackManifest(Strict):
 
     def field_index(self) -> dict[tuple[str, str], FieldSpec]:
         """(document_type, field_name) -> FieldSpec. Used by the extractor and the scorer."""
-        return {
-            (dt, f.name): f
-            for dt, spec in self.document_types.items()
-            for f in spec.fields
-        }
+        return {(dt, f.name): f for dt, spec in self.document_types.items() for f in spec.fields}
 
 
 ModuleManifest.model_rebuild()

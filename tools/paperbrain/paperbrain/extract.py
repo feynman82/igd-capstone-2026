@@ -43,9 +43,7 @@ def _ocr_pdf_pages(path: Path, page_numbers: list[int], dpi: int) -> dict[int, s
 
     out: dict[int, str] = {}
     for pageno in page_numbers:
-        images = convert_from_path(
-            str(path), dpi=dpi, first_page=pageno + 1, last_page=pageno + 1
-        )
+        images = convert_from_path(str(path), dpi=dpi, first_page=pageno + 1, last_page=pageno + 1)
         if images:
             out[pageno] = _ocr_image(images[0])
     return out
@@ -124,9 +122,7 @@ def extract_eml(path: Path) -> Extracted:
 
 
 def extract_text_file(path: Path) -> Extracted:
-    return Extracted(
-        pages=[path.read_text(encoding="utf-8", errors="replace")], ocr_used=False
-    )
+    return Extracted(pages=[path.read_text(encoding="utf-8", errors="replace")], ocr_used=False)
 
 
 def extract(path: Path, ocr_enabled: bool = True, dpi: int = 220) -> Extracted:

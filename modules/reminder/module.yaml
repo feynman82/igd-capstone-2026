@@ -1,0 +1,10 @@
+id: reminder
+version: 1.0.0
+reads: [obligations]        # typed rows only — modules cannot read chunks
+writes: [obligations.state] # its own bookkeeping: which lead window has been served
+runs:
+  "on": schedule
+  cron: "0 7 * * *"
+  debounce_hours: 24
+surfaces: [today, notification]
+config_schema: core.contracts:ReminderConfig

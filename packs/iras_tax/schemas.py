@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -18,10 +17,18 @@ class Payslip(BaseModel):
 
     employee: str = Field(description="Name of the employee as printed on the payslip")
     employer: str = Field(description="Legal name of the employing company as printed")
-    pay_period: str = Field(pattern=r"^\d{4}-(0[1-9]|1[0-2])$", description="The month the payslip covers, as YYYY-MM")
+    pay_period: str = Field(
+        pattern=r"^\d{4}-(0[1-9]|1[0-2])$",
+        description="The month the payslip covers, as YYYY-MM",
+    )
     gross_salary: Decimal = Field(ge=0, description="Total pay before any deduction, in SGD")
-    cpf_employee: Decimal | None = Field(default=None, ge=0, description="Employee CPF contribution deducted this period, in SGD")
+    cpf_employee: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Employee CPF contribution deducted this period, in SGD",
+    )
     net_pay: Decimal = Field(ge=0, description="Amount actually paid to the employee, in SGD")
+
 
 class DonationReceipt(BaseModel):
     """Official receipt from a charity for a donation."""
@@ -33,7 +40,11 @@ class DonationReceipt(BaseModel):
     receipt_no: str = Field(description="The receipt reference exactly as printed, not normalised")
     donation_date: date = Field(description="Date the donation was received")
     amount: Decimal = Field(ge=0, description="Amount donated, in SGD")
-    tax_deductible: bool | None = Field(default=None, description="Whether the receipt states the donation is tax deductible")
+    tax_deductible: bool | None = Field(
+        default=None,
+        description="Whether the receipt states the donation is tax deductible",
+    )
+
 
 class CpfStatement(BaseModel):
     """Annual or periodic CPF contribution statement."""
@@ -42,8 +53,16 @@ class CpfStatement(BaseModel):
 
     member: str = Field(description="Name of the CPF member the statement belongs to")
     statement_year: int = Field(ge=0, description="The calendar year the statement covers")
-    total_contributions: Decimal = Field(ge=0, description="Total contributions for the period, in SGD")
-    ordinary_account_balance: Decimal | None = Field(default=None, ge=0, description="Ordinary Account balance at the statement date, in SGD")
+    total_contributions: Decimal = Field(
+        ge=0,
+        description="Total contributions for the period, in SGD",
+    )
+    ordinary_account_balance: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Ordinary Account balance at the statement date, in SGD",
+    )
+
 
 class SrsStatement(BaseModel):
     """Supplementary Retirement Scheme account statement."""
@@ -53,7 +72,10 @@ class SrsStatement(BaseModel):
     account_holder: str = Field(description="Name of the SRS account holder")
     account_no: str = Field(description="SRS account reference exactly as printed")
     statement_year: int = Field(ge=0, description="The calendar year the statement covers")
-    contributions_ytd: Decimal = Field(ge=0, description="Contributions made so far this year, in SGD")
+    contributions_ytd: Decimal = Field(
+        ge=0,
+        description="Contributions made so far this year, in SGD",
+    )
 
 
 # doc_type -> model, used by the ingestion worker to pick a decode constraint.

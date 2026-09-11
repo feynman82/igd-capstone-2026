@@ -28,7 +28,7 @@ fmt:
 	uv run ruff format . && uv run ruff check --fix .
 
 dev:
-	uv run uvicorn api.main:app --reload --port 8000 & (cd web && npm run dev)
+	uv run python scripts/run_parrot.py
 
 # Validate a register handed over by Lane E before anyone builds against it.
 corpus-check:

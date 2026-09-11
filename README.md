@@ -51,9 +51,9 @@ cp infra/.env.example .env
 docker compose -f infra/docker-compose.yml up -d     # postgres+pgvector, redis
 uv sync                                              # or: pip install -e ".[dev]"
 psql "$DATABASE_URL" -f db/migrations/0001_init.sql
-ollama pull hf.co/aisingapore/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
+ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
 python -m corpus.validate corpus/register/batch1.csv  # check a handed-over batch
-make dev                                             # api on :8000, web on :3000
+make dev                                             # local setup page on :8000
 ```
 
 ---
@@ -96,9 +96,13 @@ make dev                                             # api on :8000, web on :300
 | Interface | Next.js 15, Tailwind, shadcn/ui |
 | Evaluation | Ragas with a locally served judge |
 
-The whole stack fits on a single 8 GB GPU. That is deliberate: a local-first household
-assistant that needs an 18 GB workstation is a research prototype; one that runs on a
-laptop is a product.
+The target is consumer hardware; fitting the full workflow on an 8 GB GPU remains a
+planning estimate. The first demo target is Christian's onboard RTX 4060, without the
+external development GPU. Minimum specifications will follow measured quality, latency
+and memory use. See [`docs/RUNNING.md`](docs/RUNNING.md) for startup and qualification.
+
+On Windows, double-click [`START.cmd`](START.cmd). It currently opens the local setup
+page; document ingestion, questions and the product interface are still being built.
 
 ---
 

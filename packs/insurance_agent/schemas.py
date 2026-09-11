@@ -19,11 +19,18 @@ class PolicySchedule(BaseModel):
     insurer: str = Field(description="Name of the insurance company as printed on the schedule")
     policy_no: str = Field(description="Policy number exactly as printed, not normalised")
     insured: str = Field(description="Name of the policyholder or life assured")
-    policy_type: Literal["motor", "home", "life", "health", "travel", "personal_accident"] = Field(description="Which kind of cover this policy provides")
+    policy_type: Literal["motor", "home", "life", "health", "travel", "personal_accident"] = Field(
+        description="Which kind of cover this policy provides",
+    )
     cover_from: date = Field(description="First day of the period of insurance")
     expiry_date: date = Field(description="Last day of the period of insurance")
     annual_premium: Decimal = Field(ge=0, description="Premium payable for the period, in SGD")
-    excess: Decimal | None = Field(default=None, ge=0, description="Amount the policyholder bears per claim, in SGD")
+    excess: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Amount the policyholder bears per claim, in SGD",
+    )
+
 
 class RenewalNotice(BaseModel):
     """Notice issued before expiry inviting the policyholder to renew."""
@@ -34,7 +41,11 @@ class RenewalNotice(BaseModel):
     policy_no: str = Field(description="Policy number exactly as printed")
     insured: str = Field(description="Name of the policyholder")
     expiry_date: date = Field(description="Date the current cover ends")
-    renewal_premium: Decimal = Field(ge=0, description="Premium quoted for the coming period, in SGD")
+    renewal_premium: Decimal = Field(
+        ge=0,
+        description="Premium quoted for the coming period, in SGD",
+    )
+
 
 class ClaimLetter(BaseModel):
     """Letter from an insurer about a claim, including settlement advice."""
@@ -45,8 +56,16 @@ class ClaimLetter(BaseModel):
     policy_no: str = Field(description="Policy the claim was made against, exactly as printed")
     claim_no: str = Field(description="Claim reference exactly as printed")
     claimant: str = Field(description="Name of the person the claim relates to")
-    incident_date: date | None = Field(default=None, description="Date of the event being claimed for")
-    settled_amount: Decimal | None = Field(default=None, ge=0, description="Amount paid out, in SGD, if the letter states one")
+    incident_date: date | None = Field(
+        default=None,
+        description="Date of the event being claimed for",
+    )
+    settled_amount: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Amount paid out, in SGD, if the letter states one",
+    )
+
 
 class BenefitIllustration(BaseModel):
     """Illustration of benefits and values issued with a life or health policy."""
@@ -54,7 +73,10 @@ class BenefitIllustration(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     insurer: str = Field(description="Name of the insurance company")
-    policy_no: str | None = Field(default=None, description="Policy number if the illustration carries one")
+    policy_no: str | None = Field(
+        default=None,
+        description="Policy number if the illustration carries one",
+    )
     life_assured: str = Field(description="Name of the person covered")
     sum_assured: Decimal = Field(ge=0, description="Headline sum assured, in SGD")
     annual_premium: Decimal = Field(ge=0, description="Premium payable each year, in SGD")

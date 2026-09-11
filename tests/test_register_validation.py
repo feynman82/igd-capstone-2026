@@ -1,6 +1,5 @@
 """The register is the evaluation ground truth. These are the checks that keep it honest."""
 
-import csv
 from pathlib import Path
 
 from corpus.validate import validate

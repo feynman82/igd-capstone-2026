@@ -13,6 +13,10 @@ the difference matters when a supervisor asks.
 | [0001](0001-record-architecture-decisions.md) | Record architecture decisions | Accepted |
 | [0002](0002-one-postgres.md) | One PostgreSQL instance for chunks, facts and state | Accepted |
 | [0003](0003-paperbrain-pattern-not-module.md) | PaperBrain informs core/retrieve/'s pattern; it is not the core module | Accepted |
+| [0004](0004-local-setup-readiness.md) | Local setup runs before assistant readiness; loopback defaults | Accepted |
+| [0005](0005-polling-the-watched-folder.md) | The watched folder is polled for stability, not subscribed to for events | Accepted |
+| [0006](0006-pypdfium2-for-the-quarantine-image-pass.md) | pypdfium2 renders the page images the quarantine second pass reads | Accepted |
+| [0007](0007-the-graph-ships-before-retrieval-and-before-a-checkpoint-table.md) | The answer graph ships before hybrid retrieval and before a checkpoint table | Accepted |
 
 Add a row when you add a record.
 
