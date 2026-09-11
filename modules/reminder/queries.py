@@ -65,3 +65,13 @@ SELECT o.id, o.pack_id, o.label, o.due_date, d.original_name
    AND o.due_date < %(today)s
  ORDER BY o.due_date
 """
+
+# One open obligation, with what `next_window` needs to say when it will speak again. Used
+# before a close or a snooze so that acting on a row that is already done says so, rather than
+# reporting success for an UPDATE that matched nothing.
+SELECT_OPEN = """
+SELECT o.id, o.due_date, o.lead_days
+  FROM obligations o
+ WHERE o.id = %(obligation_id)s
+   AND o.state IN ('pending', 'notified')
+"""

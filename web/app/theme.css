@@ -1,0 +1,326 @@
+/* =============================================================================================
+   PARROT — the theme. One accent, one radius scale, one type scale.
+
+   This file is the only place a colour, a radius, a type size, a duration or an easing curve
+   is written down. A screen that introduces its own is a bug, in the same way that a
+   hand-edited `schemas.py` is a bug: there is one source and everything else is generated
+   from it. `app/tokens/page.tsx` renders this file back as a specimen, so a drift between
+   what is written here and what is on screen is visible rather than argued about.
+
+   The values come from `docs/artefacts/interface-design-pack.html`. Four things changed, and
+   each one changed because it failed a contrast measurement rather than because it looked
+   better:
+
+     1. `--ink-3`, the muted text, was #6B7873. On the tinted surfaces it measured 3.74:1,
+        which is below AA for body-size text. It is now #5E6965, which clears 4.5:1 on every
+        one of the nine backgrounds this system can put it on. Dark mode had the same problem
+        in the other direction and is now #88958F.
+     2. `--edge` is new. Every border in the design pack sits between 1.3:1 and 2.9:1 — right
+        for a divider, and not enough for the outline of a control a person has to find.
+        WCAG 1.4.11 wants 3:1 for that, so control boundaries get their own token.
+     3. `--focus` is new, and it is not a border. See the note above it.
+     4. The type scale, the spacing rhythm and the layout constants were not in the design
+        pack at all. They are decided here so that they are decided once.
+
+   Every ratio quoted in a comment below was computed, not estimated.
+   ============================================================================================= */
+
+/* --------------------------------------------------------------------------------- light
+   The default. Chosen from the use scene rather than from fashion: this is opened in a
+   kitchen at 7am and in an office at lunch, on a laptop, in daylight, for ninety seconds.
+   Dark is a real second theme rather than an inversion — see below — because the same person
+   opens it again at eleven at night. */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces. Four, and they nest: ground holds surface, surface holds surface-2, and
+     surface-3 is the deepest inset — a code block, a quoted passage from a document, the
+     well a source panel sits in. A fifth would be a shade nobody could name. */
+  --ground: #f6f7f5;
+  --surface: #ffffff;
+  --surface-2: #edf1ee;
+  --surface-3: #e3e9e5;
+
+  /* Ink. Three weights, and the rule is about role rather than size: ink for what the
+     sentence is about, ink-2 for the sentence around it, ink-3 for the provenance line —
+     "p.3 · confidence 0.61". ink-3 is the smallest and the most likely to be skipped by a
+     designer, which is exactly why it is pinned to a measured 4.5:1 everywhere. */
+  --ink: #141b18; /* 17.50:1 on surface */
+  --ink-2: #3d4a45; /*  9.28:1 on surface,  7.53:1 on surface-3 */
+  --ink-3: #5e6965; /*  5.70:1 on surface,  4.55:1 on the tightest tint */
+
+  /* Lines. Three kinds, and confusing them is the usual accessibility failure.
+       hairline — the rule between two rows. Decorative. Carries no meaning on its own.
+       rule     — a section division, or the border of a resting card.
+       edge     — the boundary of something you can click or type into. 3:1 minimum,
+                  because for an empty text field the border IS the control. */
+  --hairline: #d8deda;
+  --rule: #bcc6c1;
+  --edge: #7f8683; /* 3.72:1 on surface, 3.02:1 on surface-3 */
+
+  /* The accent. One. Deep evergreen — it reads as institutional rather than as a startup,
+     which is the correct register for something that holds your insurance policies. It is
+     spent on exactly three things: the primary action, the current selection, and a source
+     citation. It is never spent on decoration, and a second accent is never introduced. */
+  --accent: #0f5f52; /* 7.56:1 on surface — passes AA as text, not only as a shape */
+  --accent-soft: #dceae6;
+  --accent-line: #7fb6aa;
+  --accent-ink: #ffffff; /* 7.56:1 on accent */
+
+  /* Status. These are not accents and they are not a palette to pick from. Each one has one
+     meaning and appears only when that thing is true.
+       brass — this figure is an estimate, or this pack is not installed
+       crit  — overdue, or the extractor was wrong
+       warn  — below the confidence floor, needs your eyes
+       ok    — verified by a person, or handled
+     Every one of them passes AA as text on white and on its own tint, so a status can always
+     be said in words. The tint's border is decorative: the meaning lives in the word and in
+     the stripe, never in a 1px line. */
+  --brass: #8a6224; /* 5.45:1 on surface */
+  --brass-soft: #f2e8d6;
+  --brass-line: #c7a167;
+
+  --crit: #98291a; /* 7.87:1 on surface */
+  --crit-soft: #f7e1dc;
+  --crit-line: #d08d7e;
+
+  --warn: #7e5c0d; /* 6.13:1 on surface */
+  --warn-soft: #f6edd6;
+  --warn-line: #cfaf63;
+
+  --ok: #26623a; /* 7.26:1 on surface */
+  --ok-soft: #deede2;
+  --ok-line: #84b795;
+
+  /* Focus. Not a border, not a colour change, not a shadow — an outline with a gap, so it
+     survives being drawn on top of the accent button itself. The gap is painted in the
+     surface colour, which means the ring always has something to contrast against no matter
+     what it is wrapped around: 7.56:1 on white, 6.14:1 on the deepest inset. It is the same
+     ring on every control on all four surfaces, because a focus ring that varies is a focus
+     ring people stop trusting. */
+  --focus: #0f5f52;
+  --focus-gap: #ffffff;
+
+  /* Elevation. Two levels and no more. Both carry a vertical offset and a soft blur —
+     light falls from above in this system, so a symmetric halo is decoration and is not used.
+       lift-1  a card at rest, or a row you are hovering
+       lift-2  something that opened over the page: the source panel, a popover, a dialog */
+  --lift-1: 0 1px 2px rgb(20 27 24 / 0.05), 0 10px 26px -16px rgb(20 27 24 / 0.3);
+  --lift-2: 0 2px 4px rgb(20 27 24 / 0.06), 0 24px 48px -24px rgb(20 27 24 / 0.36);
+
+  /* The skeleton sweep. Sits on surface-2 and travels; it is the only looping motion here. */
+  --shimmer: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.72) 50%, transparent 80%);
+}
+
+/* ---------------------------------------------------------------------------------- dark
+   Not an inversion. The ground is a desaturated evergreen rather than black, the accent is
+   lifted to #54C2AB so it still passes AA as text against it, and the status hues are pulled
+   toward their lighter, warmer ends — a #98291A on a dark ground reads as mud. Every ratio
+   was recomputed against the dark surfaces rather than assumed to carry over. */
+
+.dark {
+  color-scheme: dark;
+
+  --ground: #0d1311;
+  --surface: #141c19;
+  --surface-2: #1b2521;
+  --surface-3: #222e29;
+
+  --ink: #e9efec; /* 14.90:1 on surface */
+  --ink-2: #b2c0b9; /*  9.20:1 on surface */
+  --ink-3: #88958f; /*  5.57:1 on surface, 4.52:1 on surface-3 */
+
+  --hairline: #26312d;
+  --rule: #374440;
+  --edge: #6c7673; /* 3.70:1 on surface, 3.00:1 on surface-3 */
+
+  --accent: #54c2ab; /* 8.00:1 on surface */
+  --accent-soft: #11302b;
+  --accent-line: #2e6e62;
+  --accent-ink: #08120f; /* 8.77:1 on accent */
+
+  --brass: #d6a85f; /* 7.96:1 on surface */
+  --brass-soft: #2a2317;
+  --brass-line: #6f5a2f;
+
+  --crit: #eb8a72; /* 6.95:1 on surface */
+  --crit-soft: #331a14;
+  --crit-line: #7a4234;
+
+  --warn: #e0b252; /* 8.81:1 on surface */
+  --warn-soft: #2d2413;
+  --warn-line: #6e5825;
+
+  --ok: #74cc8e; /* 8.90:1 on surface */
+  --ok-soft: #15281b;
+  --ok-line: #3a6b47;
+
+  --focus: #54c2ab;
+  --focus-gap: #141c19;
+
+  --lift-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 28px -18px rgb(0 0 0 / 0.9);
+  --lift-2: 0 2px 6px rgb(0 0 0 / 0.5), 0 28px 56px -26px rgb(0 0 0 / 0.95);
+
+  --shimmer: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.06) 50%, transparent 80%);
+}
+
+/* ------------------------------------------------------------------- everything non-colour
+   These do not change between themes, so they are written once. */
+
+:root {
+  /* -------- radius. Three values, and a screen may not invent a fourth.
+       r-sm  chips, badges, inputs, small buttons — things the size of a word
+       r     cards, panels, dialogs — things the size of a paragraph
+       r-pill a toggle or a status dot, where the shape is the affordance
+     10px is the deliberate centre of the scale: enough to look made rather than drawn by a
+     browser, not enough to look like a consumer app for teenagers. */
+  --r-sm: 6px;
+  --r: 10px;
+  --r-pill: 999px;
+
+  /* -------- type.
+     Two families and one measurement face.
+
+       display — Spectral, a serif, and it appears in exactly two places: the name of the
+                 thing you are looking at, and the one household figure on Today. It is what
+                 stops this reading like a SaaS dashboard. It is never used for a control.
+       body    — Archivo. Everything else: headings, labels, buttons, prose, table cells.
+       mono    — JetBrains Mono, and only for things that are measured or identified: a policy
+                 number, a confidence score, a page reference, a hash, a currency column.
+                 Monospace as a costume for "technical" is banned.
+
+     One ratio, 1.2, eight steps, fixed in rem. Fluid type is wrong here — this is a tool
+     used at a consistent distance on a consistent screen, and an h1 that shrinks inside a
+     narrow column looks broken rather than responsive. */
+  --fs-label: 0.6875rem; /* 11px — uppercase section labels: NEEDS YOU NOW */
+  --fs-meta: 0.8125rem; /* 13px — provenance, timestamps, table cells */
+  --fs-body: 0.9375rem; /* 15px — the default */
+  --fs-lead: 1.125rem; /* 18px — an answer, a card's first line */
+  --fs-title: 1.375rem; /* 22px — the title of a card or a document */
+  --fs-screen: 1.625rem; /* 26px — the name of the surface you are on */
+  --fs-display: 1.9375rem; /* 31px — a figure worth reading across the room */
+  --fs-figure: 2.3125rem; /* 37px — the single largest thing on Today */
+
+  --lh-tight: 1.15; /* display sizes */
+  --lh-snug: 1.35; /* titles, leads */
+  --lh-body: 1.55; /* prose */
+  --lh-flat: 1.2; /* labels, buttons, single-line rows */
+
+  --tr-label: 0.08em; /* the only positive tracking in the system */
+  --tr-tight: -0.011em; /* body: Archivo is slightly wide at small sizes */
+  --tr-display: -0.02em; /* Spectral at 31px and above */
+
+  /* -------- spacing.
+     A 4px base with eight rungs. Use the rungs; do not use the values between them, and do
+     not invent a ninth. The pairing rule from the design pack: tight inside a group,
+     generous between groups, and more space above a heading than below it. */
+  --s-1: 0.25rem; /*  4 */
+  --s-2: 0.5rem; /*  8 */
+  --s-3: 0.75rem; /* 12 */
+  --s-4: 1rem; /* 16 */
+  --s-5: 1.5rem; /* 24 */
+  --s-6: 2rem; /* 32 */
+  --s-7: 3rem; /* 48 */
+  --s-8: 4rem; /* 64 */
+
+  /* -------- layout constants. */
+  --shell: 68rem; /* 1088px — the widest the content ever gets */
+  --measure: 68ch; /* prose line length; an answer never runs wider */
+  --rail: 13.5rem; /* the navigation rail on a wide screen */
+  --gutter: var(--s-5);
+
+  /* -------- motion.
+     Straight from the design pack's specification, which had one rule behind it: the more
+     often a person sees an interaction, the less it moves. A tab switch is instant because it
+     happens forty times a day. A source chip appearing is animated because it happens once
+     per answer and it is the moment the answer became verifiable. */
+  --ease: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --dur-press: 160ms; /* any button, scale(0.97) */
+  --dur-chip: 180ms; /* a source chip arriving, after the stream ends */
+  --dur-collapse: 200ms; /* a row being snoozed or dismissed */
+  --dur-panel: 220ms; /* the source panel growing out of the chip that opened it */
+  --dur-enter: 300ms; /* Today's rows, 50ms apart */
+  --dur-shimmer: 1400ms; /* the skeleton loop; linear, because constant motion takes linear */
+  --dur-none: 0ms; /* tab switches, and every keyboard-triggered action */
+
+  /* -------- focus geometry. The same everywhere. */
+  --focus-w: 2px;
+  --focus-offset: 2px;
+}
+
+/* --------------------------------------------------------------------- tokens → utilities
+   `@theme inline` is what lets a component write `bg-surface` or `text-ink-3` instead of
+   `bg-[var(--surface)]`. The variables stay live, so switching `.dark` re-paints without a
+   rebuild and without a second set of class names. */
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+
+  --color-hairline: var(--hairline);
+  --color-rule: var(--rule);
+  --color-edge: var(--edge);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-accent-ink: var(--accent-ink);
+
+  --color-brass: var(--brass);
+  --color-brass-soft: var(--brass-soft);
+  --color-brass-line: var(--brass-line);
+
+  --color-crit: var(--crit);
+  --color-crit-soft: var(--crit-soft);
+  --color-crit-line: var(--crit-line);
+
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
+
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-ok-line: var(--ok-line);
+
+  --color-focus: var(--focus);
+
+  --radius-sm: var(--r-sm);
+  --radius: var(--r);
+  --radius-pill: var(--r-pill);
+
+  --font-display: var(--font-spectral), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-archivo), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-label: var(--fs-label);
+  --text-label--line-height: var(--lh-flat);
+  --text-label--letter-spacing: var(--tr-label);
+  --text-meta: var(--fs-meta);
+  --text-meta--line-height: var(--lh-body);
+  --text-body: var(--fs-body);
+  --text-body--line-height: var(--lh-body);
+  --text-lead: var(--fs-lead);
+  --text-lead--line-height: var(--lh-snug);
+  --text-title: var(--fs-title);
+  --text-title--line-height: var(--lh-snug);
+  --text-screen: var(--fs-screen);
+  --text-screen--line-height: var(--lh-tight);
+  --text-display: var(--fs-display);
+  --text-display--line-height: var(--lh-tight);
+  --text-figure: var(--fs-figure);
+  --text-figure--line-height: var(--lh-tight);
+
+  --shadow-lift-1: var(--lift-1);
+  --shadow-lift-2: var(--lift-2);
+
+  --ease-parrot: var(--ease);
+}

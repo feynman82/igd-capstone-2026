@@ -12,11 +12,18 @@ What these protect, in order of how much it would hurt to lose:
 - **A disabled pack goes quiet.** No reminder, no alert, no document, no passage to cite.
 - **Installing does not re-enable.** The upsert leaves the person's choice alone.
 - **Every item on Today carries a source**, and the three shapes of `/api/ask` stay distinct.
+- **A citation carries the document it opens.** A chip with a name and no id is a chip a
+  person cannot click, which is most of the trust story gone.
+- **A correction keeps what the field used to say**, because that is what makes it a labelled
+  example rather than an overwrite.
 """
 
 from __future__ import annotations
 
+import base64
+import json
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -28,6 +35,7 @@ from fastapi.testclient import TestClient
 
 from api import routes
 from api.main import create_app
+from core.adapters.base import sha256
 from core.graph.answer import Answer, Cited
 from core.runtime.settings import Settings
 
@@ -36,6 +44,12 @@ ROOT = Path(__file__).resolve().parents[1]
 TODAY = date(2026, 9, 11)
 DOC = UUID("11111111-1111-1111-1111-111111111111")
 SCAN = UUID("22222222-2222-2222-2222-222222222222")
+
+# A real 1x1 PNG. An image document is one page of pixels and `core.pages` hands it back
+# untouched, so the page endpoint can be tested end to end without a PDF renderer installed.
+PNG = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+)
 
 
 # ----------------------------------------------------------------------------- the fake rows
@@ -65,19 +79,32 @@ def rows_for(**overrides: list[tuple[Any, ...]]) -> dict[str, list[tuple[Any, ..
         "max(f.value_date)": [],  # alert.DAYS_UNCOVERED
         "f.value_num, f.value_date, f.subject": [],  # alert.EVIDENCE_FOR_KEY
         "FROM traces": [],  # alert.LAST_FIRED, the debounce
+        # vault.RESOLVE_NAMES. Empty means no citation resolves to a document, which is the
+        # honest default: most of these tests do not put documents in the fake at all.
+        "DISTINCT ON (d.original_name)": [],
+        "SELECT sha256 FROM documents": [],  # source.DIGEST_OF_DOCUMENT
+        "JOIN documents d ON d.id = f.document_id": [],  # corrections.SELECT_FACT
+        "o.due_date, o.lead_days": [],  # reminder.SELECT_OPEN
     }
     table.update(overrides)
     return table
 
 
 class FakeCursor:
-    def __init__(self, table: dict[str, list[tuple[Any, ...]]], log: list[str]) -> None:
+    def __init__(
+        self,
+        table: dict[str, list[tuple[Any, ...]]],
+        log: list[str],
+        calls: list[tuple[str, Any]],
+    ) -> None:
         self._table = table
         self._log = log
+        self._calls = calls
         self._current: list[tuple[Any, ...]] = []
 
     def execute(self, query: str, params: Any = None) -> None:
         self._log.append(query)
+        self._calls.append((query, params))
         for needle, rows in self._table.items():
             if needle in query:
                 self._current = rows
@@ -101,11 +128,19 @@ class FakeConn:
     def __init__(self, table: dict[str, list[tuple[Any, ...]]] | None = None) -> None:
         self.table = table if table is not None else rows_for()
         self.statements: list[str] = []
+        self.calls: list[tuple[str, Any]] = []
         self.commits = 0
         self.rollbacks = 0
 
     def cursor(self) -> FakeCursor:
-        return FakeCursor(self.table, self.statements)
+        return FakeCursor(self.table, self.statements, self.calls)
+
+    def params_for(self, needle: str) -> Any:
+        """The parameters of the one statement containing `needle`. Fails loudly if it never ran."""
+        for query, params in self.calls:
+            if needle in query:
+                return params
+        raise AssertionError(f"no statement containing {needle!r} was executed")
 
     def commit(self) -> None:
         self.commits += 1
@@ -303,7 +338,8 @@ def test_ask_returns_claims_with_their_citations(
     body = client.post("/api/ask", json={"question": "when does it renew?"}).json()
 
     assert body["kind"] == "answer"
-    assert body["claims"][0]["citations"] == ["renewal-notice.pdf, page 1"]
+    assert body["claims"][0]["citations"][0]["text"] == "renewal-notice.pdf, page 1"
+    assert body["claims"][0]["citations"][0]["page"] == 1
     assert body["claims"][0]["chunk_ids"] == [11]
     assert body["disclaimer"] == "This is not financial advice."
 
@@ -344,11 +380,13 @@ def test_ask_requires_a_question(client: TestClient) -> None:
 # ------------------------------------------------------------------------------------ vault
 
 
-def document_row(pack_id: str | None = "insurance_agent") -> tuple[Any, ...]:
+def document_row(
+    pack_id: str | None = "insurance_agent", mime: str = "application/pdf"
+) -> tuple[Any, ...]:
     return (
         DOC,
         "renewal-notice.pdf",
-        "application/pdf",
+        mime,
         2,
         "renewal_notice",
         pack_id,
@@ -359,8 +397,22 @@ def document_row(pack_id: str | None = "insurance_agent") -> tuple[Any, ...]:
     )
 
 
-def fact_row(key: str, text: str | None, num: Any, on: date | None) -> tuple[Any, ...]:
-    return (DOC, key, "Marcus Fernandez", text, num, on, 1, 0.93, False, "insurance_agent")
+def fact_row(
+    key: str, text: str | None, num: Any, on: date | None, fact_id: int = 501
+) -> tuple[Any, ...]:
+    return (
+        fact_id,
+        DOC,
+        key,
+        "Marcus Fernandez",
+        text,
+        num,
+        on,
+        1,
+        0.93,
+        False,
+        "insurance_agent",
+    )
 
 
 def test_vault_lists_documents_with_their_facts(settings: Settings) -> None:
@@ -370,8 +422,8 @@ def test_vault_lists_documents_with_their_facts(settings: Settings) -> None:
                 "count(*) FROM documents d": [(1,)],
                 "d.quarantine_reason": [document_row()],
                 "f.document_id = ANY": [
-                    fact_row("expiry_date", None, None, date(2026, 11, 30)),
-                    fact_row("annual_premium", None, Decimal("1248.90"), None),
+                    fact_row("expiry_date", None, None, date(2026, 11, 30), fact_id=501),
+                    fact_row("renewal_premium", None, Decimal("1248.90"), None, fact_id=502),
                 ],
             }
         )
@@ -387,8 +439,9 @@ def test_vault_lists_documents_with_their_facts(settings: Settings) -> None:
     by_key = {fact["key"]: fact for fact in document["facts"]}
     assert by_key["expiry_date"]["value"] == "2026-11-30"
     assert by_key["expiry_date"]["value_type"] == "date"
-    assert by_key["annual_premium"]["value"] == 1248.90
+    assert by_key["renewal_premium"]["value"] == 1248.90
     assert by_key["expiry_date"]["page"] == 1, "a fact without a page is not showable"
+    assert by_key["expiry_date"]["id"] == 501, "a field with no id cannot be corrected"
 
 
 def test_vault_hides_a_disabled_packs_documents(settings: Settings) -> None:
@@ -615,3 +668,289 @@ def test_overdue_is_filtered_by_the_same_set() -> None:
 
     assert reminder.overdue(conn, TODAY, enabled=frozenset({"iras_tax"})) == []
     assert len(reminder.overdue(conn, TODAY, enabled=None)) == 1
+
+
+# -------------------------------------------------------------------------------- citations
+#
+# The chip is the trust surface, and a chip that cannot be opened is a claim with a footnote to
+# nowhere. These are the tests that fail if the name-to-id lookup is ever quietly dropped.
+
+
+def test_an_alerts_citation_carries_the_document_it_opens(settings: Settings) -> None:
+    conn = FakeConn(
+        rows_for(
+            **{
+                **uncovered_since(date(2026, 8, 1)),
+                "DISTINCT ON (d.original_name)": [("policy.pdf", DOC, 4)],
+            }
+        )
+    )
+    body = client_for(settings, conn).get(f"/api/today?as_of={TODAY}").json()
+
+    firing = next(item for item in body["items"] if item["kind"] == "alert")
+    cited = firing["sources"][0]
+    assert cited["document_name"] == "policy.pdf"
+    assert cited["page"] == 3
+    assert cited["document_id"] == str(DOC), "a chip with no id is a chip nobody can click"
+
+
+def test_a_citation_that_resolves_to_nothing_still_says_what_it_said(
+    settings: Settings,
+) -> None:
+    """A deleted document must not take the sentence down with it."""
+    conn = FakeConn(rows_for(**uncovered_since(date(2026, 8, 1))))
+    body = client_for(settings, conn).get(f"/api/today?as_of={TODAY}").json()
+
+    cited = next(item for item in body["items"] if item["kind"] == "alert")["sources"][0]
+    assert cited["text"] == "policy.pdf, page 3"
+    assert cited["document_id"] is None
+
+
+def test_ask_resolves_every_name_in_one_query(settings: Settings, graph: type[FakeGraph]) -> None:
+    conn = FakeConn(rows_for(**{"DISTINCT ON (d.original_name)": [("renewal-notice.pdf", DOC, 2)]}))
+    graph.answer = Answer(
+        "It renews on 30 November 2026 [renewal-notice.pdf, page 1].",
+        citations=["renewal-notice.pdf, page 1"],
+        claims=[
+            Cited(
+                text="It renews on 30 November 2026.",
+                chunk_ids=(11,),
+                citations=["renewal-notice.pdf, page 1"],
+            )
+        ],
+    )
+    body = client_for(settings, conn).post("/api/ask", json={"question": "when?"}).json()
+
+    assert body["claims"][0]["citations"][0]["document_id"] == str(DOC)
+    assert body["citations"][0]["document_id"] == str(DOC)
+    lookups = [q for q in conn.statements if "DISTINCT ON (d.original_name)" in q]
+    assert len(lookups) == 1, "one lookup per response, not one per chip"
+
+
+# -------------------------------------------------------------------------------- the page
+
+
+@pytest.fixture
+def inbox(settings: Settings, tmp_path: Path) -> Settings:
+    """A watched folder holding one document, hashed the way the ingest registered it."""
+    (tmp_path / "renewal-notice.png").write_bytes(PNG)
+    return replace(settings, watch_folder=str(tmp_path))
+
+
+def filed_document(mime: str = "image/png") -> dict[str, list[tuple[Any, ...]]]:
+    return {
+        "d.quarantine_reason": [document_row(mime=mime)],
+        "count(*) FROM documents d": [(1,)],
+        "SELECT sha256 FROM documents": [(sha256(PNG),)],
+    }
+
+
+def test_a_page_comes_back_as_an_image(inbox: Settings) -> None:
+    conn = FakeConn(rows_for(**filed_document()))
+    response = client_for(inbox, conn).get(f"/api/documents/{DOC}/page/1")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/png")
+    assert response.content == PNG
+    assert "immutable" in response.headers["cache-control"], "a page of a document cannot change"
+
+
+def test_a_page_that_does_not_exist_is_a_404_that_says_so(inbox: Settings) -> None:
+    conn = FakeConn(rows_for(**filed_document()))
+    response = client_for(inbox, conn).get(f"/api/documents/{DOC}/page/2")
+
+    assert response.status_code == 404
+    assert "1 page" in response.json()["detail"]
+
+
+def test_a_document_whose_file_left_the_inbox_is_409_not_500(
+    settings: Settings, tmp_path: Path
+) -> None:
+    """v1 keeps the inbox as the document store, so this is a real state, not a fault."""
+    conn = FakeConn(rows_for(**filed_document()))
+    empty = replace(settings, watch_folder=str(tmp_path))
+    response = client_for(empty, conn).get(f"/api/documents/{DOC}/page/1")
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == "the original file is no longer in the inbox"
+
+
+def test_an_unknown_document_is_404(inbox: Settings) -> None:
+    conn = FakeConn(rows_for(**{"d.quarantine_reason": []}))
+    assert client_for(inbox, conn).get(f"/api/documents/{uuid4()}/page/1").status_code == 404
+
+
+def test_one_document_is_shown_even_when_its_pack_is_off(settings: Settings) -> None:
+    """Following a citation must never end in a blank screen because a pack was switched off."""
+    conn = FakeConn(
+        rows_for(
+            **{
+                "SELECT id, enabled FROM packs": [("insurance_agent", False)],
+                "d.quarantine_reason": [document_row()],
+                "f.document_id = ANY": [fact_row("expiry_date", None, None, date(2026, 11, 30))],
+            }
+        )
+    )
+    body = client_for(settings, conn).get(f"/api/documents/{DOC}").json()
+
+    assert body["original_name"] == "renewal-notice.pdf"
+    assert body["pack_enabled"] is False, "the screen has to be able to say why it looks odd"
+
+
+# ------------------------------------------------------------------------------ corrections
+
+
+def stored_fact(
+    key: str = "renewal_premium",
+    value_text: str | None = None,
+    value_num: Any = Decimal("486.00"),
+    value_date: date | None = None,
+    confidence: float = 0.61,
+) -> dict[str, list[tuple[Any, ...]]]:
+    return {
+        "JOIN documents d ON d.id = f.document_id": [
+            (
+                502,
+                DOC,
+                3,
+                "insurance_agent",
+                key,
+                "Marcus Fernandez",
+                value_text,
+                value_num,
+                value_date,
+                confidence,
+                False,
+                "renewal_notice",
+                "renewal-notice.pdf",
+            )
+        ]
+    }
+
+
+def test_correcting_a_field_keeps_what_it_used_to_say(settings: Settings) -> None:
+    """The point of the endpoint. An UPDATE alone loses the example we are trying to collect."""
+    conn = FakeConn(rows_for(**stored_fact()))
+    body = client_for(settings, conn).patch("/api/facts/502", json={"value": "479.60"}).json()
+
+    assert body["was"] == 486.0
+    assert body["now"] == 479.6
+    assert body["was_confidence"] == 0.61
+    assert body["page"] == 3, "a correction never moves a fact to a different page"
+
+    written = conn.params_for("UPDATE facts")
+    assert written["value_num"] == Decimal("479.60")
+    assert written["value_text"] is None, "the other columns are cleared, not left stale"
+
+    trace = json.loads(conn.params_for("INSERT INTO traces")["payload"])
+    assert trace["was"] == 486.0 and trace["now"] == 479.6
+    assert trace["was_confidence"] == 0.61, "the model's confidence is the label's other half"
+
+
+def test_a_corrected_field_stops_being_flagged(settings: Settings) -> None:
+    conn = FakeConn(rows_for(**stored_fact()))
+    client_for(settings, conn).patch("/api/facts/502", json={"value": "479.60"})
+
+    statement = next(q for q in conn.statements if "UPDATE facts" in q)
+    assert "verified_by_user = true" in statement
+    assert "confidence = 1.0" in statement
+
+
+def test_a_premium_that_is_not_a_number_is_refused_rather_than_stored_as_text(
+    settings: Settings,
+) -> None:
+    conn = FakeConn(rows_for(**stored_fact()))
+    response = client_for(settings, conn).patch(
+        "/api/facts/502", json={"value": "four hundred and eighty"}
+    )
+
+    assert response.status_code == 422
+    assert "not a number" in response.json()["detail"]
+    assert not [q for q in conn.statements if "UPDATE facts" in q], "nothing was written"
+
+
+def test_a_date_field_takes_an_iso_date_and_says_so_when_it_does_not(
+    settings: Settings,
+) -> None:
+    conn = FakeConn(
+        rows_for(**stored_fact(key="expiry_date", value_num=None, value_date=date(2026, 10, 14)))
+    )
+    client = client_for(settings, conn)
+
+    bad = client.patch("/api/facts/502", json={"value": "14 October 2027"})
+    assert bad.status_code == 422
+    assert "YYYY-MM-DD" in bad.json()["detail"]
+
+    good = client.patch("/api/facts/502", json={"value": "2027-10-14"})
+    assert good.status_code == 200
+    assert good.json()["now"] == "2027-10-14"
+
+
+def test_correcting_a_fact_that_is_not_there_is_404(settings: Settings) -> None:
+    conn = FakeConn(rows_for())
+    response = client_for(settings, conn).patch("/api/facts/999", json={"value": "1.00"})
+    assert response.status_code == 404
+
+
+# ------------------------------------------------------------------------------ obligations
+
+
+def open_obligation(due: date = date(2026, 11, 10)) -> dict[str, list[tuple[Any, ...]]]:
+    return {"o.due_date, o.lead_days": [(42, due, [60, 30, 7])]}
+
+
+def test_snooze_says_the_day_it_will_speak_again(settings: Settings) -> None:
+    """Snooze means 'not until this gets more urgent', so it can name the day it does."""
+    conn = FakeConn(rows_for(**open_obligation(due=date(2026, 11, 10))))
+    body = client_for(settings, conn).post(f"/api/obligations/42/snooze?as_of={TODAY}").json()
+
+    assert body["state"] == "snoozed"
+    # 60 days out today, so the window being silenced is 60 and the next one down is 30.
+    assert body["speaks_again"] == "2026-10-11"
+
+
+def test_snoozing_inside_the_last_window_admits_there_is_nothing_after_it(
+    settings: Settings,
+) -> None:
+    conn = FakeConn(rows_for(**open_obligation(due=date(2026, 9, 14))))
+    body = client_for(settings, conn).post(f"/api/obligations/42/snooze?as_of={TODAY}").json()
+
+    assert body["speaks_again"] is None, "the next thing it does is go overdue"
+
+
+def test_snooze_stamps_the_column_the_sweep_already_reads(settings: Settings) -> None:
+    """No new column: `already_said` is what makes the row quiet, and it reads this one."""
+    conn = FakeConn(rows_for(**open_obligation()))
+    client_for(settings, conn).post(f"/api/obligations/42/snooze?as_of={TODAY}")
+
+    statement = next(q for q in conn.statements if "SET state = 'notified'" in q)
+    assert "last_notified_at" in statement
+
+
+def test_an_obligation_can_be_closed_as_done_or_dismissed(settings: Settings) -> None:
+    for state, expected in (("done", "state = 'done'"), ("dismissed", "state = 'dismissed'")):
+        conn = FakeConn(rows_for(**open_obligation()))
+        body = (
+            client_for(settings, conn)
+            .post("/api/obligations/42/close", json={"state": state})
+            .json()
+        )
+        assert body["state"] == state
+        assert any(expected in q for q in conn.statements)
+
+
+def test_closing_something_already_closed_is_404_not_a_silent_success(
+    settings: Settings,
+) -> None:
+    conn = FakeConn(rows_for())  # SELECT_OPEN finds nothing
+    response = client_for(settings, conn).post("/api/obligations/42/close", json={"state": "done"})
+    assert response.status_code == 404
+    assert not [q for q in conn.statements if "SET state = 'done'" in q]
+
+
+def test_an_obligation_cannot_be_closed_into_an_invented_state(settings: Settings) -> None:
+    conn = FakeConn(rows_for(**open_obligation()))
+    response = client_for(settings, conn).post(
+        "/api/obligations/42/close", json={"state": "cancelled"}
+    )
+    assert response.status_code == 422

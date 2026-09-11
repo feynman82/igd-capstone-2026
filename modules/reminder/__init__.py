@@ -147,3 +147,77 @@ def overdue(
     if enabled is None:
         return rows
     return [row for row in rows if row[1] in enabled]
+
+
+# ------------------------------------------------------------------------------ closing one
+#
+# Three things a person can do to a row on Today, and only two of them need a new column — so
+# only two of them are here. `queries.MARK_DONE` and `queries.MARK_DISMISSED` were written when
+# the table was designed and have had no caller until now.
+
+
+class UnknownObligation(LookupError):
+    """Safe to show: there is no obligation with that id, or it is already closed."""
+
+
+def close(conn: Any, obligation_id: int, *, state: str) -> None:
+    """Mark an obligation done or dismissed. Both are final; neither deletes anything.
+
+    `done` means the person did the thing. `dismissed` means it was never theirs to do. The
+    distinction is not cosmetic: an evaluation that counts missed obligations has to be able to
+    tell "renewed it" from "this reminder should not have existed".
+    """
+    statement = {"done": queries.MARK_DONE, "dismissed": queries.MARK_DISMISSED}.get(state)
+    if statement is None:  # pragma: no cover - the caller's type already forbids it
+        raise ValueError(f"an obligation is closed as done or dismissed, not {state!r}")
+    with conn.cursor() as cur:
+        cur.execute(queries.SELECT_OPEN, {"obligation_id": obligation_id})
+        if cur.fetchone() is None:
+            raise UnknownObligation(f"no open obligation with id {obligation_id}")
+        cur.execute(statement, {"obligation_id": obligation_id})
+    conn.commit()
+    log.info("obligation %s marked %s", obligation_id, state)
+
+
+def snooze(conn: Any, obligation_id: int, on: date | None = None) -> date | None:
+    """Quiet until the next lead window opens. Returns the date it will speak again, if any.
+
+    **Snooze here means "not again until it gets more urgent", not "not for N days".** A pack
+    declares its lead windows — insurance uses 60, 30 and 7 — and snoozing at 60 days out
+    silences the row until day 30, when the situation has genuinely changed. That is a better
+    default than an arbitrary number of days a person has to pick while they are busy, and it
+    is the only version that needs no new column: it stamps `last_notified_at`, which is exactly
+    what `already_said` reads.
+
+    The cost of that choice, stated plainly because someone will ask: a person cannot say "next
+    Tuesday". Giving them that means an `obligations.snoozed_until` column, which is a
+    migration, which is its own reviewed pull request.
+    """
+    when = on or date.today()
+    stamp = datetime.combine(when, time.min).astimezone()
+    with conn.cursor() as cur:
+        cur.execute(queries.SELECT_OPEN, {"obligation_id": obligation_id})
+        row = cur.fetchone()
+        if row is None:
+            raise UnknownObligation(f"no open obligation with id {obligation_id}")
+        _id, due_date, lead_days = row
+        cur.execute(queries.MARK_NOTIFIED, {"obligation_id": obligation_id, "now": stamp})
+    conn.commit()
+
+    return next_window(when, due_date, list(lead_days or []))
+
+
+def next_window(after: date, due: date, lead_days: list[int]) -> date | None:
+    """The day this obligation is allowed to speak again, or None when it has no window left.
+
+    The tightest window it is already inside is the one being silenced, so the answer is the day
+    the *next* one down opens. Past the last window there is nothing further to say until the
+    date itself passes and it becomes overdue, which is a different list on a different part of
+    the screen.
+    """
+    days_left = (due - after).days
+    current = current_lead(days_left, lead_days)
+    tighter = [lead for lead in sorted(lead_days) if current is None or lead < current]
+    if not tighter:
+        return None
+    return due - timedelta(days=tighter[-1])

@@ -59,18 +59,24 @@ class AskRequest(BaseModel):
 
 
 class Claim(BaseModel):
-    """One sentence and the passages it was traced to. Never emitted without `citations`."""
+    """One sentence and the passages it was traced to. Never emitted without `citations`.
+
+    A citation is a `Source` rather than a string. The answer graph formats it the way a person
+    says it — "policy.pdf, page 1" — and that sentence survives as `Source.text`; what is added
+    is the document id, looked up once per response, so the chip beside the sentence is
+    something a person can open rather than something they have to go and find.
+    """
 
     text: str
     chunk_ids: list[int]
-    citations: list[str]
+    citations: list[Source]
 
 
 class AskResponse(BaseModel):
     kind: Literal["answer", "abstention", "refusal"]
     text: str
     claims: list[Claim] = Field(default_factory=list)
-    citations: list[str] = Field(default_factory=list)
+    citations: list[Source] = Field(default_factory=list)
     disclaimer: str = ""
     reason: str = ""  # why it abstained
     missing: str = ""  # what document would have answered it
@@ -82,6 +88,7 @@ class AskResponse(BaseModel):
 
 
 class VaultFact(BaseModel):
+    id: int  # what `PATCH /api/facts/{id}` addresses
     key: str
     value: str | float | None
     value_type: str
@@ -150,6 +157,58 @@ class PacksResponse(BaseModel):
 
 class EnabledRequest(BaseModel):
     enabled: bool
+
+
+# ------------------------------------------------------------------------------- corrections
+
+
+class CorrectionRequest(BaseModel):
+    """What the person typed. The pack decides what type it is; the caller does not get to say.
+
+    One field, deliberately. A screen cannot ask for the value to be stored as text, or move it
+    to another page, or set its own confidence — those are the three ways a correction endpoint
+    turns into a way of writing arbitrary rows into `facts`.
+    """
+
+    value: str = Field(min_length=1, max_length=500)
+
+
+class CorrectionResponse(BaseModel):
+    """What changed, in the words the screen confirms it with.
+
+    `was` is returned rather than discarded because the screen says "was $486.00" under the
+    corrected field: a person who mistypes needs to see what they replaced.
+    """
+
+    fact_id: int
+    key: str
+    document_id: str
+    document_name: str
+    page: int
+    was: str | float | None
+    now: str | float | None
+    was_confidence: float
+    value_type: str
+
+
+# ------------------------------------------------------------------------------- obligations
+
+
+class CloseRequest(BaseModel):
+    state: Literal["done", "dismissed"]
+
+
+class ObligationChanged(BaseModel):
+    """The row is gone from Today. `speaks_again` is null when it will not come back.
+
+    A snooze that cannot say when it ends is a snooze a person will not trust, so the date is
+    computed from the pack's own lead windows and returned rather than left to the interface to
+    guess.
+    """
+
+    obligation_id: int
+    state: Literal["done", "dismissed", "snoozed"]
+    speaks_again: date | None = None
 
 
 # ------------------------------------------------------------------------------- quarantine

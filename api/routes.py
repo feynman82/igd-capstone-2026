@@ -1,4 +1,4 @@
-"""The five endpoints the interface needs, on the existing loopback app.
+"""The endpoints the interface needs, on the existing loopback app.
 
 **Nothing here reimplements anything.** `/api/today` calls the same `modules.reminder.sweep`
 and `modules.alert.sweep` that `scripts/today.py` calls, `/api/ask` builds the same
@@ -20,6 +20,20 @@ twice had used up their 30-day warning.
 
 *The retry is queued, not run.* The vision pass takes tens of seconds on a 4B model. The
 handler returns 202 and a task id; the worker does the reading.
+
+**The three writes a person can make.** Everything above reads. Three endpoints here write, and
+each one is a person disagreeing with the system rather than the system changing its own mind:
+`PATCH /api/facts/{id}` is "that is not what the paper says", `POST /api/obligations/{id}/close`
+is "done" or "this was never mine to do", and `.../snooze` is "not yet". None of them can write
+a row that did not already exist, and none of them can write a fact without provenance —
+`core/corrections.py` never touches `document_id` or `page`, so rule 2 holds through the one
+path that lets a human edit a fact.
+
+**A citation is something you can open.** The modules and the answer graph format a citation the
+way a person says it — "policy.pdf, page 1" — and by the time it arrives here the document id
+has been thrown away. `vault.resolve_names` puts it back, once per response rather than once per
+chip, so `GET /api/documents/{id}/page/{n}` has something to be called with. That endpoint is
+the only one in this file that returns bytes instead of JSON.
 """
 
 from __future__ import annotations
@@ -30,14 +44,18 @@ from datetime import date
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 
 from api.models import (
     AskRequest,
     AskResponse,
     Claim,
+    CloseRequest,
+    CorrectionRequest,
+    CorrectionResponse,
     EnabledRequest,
     ModuleSummary,
+    ObligationChanged,
     PacksResponse,
     PackSummary,
     QuarantinedDocument,
@@ -50,10 +68,11 @@ from api.models import (
     VaultFact,
     VaultResponse,
 )
-from core import registry, vault
+from core import corrections, registry, vault
 from core.graph.answer import Answer, AnswerGraph
 from core.graph.baseline import DenseRetriever, NoReranker
-from core.ingest import quarantine
+from core.ingest import quarantine, source
+from core.pages import PageUnavailable, RendererUnavailable, render_page
 from core.runtime.db import DatabaseUnavailable, connect
 from core.runtime.ollama import Ollama
 from core.runtime.settings import Settings
@@ -100,6 +119,21 @@ def _cite(text: str) -> Source:
     if separator and page.strip().isdigit():
         return Source(document_name=name, page=int(page.strip()), text=text)
     return Source(document_name=text or None, text=text)
+
+
+def _link(conn: Any, groups: list[list[Source]]) -> None:
+    """Fill in `document_id` on every source, in one query for the whole response.
+
+    Mutates in place because the alternative is rebuilding three nested lists to change one
+    field on some of them. A name that resolves to nothing is left alone: the citation still
+    says what it said, it simply is not a link, which is the right outcome for a document
+    somebody has since deleted.
+    """
+    flat = [source_ for group in groups for source_ in group]
+    resolved = vault.resolve_names(conn, [item.document_name or "" for item in flat])
+    for item in flat:
+        if item.document_id is None and item.document_name in resolved:
+            item.document_id = str(resolved[item.document_name].document_id)
 
 
 # ------------------------------------------------------------------------------------ today
@@ -167,6 +201,7 @@ def _today_items(conn: Any, on: date) -> list[TodayItem]:
         )
 
     items.sort(key=lambda item: (BUCKET[item.kind], item.urgency))
+    _link(conn, [item.sources for item in items])
     return items
 
 
@@ -204,7 +239,9 @@ def build_router() -> APIRouter:
             DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
             NoReranker(),
         )
-        return _as_response(graph.ask(ask_request.question, thread_id=ask_request.thread_id))
+        answer = _as_response(graph.ask(ask_request.question, thread_id=ask_request.thread_id))
+        _link(conn, [claim.citations for claim in answer.claims] + [answer.citations])
+        return answer
 
     @router.get("/vault", response_model=VaultResponse)
     def vault_documents(
@@ -259,6 +296,136 @@ def build_router() -> APIRouter:
                 status_code=404, detail=f"no installed module with id {module_id}"
             ) from error
         return _as_module_summary(updated)
+
+    # -------------------------------------------------------------------------- documents
+    #
+    # Two endpoints, and the second is the point of the first. A person who clicked a citation
+    # is asking to see the paper; nothing else in this file can show it to them.
+
+    @router.get("/documents/{document_id}", response_model=VaultDocument)
+    def one_document(document_id: str, conn: Conn) -> VaultDocument:
+        """One document and everything read off it.
+
+        Not filtered by the enabled set, unlike the listing. Somebody who followed a citation
+        here is looking at a named thing; hiding it because its pack is switched off would be a
+        dead end. `pack_enabled` says so instead, and the screen can be honest about it.
+        """
+        found = vault.document(conn, document_id, enabled=registry.enabled_pack_ids(conn))
+        if found is None:
+            raise HTTPException(status_code=404, detail=f"no document with id {document_id}")
+        return _as_vault_document(found)
+
+    @router.get("/documents/{document_id}/page/{page}")
+    def document_page(document_id: str, page: int, conn: Conn, config: Config) -> Response:
+        """The page itself, drawn. The one endpoint here that returns bytes.
+
+        Four things can go wrong and a person is told which, because "could not open" is not an
+        answer anybody can act on:
+
+        * **404** there is no such document, or no such page in it
+        * **409** the document is registered but its file has left the inbox. v1 keeps the
+          inbox as the document store, so this is a real state and not a fault, and it is the
+          same sentence the quarantine queue uses because it is the same situation
+        * **501** this install has no PDF renderer
+
+        The bytes are content-addressed: a document id is bound to one SHA-256, so a given page
+        of a given document can never change and the response says so.
+        """
+        found = vault.document(conn, document_id)
+        if found is None:
+            raise HTTPException(status_code=404, detail=f"no document with id {document_id}")
+
+        digest = source.digest_of_document(conn, document_id)
+        if digest is None:  # pragma: no cover - the row was just read
+            raise HTTPException(status_code=404, detail=f"no document with id {document_id}")
+
+        try:
+            payload = source.bytes_for(digest, Path(config.watch_folder))
+        except source.SourceMissing as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+
+        try:
+            drawn, media_type = render_page(payload, found.mime, page)
+        except RendererUnavailable as error:
+            raise HTTPException(status_code=501, detail=str(error)) from error
+        except PageUnavailable as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+        return Response(
+            content=drawn,
+            media_type=media_type,
+            headers={
+                "Cache-Control": "private, max-age=86400, immutable",
+                "Content-Disposition": "inline",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
+
+    # ------------------------------------------------------------------------------- facts
+
+    @router.patch("/facts/{fact_id}", response_model=CorrectionResponse)
+    def correct_fact(fact_id: int, body: CorrectionRequest, conn: Conn) -> CorrectionResponse:
+        """That is not what the paper says. The only human write to `facts` in the system.
+
+        422 rather than a coercion when the value does not fit the field's declared type. A
+        premium quietly stored as the text "four hundred" would be worse than the wrong number
+        it replaced, and the person is standing in front of the document and can retype it.
+        """
+        try:
+            changed = corrections.correct(conn, fact_id, body.value)
+        except corrections.UnknownFact as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        except corrections.CorrectionRejected as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return CorrectionResponse(
+            fact_id=changed.fact_id,
+            key=changed.key,
+            document_id=str(changed.document_id),
+            document_name=changed.document_name,
+            page=changed.page,
+            was=changed.was,
+            now=changed.now,
+            was_confidence=changed.was_confidence,
+            value_type=changed.value_type,
+        )
+
+    # -------------------------------------------------------------------------- obligations
+
+    @router.post("/obligations/{obligation_id}/close", response_model=ObligationChanged)
+    def close_obligation(obligation_id: int, body: CloseRequest, conn: Conn) -> ObligationChanged:
+        """Done, or dismissed. Both final, neither destructive.
+
+        The distinction is kept because an evaluation that counts missed obligations has to
+        tell "I renewed it" from "this reminder should never have existed" — the second is a
+        finding about the pack, the first is the system working.
+        """
+        try:
+            reminder.close(conn, obligation_id, state=body.state)
+        except reminder.UnknownObligation as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return ObligationChanged(obligation_id=obligation_id, state=body.state)
+
+    @router.post("/obligations/{obligation_id}/snooze", response_model=ObligationChanged)
+    def snooze_obligation(
+        obligation_id: int,
+        conn: Conn,
+        as_of: Annotated[
+            date | None, Query(description="YYYY-MM-DD, for the demonstration")
+        ] = None,
+    ) -> ObligationChanged:
+        """Quiet until it gets more urgent, and say when that is.
+
+        `speaks_again` is the day the next lead window opens, computed from the pack's own
+        declared windows. Null means there is no tighter window left: the next thing this
+        obligation does is go overdue.
+        """
+        try:
+            speaks_again = reminder.snooze(conn, obligation_id, as_of)
+        except reminder.UnknownObligation as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return ObligationChanged(
+            obligation_id=obligation_id, state="snoozed", speaks_again=speaks_again
+        )
 
     @router.get("/quarantine", response_model=QuarantineResponse)
     def quarantine_queue(
@@ -340,10 +507,14 @@ def _as_response(answer: Answer) -> AskResponse:
         kind="answer",
         text=answer.text,
         claims=[
-            Claim(text=claim.text, chunk_ids=list(claim.chunk_ids), citations=claim.citations)
+            Claim(
+                text=claim.text,
+                chunk_ids=list(claim.chunk_ids),
+                citations=[_cite(citation) for citation in claim.citations],
+            )
             for claim in answer.claims
         ],
-        citations=answer.citations,
+        citations=[_cite(citation) for citation in answer.citations],
         disclaimer=answer.disclaimer,
         passages_read=answer.passages_read,
         dropped=answer.dropped,
@@ -365,6 +536,7 @@ def _as_vault_document(document: vault.VaultDocument) -> VaultDocument:
         synthetic=document.synthetic,
         facts=[
             VaultFact(
+                id=fact.id,
                 key=fact.key,
                 value=fact.value,
                 value_type=fact.value_type,

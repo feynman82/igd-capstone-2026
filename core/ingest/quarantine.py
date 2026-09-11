@@ -25,7 +25,6 @@ against Desmond's register, not against its own output, is the only thing that m
 from __future__ import annotations
 
 import base64
-import io
 import logging
 from dataclasses import dataclass
 from pathlib import Path
@@ -39,14 +38,12 @@ from core.ingest.parse import ParsedDocument, ParsedPage
 from core.ingest.pipeline import commit_both_lanes
 from core.ingest.source import index_folder
 from core.packs import PackUnavailable, pack
+from core.pages import PageUnavailable, RendererUnavailable, page_count, render_page
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
 
-RENDER_DPI = 150  # enough for 8pt print; 300 quadruples the tokens for no measured gain yet
 MAX_IMAGE_PAGES = 4  # a household document; beyond this the context cost is not worth it
-
-IMAGE_MIMES = frozenset({"image/jpeg", "image/png", "image/tiff"})
 
 READ_SYSTEM = (
     "You are looking at a photograph or scan of one household document. You transcribe what is "
@@ -128,28 +125,31 @@ def blocked_reasons(
 
 
 def page_images(payload: bytes, mime: str) -> list[str]:
-    """Base64 page images, in page order. Empty when this document cannot be rendered."""
-    if mime in IMAGE_MIMES:
-        return [base64.b64encode(payload).decode("ascii")]
-    if mime != "application/pdf":
-        return []
+    """Base64 page images, in page order. Empty when this document cannot be rendered.
+
+    Capped at `MAX_IMAGE_PAGES`, which is a context-budget decision belonging to this pass and
+    to nothing else — `core.pages` will happily draw page nine for a person who clicked a
+    citation. The drawing itself is `core.pages`' job so that the page this model reads and the
+    page the interface shows are the same page.
+
+    The names are imported rather than the module, because `transcribe` below already has a
+    local called `pages` and one of them would have shadowed the other.
+    """
     try:
-        import pypdfium2
-    except ImportError:
-        log.warning("cannot render PDF pages: pypdfium2 is not installed")
+        total = page_count(payload, mime)
+    except RendererUnavailable as error:
+        log.warning("%s", error)
         return []
-    try:
-        document = pypdfium2.PdfDocument(payload)
-        images = []
-        for index in range(min(len(document), MAX_IMAGE_PAGES)):
-            bitmap = document[index].render(scale=RENDER_DPI / 72)
-            buffer = io.BytesIO()
-            bitmap.to_pil().save(buffer, format="PNG")
-            images.append(base64.b64encode(buffer.getvalue()).decode("ascii"))
-        return images
-    except Exception as error:  # pdfium raises its own errors on damaged files
-        log.info("could not render pages: %s", error)
-        return []
+
+    images: list[str] = []
+    for number in range(1, min(total, MAX_IMAGE_PAGES) + 1):
+        try:
+            drawn, _ = render_page(payload, mime, number)
+        except PageUnavailable as error:
+            log.info("stopping at page %d: %s", number, error)
+            break
+        images.append(base64.b64encode(drawn).decode("ascii"))
+    return images
 
 
 def transcribe(client: Ollama, images: list[str]) -> ParsedDocument:

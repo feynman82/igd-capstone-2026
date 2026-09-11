@@ -32,3 +32,4 @@ graphify-out/*
 #   doc/PARROT_Proposal_Deck.pptx    -> docs/artefacts/PARROT_Proposal_Deck.pptx
 #   doc/PARROT_diagrams.zip          -> docs/artefacts/diagrams/*.png
 /doc/
+.playwright-mcp/
