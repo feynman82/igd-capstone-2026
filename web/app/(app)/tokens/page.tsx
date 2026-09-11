@@ -104,7 +104,7 @@ function Section({
   return (
     <section id={id} className="scroll-mt-[var(--s-8)] border-t border-hairline pt-[var(--s-6)] pb-[var(--s-7)]">
       <div className="mb-[var(--s-5)] max-w-[var(--measure)]">
-        <h2 className="font-display text-title">{title}</h2>
+        <h2 className="text-title font-medium">{title}</h2>
         <p className="mt-[var(--s-2)] text-meta text-ink-2">{note}</p>
       </div>
       {children}
@@ -184,7 +184,7 @@ function Accent() {
             href="#accent"
             className="mt-[var(--s-3)] inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[var(--s-1)] text-meta text-accent no-underline"
           >
-            Motor renewal notice <span className="num opacity-70">p.1</span>
+            Motor renewal notice <span className="num">p.1</span>
           </a>
         </div>
       </div>
@@ -268,7 +268,12 @@ function Surfaces() {
               </div>
             </li>
           </ul>
+          {/* A placeholder is not a label: it disappears the moment somebody types. */}
+          <label htmlFor="edge-demo" className="sr-only">
+            Example text field, to show the control border
+          </label>
           <input
+            id="edge-demo"
             type="text"
             placeholder="Ask about your documents"
             className="mt-[var(--s-4)] w-full rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-body"
@@ -535,9 +540,13 @@ function Focus() {
           href="#focus"
           className="rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[var(--s-1)] text-meta text-accent no-underline"
         >
-          A source chip <span className="num opacity-70">p.2</span>
+          A source chip <span className="num">p.2</span>
         </a>
+        <label htmlFor="focus-demo" className="sr-only">
+          Example text field, to try the focus ring
+        </label>
         <input
+          id="focus-demo"
           type="text"
           placeholder="A text field"
           className="min-w-[12rem] flex-1 rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-body"

@@ -40,6 +40,34 @@ class Due:
         return f"{self.label}: due {when} ({self.due_date}){source}"
 
 
+@dataclass(frozen=True, slots=True)
+class Overdue:
+    """Past its date and never closed. A different problem from a reminder, shown separately.
+
+    A dataclass rather than the bare tuple this used to be, for one reason: it grew a document
+    and a page, and a five-element tuple that becomes a seven-element tuple is a change every
+    caller gets wrong silently. It carries its own `line()` so the command line and the screen
+    cannot drift apart about how an overdue item is worded.
+    """
+
+    obligation_id: int
+    pack_id: str
+    label: str
+    due_date: date
+    document_id: Any | None
+    page: int | None
+    document_name: str | None
+
+    def line(self) -> str:
+        if self.document_name and self.page is not None:
+            source = f" — {self.document_name}, page {self.page}"
+        elif self.document_name:
+            source = f" — {self.document_name}"
+        else:
+            source = ""
+        return f"{self.label}: overdue since {self.due_date}{source}"
+
+
 def current_lead(days_left: int, lead_days: list[int]) -> int | None:
     """The tightest lead window this obligation has entered, or None if it has entered none."""
     active = [lead for lead in sorted(lead_days) if days_left <= lead]
@@ -135,7 +163,7 @@ def overdue(
     today: date | None = None,
     *,
     enabled: frozenset[str] | None = None,
-) -> list[tuple[int, str, str, date, str | None]]:
+) -> list[Overdue]:
     """Past their date and never closed. A different problem from a reminder, shown separately.
 
     Filtered by the same enabled set as `sweep`: a pack that is switched off does not get to
@@ -143,10 +171,10 @@ def overdue(
     """
     with conn.cursor() as cur:
         cur.execute(queries.OVERDUE, {"today": today or date.today()})
-        rows = list(cur.fetchall())
+        rows = [Overdue(*row) for row in cur.fetchall()]
     if enabled is None:
         return rows
-    return [row for row in rows if row[1] in enabled]
+    return [row for row in rows if row.pack_id in enabled]
 
 
 # ------------------------------------------------------------------------------ closing one

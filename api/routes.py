@@ -45,8 +45,10 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import StreamingResponse
 
 from api.models import (
+    AbstentionEvent,
     AskRequest,
     AskResponse,
     Claim,
@@ -54,13 +56,18 @@ from api.models import (
     CorrectionRequest,
     CorrectionResponse,
     EnabledRequest,
+    ErrorEvent,
+    FinishedEvent,
     ModuleSummary,
     ObligationChanged,
     PacksResponse,
     PackSummary,
     QuarantinedDocument,
     QuarantineResponse,
+    ReadingEvent,
+    RefusalEvent,
     RetryAccepted,
+    SentenceEvent,
     Source,
     TodayItem,
     TodayResponse,
@@ -69,6 +76,7 @@ from api.models import (
     VaultResponse,
 )
 from core import corrections, registry, vault
+from core.graph import answer as graph
 from core.graph.answer import Answer, AnswerGraph
 from core.graph.baseline import DenseRetriever, NoReranker
 from core.ingest import quarantine, source
@@ -181,22 +189,28 @@ def _today_items(conn: Any, on: date) -> list[TodayItem]:
             )
         )
 
-    for obligation_id, pack_id, label, due_date, document_name in reminder.overdue(
-        conn, on, enabled=enabled
-    ):
-        days_left = (due_date - on).days
+    for late in reminder.overdue(conn, on, enabled=enabled):
+        days_left = (late.due_date - on).days
         items.append(
             TodayItem(
-                id=f"obligation:{obligation_id}",
+                id=f"obligation:{late.obligation_id}",
                 kind="overdue",
                 urgency=days_left,
-                pack_id=pack_id,
-                label=label,
-                line=f"{label}: overdue since {due_date}"
-                + (f" — {document_name}" if document_name else ""),
-                due_date=due_date,
+                pack_id=late.pack_id,
+                label=late.label,
+                line=late.line(),
+                due_date=late.due_date,
                 days_left=days_left,
-                sources=[Source(document_name=document_name, text=document_name or "no document")],
+                sources=[
+                    Source(
+                        document_id=str(late.document_id) if late.document_id else None,
+                        document_name=late.document_name,
+                        page=late.page,
+                        text=f"{late.document_name}, page {late.page}"
+                        if late.document_name and late.page is not None
+                        else (late.document_name or "no document behind this one"),
+                    )
+                ],
             )
         )
 
@@ -230,18 +244,59 @@ def build_router() -> APIRouter:
         on = as_of or date.today()
         return TodayResponse(as_of=on, items=_today_items(conn, on))
 
-    @router.post("/ask", response_model=AskResponse)
-    def ask(ask_request: AskRequest, conn: Conn, config: Config) -> AskResponse:
+    def _graph_for(conn: Any, config: Settings) -> AnswerGraph:
+        """One construction, used by both ask endpoints. They must not differ in what they read."""
         client = Ollama(config)
         enabled = registry.enabled_pack_ids(conn)
-        graph = AnswerGraph(
+        return AnswerGraph(
             client,
             DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
             NoReranker(),
         )
-        answer = _as_response(graph.ask(ask_request.question, thread_id=ask_request.thread_id))
-        _link(conn, [claim.citations for claim in answer.claims] + [answer.citations])
-        return answer
+
+    @router.post("/ask", response_model=AskResponse)
+    def ask(ask_request: AskRequest, conn: Conn, config: Config) -> AskResponse:
+        """The whole answer, once. For `scripts/ask.py`, for tests, and for anything that would
+        rather wait than render progressively."""
+        return _as_response(
+            _graph_for(conn, config).ask(ask_request.question, thread_id=ask_request.thread_id)
+        )
+
+    @router.post("/ask/stream")
+    def ask_stream(ask_request: AskRequest, conn: Conn, config: Config) -> StreamingResponse:
+        """The same answer, one verified sentence at a time.
+
+        Server-sent events rather than a websocket: this is one question producing a short
+        ordered burst of events and then ending, which is exactly what SSE is, and it survives
+        being proxied by the Next.js route handler without either side holding a socket open.
+
+        The sentences are already gated when they arrive here, so the only thing this handler
+        does is turn a dataclass into a line of JSON. A `ModelUnavailable` that escapes the graph
+        becomes an `error` event, because by the time it happens the response has begun and
+        there is no status code left to send.
+        """
+
+        def events() -> Iterator[str]:
+            try:
+                for event in _graph_for(conn, config).stream(
+                    ask_request.question, thread_id=ask_request.thread_id
+                ):
+                    yield _sse(_as_event(event))
+            except Exception as error:  # the stream has started; a 500 would never be seen
+                log.exception("the answer stream failed")
+                yield _sse(ErrorEvent(detail=f"Parrot stopped answering: {error}"))
+
+        return StreamingResponse(
+            events(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-store",
+                # Nginx and friends buffer an event stream into uselessness by default. Nothing
+                # sits in front of this today; the header costs nothing and stops a later
+                # deployment quietly turning streaming back into waiting.
+                "X-Accel-Buffering": "no",
+            },
+        )
 
     @router.get("/vault", response_model=VaultResponse)
     def vault_documents(
@@ -490,6 +545,47 @@ def build_router() -> APIRouter:
 # ------------------------------------------------------------------------------- translation
 
 
+def _sse(event: Any) -> str:
+    """One event, in the wire format. `kind` is on the payload, so no `event:` line is needed."""
+    return f"data: {event.model_dump_json()}\n\n"
+
+
+def _as_source(citation: graph.Citation) -> Source:
+    """A citation that never lost its document id, so the chip opens the page without a lookup."""
+    return Source(
+        document_id=str(citation.document_id) if citation.document_id else None,
+        document_name=citation.document_name or None,
+        page=citation.page,
+        text=citation.text,
+    )
+
+
+def _as_event(event: graph.Event) -> Any:
+    if isinstance(event, graph.Reading):
+        return ReadingEvent(passages_read=event.passages_read)
+    if isinstance(event, graph.Sentence):
+        return SentenceEvent(
+            text=event.text,
+            chunk_ids=list(event.chunk_ids),
+            citations=[_as_source(citation) for citation in event.citations],
+        )
+    if isinstance(event, graph.Abstained):
+        return AbstentionEvent(
+            reason=event.reason,
+            missing=event.missing,
+            passages_read=event.passages_read,
+            dropped=event.dropped,
+        )
+    if isinstance(event, graph.Refused):
+        return RefusalEvent(text=event.text)
+    return FinishedEvent(
+        citations=[],  # every source is already on the sentence that used it
+        disclaimer=event.disclaimer,
+        passages_read=event.passages_read,
+        dropped=event.dropped,
+    )
+
+
 def _as_response(answer: Answer) -> AskResponse:
     """One `Answer` to one of the three shapes a client has to handle."""
     if answer.refused:
@@ -510,11 +606,18 @@ def _as_response(answer: Answer) -> AskResponse:
             Claim(
                 text=claim.text,
                 chunk_ids=list(claim.chunk_ids),
-                citations=[_cite(citation) for citation in claim.citations],
+                citations=[_as_source(citation) for citation in claim.citations],
             )
             for claim in answer.claims
         ],
-        citations=[_cite(citation) for citation in answer.citations],
+        # Deduplicated across the answer, in the order a person met them.
+        citations=list(
+            {
+                citation.text: _as_source(citation)
+                for claim in answer.claims
+                for citation in claim.citations
+            }.values()
+        ),
         disclaimer=answer.disclaimer,
         passages_read=answer.passages_read,
         dropped=answer.dropped,
@@ -544,6 +647,7 @@ def _as_vault_document(document: vault.VaultDocument) -> VaultDocument:
                 page=fact.page,
                 confidence=fact.confidence,
                 verified_by_user=fact.verified_by_user,
+                needs_review=fact.needs_review,
             )
             for fact in document.facts
         ],

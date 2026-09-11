@@ -27,7 +27,7 @@ from dataclasses import replace
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 from uuid import UUID, uuid4
 
 import pytest
@@ -36,7 +36,7 @@ from fastapi.testclient import TestClient
 from api import routes
 from api.main import create_app
 from core.adapters.base import sha256
-from core.graph.answer import Answer, Cited
+from core.graph.answer import Answer, Citation, Cited
 from core.runtime.settings import Settings
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -202,6 +202,18 @@ def obligation(
     )
 
 
+def overdue_row(
+    obligation_id: int = 7,
+    pack_id: str = "iras_tax",
+    label: str = "income tax filing",
+    due: date = date(2026, 8, 28),
+    name: str | None = "notice.pdf",
+    page: int | None = 1,
+) -> tuple[Any, ...]:
+    """One row of `reminder.OVERDUE`, in its column order."""
+    return (obligation_id, pack_id, label, due, DOC, page, name)
+
+
 def uncovered_since(expiry: date) -> dict[str, list[tuple[Any, ...]]]:
     """Enough rows to make `insurance_agent`'s `days_uncovered` threshold fire, with evidence.
 
@@ -223,9 +235,7 @@ def test_today_is_ordered_overdue_then_alerts_then_reminders(
         rows_for(
             **{
                 "o.last_notified_at": [obligation(due=date(2026, 9, 20))],
-                "o.due_date < %(today)s": [
-                    (7, "iras_tax", "income tax filing", date(2026, 8, 28), "notice.pdf")
-                ],
+                "o.due_date < %(today)s": [overdue_row()],
                 **uncovered_since(date(2026, 8, 1)),
             }
         )
@@ -272,7 +282,7 @@ def test_a_disabled_pack_stops_its_reminders(settings: Settings) -> None:
                 ],
                 "o.last_notified_at": [obligation(pack_id="insurance_agent")],
                 "o.due_date < %(today)s": [
-                    (7, "insurance_agent", "policy expiry", date(2026, 8, 28), "old.pdf")
+                    overdue_row(pack_id="insurance_agent", label="policy expiry", name="old.pdf")
                 ],
             }
         )
@@ -319,6 +329,11 @@ def graph(monkeypatch: pytest.MonkeyPatch) -> type[FakeGraph]:
     return FakeGraph
 
 
+def a_citation(page: int = 1, name: str = "renewal-notice.pdf") -> Citation:
+    """What a retrieved passage hands over: the sentence a person reads, and the id a link needs."""
+    return Citation(document_id=DOC, document_name=name, page=page, text=f"{name}, page {page}")
+
+
 def test_ask_returns_claims_with_their_citations(
     client: TestClient, graph: type[FakeGraph]
 ) -> None:
@@ -329,7 +344,7 @@ def test_ask_returns_claims_with_their_citations(
             Cited(
                 text="The policy renews on 30 November 2026.",
                 chunk_ids=(11,),
-                citations=["renewal-notice.pdf, page 1"],
+                citations=[a_citation()],
             )
         ],
         passages_read=6,
@@ -660,7 +675,12 @@ def test_overdue_is_filtered_by_the_same_set() -> None:
         rows_for(
             **{
                 "o.due_date < %(today)s": [
-                    (7, "insurance_agent", "policy expiry", TODAY - timedelta(days=3), "p.pdf")
+                    overdue_row(
+                        pack_id="insurance_agent",
+                        label="policy expiry",
+                        due=TODAY - timedelta(days=3),
+                        name="p.pdf",
+                    )
                 ]
             }
         )
@@ -694,6 +714,24 @@ def test_an_alerts_citation_carries_the_document_it_opens(settings: Settings) ->
     assert cited["document_id"] == str(DOC), "a chip with no id is a chip nobody can click"
 
 
+def test_an_overdue_citation_carries_its_page(settings: Settings) -> None:
+    """A date that has passed is the one somebody most wants to check against the paper."""
+    conn = FakeConn(
+        rows_for(
+            **{
+                "o.due_date < %(today)s": [overdue_row(page=2, name="notice.pdf")],
+                "DISTINCT ON (d.original_name)": [("notice.pdf", DOC, 3)],
+            }
+        )
+    )
+    body = client_for(settings, conn).get(f"/api/today?as_of={TODAY}").json()
+
+    cited = next(item for item in body["items"] if item["kind"] == "overdue")["sources"][0]
+    assert cited["page"] == 2
+    assert cited["document_id"] == str(DOC)
+    assert cited["text"] == "notice.pdf, page 2"
+
+
 def test_a_citation_that_resolves_to_nothing_still_says_what_it_said(
     settings: Settings,
 ) -> None:
@@ -706,8 +744,12 @@ def test_a_citation_that_resolves_to_nothing_still_says_what_it_said(
     assert cited["document_id"] is None
 
 
-def test_ask_resolves_every_name_in_one_query(settings: Settings, graph: type[FakeGraph]) -> None:
-    conn = FakeConn(rows_for(**{"DISTINCT ON (d.original_name)": [("renewal-notice.pdf", DOC, 2)]}))
+def test_an_ask_citation_needs_no_lookup_to_be_openable(
+    settings: Settings, graph: type[FakeGraph]
+) -> None:
+    """A retrieved passage knows its own document, so the id is never thrown away and never
+    guessed back. Today's alerts still need the name lookup; Ask does not."""
+    conn = FakeConn(rows_for())
     graph.answer = Answer(
         "It renews on 30 November 2026 [renewal-notice.pdf, page 1].",
         citations=["renewal-notice.pdf, page 1"],
@@ -715,7 +757,7 @@ def test_ask_resolves_every_name_in_one_query(settings: Settings, graph: type[Fa
             Cited(
                 text="It renews on 30 November 2026.",
                 chunk_ids=(11,),
-                citations=["renewal-notice.pdf, page 1"],
+                citations=[a_citation()],
             )
         ],
     )
@@ -723,8 +765,9 @@ def test_ask_resolves_every_name_in_one_query(settings: Settings, graph: type[Fa
 
     assert body["claims"][0]["citations"][0]["document_id"] == str(DOC)
     assert body["citations"][0]["document_id"] == str(DOC)
-    lookups = [q for q in conn.statements if "DISTINCT ON (d.original_name)" in q]
-    assert len(lookups) == 1, "one lookup per response, not one per chip"
+    assert not [q for q in conn.statements if "DISTINCT ON (d.original_name)" in q], (
+        "Ask resolved a document by name when the passage already carried its id"
+    )
 
 
 # -------------------------------------------------------------------------------- the page
@@ -954,3 +997,135 @@ def test_an_obligation_cannot_be_closed_into_an_invented_state(settings: Setting
         "/api/obligations/42/close", json={"state": "cancelled"}
     )
     assert response.status_code == 422
+
+
+# ------------------------------------------------------------------------------ the stream
+#
+# `POST /api/ask/stream` is what the Ask surface reads. The wire format is a contract with a
+# browser, so it is tested as one: the events, their order, and the promise that a sentence
+# arriving on it has already been verified and will not be taken back.
+
+
+def sse(body: str) -> list[dict[str, Any]]:
+    """Parse an `text/event-stream` body into the payloads it carried."""
+    return [
+        json.loads(line[len("data: ") :])
+        for chunk in body.split("\n\n")
+        for line in chunk.splitlines()
+        if line.startswith("data: ")
+    ]
+
+
+class StreamingGraph:
+    """Yields whatever events the test scripted, in order."""
+
+    events: ClassVar[list[Any]] = []
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        pass
+
+    def stream(self, question: str, *, thread_id: str = "local") -> Iterator[Any]:
+        yield from type(self).events
+
+
+@pytest.fixture
+def streaming(monkeypatch: pytest.MonkeyPatch) -> type[StreamingGraph]:
+    monkeypatch.setattr(routes, "Ollama", lambda settings: object())
+    monkeypatch.setattr(routes, "AnswerGraph", StreamingGraph)
+    return StreamingGraph
+
+
+def test_the_stream_sends_each_sentence_as_its_own_event(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Finished, Reading, Sentence
+
+    streaming.events = [
+        Reading(passages_read=6),
+        Sentence("Great Eastern covered it.", (2,), [a_citation(page=2, name="policy.pdf")]),
+        Sentence("The policy number is GE-7714.", (5,), [a_citation(page=1, name="claim.pdf")]),
+        Finished([], "Not financial advice.", 6, 1),
+    ]
+    conn = FakeConn(rows_for())
+    response = client_for(settings, conn).post(
+        "/api/ask/stream", json={"question": "who covered dad?"}
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert response.headers["cache-control"] == "no-store"
+
+    kinds = [event["kind"] for event in sse(response.text)]
+    assert kinds == ["reading", "sentence", "sentence", "finished"]
+
+
+def test_every_streamed_sentence_arrives_with_an_openable_source(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """The promise the whole design rests on: a sentence and its chips arrive together, so a
+    chip can never appear late, change, or point nowhere."""
+    from core.graph.answer import Finished, Reading, Sentence
+
+    streaming.events = [
+        Reading(passages_read=3),
+        Sentence("Great Eastern covered it.", (2,), [a_citation(page=2, name="policy.pdf")]),
+        Finished([], "", 3, 0),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "who?"}).text)
+
+    sentence = next(event for event in body if event["kind"] == "sentence")
+    assert sentence["citations"][0]["document_id"] == str(DOC)
+    assert sentence["citations"][0]["page"] == 2
+    assert sentence["citations"][0]["text"] == "policy.pdf, page 2"
+
+
+def test_an_abstention_is_the_whole_stream(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """No `reading` before it: the floor is checked before the model is asked anything."""
+    from core.graph.answer import Abstained
+
+    streaming.events = [Abstained("the closest document is not close enough", "", 4, 0)]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "eh?"}).text)
+
+    assert [event["kind"] for event in body] == ["abstention"]
+    assert "not close enough" in body[0]["reason"]
+
+
+def test_a_refusal_is_the_whole_stream(settings: Settings, streaming: type[StreamingGraph]) -> None:
+    from core.graph.answer import Refused
+
+    streaming.events = [Refused("I do not act on your documents.")]
+    conn = FakeConn(rows_for())
+    body = sse(
+        client_for(settings, conn).post("/api/ask/stream", json={"question": "renew it"}).text
+    )
+
+    assert [event["kind"] for event in body] == ["refusal"]
+
+
+def test_a_failure_after_the_stream_started_arrives_as_an_event(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """By then the 200 has been sent. An exception that only logged would leave a screen
+    waiting for a sentence that is never coming."""
+
+    class Breaks(StreamingGraph):
+        def stream(self, question: str, *, thread_id: str = "local") -> Iterator[Any]:
+            from core.graph.answer import Reading
+
+            yield Reading(passages_read=2)
+            raise RuntimeError("the model went away")
+
+    monkey = Breaks
+    routes.AnswerGraph = monkey  # type: ignore[misc]
+    try:
+        conn = FakeConn(rows_for())
+        body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "hi"}).text)
+    finally:
+        routes.AnswerGraph = StreamingGraph  # type: ignore[misc]
+
+    assert [event["kind"] for event in body] == ["reading", "error"]
+    assert "stopped answering" in body[-1]["detail"]

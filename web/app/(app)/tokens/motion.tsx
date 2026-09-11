@@ -73,7 +73,7 @@ export function Motion() {
       className="scroll-mt-[var(--s-8)] border-t border-hairline pt-[var(--s-6)] pb-[var(--s-7)]"
     >
       <div className="mb-[var(--s-5)] max-w-[var(--measure)]">
-        <h2 className="font-display text-title">Nothing moves without a reason</h2>
+        <h2 className="text-title font-medium">Nothing moves without a reason</h2>
         <p className="mt-[var(--s-2)] text-meta text-ink-2">
           One easing curve, seven durations, and two of them are zero. Only transform and opacity
           are animated, so everything runs off the main thread while the ingestion worker is busy.
@@ -135,7 +135,7 @@ export function Motion() {
               className="rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[var(--s-1)] text-meta text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
               aria-expanded={openPanel}
             >
-              GE policy schedule <span className="num opacity-70">p.2</span>
+              GE policy schedule <span className="num">p.2</span>
             </button>
             <div
               hidden={!openPanel}

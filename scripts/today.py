@@ -70,9 +70,8 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"  ! {item.line()}")
             for item in due:
                 print(f"  • {item.line()}")
-            for _id, _pack, label, due_date, name in late:
-                source = f" — {name}" if name else ""
-                print(f"  ✗ {label}: overdue since {due_date}{source}")
+            for item in late:
+                print(f"  ✗ {item.line()}")
 
             if args.dry_run:
                 print("\n(dry run: nothing was recorded, so these will appear again)")

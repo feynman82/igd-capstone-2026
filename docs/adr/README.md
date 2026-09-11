@@ -18,6 +18,7 @@ the difference matters when a supervisor asks.
 | [0006](0006-pypdfium2-for-the-quarantine-image-pass.md) | pypdfium2 renders the page images the quarantine second pass reads | Accepted |
 | [0007](0007-the-graph-ships-before-retrieval-and-before-a-checkpoint-table.md) | The answer graph ships before hybrid retrieval and before a checkpoint table | Accepted |
 | [0008](0008-ingestion-runs-on-a-celery-worker.md) | Ingestion runs on a Celery worker; the queue carries a digest, not the document | Accepted |
+| [0009](0009-two-web-dependencies-beyond-the-stack.md) | `next-themes` and `lucide-react` are the only two web dependencies beyond the named stack | Accepted |
 
 Add a row when you add a record.
 

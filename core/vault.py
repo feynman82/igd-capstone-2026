@@ -32,6 +32,18 @@ from core.packs import PackUnavailable, pack
 
 log = logging.getLogger(__name__)
 
+# Below this, a field is shown to a person to check rather than presented as read.
+#
+# It is not a pack rule and deliberately not in `pack.yaml`: `guardrails.abstain_below` governs
+# whether an *answer* may be given, which is a different question from whether an extracted
+# field is worth a second look. One number, here, so that the screen cannot invent its own and
+# the command line and the interface flag the same rows.
+#
+# 0.75 is a starting point, not a finding. The number that belongs here is the one where the
+# extractor's confidence stops predicting agreement with Desmond's register — Lane B can measure
+# it once extraction is scored, and when they do, this constant and an ADR are what change.
+NEEDS_REVIEW_BELOW = 0.75
+
 # --------------------------------------------------------------------------------- the SQL
 #
 # The casts are not decoration. An untyped parameter compared with IS NULL gives Postgres
@@ -153,6 +165,15 @@ class Fact:
         if self.value_num is not None:
             return float(self.value_num)
         return self.value_text
+
+    @property
+    def needs_review(self) -> bool:
+        """Worth a person's eyes: the extractor was unsure and nobody has looked yet.
+
+        A field a person has confirmed is never flagged again, whatever the model thought of it
+        at the time. That is the correction loop closing rather than a screen nagging.
+        """
+        return not self.verified_by_user and self.confidence < NEEDS_REVIEW_BELOW
 
     @property
     def value_type(self) -> str:

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -131,3 +132,60 @@ class Ollama:
             raise ModelUnavailable(f"{model} returned an empty answer")
         elapsed = payload.get("total_duration") or 0
         return Generated(content.strip(), model, int(elapsed / 1_000_000))
+
+    def constrained_stream(
+        self,
+        system: str,
+        prompt: str,
+        schema: dict[str, Any],
+        *,
+        temperature: float = 0.0,
+    ) -> Iterator[str]:
+        """The same constrained generation, yielded as it is written.
+
+        Identical body to `constrained` but for `stream`, deliberately: the schema, the
+        temperature and the context window must not differ between the streaming and batch
+        paths, or the interface and the command line would be asking two different questions of
+        the same model.
+
+        Yields raw content deltas. They are fragments of JSON, not sentences — whoever wants
+        sentences reads them through `core.graph.sentences.SentenceScanner`, which is the only
+        thing that knows when one has finished.
+        """
+        model = self._settings.generation_model
+        body = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            "format": schema,
+            "stream": True,
+            "options": {
+                "temperature": temperature,
+                "num_ctx": int(self._settings.context_tokens),
+            },
+        }
+        try:
+            with (
+                self._client(self._settings.generation_url) as client,
+                client.stream("POST", "/api/chat", json=body) as response,
+            ):
+                response.raise_for_status()
+                for line in response.iter_lines():
+                    if not line.strip():
+                        continue
+                    try:
+                        chunk = json.loads(line)
+                    except json.JSONDecodeError:
+                        # Ollama emits one JSON object per line. A line that is not one is not
+                        # a reason to lose the sentences that already arrived.
+                        log.info("%s sent a line that was not JSON", model)
+                        continue
+                    piece = (chunk.get("message") or {}).get("content")
+                    if isinstance(piece, str) and piece:
+                        yield piece
+                    if chunk.get("done"):
+                        return
+        except httpx.HTTPError as error:
+            raise ModelUnavailable(f"{model} did not answer") from error

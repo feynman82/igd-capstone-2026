@@ -1,16 +1,33 @@
-"""Router → retrieve → rerank → grounding gate → answer or abstain.
+"""Router → retrieve → rerank → decide → answer, one verified sentence at a time.
 
 A LangGraph state machine, because the interesting part is the *order* and the fact that one of
 the edges goes to "abstain". Retrieval is one tool call we wrote ourselves; there is no agent
 deciding what to do next.
 
-    route ──► retrieve ──► rerank ──► answer ──► gate ──┬──► respond
-       │                                                └──► abstain
-       └──► refuse            (a request to act, not to explain)
+    route ──► retrieve ──► rerank ──┬──► abstain        (the evidence is not good enough)
+       │                            └──► answer ──► one Sentence event per kept claim
+       └──► refuse                                      (a request to act, not to explain)
 
 `route` exists for one reason worth stating: `never_acts` is `Literal[True]` in every pack
 manifest, and a question like "renew it for me" must be refused at the top of the graph rather
 than politely declined at the bottom by a model that might not.
+
+**`stream` is the implementation and `ask` drains it.** There is one path through this file, so
+`scripts/ask.py` and the Ask screen cannot come to different conclusions about the same
+question — the same thing rule 6 protects for field names, applied to the answer.
+
+**The gate moved either side of generation, and that is what makes streaming honest.** The
+question "is this evidence worth answering from" is settled by retrieval, so it is asked
+*before* the model runs — which also means a question the vault cannot answer costs a retrieval
+instead of a full pass through a 4B model whose output is discarded. The question "can this
+sentence be kept" depends on nothing but that sentence, so it is asked the moment the sentence
+is finished. Nothing reaches a screen before it has passed both. An interface built on this
+never shows a claim it has to withdraw, which is rule 3 holding at the pixel rather than only
+in the response body.
+
+The answering is therefore not a LangGraph node: a node returns a state dict, and this yields.
+The graph declares the part that is a pipeline — routing and gathering evidence — and stops
+there.
 
 The checkpointer is `MemorySaver`, not `PostgresSaver`. The Postgres checkpointer creates its
 own tables, and creating tables at runtime is exactly what rule 4 forbids — `db/migrations/` is
@@ -20,11 +37,13 @@ a separate reviewed pull request. The swap is one line once that migration lands
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import Any, Literal, TypedDict
 
-from core.graph.gate import Claim, Verdict, check
+from core.graph.gate import Claim, check_one, precheck
 from core.graph.ports import Passage, Reranker, Retriever
+from core.graph.sentences import SentenceScanner
 from core.packs import InstalledPack, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -79,15 +98,28 @@ REFUSAL = (
 
 
 class State(TypedDict, total=False):
+    """What the graph carries. It ends at the evidence; the answer is streamed, not stated."""
+
     question: str
     intent: str
     passages: list[Passage]
     reranked: list[Passage]
-    claims: list[Claim]
-    missing: str
-    verdict: Verdict
-    disclaimer: str
-    answer: str
+
+
+@dataclass(frozen=True, slots=True)
+class Citation:
+    """A passage, named the way a person cites it and identified the way a link needs.
+
+    Both, deliberately. `text` is what a terminal prints and what a chip is labelled with;
+    `document_id` and `page` are what makes that chip open the page. Keeping them together from
+    the moment the passage is retrieved is what stops the interface having to find the document
+    again by name — a lookup that has to guess when two files share one.
+    """
+
+    document_id: Any
+    document_name: str
+    page: int
+    text: str  # "policy.pdf, page 1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -100,7 +132,60 @@ class Cited:
 
     text: str
     chunk_ids: tuple[int, ...]
-    citations: list[str] = field(default_factory=list)
+    citations: list[Citation] = field(default_factory=list)
+
+
+# ------------------------------------------------------------------------------- the events
+#
+# What a caller receives, in the order it happens. A screen renders each as it arrives; `ask`
+# collects them into one `Answer`. Every one of them is terminal except `Reading` and
+# `Sentence`, so a consumer can stop at the first of the others.
+
+
+@dataclass(frozen=True, slots=True)
+class Reading:
+    """Evidence gathered, floor cleared, the model is now writing. Nothing is claimed yet."""
+
+    passages_read: int
+
+
+@dataclass(frozen=True, slots=True)
+class Sentence:
+    """One sentence that has passed the gate, with the citations it passed on.
+
+    It will not be withdrawn, reworded or re-cited. That promise is the reason the gate was
+    split in two, and it is the whole difference between this and streaming raw tokens.
+    """
+
+    text: str
+    chunk_ids: tuple[int, ...]
+    citations: list[Citation]
+
+
+@dataclass(frozen=True, slots=True)
+class Abstained:
+    reason: str
+    missing: str
+    passages_read: int
+    dropped: int
+
+
+@dataclass(frozen=True, slots=True)
+class Refused:
+    text: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class Finished:
+    """Everything that is only knowable once the last sentence is in."""
+
+    citations: list[str]
+    disclaimer: str
+    passages_read: int
+    dropped: int
+
+
+Event = Reading | Sentence | Abstained | Refused | Finished
 
 
 @dataclass(frozen=True, slots=True)
@@ -129,25 +214,39 @@ def _numbered(passages: list[Passage]) -> str:
 
 
 def _pack_for(passages: list[Passage], packs: tuple[InstalledPack, ...]) -> InstalledPack | None:
-    """Whichever pack owns the most of the evidence. Its guardrails govern the answer.
+    """The pack owning the best-scoring passage. Its guardrails govern the answer.
 
-    Packs declare different abstain floors - insurance is stricter than tax - so this is not a
-    detail. When the evidence is split, the majority owner wins; when it names no pack at all,
-    the caller falls back to the strictest floor rather than the loosest.
+    Packs declare different abstain floors — insurance is stricter than tax — and a different
+    disclaimer, so this is not a detail: it decides both what it takes to answer and what the
+    answer is signed with.
+
+    **The best passage, not the most passages.** The majority rule this replaced went wrong in
+    the ordinary case: ask about a motor policy in a vault that mostly holds payslips, and five
+    retrieved passages can be three tax ones and two insurance ones — so the answer came back
+    stamped with a tax disclaimer even though every sentence in it was traced to the renewal
+    notice. Counting evidence measured what the household files most of, which is not what the
+    question was about.
+
+    Taking the best passage also makes the floor coherent with itself. `precheck` compares that
+    same passage's score against the floor, so the passage that has to clear the bar is now the
+    passage whose pack sets it.
+
+    A passage with no pack is skipped rather than counted: the RAG core answers from any
+    document, pack or no pack, and a chunk that belongs to nothing cannot be the one that
+    chooses a disclaimer. When nothing in the evidence names a pack, the caller falls back to
+    the strictest floor rather than the loosest.
     """
     if not packs:
         return None
-    counts: dict[str, int] = {}
-    for passage in passages:
-        if passage.pack_id:
-            counts[passage.pack_id] = counts.get(passage.pack_id, 0) + 1
-    if not counts:
+    owned = [passage for passage in passages if passage.pack_id]
+    if not owned:
         return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
-    winner = max(counts, key=lambda pack_id: counts[pack_id])
+    winner = max(owned, key=lambda passage: passage.score).pack_id
     for installed in packs:
         if installed.id == winner:
             return installed
-    return None
+    # The evidence names a pack that is not installed any more. Strictest, not loosest.
+    return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
 
 
 class AnswerGraph:
@@ -186,37 +285,25 @@ class AnswerGraph:
         passages = state.get("passages") or []
         return {"reranked": self._reranker.rerank(state["question"], passages, keep=self._keep)}
 
-    def answer(self, state: State) -> State:
-        passages = state.get("reranked") or []
-        if not passages:
-            return {"claims": [], "missing": "no document in your vault covers this"}
-        prompt = f"Question: {state['question']}\n\nPassages:\n{_numbered(passages)}"
-        try:
-            reply = self._client.constrained(ANSWER_SYSTEM, prompt, _ANSWER_SCHEMA).json()
-        except ModelUnavailable as error:
-            return {"claims": [], "missing": str(error)}
+    def _claim(self, item: dict[str, Any], passages: list[Passage]) -> Claim:
+        """One streamed sentence object, turned into the thing the gate understands.
 
-        claims: list[Claim] = []
-        for item in reply.get("sentences") or []:
-            text = str(item.get("text", "")).strip()
-            numbers = [int(n) for n in item.get("supports") or [] if isinstance(n, int)]
-            # The model cites 1-based positions; the gate checks real chunk ids.
-            supports = tuple(passages[n - 1].chunk_id for n in numbers if 1 <= n <= len(passages))
-            claims.append(Claim(text, supports))
-        return {"claims": claims, "missing": str(reply.get("missing", "")).strip()}
-
-    def gate(self, state: State) -> State:
-        passages = state.get("reranked") or []
-        installed = _pack_for(passages, installed_packs())
-        floor = installed.manifest.guardrails.abstain_below if installed else 0.42
-        return {
-            "verdict": check(state.get("claims") or [], passages, abstain_below=floor),
-            "disclaimer": installed.manifest.guardrails.disclaimer.strip() if installed else "",
-        }
+        The model cites 1-based positions in the prompt it was given; the gate checks real chunk
+        ids. A position outside the range is silently not translated, which means the claim ends
+        up with fewer supports than the model named — and `check_one` then drops it for citing a
+        passage that was not retrieved, which is the correct outcome and the one rule 3 wants.
+        """
+        text = str(item.get("text", "")).strip()
+        numbers = [n for n in item.get("supports") or [] if isinstance(n, int)]
+        supports = tuple(passages[n - 1].chunk_id for n in numbers if 1 <= n <= len(passages))
+        if len(supports) != len(numbers):
+            supports = (*supports, -1)  # an id no passage has, so the gate sees it invented one
+        return Claim(text, supports)
 
     # ------------------------------------------------------------------------ the graph
 
     def _build(self) -> Any:
+        """Routing and evidence. The answering is not a node — it yields, and a node returns."""
         from langgraph.checkpoint.memory import MemorySaver
         from langgraph.graph import END, START, StateGraph
 
@@ -224,8 +311,6 @@ class AnswerGraph:
         builder.add_node("route", self.route)
         builder.add_node("retrieve", self.retrieve)
         builder.add_node("rerank", self.rerank)
-        builder.add_node("answer", self.answer)
-        builder.add_node("gate", self.gate)
 
         builder.add_edge(START, "route")
         builder.add_conditional_edges(
@@ -234,57 +319,139 @@ class AnswerGraph:
             {"refuse": END, "explain": "retrieve"},
         )
         builder.add_edge("retrieve", "rerank")
-        builder.add_edge("rerank", "answer")
-        builder.add_edge("answer", "gate")
-        builder.add_edge("gate", END)
+        builder.add_edge("rerank", END)
         return builder.compile(checkpointer=MemorySaver())
 
     # ------------------------------------------------------------------------- the call
 
-    def ask(self, question: str, *, thread_id: str = "local") -> Answer:
+    def stream(self, question: str, *, thread_id: str = "local") -> Iterator[Event]:
+        """The implementation. Yields each sentence once it has passed the gate, never before.
+
+        The order is worth reading as a sequence of promises. Nothing is claimed until `Reading`;
+        after that every `Sentence` is final; and exactly one of `Abstained`, `Refused` or
+        `Finished` ends the stream.
+        """
         final: State = self._graph.invoke(
             {"question": question}, {"configurable": {"thread_id": thread_id}}
         )
         if final.get("intent") == "act":
-            return Answer(REFUSAL, refused=True)
+            yield Refused(REFUSAL)
+            return
 
         passages = final.get("reranked") or []
-        verdict = final.get("verdict")
-        if verdict is None or not verdict.has_answer:
-            reason = (verdict.reason if verdict else None) or "this is not in your documents"
-            missing = final.get("missing") or ""
-            text = f"I can't answer that from your documents: {reason}."
-            if missing:
-                text = f"{text} {missing}"
-            return Answer(
-                text,
-                abstained=True,
-                passages_read=len(passages),
-                dropped=len(verdict.dropped) if verdict else 0,
-                reason=reason,
-                missing=missing,
-            )
+        installed = _pack_for(passages, installed_packs())
+        floor = installed.manifest.guardrails.abstain_below if installed else 0.42
+        disclaimer = installed.manifest.guardrails.disclaimer.strip() if installed else ""
+
+        # Asked before the model runs. A question the evidence cannot support costs a retrieval,
+        # not a retrieval and a generation that is then thrown away.
+        refusal = precheck(passages, abstain_below=floor)
+        if refusal is not None:
+            yield Abstained(refusal, "", len(passages), 0)
+            return
+
+        yield Reading(len(passages))
 
         by_id = {passage.chunk_id: passage for passage in passages}
-        lines = [claim.with_citation(by_id) for claim in verdict.grounded]
-        citations = sorted(
-            {by_id[cid].cite() for claim in verdict.grounded for cid in claim.supports}
-        )
-        cited = [
-            Cited(
-                text=claim.text,
-                chunk_ids=tuple(claim.supports),
-                citations=[by_id[cid].cite() for cid in claim.supports if cid in by_id],
+        retrieved = set(by_id)
+        prompt = f"Question: {question}\n\nPassages:\n{_numbered(passages)}"
+        scanner = SentenceScanner()
+        kept: list[str] = []
+        dropped = 0
+
+        try:
+            for delta in self._client.constrained_stream(ANSWER_SYSTEM, prompt, _ANSWER_SCHEMA):
+                for item in scanner.feed(delta):
+                    claim = self._claim(item, passages)
+                    why = check_one(claim, retrieved)
+                    if why is not None:
+                        if why != "empty":
+                            dropped += 1
+                            log.info("gate dropped a sentence (%s): %.80s", why, claim.text)
+                        continue
+                    citations: list[Citation] = []
+                    for chunk_id in claim.supports:
+                        passage = by_id[chunk_id]
+                        cited = Citation(
+                            document_id=passage.document_id,
+                            document_name=passage.document_name,
+                            page=passage.page,
+                            text=passage.cite(),
+                        )
+                        if all(cited.text != seen.text for seen in citations):
+                            citations.append(cited)
+                    kept.extend(citation.text for citation in citations)
+                    yield Sentence(claim.text, tuple(claim.supports), citations)
+        except ModelUnavailable as error:
+            # Sentences already yielded were verified and stay said. What follows is the honest
+            # account of why there are no more of them.
+            if kept:
+                yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped)
+            else:
+                yield Abstained(str(error), "", len(passages), dropped)
+            return
+
+        if not kept:
+            # The model wrote nothing, or nothing it wrote could be traced to a document. Its own
+            # `missing` says which document would have answered, when it offered one.
+            yield Abstained(
+                "nothing in the answer could be traced to a document",
+                scanner.missing(),
+                len(passages),
+                dropped,
             )
-            for claim in verdict.grounded
-        ]
+            return
+
+        yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped)
+
+    def ask(self, question: str, *, thread_id: str = "local") -> Answer:
+        """Every event, collected. `scripts/ask.py` and the screen ask the same question of the
+        same code, so they cannot disagree about the answer."""
+        claims: list[Cited] = []
+        passages_read = 0
+
+        for event in self.stream(question, thread_id=thread_id):
+            if isinstance(event, Refused):
+                return Answer(event.text, refused=True)
+            if isinstance(event, Reading):
+                passages_read = event.passages_read
+            elif isinstance(event, Sentence):
+                claims.append(Cited(event.text, event.chunk_ids, event.citations))
+            elif isinstance(event, Abstained):
+                text = f"I can't answer that from your documents: {event.reason}."
+                if event.missing:
+                    text = f"{text} {event.missing}"
+                return Answer(
+                    text,
+                    abstained=True,
+                    passages_read=event.passages_read,
+                    dropped=event.dropped,
+                    reason=event.reason,
+                    missing=event.missing,
+                )
+            elif isinstance(event, Finished):
+                lines = [
+                    f"{claim.text} [{'; '.join(c.text for c in claim.citations)}]"
+                    if claim.citations
+                    else claim.text
+                    for claim in claims
+                ]
+                return Answer(
+                    " ".join(lines),
+                    citations=event.citations,
+                    passages_read=event.passages_read,
+                    dropped=event.dropped,
+                    disclaimer=event.disclaimer,
+                    claims=claims,
+                )
+
+        # Unreachable: `stream` always ends on a terminal event. Kept because a silent `None`
+        # here would be the worst possible failure in this file.
         return Answer(
-            " ".join(lines),
-            citations=citations,
-            passages_read=len(passages),
-            dropped=len(verdict.dropped),
-            disclaimer=final.get("disclaimer") or "",
-            claims=cited,
+            "I can't answer that from your documents: the answer did not finish.",
+            abstained=True,
+            passages_read=passages_read,
+            reason="the answer did not finish",
         )
 
 

@@ -77,7 +77,7 @@
      Every one of them passes AA as text on white and on its own tint, so a status can always
      be said in words. The tint's border is decorative: the meaning lives in the word and in
      the stripe, never in a 1px line. */
-  --brass: #8a6224; /* 5.45:1 on surface */
+  --brass: #886124; /* 5.55:1 on surface, 4.57:1 on its own tint — the tint is the tight one */
   --brass-soft: #f2e8d6;
   --brass-line: #c7a167;
 
@@ -182,9 +182,17 @@
   /* -------- type.
      Two families and one measurement face.
 
-       display — Spectral, a serif, and it appears in exactly two places: the name of the
-                 thing you are looking at, and the one household figure on Today. It is what
-                 stops this reading like a SaaS dashboard. It is never used for a control.
+       display — Spectral, a serif, and the rule for it is one sentence: **it names the thing
+                 you are looking at, and nothing else.** In practice that is the wordmark, the
+                 h1 of a surface, and the one household figure on Today. Not card titles, not
+                 pack names, not the heading inside an empty state — those are all inside a
+                 surface that already has a name, and a second serif competing with the first
+                 is what makes a screen look assembled rather than designed.
+
+                 One consequence worth stating, because it looks like an exception and is not:
+                 a document's filename is an identifier, not a name a person would say, so the
+                 vault's document page sets it in the body face. Spectral names; it does not
+                 label. It is never used for a control.
        body    — Archivo. Everything else: headings, labels, buttons, prose, table cells.
        mono    — JetBrains Mono, and only for things that are measured or identified: a policy
                  number, a confidence score, a page reference, a hash, a currency column.

@@ -72,6 +72,59 @@ class Claim(BaseModel):
     citations: list[Source]
 
 
+# The streamed form of the same answer. One event per line of an `text/event-stream`, and the
+# `kind` on each says which. A client that renders these in order and a client that POSTs
+# `/api/ask` are looking at the same answer — `AnswerGraph.ask` is `AnswerGraph.stream` drained.
+
+
+class ReadingEvent(BaseModel):
+    """Evidence gathered and good enough to answer from. Nothing has been claimed yet."""
+
+    kind: Literal["reading"] = "reading"
+    passages_read: int
+
+
+class SentenceEvent(BaseModel):
+    """One sentence that has passed the gate, with the sources it passed on.
+
+    It will never be withdrawn, reworded or re-cited. That is the contract this whole stream
+    exists to keep: a screen can render this the moment it arrives and never take it back.
+    """
+
+    kind: Literal["sentence"] = "sentence"
+    text: str
+    chunk_ids: list[int]
+    citations: list[Source]
+
+
+class AbstentionEvent(BaseModel):
+    kind: Literal["abstention"] = "abstention"
+    reason: str
+    missing: str = ""
+    passages_read: int = 0
+    dropped: int = 0
+
+
+class RefusalEvent(BaseModel):
+    kind: Literal["refusal"] = "refusal"
+    text: str
+
+
+class FinishedEvent(BaseModel):
+    kind: Literal["finished"] = "finished"
+    citations: list[Source] = Field(default_factory=list)
+    disclaimer: str = ""
+    passages_read: int = 0
+    dropped: int = 0
+
+
+class ErrorEvent(BaseModel):
+    """The stream broke after it began. A client cannot read an HTTP status by then."""
+
+    kind: Literal["error"] = "error"
+    detail: str
+
+
 class AskResponse(BaseModel):
     kind: Literal["answer", "abstention", "refusal"]
     text: str
@@ -96,6 +149,8 @@ class VaultFact(BaseModel):
     page: int
     confidence: float
     verified_by_user: bool
+    # Computed in `core/vault.py`, not here and not in the browser: one threshold, one place.
+    needs_review: bool = False
 
 
 class VaultDocument(BaseModel):

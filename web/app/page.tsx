@@ -1,9 +1,6 @@
 import { redirect } from "next/navigation";
 
-/**
- * Temporary. The front door is the passphrase unlock, and behind it is Today; neither exists
- * yet, so for now the only thing built is what everything else gets built against.
- */
+/** Today is the front door once you are through the lock. The lock screen sends you here too. */
 export default function Home() {
-  redirect("/tokens");
+  redirect("/today");
 }

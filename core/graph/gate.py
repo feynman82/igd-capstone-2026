@@ -17,6 +17,17 @@ The gate then does three checks, in order of how cheaply they catch a lie:
 What survives all three is the answer. If nothing survives, the graph abstains and says what
 document would have answered the question. An abstention is a correct outcome here, not a
 failure — it is the behaviour the demonstration deliberately shows.
+
+**The three checks split into two groups, and the split is what makes streaming honest.**
+Checks 1 and 2 are about one sentence and nothing else: whether a given sentence can be kept
+never depends on any other sentence. Check 3 is about the evidence, so it is decided by
+retrieval before a single token is generated.
+
+That means a sentence can be verified the moment the model finishes writing it, and released
+with its citations already attached — rather than the interface showing text it may have to take
+back. `precheck` is the evidence question, `check_one` is the sentence question, and `check` is
+the two of them composed for a caller that has the whole answer in hand. There is one set of
+rules; the streaming path and the batch path are two ways of asking it.
 """
 
 from __future__ import annotations
@@ -55,40 +66,64 @@ class Verdict:
         return bool(self.grounded) and not self.abstained
 
 
+def precheck(passages: list[Passage], *, abstain_below: float) -> str | None:
+    """Is this evidence worth answering from at all? The reason to abstain, or `None`.
+
+    Decided from retrieval alone, which is the point: it runs **before** generation, so a
+    question the vault cannot answer costs a retrieval rather than a retrieval and a full pass
+    through a 4B model whose output is then thrown away.
+    """
+    if not passages:
+        return "no document in your vault covers this"
+    best = max(passage.score for passage in passages)
+    if best < abstain_below:
+        return (
+            f"the closest document is not close enough (best match {best:.2f}, "
+            f"this pack answers above {abstain_below:.2f})"
+        )
+    return None
+
+
+def check_one(claim: Claim, retrieved: set[int]) -> str | None:
+    """Why this one sentence cannot be kept, or `None` if it can.
+
+    Depends on nothing but the sentence and what was retrieved, which is what lets a sentence be
+    released the moment the model finishes writing it.
+    """
+    if not claim.text.strip():
+        return "empty"
+    if not claim.supports:
+        return "no supporting passage"
+    unknown = [chunk_id for chunk_id in claim.supports if chunk_id not in retrieved]
+    if unknown:
+        return f"cites passage(s) that were not retrieved: {unknown}"
+    return None
+
+
 def check(
     claims: list[Claim],
     passages: list[Passage],
     *,
     abstain_below: float,
 ) -> Verdict:
-    """Never raises, never rewrites a claim. It keeps, drops, or abstains."""
-    if not passages:
-        return Verdict([], [], True, "no document in your vault covers this")
+    """Never raises, never rewrites a claim. It keeps, drops, or abstains.
 
-    best = max(passage.score for passage in passages)
-    if best < abstain_below:
-        return Verdict(
-            [],
-            [],
-            True,
-            f"the closest document is not close enough (best match {best:.2f}, "
-            f"this pack answers above {abstain_below:.2f})",
-        )
+    The whole-answer form, for a caller holding every sentence at once. `precheck` and
+    `check_one` are the same rules, asked one at a time.
+    """
+    refusal = precheck(passages, abstain_below=abstain_below)
+    if refusal is not None:
+        return Verdict([], [], True, refusal)
 
     retrieved = {passage.chunk_id for passage in passages}
     grounded: list[Claim] = []
     dropped: list[tuple[str, str]] = []
     for claim in claims:
-        if not claim.text.strip():
-            continue
-        if not claim.supports:
-            dropped.append((claim.text, "no supporting passage"))
-            continue
-        unknown = [chunk_id for chunk_id in claim.supports if chunk_id not in retrieved]
-        if unknown:
-            dropped.append((claim.text, f"cites passage(s) that were not retrieved: {unknown}"))
-            continue
-        grounded.append(claim)
+        why = check_one(claim, retrieved)
+        if why is None:
+            grounded.append(claim)
+        elif why != "empty":  # an empty sentence is not a dropped claim, it is nothing
+            dropped.append((claim.text, why))
 
     for sentence, why in dropped:
         log.info("gate dropped a sentence (%s): %.80s", why, sentence)

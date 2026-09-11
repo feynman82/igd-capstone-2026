@@ -56,8 +56,12 @@ MARK_DONE = "UPDATE obligations SET state = 'done' WHERE id = %(obligation_id)s"
 MARK_DISMISSED = "UPDATE obligations SET state = 'dismissed' WHERE id = %(obligation_id)s"
 
 # Anything whose date has passed and which nobody closed. Not a reminder — a different screen.
+#
+# The document and its page come back for the same reason they do on the sweep: a date that has
+# passed is the one a person most wants to check against the paper, and a citation without a
+# page is half a citation.
 OVERDUE = """
-SELECT o.id, o.pack_id, o.label, o.due_date, d.original_name
+SELECT o.id, o.pack_id, o.label, o.due_date, f.document_id, f.page, d.original_name
   FROM obligations o
   LEFT JOIN facts f     ON f.id = o.fact_id
   LEFT JOIN documents d ON d.id = f.document_id
