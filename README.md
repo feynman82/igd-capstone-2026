@@ -53,7 +53,15 @@ uv sync                                              # or: pip install -e ".[dev
 psql "$DATABASE_URL" -f db/migrations/0001_init.sql
 ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
 python -m corpus.validate corpus/register/batch1.csv  # check a handed-over batch
-make dev                                             # local setup page on :8000
+make dev                                             # setup page on :8000, watcher and worker
+```
+
+`make dev` starts three things: the setup page, the folder watcher and the ingestion worker
+with its nightly sweeps. To run the worker on its own — a second window, or a machine where
+the server is already up:
+
+```bash
+uv run python scripts/worker.py --beat
 ```
 
 ---

@@ -38,6 +38,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="register documents without parsing, extracting or embedding them",
     )
+    parser.add_argument(
+        "--queue",
+        action="store_true",
+        help="hand each document to the Celery worker instead of reading it on this thread",
+    )
     args = parser.parse_args(argv)
     if args.stable_seconds < 0 or args.poll_seconds <= 0:
         parser.error("stable-seconds must be zero or more and poll-seconds must be positive")
@@ -48,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
         logging.getLogger(name).setLevel(logging.WARNING)
 
     from core.adapters.folder import FolderAdapter, FolderSettings
+    from core.ingest.dispatch import Dispatcher, Inline, queued
     from core.ingest.intake import Intake
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
@@ -66,11 +72,15 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with connect(settings) as conn:
+            dispatch: Dispatcher | None = None
+            if not args.register_only:
+                dispatch = queued(settings) if args.queue else Inline(conn, Ollama(settings))
             adapter = FolderAdapter(
-                Intake(conn, Ollama(settings), process_documents=not args.register_only),
+                Intake(conn, dispatch),
                 FolderSettings(folder, args.stable_seconds, args.poll_seconds),
             )
-            print(f"Watching {folder}. Ctrl+C to stop.")
+            where = "queued for the worker" if args.queue else "read on this thread"
+            print(f"Watching {folder} — documents are {where}. Ctrl+C to stop.")
             return _loop(adapter, args.once, args.poll_seconds, args.stable_seconds)
     except DatabaseUnavailable as error:
         print(str(error))

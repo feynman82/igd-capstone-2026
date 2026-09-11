@@ -11,6 +11,9 @@ corpus/batches/
 inbox/
 !corpus/batches/.gitkeep
 
+# Celery beat's record of when it last ran each sweep. Local state, not a decision.
+var/
+
 # Graphify — only the graph and the report are committed, and only by the
 # integration lead at the weekly session. See docs/GRAPHIFY.md.
 graphify-out/*

@@ -5,6 +5,11 @@
 Docling parse and OCR → contextualise chunk → embed → extract typed fields →
 idempotent upsert on a SHA-256 of the source bytes.
 
+Capture does not run any of that. It registers the document, puts a message on Redis and goes
+back to watching the folder; `core/worker/` reads the message and calls `pipeline.process`.
+Five scans dropped at once are five filed lines at once, and the queue is what survives a
+restart. See `docs/adr/0008-ingestion-runs-on-a-celery-worker.md`.
+
 The pipeline **forks**, and both lanes commit in one transaction so a reminder can never
 disagree with a search result:
 

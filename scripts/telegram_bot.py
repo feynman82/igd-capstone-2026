@@ -45,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
         logging.getLogger(name).setLevel(logging.WARNING)
 
     from core.adapters.telegram import TelegramAdapter, TelegramSettings, TelegramUnavailable
+    from core.ingest.dispatch import Inline
     from core.ingest.intake import Intake
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
@@ -75,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with connect(settings) as conn:
-            adapter = TelegramAdapter(Intake(conn, Ollama(settings)), telegram)
+            adapter = TelegramAdapter(Intake(conn, Inline(conn, Ollama(settings))), telegram)
             try:
                 name = adapter.whoami()
             except TelegramUnavailable as error:

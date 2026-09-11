@@ -92,11 +92,43 @@ def redis_check(settings: Settings) -> Check:
             settings.redis_url, socket_connect_timeout=2, socket_timeout=2
         ) as client:
             client.ping()
-        return Check(
-            "Queue broker", "available", "Redis responds; this does not verify an ingestion worker."
-        )
+        return Check("Queue broker", "available", "Redis responds.")
     except (RedisError, ValueError):
         return Check("Queue broker", "blocked", "Cannot reach Redis. Start the local queue broker.")
+
+
+def worker_check(settings: Settings) -> Check:
+    """Whether a worker is listening — which is a different question from whether Redis is up.
+
+    A reachable broker and no worker is the failure this check exists for: documents would be
+    registered, queued, and then sit there looking filed while nothing read them.
+    """
+    try:
+        from core.worker.tasks import application
+    except ImportError:
+        return Check("Ingestion worker", "blocked", "Celery is not installed. Run uv sync.")
+    try:
+        app = application(settings)
+        app.conf.broker_transport_options = {"socket_connect_timeout": 2, "socket_timeout": 2}
+        replies = app.control.inspect(timeout=2).ping()
+    except Exception:
+        return Check(
+            "Ingestion worker",
+            "blocked",
+            "Cannot ask the queue whether a worker is listening. Check the broker.",
+        )
+    if not replies:
+        return Check(
+            "Ingestion worker",
+            "blocked",
+            "No worker is listening. Documents would queue unread. "
+            "Start it with `uv run python scripts/worker.py --beat`.",
+        )
+    return Check(
+        "Ingestion worker",
+        "available",
+        f"{len(replies)} worker(s) listening. This does not verify that a parse succeeds.",
+    )
 
 
 async def model_check(
@@ -142,6 +174,7 @@ async def collect_checks(settings: Settings) -> list[Check]:
         checks = await asyncio.gather(
             asyncio.to_thread(database_check, settings),
             asyncio.to_thread(redis_check, settings),
+            asyncio.to_thread(worker_check, settings),
             asyncio.to_thread(capture_check, settings),
             model_check(
                 client,

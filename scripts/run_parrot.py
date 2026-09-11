@@ -1,16 +1,72 @@
-"""Run the local diagnostic server; own its socket and open a browser only after startup."""
+"""Run the local diagnostic server, the folder watcher and the ingestion worker together.
+
+Three things start here and they fail independently on purpose. The server is the one a person
+is looking at, so it comes up even when the other two cannot. The watcher registers whatever is
+dropped into the inbox. The worker reads those documents off the queue, and when it cannot start
+— no broker, no Celery — the reason is printed in one line and capture falls back to reading
+documents on the watcher thread, which is slower and says so.
+"""
 
 from __future__ import annotations
 
 import argparse
 import logging
 import socket
+import subprocess
 import sys
 import threading
 import webbrowser
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core.runtime.settings import Settings
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def start_worker(settings: Settings) -> subprocess.Popen[bytes] | None:
+    """Start `scripts/worker.py --beat` beside us, or say plainly why it could not.
+
+    It is a child process rather than a thread because that is what Celery is: the whole point
+    of moving ingestion off the watcher thread is that a parse cannot stall anything else, and
+    a worker inside this interpreter would still share its GIL and its crash.
+    """
+    from core.runtime.capture import broker_available
+
+    if not broker_available(settings):
+        print(
+            "Ingestion worker: not started. The queue broker did not answer. Start it with "
+            "`docker compose -f infra/docker-compose.yml up -d redis`; until then documents "
+            "are read on the watcher thread, a few seconds each.",
+            flush=True,
+        )
+        return None
+    try:
+        import celery  # noqa: F401
+    except ImportError:
+        print("Ingestion worker: not started. Celery is not installed; run uv sync.", flush=True)
+        return None
+    try:
+        worker = subprocess.Popen(
+            [sys.executable, str(ROOT / "scripts/worker.py"), "--beat"],
+            cwd=ROOT,
+        )
+    except OSError as error:
+        print(f"Ingestion worker: not started ({error}).", flush=True)
+        return None
+    print("Ingestion worker: started, with the nightly Reminder and Alert sweeps.", flush=True)
+    return worker
+
+
+def stop_worker(worker: subprocess.Popen[bytes] | None) -> None:
+    if worker is None or worker.poll() is not None:
+        return
+    worker.terminate()
+    try:
+        worker.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        worker.kill()
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -18,6 +74,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--bind-address", choices=["127.0.0.1"], default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--no-browser", action="store_true")
+    parser.add_argument(
+        "--no-worker", action="store_true", help="do not start the ingestion worker"
+    )
     args = parser.parse_args(argv)
     if not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
@@ -69,7 +128,10 @@ def main(argv: list[str] | None = None) -> int:
 
         watcher = threading.Thread(target=open_browser, daemon=True)
         watcher.start()
-        capture = FolderCapture(settings)
+        worker = None if args.no_worker else start_worker(settings)
+        # --no-worker means "I am running the worker myself", so let capture look for the
+        # broker rather than assuming there is nothing listening.
+        capture = FolderCapture(settings, use_queue=None if args.no_worker else worker is not None)
         capture.start()
         try:
             server.run(sockets=[listener])
@@ -77,6 +139,7 @@ def main(argv: list[str] | None = None) -> int:
             pass
         finally:
             capture.stop()
+            stop_worker(worker)
             finished.set()
             watcher.join(timeout=1)
         return 0 if server.started else 1

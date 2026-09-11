@@ -33,7 +33,6 @@ def main(argv: list[str] | None = None) -> int:
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.WARNING)
 
-    from core.adapters.base import sha256
     from core.ingest.quarantine import Recovery, queue, recovery_rate, retry
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
@@ -60,13 +59,12 @@ def main(argv: list[str] | None = None) -> int:
                 print("\nRun with --retry to send the page images to the vision-language model.")
                 return 0
 
-            by_digest = _index_folder(folder, sha256)
-            print(f"\nRetrying against {len(by_digest)} file(s) still in {folder}:")
+            print(f"\nRetrying against the files still in {folder}:")
             recoveries: list[Recovery] = []
             client = Ollama(settings)
             for document in waiting:
-                path = _path_for(conn, document.document_id, by_digest)
-                if path is None:
+                payload = _payload_for(conn, document.document_id, folder)
+                if payload is None:
                     print(
                         f"  {document.original_name}: the original file is no longer in the inbox"
                     )
@@ -75,7 +73,7 @@ def main(argv: list[str] | None = None) -> int:
                     conn,
                     client,
                     document_id=document.document_id,
-                    payload=path.read_bytes(),
+                    payload=payload,
                     mime=document.mime,
                     original_name=document.original_name,
                 )
@@ -94,27 +92,18 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
 
-def _index_folder(folder: Path, digest: Any) -> dict[bytes, Path]:
-    """SHA-256 of every file currently in the inbox. The document row holds the same key."""
-    found: dict[bytes, Path] = {}
-    if not folder.is_dir():
-        return found
-    for path in sorted(folder.iterdir()):
-        if path.is_file():
-            try:
-                found.setdefault(digest(path.read_bytes()), path)
-            except OSError:
-                continue
-    return found
+def _payload_for(conn: Any, document_id: Any, folder: Path) -> bytes | None:
+    """The document's bytes, found by digest. `core/ingest/source.py` is the one implementation;
+    the worker's retry task uses the same one."""
+    from core.ingest.source import SourceMissing, bytes_for, digest_of_document
 
-
-def _path_for(conn: Any, document_id: Any, by_digest: dict[bytes, Path]) -> Path | None:
-    with conn.cursor() as cur:
-        cur.execute("SELECT sha256 FROM documents WHERE id = %s", (document_id,))
-        row = cur.fetchone()
-    if row is None:
+    digest = digest_of_document(conn, document_id)
+    if digest is None:
         return None
-    return by_digest.get(bytes(row[0]))
+    try:
+        return bytes_for(digest, folder)
+    except SourceMissing:
+        return None
 
 
 if __name__ == "__main__":

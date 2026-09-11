@@ -200,6 +200,26 @@ Database checks verify PostgreSQL 17, pgvector and base-table presence, not ever
 constraint or migration state. Model metadata checks do not run inference and therefore
 cannot establish successful vision, generation, embeddings or reranking.
 
+## The ingestion worker
+
+Since ADR 0008 the folder watcher does not read documents; it registers them and queues them,
+and `scripts/worker.py` reads them. `scripts/run_parrot.py` starts that worker beside the
+server and stops it on shutdown, or prints in one line why it could not — an unreachable
+broker, or Celery not installed — and capture then falls back to reading documents on the
+watcher thread, several seconds each, saying so.
+
+    uv run python scripts/worker.py --beat        # documents, and the nightly sweeps
+    uv run python scripts/worker.py --beat-only   # the schedule alone
+    uv run python scripts/run_parrot.py --no-worker
+
+On Windows the worker runs the `solo` pool, and `--beat` starts the schedule as a second
+process: Celery refuses `worker -B` there.
+
+The setup page distinguishes two failures that look alike. "Queue broker" is whether Redis
+answers. "Ingestion worker" is whether anything is listening to it — a reachable broker with
+no worker means documents register, queue, and sit there looking filed while nothing reads
+them.
+
 Before full application readiness can be enabled, the supervisor must additionally:
 
 - Validate configuration, database schema and required model capabilities.
