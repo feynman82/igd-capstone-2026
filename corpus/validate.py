@@ -122,7 +122,7 @@ def validate(path: Path) -> list[str]:
             if expiry and start and expiry <= start:
                 errors.append(f"{where}: expiry_date {expiry} is not after {start}")
 
-            for key in ("annual_premium", "gross_salary", "amount", "net_pay"):
+            for key in ("premium_payable", "gross_salary", "donation_amount", "net_pay"):
                 if key in f:
                     try:
                         if float(f[key].replace(",", "").lstrip("$")) <= 0:

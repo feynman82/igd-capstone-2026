@@ -95,7 +95,7 @@ def donations_ytd(conn: Any, today: date) -> list[Measurement]:
         row = cur.fetchone()
     if row is None or not row[1]:
         return []
-    return [Measurement(Decimal(row[0]), _citations(conn, "iras_tax", "amount"))]
+    return [Measurement(Decimal(row[0]), _citations(conn, "iras_tax", "donation_amount"))]
 
 
 def cpf_contributions_ytd(conn: Any, today: date) -> list[Measurement]:

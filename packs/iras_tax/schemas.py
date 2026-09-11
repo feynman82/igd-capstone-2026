@@ -39,7 +39,10 @@ class DonationReceipt(BaseModel):
     charity: str = Field(description="Name of the receiving organisation as printed")
     receipt_no: str = Field(description="The receipt reference exactly as printed, not normalised")
     donation_date: date = Field(description="Date the donation was received")
-    amount: Decimal = Field(ge=0, description="Amount donated, in SGD")
+    donation_amount: Decimal = Field(
+        ge=0,
+        description="Amount donated as printed on the receipt, in SGD",
+    )
     tax_deductible: bool | None = Field(
         default=None,
         description="Whether the receipt states the donation is tax deductible",
@@ -55,7 +58,7 @@ class CpfStatement(BaseModel):
     statement_year: int = Field(ge=0, description="The calendar year the statement covers")
     total_contributions: Decimal = Field(
         ge=0,
-        description="Total contributions for the period, in SGD",
+        description="Total credited for the statement year, employee and employer combined, in SGD",
     )
     ordinary_account_balance: Decimal | None = Field(
         default=None,
@@ -78,22 +81,46 @@ class SrsStatement(BaseModel):
     )
 
 
+class NoticeOfAssessment(BaseModel):
+    """Notice of Assessment issued by IRAS stating assessed income and tax payable."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    taxpayer: str = Field(description="Name of the taxpayer as printed on the notice")
+    assessment_year: int = Field(
+        ge=0,
+        description="Year of Assessment printed at the head of the notice",
+    )
+    assessable_income: Decimal = Field(
+        ge=0,
+        description="Assessable income for the year as stated on the notice, in SGD",
+    )
+    tax_payable: Decimal = Field(
+        ge=0,
+        description="Total tax payable as stated on the notice, in SGD",
+    )
+    payment_due_date: date = Field(description="Date the notice requires payment by, as printed")
+
+
 # doc_type -> model, used by the ingestion worker to pick a decode constraint.
 MODELS: dict[str, type[BaseModel]] = {
     "payslip": Payslip,
     "donation_receipt": DonationReceipt,
     "cpf_statement": CpfStatement,
     "srs_statement": SrsStatement,
+    "notice_of_assessment": NoticeOfAssessment,
 }
 
 # field name -> the facts column it is stored in, used by the extractor and the scorer.
 FACT_COLUMNS: dict[str, str] = {
     "account_holder": "value_text",
     "account_no": "value_text",
-    "amount": "value_num",
+    "assessable_income": "value_num",
+    "assessment_year": "value_num",
     "charity": "value_text",
     "contributions_ytd": "value_num",
     "cpf_employee": "value_num",
+    "donation_amount": "value_num",
     "donation_date": "value_date",
     "donor": "value_text",
     "employee": "value_text",
@@ -103,8 +130,11 @@ FACT_COLUMNS: dict[str, str] = {
     "net_pay": "value_num",
     "ordinary_account_balance": "value_num",
     "pay_period": "value_text",
+    "payment_due_date": "value_date",
     "receipt_no": "value_text",
     "statement_year": "value_num",
     "tax_deductible": "value_text",
+    "tax_payable": "value_num",
+    "taxpayer": "value_text",
     "total_contributions": "value_num",
 }

@@ -32,7 +32,7 @@ DONATIONS_YTD = """
 SELECT coalesce(sum(f.value_num), 0), count(*)
   FROM facts f
  WHERE f.pack_id = 'iras_tax'
-   AND f.key = 'amount'
+   AND f.key = 'donation_amount'
    AND f.value_num IS NOT NULL
 """
 

@@ -6,7 +6,7 @@
 # Never edit a generated file by hand.
 
 id: iras_tax
-version: 0.1.0
+version: 0.2.0
 display_name: Tax and Reliefs
 
 document_types:
@@ -61,9 +61,9 @@ document_types:
         type: date
         description: Date the donation was received
         example: "2026-03-14"
-      - name: amount
+      - name: donation_amount
         type: money
-        description: Amount donated, in SGD
+        description: Amount donated as printed on the receipt, in SGD
         example: "500.00"
       - name: tax_deductible
         type: boolean
@@ -85,7 +85,7 @@ document_types:
         example: "2025"
       - name: total_contributions
         type: money
-        description: Total contributions for the period, in SGD
+        description: Total credited for the statement year, employee and employer combined, in SGD
         example: "21360.00"
       - name: ordinary_account_balance
         type: money
@@ -114,15 +114,50 @@ document_types:
         description: Contributions made so far this year, in SGD
         example: "12400.00"
 
+  # The tax reference number printed on this notice is the taxpayer's NRIC or FIN. It is
+  # deliberately NOT captured: storing a national identifier in `facts` is a governance
+  # decision, not a field-list decision, and it is not needed to answer any question this
+  # pack exists to answer. Raise it with Siew before adding it.
+  notice_of_assessment:
+    description: Notice of Assessment issued by IRAS stating assessed income and tax payable
+    subject_field: taxpayer
+    fields:
+      - name: taxpayer
+        type: person
+        description: Name of the taxpayer as printed on the notice
+        example: Marcus Fernandez
+      - name: assessment_year
+        type: integer
+        description: Year of Assessment printed at the head of the notice
+        example: "2026"
+      - name: assessable_income
+        type: money
+        description: Assessable income for the year as stated on the notice, in SGD
+        example: "104500.00"
+      - name: tax_payable
+        type: money
+        description: Total tax payable as stated on the notice, in SGD
+        example: "7318.20"
+      - name: payment_due_date
+        type: date
+        description: Date the notice requires payment by, as printed
+        example: "2026-06-30"
+
 grounding:
   corpus: grounding/iras_reliefs_ya2026/
   top_k: 8
 
 registers:
   reminder:
+    # Both dates are fixed to a single year. ReminderConfig offers only `from_field` or
+    # `on_date` — there is no recurring option — so each will fall silent once its date
+    # passes. Making them recur is a core/contracts.py change, which is its own PR.
     - key: filing_deadline
       on_date: 2027-04-18
       lead_days: [30, 7, 1]
+    - key: srs_contribution_cutoff
+      on_date: 2026-12-31
+      lead_days: [30]
   alert:
     - metric: srs_contributions_ytd
       ceiling: 15300

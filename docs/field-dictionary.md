@@ -76,7 +76,7 @@ Annual statement issued on the anniversary of a life or investment-linked policy
 | `surrender_value` | money | no | `facts.value_num` | Cash or surrender value as at the statement date, in SGD |
 | `premiums_paid_to_date` | money | no | `facts.value_num` | Total premiums paid since inception where the statement prints it, in SGD |
 
-## Tax and Reliefs (`iras_tax` v0.1.0)
+## Tax and Reliefs (`iras_tax` v0.2.0)
 
 ### `payslip`
 
@@ -101,7 +101,7 @@ Official receipt from a charity for a donation.
 | `charity` | string | yes | `facts.value_text` | Name of the receiving organisation as printed |
 | `receipt_no` | identifier | yes | `facts.value_text` | The receipt reference exactly as printed, not normalised |
 | `donation_date` | date | yes | `facts.value_date` | Date the donation was received |
-| `amount` | money | yes | `facts.value_num` | Amount donated, in SGD |
+| `donation_amount` | money | yes | `facts.value_num` | Amount donated as printed on the receipt, in SGD |
 | `tax_deductible` | boolean | no | `facts.value_text` | Whether the receipt states the donation is tax deductible |
 
 ### `cpf_statement`
@@ -112,7 +112,7 @@ Annual or periodic CPF contribution statement.
 |---|---|---|---|---|
 | `member` | person | yes | `facts.value_text` | Name of the CPF member the statement belongs to |
 | `statement_year` | integer | yes | `facts.value_num` | The calendar year the statement covers |
-| `total_contributions` | money | yes | `facts.value_num` | Total contributions for the period, in SGD |
+| `total_contributions` | money | yes | `facts.value_num` | Total credited for the statement year, employee and employer combined, in SGD |
 | `ordinary_account_balance` | money | no | `facts.value_num` | Ordinary Account balance at the statement date, in SGD |
 
 ### `srs_statement`
@@ -125,3 +125,15 @@ Supplementary Retirement Scheme account statement.
 | `account_no` | identifier | yes | `facts.value_text` | SRS account reference exactly as printed |
 | `statement_year` | integer | yes | `facts.value_num` | The calendar year the statement covers |
 | `contributions_ytd` | money | yes | `facts.value_num` | Contributions made so far this year, in SGD |
+
+### `notice_of_assessment`
+
+Notice of Assessment issued by IRAS stating assessed income and tax payable.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `taxpayer` | person | yes | `facts.value_text` | Name of the taxpayer as printed on the notice |
+| `assessment_year` | integer | yes | `facts.value_num` | Year of Assessment printed at the head of the notice |
+| `assessable_income` | money | yes | `facts.value_num` | Assessable income for the year as stated on the notice, in SGD |
+| `tax_payable` | money | yes | `facts.value_num` | Total tax payable as stated on the notice, in SGD |
+| `payment_due_date` | date | yes | `facts.value_date` | Date the notice requires payment by, as printed |

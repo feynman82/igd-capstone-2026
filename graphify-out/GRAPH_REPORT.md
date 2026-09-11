@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-09-11)
 
 ## Corpus Check
-- 140 files · ~88,559 words
+- 140 files · ~89,108 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `08746980`
+- Built from commit: `04e821b2`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -511,7 +511,7 @@ Cohesion: 0.48
 Nodes (6): answer(), build_context(), format_sources(), Ollama, Answer a question from retrieved chunks, with citations back to the file.  The, Hit
 
 ## Knowledge Gaps
-- **334 isolated node(s):** `npx`, `@modelcontextprotocol/server-filesystem`, `packs`, `modules`, `traces` (+329 more)
+- **334 isolated node(s):** `1. What we are building, in one paragraph`, `The field types you can use`, `The rules for a field`, `3. The one thing that matters most`, `4. What you do, step by step` (+329 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -519,11 +519,11 @@ Nodes (6): answer(), build_context(), format_sources(), Ollama, Answer a questio
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Connection` connect `cli.py` to `5. The watched folder is polled for stability, not subscribed to for events`, `Architecture decision records`, `register_document`, `Cursor`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+  _High betweenness centrality (0.088) - this node is a cross-community bridge._
 - **Why does `Ollama` connect `Passage` to `test_ingest_pipeline.py`, `Ollama`, `Cursor`, `obligations.py`, `Settings`, `Registrar`, `retrieve.py`, `FolderCapture`, `Parser`, `pipeline.py`?**
-  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **Why does `register_document()` connect `register_document` to `cli.py`, `Cursor`, `Cursor`, `pipeline.py`?**
-  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
 - **Are the 14 inferred relationships involving `Ollama` (e.g. with `Answer` and `AnswerGraph`) actually correct?**
   _`Ollama` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 4 inferred relationships involving `FolderAdapter` (e.g. with `IngestJob` and `Registrar`) actually correct?**
