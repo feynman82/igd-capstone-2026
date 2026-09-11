@@ -106,5 +106,8 @@
   "104": "5. The watched folder is polled for stability, not subscribed to for events",
   "105": "Architecture decision records",
   "106": "__init__.py",
-  "107": "Alert"
+  "107": "Alert",
+  "108": "Ollama",
+  "109": "Cursor",
+  "110": "ask.py"
 }

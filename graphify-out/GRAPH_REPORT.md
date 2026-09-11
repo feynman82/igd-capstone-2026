@@ -1,16 +1,16 @@
 # Graph Report - igd-capstone-2026  (2026-09-11)
 
 ## Corpus Check
-- 140 files · ~88,180 words
+- 140 files · ~88,559 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1211 nodes · 2213 edges · 108 communities (93 shown, 15 thin omitted)
+- 1211 nodes · 2225 edges · 111 communities (96 shown, 15 thin omitted)
 - Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 160 edges (avg confidence: 0.53)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `25231515`
+- Built from commit: `08746980`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -117,6 +117,9 @@
 - Architecture decision records
 - __init__.py
 - Alert
+- Ollama
+- Cursor
+- ask.py
 
 ## God Nodes (most connected - your core abstractions)
 1. `Ollama` - 36 edges
@@ -145,15 +148,15 @@
 ## Import Cycles
 - None detected.
 
-## Communities (108 total, 15 thin omitted)
+## Communities (111 total, 15 thin omitted)
 
 ### Community 0 - "contracts.py"
 Cohesion: 0.12
 Nodes (20): PackManifest, A domain pack, authored as one YAML file., (document_type, field_name) -> FieldSpec. Used by the extractor and the scorer., _class_name(), _docstring(), _field_line(), load(), main() (+12 more)
 
 ### Community 1 - "NNNN · The decision, as a statement not a question"
-Cohesion: 0.33
-Nodes (5): 2. One PostgreSQL instance for everything, Consequences, Context, Decision, Rejected
+Cohesion: 0.18
+Nodes (8): 2. One PostgreSQL instance for everything, Consequences, Context, Decision, Rejected, Architecture decision records, Index, Writing one
 
 ### Community 2 - "README.md"
 Cohesion: 0.18
@@ -184,7 +187,7 @@ Cohesion: 0.18
 Nodes (10): Commands, Done, Never overwrite a result, One variable per run, Read first, Reporting a change, Running the evaluation harness, Staying in lane (+2 more)
 
 ### Community 9 - "Christian — task list"
-Cohesion: 0.20
+Cohesion: 0.18
 Nodes (10): 1 · Collaborators, 2 · Branch protection, 3 · Actions permissions, 4 · Project board, 5 · The Notion hub, First run, Send these on day one, Setting up a second machine (+2 more)
 
 ### Community 10 - "Desmond — task list"
@@ -216,7 +219,7 @@ Cohesion: 0.33
 Nodes (5): Before you say you are done, Claude Code — read this first, Finding your way around, Skills and commands, The three things agents get wrong here
 
 ### Community 17 - "igd-capstone-2026"
-Cohesion: 0.18
+Cohesion: 0.22
 Nodes (9): Authoring a pack, igd-capstone-2026, Quick start, The stack, in one table, The three rules that matter, What it is, Where things live, Where to start (+1 more)
 
 ### Community 18 - "Zee — Lane D · Domain packs and interface"
@@ -340,8 +343,8 @@ Cohesion: 0.13
 Nodes (21): BaseModel, DocumentTypeSpec, FieldSpec, Grounding, Guardrails, ModuleManifest, ModuleTrigger, Persona (+13 more)
 
 ### Community 58 - "cli.py"
-Cohesion: 0.05
-Nodes (67): ArgumentParser, Connection, Cursor, Any, Protocol, Just enough of `psycopg.Connection` to register a document and to be faked in a, ndarray, answer() (+59 more)
+Cohesion: 0.15
+Nodes (22): Connection, Just enough of `psycopg.Connection` to register a document and to be faked in a, ndarray, load_matrix(), pack(), SQLite storage: documents, chunks, FTS5 keyword index, and dense vectors.  Des, Return (N x D matrix of normalised embeddings, chunk ids)., stats() (+14 more)
 
 ### Community 59 - "register_document"
 Cohesion: 0.14
@@ -404,15 +407,15 @@ Cohesion: 0.17
 Nodes (12): Access and privacy, Asking a question, Dropping a document in, First test machine: Christian's Legion, Hardware qualification, Local validation notes, 2026-09-11, Quarantine, and the second pass, Reading a document (+4 more)
 
 ### Community 75 - "RUNNING.md"
-Cohesion: 0.25
-Nodes (4): 7. The answer graph ships before hybrid retrieval and before a checkpoint table, Consequences, Context, Decision
+Cohesion: 0.18
+Nodes (8): 5. The watched folder is polled for stability, not subscribed to for events, Consequences, Context, Decision, 7. The answer graph ships before hybrid retrieval and before a checkpoint table, Consequences, Context, Decision
 
 ### Community 76 - "DoclingParser"
 Cohesion: 0.10
 Nodes (13): DoclingParser, _pages_from(), parse(), Parser, PlainTextParser, Protocol, Turn captured bytes into pages of text, or say why it could not be done.  Every, Group Docling's items by the page they were found on.      Docling's markdown ex (+5 more)
 
 ### Community 77 - "Notion"
-Cohesion: 0.25
+Cohesion: 0.29
 Nodes (7): Importing the task database, Keeping the two in sync, Notion, Option A — move the hub into Christian's workspace ✅ recommended, Option B — Christian switches his connector to Yew Mun's workspace, Option C — leave Notion as a human-only view, The access problem, and the one decision that fixes it
 
 ### Community 78 - "start_parrot.py"
@@ -456,7 +459,7 @@ Cohesion: 0.29
 Nodes (6): Explicitly not doing, Phase 1 — Retrieval (done), Phase 2 — Facts, Phase 3 — Reminders, Phase 4 — Agent, Roadmap
 
 ### Community 88 - "3. PaperBrain informs core/retrieve/'s pattern; it is not the core module"
-Cohesion: 0.29
+Cohesion: 0.33
 Nodes (6): 3. PaperBrain informs core/retrieve/'s pattern; it is not the core module, Consequences, Context, Decision, Rejected, Revisit when
 
 ### Community 89 - "Christian — Lane A · Integration and product owner"
@@ -472,11 +475,11 @@ Cohesion: 0.40
 Nodes (4): 1. Record architecture decisions, Consequences, Context, Decision
 
 ### Community 92 - "4. Local setup can run before the household assistant is ready"
-Cohesion: 0.50
+Cohesion: 0.40
 Nodes (4): 4. Local setup can run before the household assistant is ready, Consequences, Context, Decision
 
 ### Community 93 - "6. pypdfium2 renders the page images the quarantine second pass reads"
-Cohesion: 0.50
+Cohesion: 0.40
 Nodes (4): 6. pypdfium2 renders the page images the quarantine second pass reads, Consequences, Context, Decision
 
 ### Community 94 - "Parser"
@@ -488,27 +491,39 @@ Cohesion: 0.29
 Nodes (5): Intake, What every capture channel hands a document to.  An adapter's job ends at "these, An already-indexed document is not re-parsed. Re-parsing it would burn a minute, The row as it now stands, plus whether this call is the one that created it., Registration
 
 ### Community 104 - "5. The watched folder is polled for stability, not subscribed to for events"
-Cohesion: 0.40
-Nodes (4): 5. The watched folder is polled for stability, not subscribed to for events, Consequences, Context, Decision
+Cohesion: 0.21
+Nodes (18): ArgumentParser, build_parser(), _client(), cmd_add(), cmd_ask(), cmd_docs(), cmd_doctor(), cmd_ingest() (+10 more)
 
 ### Community 105 - "Architecture decision records"
-Cohesion: 0.67
-Nodes (3): Architecture decision records, Index, Writing one
+Cohesion: 0.24
+Nodes (13): Chunk, chunk_pages(), clean(), Split extracted text into retrieval-sized chunks.  Paperwork is short and stru, _split_page(), discover(), guess_date(), guess_type() (+5 more)
+
+### Community 108 - "Ollama"
+Cohesion: 0.24
+Nodes (5): Ollama, OllamaUnavailable, RuntimeError, Minimal Ollama client over stdlib urllib — no third-party HTTP dependency.  Ta, Batch embeddings. Falls back to the legacy endpoint on old servers.
+
+### Community 109 - "Cursor"
+Cohesion: 0.29
+Nodes (3): Cursor, Any, Protocol
+
+### Community 110 - "ask.py"
+Cohesion: 0.48
+Nodes (6): answer(), build_context(), format_sources(), Ollama, Answer a question from retrieved chunks, with citations back to the file.  The, Hit
 
 ## Knowledge Gaps
-- **334 isolated node(s):** `1 · Collaborators`, `2 · Branch protection`, `3 · Actions permissions`, `4 · Project board`, `5 · The Notion hub` (+329 more)
+- **334 isolated node(s):** `npx`, `@modelcontextprotocol/server-filesystem`, `packs`, `modules`, `traces` (+329 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **15 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Connection` connect `cli.py` to `register_document`?**
-  _High betweenness centrality (0.076) - this node is a cross-community bridge._
+- **Why does `Connection` connect `cli.py` to `5. The watched folder is polled for stability, not subscribed to for events`, `Architecture decision records`, `register_document`, `Cursor`?**
+  _High betweenness centrality (0.083) - this node is a cross-community bridge._
 - **Why does `Ollama` connect `Passage` to `test_ingest_pipeline.py`, `Ollama`, `Cursor`, `obligations.py`, `Settings`, `Registrar`, `retrieve.py`, `FolderCapture`, `Parser`, `pipeline.py`?**
-  _High betweenness centrality (0.063) - this node is a cross-community bridge._
-- **Why does `Settings` connect `Settings` to `Passage`, `Registrar`, `register_document`, `FolderCapture`, `Parser`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
+- **Why does `register_document()` connect `register_document` to `cli.py`, `Cursor`, `Cursor`, `pipeline.py`?**
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
 - **Are the 14 inferred relationships involving `Ollama` (e.g. with `Answer` and `AnswerGraph`) actually correct?**
   _`Ollama` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 4 inferred relationships involving `FolderAdapter` (e.g. with `IngestJob` and `Registrar`) actually correct?**
