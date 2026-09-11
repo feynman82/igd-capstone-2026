@@ -24,6 +24,11 @@ log = logging.getLogger(__name__)
 
 # Hand-written and parameterised, per rule 1. `<=>` is pgvector's cosine distance, so smaller is
 # closer and the score below is turned back into "bigger is better" for the graph.
+#
+# The `packs` predicate is how "a disabled pack hides its facts" reaches an answer: a passage
+# from a switched-off pack is never retrieved, so it can never be cited, so no sentence can be
+# built on it. Passing NULL means no filter. A document belonging to no pack is always visible
+# — nothing disabled it.
 DENSE_SEARCH = """
 SELECT c.id,
        c.document_id,
@@ -37,6 +42,9 @@ SELECT c.id,
   JOIN documents d ON d.id = c.document_id
  WHERE d.status = 'indexed'
    AND c.embedding IS NOT NULL
+   AND (%(packs)s::text[] IS NULL
+        OR d.pack_id IS NULL
+        OR d.pack_id = ANY(%(packs)s::text[]))
  ORDER BY c.embedding <=> %(query)s::vector
  LIMIT %(limit)s
 """
@@ -46,12 +54,14 @@ SELECT c.id,
 class DenseRetriever:
     conn: Any
     client: Ollama
+    packs: tuple[str, ...] | None = None  # the enabled pack ids; None means do not filter
 
     def search(self, question: str, *, candidates: int) -> list[Passage]:
         vector = self.client.embed([question])[0]
         literal = "[" + ",".join(f"{value:.6f}" for value in vector) + "]"
+        allowed = sorted(self.packs) if self.packs is not None else None
         with self.conn.cursor() as cur:
-            cur.execute(DENSE_SEARCH, {"query": literal, "limit": candidates})
+            cur.execute(DENSE_SEARCH, {"query": literal, "limit": candidates, "packs": allowed})
             rows = cur.fetchall()
         return [
             Passage(

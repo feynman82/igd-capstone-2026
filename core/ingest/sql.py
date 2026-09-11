@@ -64,6 +64,14 @@ SELECT id, original_name, mime, quarantine_reason, pages
 
 COUNT_BY_STATUS = "SELECT status, count(*) FROM documents GROUP BY status ORDER BY status"
 
+# The idempotency keys for a set of documents at once, so a screen listing the quarantine queue
+# can say which of them still have a file behind them without a query per row.
+SELECT_DIGESTS = """
+SELECT id, sha256
+  FROM documents
+ WHERE id = ANY(%(document_ids)s::uuid[])
+"""
+
 INSERT_TRACE = """
 INSERT INTO traces (thread_id, node, latency_ms, model, payload)
 VALUES (%(thread_id)s, %(node)s, %(latency_ms)s, %(model)s, %(payload)s)

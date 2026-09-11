@@ -244,3 +244,62 @@ def test_the_template_directory_is_not_an_installed_pack() -> None:
 def test_every_document_type_has_a_generated_model() -> None:
     for installed in installed_packs():
         assert set(installed.manifest.document_types) <= set(installed.models)
+
+
+# ------------------------------------------------------- the pack's names, and only those
+
+
+def _page_of_examples(spec: Any) -> list[ParsedPage]:
+    """One page printing every field's `example`, so each value is attributable to a page."""
+    return [ParsedPage(1, "\n".join(f"{f.name}: {f.example}" for f in spec.fields))]
+
+
+def _reply_of_examples(spec: Any) -> dict[str, Any]:
+    return {f.name: f.example for f in spec.fields}
+
+
+@pytest.mark.parametrize(
+    ("pack_id", "doc_type"),
+    [
+        (installed.id, doc_type)
+        for installed in installed_packs()
+        for doc_type in installed.manifest.document_types
+    ],
+)
+def test_a_fact_is_stored_under_the_name_the_pack_declares(pack_id: str, doc_type: str) -> None:
+    """`FieldSpec.name` is the `facts.key`. Nothing between the manifest and the row renames it.
+
+    Regression: iras_tax renamed `amount` to `donation_amount` at 0.2.0, and rows written by
+    0.1.0 still carry the old key. That was stale data rather than a lost key, but the reason
+    it was hard to tell apart is that no test pinned the two names together. This one does,
+    for every document type of every installed pack.
+    """
+    installed = pack(pack_id)
+    spec = installed.spec(doc_type)
+    declared = {field.name for field in spec.fields}
+
+    client = FakeOllama([_reply_of_examples(spec)])
+    result = extract(  # type: ignore[arg-type]
+        client, installed, doc_type, _page_of_examples(spec), confidence=0.9
+    )
+
+    assert result.ok, result.reason
+    keys = {fact.key for fact in result.facts}
+    assert keys <= declared, f"extraction invented {sorted(keys - declared)}"
+    assert {f.name for f in spec.fields if f.required} <= keys
+    assert set(client.schemas[0]["properties"]) == declared
+
+
+def test_a_donation_receipt_stores_donation_amount_and_never_amount() -> None:
+    """The named regression, spelled out so a future rename cannot quietly reintroduce it."""
+    installed = pack("iras_tax")
+    spec = installed.spec("donation_receipt")
+
+    client = FakeOllama([_reply_of_examples(spec)])
+    result = extract(  # type: ignore[arg-type]
+        client, installed, "donation_receipt", _page_of_examples(spec), confidence=0.9
+    )
+
+    keys = {fact.key for fact in result.facts}
+    assert "donation_amount" in keys
+    assert "amount" not in keys, "the 0.1.0 name must not come back"

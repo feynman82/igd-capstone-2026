@@ -58,10 +58,21 @@ def already_said(last_notified_at: datetime | None, due: date, lead: int) -> boo
     return last_notified_at.date() >= window_opened
 
 
-def sweep(conn: Any, today: date | None = None, *, mark: bool = True) -> list[Due]:
+def sweep(
+    conn: Any,
+    today: date | None = None,
+    *,
+    mark: bool = True,
+    enabled: frozenset[str] | None = None,
+) -> list[Due]:
     """Everything inside a lead window that has not already been said for that window.
 
     `mark=False` runs the sweep without recording it, which is what a dry run and the tests use.
+
+    `enabled` is the set of pack ids a person has left switched on, from
+    `core.registry.enabled_pack_ids`. A disabled pack's obligations are skipped before anything
+    is marked, so switching a pack off silences it rather than burning its lead windows. `None`
+    means no filter — the registry is the caller's business, not the module's.
     """
     now = today or date.today()
     with conn.cursor() as cur:
@@ -81,6 +92,8 @@ def sweep(conn: Any, today: date | None = None, *, mark: bool = True) -> list[Du
         page,
         document_name,
     ) in rows:
+        if enabled is not None and pack_id not in enabled:
+            continue
         days_left = (due_date - now).days
         lead = current_lead(days_left, list(lead_days or []))
         if lead is None:
@@ -117,8 +130,20 @@ def sweep(conn: Any, today: date | None = None, *, mark: bool = True) -> list[Du
     return due
 
 
-def overdue(conn: Any, today: date | None = None) -> list[tuple[int, str, str, date, str | None]]:
-    """Past their date and never closed. A different problem from a reminder, shown separately."""
+def overdue(
+    conn: Any,
+    today: date | None = None,
+    *,
+    enabled: frozenset[str] | None = None,
+) -> list[tuple[int, str, str, date, str | None]]:
+    """Past their date and never closed. A different problem from a reminder, shown separately.
+
+    Filtered by the same enabled set as `sweep`: a pack that is switched off does not get to
+    keep shouting about the dates it missed.
+    """
     with conn.cursor() as cur:
         cur.execute(queries.OVERDUE, {"today": today or date.today()})
-        return list(cur.fetchall())
+        rows = list(cur.fetchall())
+    if enabled is None:
+        return rows
+    return [row for row in rows if row[1] in enabled]

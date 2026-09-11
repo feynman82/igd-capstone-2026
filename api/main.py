@@ -1,26 +1,59 @@
-"""Diagnostic API. Liveness is intentionally separate from assistant readiness."""
+"""The local API. Liveness is intentionally separate from assistant readiness.
+
+Loopback only, in two ways that are not the same. `TrustedHostMiddleware` rejects a request
+whose Host header is not this machine, which is what stops a browser on the network reaching
+it by IP; binding is `scripts/run_parrot.py`'s business. There is no CORS middleware and that
+is deliberate — Zee's Next.js interface proxies through its own route handlers, so every
+request arrives same-origin and no other origin is ever granted one.
+
+The registry is installed at startup, best-effort. A database that is not running must not
+stop the server coming up: the setup page below exists to tell a person exactly that, and a
+server that refused to start could not tell them anything.
+"""
 
 from __future__ import annotations
 
 import asyncio
 import html
+import logging
 import time
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from api.routes import build_router
+from core.registry import install_best_effort
 from core.runtime.checks import Check, collect_checks
 from core.runtime.settings import Settings
+
+log = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     config = settings or Settings.load(ROOT)
-    app = FastAPI(title="Parrot local setup", docs_url=None, redoc_url=None, openapi_url=None)
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+        # Off the event loop: it opens a socket to Postgres and writes a handful of rows.
+        await asyncio.to_thread(install_best_effort, config)
+        yield
+
+    app = FastAPI(
+        title="Parrot local setup",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+        lifespan=lifespan,
+    )
+    app.state.settings = config
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
+    app.include_router(build_router())
     lock = asyncio.Lock()
     cached: list[Check] = []
     checked_at = 0.0

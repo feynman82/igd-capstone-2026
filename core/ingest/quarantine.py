@@ -28,6 +28,7 @@ import base64
 import io
 import logging
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from core.ingest import sql
@@ -36,6 +37,7 @@ from core.ingest.classify import classify
 from core.ingest.extract import extract
 from core.ingest.parse import ParsedDocument, ParsedPage
 from core.ingest.pipeline import commit_both_lanes
+from core.ingest.source import index_folder
 from core.packs import PackUnavailable, pack
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -96,6 +98,33 @@ def queue(conn: Any, limit: int = 50) -> list[QuarantinedDocument]:
         cur.execute(sql.SELECT_QUARANTINED, {"limit": limit})
         rows = cur.fetchall()
     return [QuarantinedDocument(*row) for row in rows]
+
+
+def blocked_reasons(
+    conn: Any, documents: list[QuarantinedDocument], folder: Path
+) -> dict[Any, str | None]:
+    """Per document: `None` when the image pass can run, or the sentence saying why it cannot.
+
+    v1 keeps the inbox as the document store, so a document whose file has been moved or
+    deleted cannot be retried. A screen that offers a Retry button which is certain to fail is
+    worse than one that explains itself, so the folder is hashed once — not once per row — and
+    each document is told apart from the others by the digest it was registered under.
+    """
+    if not documents:
+        return {}
+    ids = [document.document_id for document in documents]
+    with conn.cursor() as cur:
+        cur.execute(sql.SELECT_DIGESTS, {"document_ids": ids})
+        digests = {document_id: bytes(digest) for document_id, digest in cur.fetchall()}
+    available = set(index_folder(folder))
+    blocked: dict[Any, str | None] = {}
+    for document in documents:
+        digest = digests.get(document.document_id)
+        if digest is None or digest not in available:
+            blocked[document.document_id] = "the original file is no longer in the inbox"
+        else:
+            blocked[document.document_id] = None
+    return blocked
 
 
 def page_images(payload: bytes, mime: str) -> list[str]:

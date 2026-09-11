@@ -30,8 +30,16 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     sys.path.insert(0, str(ROOT))
+    # The Windows console is cp1252 by default and this screen prints • and ✗, so an overdue
+    # obligation crashed the script rather than being shown. The workstation this is demoed on
+    # is a Windows machine, and a demonstration that dies on its most alarming line is worse
+    # than no demonstration.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
+    from core.registry import enabled_pack_ids, enabled_packs
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.settings import ConfigurationError, Settings
     from modules import alert, reminder
@@ -47,9 +55,12 @@ def main(argv: list[str] | None = None) -> int:
         with connect(settings) as conn:
             print(f"Today — {today}\n")
 
-            alerts = alert.sweep(conn, today, mark=not args.dry_run)
-            due = reminder.sweep(conn, today, mark=not args.dry_run)
-            late = reminder.overdue(conn, today)
+            # A pack switched off in the interface is switched off here too. The registry is
+            # read once and handed to both modules; neither of them knows it exists.
+            enabled = enabled_pack_ids(conn)
+            alerts = alert.sweep(conn, today, mark=not args.dry_run, packs=enabled_packs(conn))
+            due = reminder.sweep(conn, today, mark=not args.dry_run, enabled=enabled)
+            late = reminder.overdue(conn, today, enabled=enabled)
 
             if not (alerts or due or late):
                 print("Nothing needs you today.")

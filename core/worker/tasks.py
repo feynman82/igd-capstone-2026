@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 INGEST = "parrot.ingest_document"
 RETRY = "parrot.retry_quarantined"
+RETRY_ONE = "parrot.retry_one_quarantined"
 SWEEP_REMINDERS = "parrot.sweep_reminders"
 SWEEP_ALERTS = "parrot.sweep_alerts"
 
@@ -100,19 +101,49 @@ def retry_quarantine(conn: Any, client: Ollama, *, limit: int, folder: Path) -> 
     return line
 
 
+def retry_one(conn: Any, client: Ollama, *, document_id: str, folder: Path) -> Recovery:
+    """The second pass over exactly one document, which is what a person clicking Retry means.
+
+    The bytes are found again from the digest rather than carried through the broker, the same
+    way `ingest` does it: a message is a reference, never a document.
+    """
+    digest = digest_of_document(conn, document_id)
+    if digest is None:
+        raise SourceMissing(f"no document with id {document_id}")
+    payload = bytes_for(digest, folder)  # raises SourceMissing when the file has been moved
+    waiting = {str(document.document_id): document for document in queue(conn, limit=200)}
+    document = waiting.get(str(document_id))
+    if document is None:
+        raise SourceMissing(f"document {document_id} is not in quarantine")
+    recovery = retry(
+        conn,
+        client,
+        document_id=document.document_id,
+        payload=payload,
+        mime=document.mime,
+        original_name=document.original_name,
+    )
+    log.info(
+        "%s: %s", document.original_name, "recovered" if recovery.recovered else "still quarantined"
+    )
+    return recovery
+
+
 def sweep_reminders_now(conn: Any, today: date | None = None) -> str:
+    from core.registry import enabled_pack_ids
     from modules import reminder
 
-    due = reminder.sweep(conn, today)
+    due = reminder.sweep(conn, today, enabled=enabled_pack_ids(conn))
     for item in due:
         log.info("  %s", item.line())
     return f"{len(due)} reminder(s) due"
 
 
 def sweep_alerts_now(conn: Any, today: date | None = None) -> str:
+    from core.registry import enabled_packs
     from modules import alert
 
-    firing = alert.sweep(conn, today)
+    firing = alert.sweep(conn, today, packs=enabled_packs(conn))
     for item in firing:
         log.info("  ! %s", item.line())
     return f"{len(firing)} alert(s) fired"
@@ -147,6 +178,24 @@ def _run_retry(limit: int = 25) -> str:
         )
 
 
+def _run_retry_one(document_id: str) -> str:
+    """One document, by id. The interface's Retry button lands here through the broker."""
+    settings = Settings.load(ROOT)
+    with connect(settings) as conn:
+        try:
+            recovery = retry_one(
+                conn,
+                Ollama(settings),
+                document_id=document_id,
+                folder=Path(settings.watch_folder),
+            )
+        except SourceMissing as error:
+            return str(error)
+    if recovery.recovered:
+        return f"recovered {recovery.facts} cited fact(s) from {recovery.pages_read} page(s)"
+    return f"still quarantined — {recovery.reason}"
+
+
 def _run_reminders() -> str:
     settings = Settings.load(ROOT)
     with connect(settings) as conn:
@@ -163,6 +212,7 @@ def register(app: Any) -> Any:
     """Attach the tasks to a Celery application and return it."""
     app.task(name=INGEST, bind=False)(_run_ingest)
     app.task(name=RETRY, bind=False)(_run_retry)
+    app.task(name=RETRY_ONE, bind=False)(_run_retry_one)
     app.task(name=SWEEP_REMINDERS, bind=False)(_run_reminders)
     app.task(name=SWEEP_ALERTS, bind=False)(_run_alerts)
     return app
@@ -196,3 +246,14 @@ def sender(settings: Settings) -> Any:
         return str(result.id)
 
     return send
+
+
+def send_retry(settings: Settings, document_id: str) -> str:
+    """Put one quarantine retry on the queue and return its task id.
+
+    The vision pass takes tens of seconds on a 4B model, which is longer than a person will
+    hold a page open for. The interface gets a task id back and the worker does the reading —
+    the same division of labour that stops a parse blocking the watched folder.
+    """
+    result = application(settings).send_task(RETRY_ONE, kwargs={"document_id": document_id})
+    return str(result.id)

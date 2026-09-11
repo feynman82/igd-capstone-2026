@@ -91,6 +91,19 @@ class State(TypedDict, total=False):
 
 
 @dataclass(frozen=True, slots=True)
+class Cited:
+    """One sentence and the passages it was traced to. What rule 3 looks like as data.
+
+    `Answer.text` joins these for a terminal; a screen wants them apart, so that a person can
+    put a finger on one sentence and see the page it came from rather than a list at the end.
+    """
+
+    text: str
+    chunk_ids: tuple[int, ...]
+    citations: list[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
 class Answer:
     text: str
     citations: list[str] = field(default_factory=list)
@@ -99,6 +112,9 @@ class Answer:
     passages_read: int = 0
     dropped: int = 0
     disclaimer: str = ""
+    claims: list[Cited] = field(default_factory=list)
+    reason: str = ""  # why it abstained, when it did
+    missing: str = ""  # what document would have answered it
 
     @property
     def grounded(self) -> bool:
@@ -245,6 +261,8 @@ class AnswerGraph:
                 abstained=True,
                 passages_read=len(passages),
                 dropped=len(verdict.dropped) if verdict else 0,
+                reason=reason,
+                missing=missing,
             )
 
         by_id = {passage.chunk_id: passage for passage in passages}
@@ -252,12 +270,21 @@ class AnswerGraph:
         citations = sorted(
             {by_id[cid].cite() for claim in verdict.grounded for cid in claim.supports}
         )
+        cited = [
+            Cited(
+                text=claim.text,
+                chunk_ids=tuple(claim.supports),
+                citations=[by_id[cid].cite() for cid in claim.supports if cid in by_id],
+            )
+            for claim in verdict.grounded
+        ]
         return Answer(
             " ".join(lines),
             citations=citations,
             passages_read=len(passages),
             dropped=len(verdict.dropped),
             disclaimer=final.get("disclaimer") or "",
+            claims=cited,
         )
 
 

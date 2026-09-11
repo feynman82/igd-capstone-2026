@@ -55,6 +55,13 @@ def main(argv: list[str] | None = None) -> int:
         print("Celery is not installed. Run uv sync --extra dev.")
         return 2
 
+    # The nightly sweeps read the enabled flag out of `packs`, so a worker started on its own
+    # against a fresh database installs the registry too. Idempotent, and it never re-enables
+    # a pack somebody switched off.
+    from core.registry import install_best_effort
+
+    install_best_effort(settings)
+
     BEAT_STATE.parent.mkdir(parents=True, exist_ok=True)
     app = application(settings)
     if args.beat_only:

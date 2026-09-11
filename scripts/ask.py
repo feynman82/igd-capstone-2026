@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from core.graph.answer import AnswerGraph
     from core.graph.baseline import DenseRetriever, NoReranker
+    from core.registry import enabled_pack_ids
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
     from core.runtime.settings import ConfigurationError, Settings
@@ -52,9 +53,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         with connect(settings) as conn:
             client = Ollama(settings)
+            enabled = enabled_pack_ids(conn)
             graph = AnswerGraph(
                 client,
-                DenseRetriever(conn, client),
+                # `None` means the registry is empty, which is "do not filter". An *empty* set
+                # means a person has switched every pack off, which is a different thing.
+                DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
                 NoReranker(),
                 candidates=args.candidates,
                 keep=args.keep,
