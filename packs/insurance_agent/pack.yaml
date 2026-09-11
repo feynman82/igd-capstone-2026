@@ -2,9 +2,11 @@
 #
 # This file is the SINGLE SOURCE OF TRUTH. After editing, run:
 #     python -m packs.build
+# which regenerates schemas.py and the register column headers Desmond fills in.
+# Never edit a generated file by hand.
 
 id: insurance_agent
-version: 0.1.0
+version: 0.2.0
 display_name: Insurance and Coverage
 
 document_types:
@@ -15,7 +17,7 @@ document_types:
     fields:
       - name: insurer
         type: string
-        description: Name of the insurance company as printed on the schedule
+        description: Name of the insurance company as printed on the schedule letterhead
         example: Meridian Assurance
       - name: policy_no
         type: identifier
@@ -23,29 +25,33 @@ document_types:
         example: MV-2026-448120
       - name: insured
         type: person
-        description: Name of the policyholder or life assured
+        description: Name of the policyholder as printed against Name of Insured
         example: Marcus Fernandez
-      - name: policy_type
-        type: enum
-        values: [motor, home, life, health, travel, personal_accident]
-        description: Which kind of cover this policy provides
-        example: motor
+      - name: product_name
+        type: string
+        description: Product name as printed at the head of the schedule, not a category
+        example: Private Car Insurance Policy
       - name: cover_from
         type: date
-        description: First day of the period of insurance
+        description: First day of the period of insurance, the from date on that line
         example: "2026-03-01"
       - name: expiry_date
         type: date
-        description: Last day of the period of insurance
+        description: Last day of the period of insurance, the to date on that line
         example: "2027-02-28"
-      - name: annual_premium
+      - name: premium_payable
         type: money
-        description: Premium payable for the period, in SGD
+        description: Total premium payable for the period of insurance shown, in SGD
         example: "742.00"
+      - name: sum_insured
+        type: money
+        required: false
+        description: Sum insured or limit of liability where the schedule prints one, in SGD
+        example: "250000.00"
       - name: excess
         type: money
         required: false
-        description: Amount the policyholder bears per claim, in SGD
+        description: Amount the policyholder bears per claim, printed as Excess, in SGD
         example: "750.00"
 
   renewal_notice:
@@ -54,24 +60,28 @@ document_types:
     fields:
       - name: insurer
         type: string
-        description: Name of the insurance company issuing the notice
+        description: Name of the insurance company issuing the notice, from the letterhead
         example: Meridian Assurance
       - name: policy_no
         type: identifier
-        description: Policy number exactly as printed
+        description: Policy number exactly as printed, not normalised
         example: MV-2026-448120
       - name: insured
         type: person
-        description: Name of the policyholder
+        description: Name of the policyholder the notice is addressed to
         example: Marcus Fernandez
       - name: expiry_date
         type: date
-        description: Date the current cover ends
+        description: Date the current cover ends, as printed in the expiry sentence
         example: "2027-02-28"
       - name: renewal_premium
         type: money
-        description: Premium quoted for the coming period, in SGD
+        description: Premium quoted for the coming period of insurance, in SGD
         example: "781.00"
+      - name: payment_due_date
+        type: date
+        description: Date the notice asks payment by, printed as Please pay by
+        example: "2027-02-14"
 
   claim_letter:
     description: Letter from an insurer about a claim, including settlement advice
@@ -79,7 +89,7 @@ document_types:
     fields:
       - name: insurer
         type: string
-        description: Name of the insurance company
+        description: Name of the insurance company, from the letterhead
         example: Meridian Assurance
       - name: policy_no
         type: identifier
@@ -87,21 +97,21 @@ document_types:
         example: HL-2024-771903
       - name: claim_no
         type: identifier
-        description: Claim reference exactly as printed
+        description: Claim reference exactly as printed in the reference line
         example: CLM-2026-0033812
       - name: claimant
         type: person
-        description: Name of the person the claim relates to
+        description: Name of the person the claim relates to, as addressed
         example: Mdm Fernandez
       - name: incident_date
         type: date
         required: false
-        description: Date of the event being claimed for
+        description: Date of the event being claimed for, where the letter states one
         example: "2026-03-14"
       - name: settled_amount
         type: money
         required: false
-        description: Amount paid out, in SGD, if the letter states one
+        description: Amount paid out in SGD, where the letter states a settlement
         example: "4820.50"
 
   benefit_illustration:
@@ -110,35 +120,75 @@ document_types:
     fields:
       - name: insurer
         type: string
-        description: Name of the insurance company
+        description: Name of the insurance company, from the illustration header
         example: Kallang Life
       - name: policy_no
         type: identifier
         required: false
-        description: Policy number if the illustration carries one
+        description: Policy number if the illustration carries one, exactly as printed
         example: LF-2023-118844
       - name: life_assured
         type: person
-        description: Name of the person covered
+        description: Name of the person covered, as printed on the illustration
         example: Marcus Fernandez
       - name: sum_assured
         type: money
-        description: Headline sum assured, in SGD
+        description: Headline sum assured as printed, never a projected value, in SGD
         example: "250000.00"
       - name: annual_premium
         type: money
-        description: Premium payable each year, in SGD
+        description: Premium payable each year as printed, in SGD
         example: "3180.00"
 
+  policy_anniversary_statement:
+    description: Annual statement issued on the anniversary of a life or investment-linked policy
+    subject_field: life_assured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company, from the statement letterhead
+        example: Kallang Life
+      - name: policy_no
+        type: identifier
+        description: Policy number exactly as printed, not normalised
+        example: LF-2023-118844
+      - name: life_assured
+        type: person
+        description: Name of the person covered, as printed on the statement
+        example: Marcus Fernandez
+      - name: sum_assured
+        type: money
+        description: Sum assured as at the statement date, in SGD
+        example: "250000.00"
+      - name: annual_premium
+        type: money
+        description: Premium payable each year as printed on the statement, in SGD
+        example: "3180.00"
+      - name: surrender_value
+        type: money
+        required: false
+        description: Cash or surrender value as at the statement date, in SGD
+        example: "18740.25"
+      - name: premiums_paid_to_date
+        type: money
+        required: false
+        description: Total premiums paid since inception where the statement prints it, in SGD
+        example: "9540.00"
+
+# No grounding corpus. This pack answers only from the user's own policy documents.
+# grounding/mas_fair_dealing/ is retained as a placeholder: its sources.yaml is empty, and
+# the MAS Fair Dealing Guidelines are a conduct standard for insurers rather than material
+# that answers what a household is covered for. Reopen with real sources and retrieval
+# dates recorded, reviewed by Siew, before setting a corpus here.
 grounding:
-  corpus: grounding/mas_fair_dealing/
-  top_k: 6
+  corpus: null
+  top_k: 0
 
 registers:
   reminder:
     - key: policy_expiry
       from_field: expiry_date
-      lead_days: [60, 30, 7]
+      lead_days: [60, 30, 14, 1]
   alert:
     - metric: days_uncovered
       ceiling: 0
@@ -147,14 +197,16 @@ registers:
 persona:
   system: >
     You explain what the user's own insurance documents say: what is covered, what is
-    excluded, what it costs and when it ends. You compare only against the documents in
-    front of you and the published guidance in your corpus, never against products you
-    recall but cannot cite.
+    excluded, what it costs and when it ends. You answer only from the documents in front
+    of you, and you decline to compare products, recommend cover, or state a policy term
+    you cannot point at on a page.
 
 guardrails:
   must_cite: true
   abstain_below: 0.45
   never_acts: true
   disclaimer: >
-    Informational analysis of your own policy documents. This does not constitute advice
-    under the Financial Advisers Act. Confirm cover with your insurer or a licensed adviser.
+    Informational analysis of your own policy documents only. This is not financial advice
+    under the Financial Advisers Act, and it does not recommend or compare insurance
+    products. Confirm cover, exclusions and renewal terms with your insurer or a licensed
+    financial adviser before you act.

@@ -6,7 +6,7 @@ header in the corpus register, the `facts.key` it is stored under, and the attri
 on the extraction model. Renaming one renames all three, so rename in `pack.yaml`
 and regenerate.
 
-## Insurance and Coverage (`insurance_agent` v0.1.0)
+## Insurance and Coverage (`insurance_agent` v0.2.0)
 
 ### `policy_schedule`
 
@@ -14,14 +14,15 @@ Policy schedule or certificate of insurance setting out cover and premium.
 
 | Field | Type | Required | Stored in | Meaning |
 |---|---|---|---|---|
-| `insurer` | string | yes | `facts.value_text` | Name of the insurance company as printed on the schedule |
+| `insurer` | string | yes | `facts.value_text` | Name of the insurance company as printed on the schedule letterhead |
 | `policy_no` | identifier | yes | `facts.value_text` | Policy number exactly as printed, not normalised |
-| `insured` | person | yes | `facts.value_text` | Name of the policyholder or life assured |
-| `policy_type` | enum | yes | `facts.value_text` | Which kind of cover this policy provides |
-| `cover_from` | date | yes | `facts.value_date` | First day of the period of insurance |
-| `expiry_date` | date | yes | `facts.value_date` | Last day of the period of insurance |
-| `annual_premium` | money | yes | `facts.value_num` | Premium payable for the period, in SGD |
-| `excess` | money | no | `facts.value_num` | Amount the policyholder bears per claim, in SGD |
+| `insured` | person | yes | `facts.value_text` | Name of the policyholder as printed against Name of Insured |
+| `product_name` | string | yes | `facts.value_text` | Product name as printed at the head of the schedule, not a category |
+| `cover_from` | date | yes | `facts.value_date` | First day of the period of insurance, the from date on that line |
+| `expiry_date` | date | yes | `facts.value_date` | Last day of the period of insurance, the to date on that line |
+| `premium_payable` | money | yes | `facts.value_num` | Total premium payable for the period of insurance shown, in SGD |
+| `sum_insured` | money | no | `facts.value_num` | Sum insured or limit of liability where the schedule prints one, in SGD |
+| `excess` | money | no | `facts.value_num` | Amount the policyholder bears per claim, printed as Excess, in SGD |
 
 ### `renewal_notice`
 
@@ -29,11 +30,12 @@ Notice issued before expiry inviting the policyholder to renew.
 
 | Field | Type | Required | Stored in | Meaning |
 |---|---|---|---|---|
-| `insurer` | string | yes | `facts.value_text` | Name of the insurance company issuing the notice |
-| `policy_no` | identifier | yes | `facts.value_text` | Policy number exactly as printed |
-| `insured` | person | yes | `facts.value_text` | Name of the policyholder |
-| `expiry_date` | date | yes | `facts.value_date` | Date the current cover ends |
-| `renewal_premium` | money | yes | `facts.value_num` | Premium quoted for the coming period, in SGD |
+| `insurer` | string | yes | `facts.value_text` | Name of the insurance company issuing the notice, from the letterhead |
+| `policy_no` | identifier | yes | `facts.value_text` | Policy number exactly as printed, not normalised |
+| `insured` | person | yes | `facts.value_text` | Name of the policyholder the notice is addressed to |
+| `expiry_date` | date | yes | `facts.value_date` | Date the current cover ends, as printed in the expiry sentence |
+| `renewal_premium` | money | yes | `facts.value_num` | Premium quoted for the coming period of insurance, in SGD |
+| `payment_due_date` | date | yes | `facts.value_date` | Date the notice asks payment by, printed as Please pay by |
 
 ### `claim_letter`
 
@@ -41,12 +43,12 @@ Letter from an insurer about a claim, including settlement advice.
 
 | Field | Type | Required | Stored in | Meaning |
 |---|---|---|---|---|
-| `insurer` | string | yes | `facts.value_text` | Name of the insurance company |
+| `insurer` | string | yes | `facts.value_text` | Name of the insurance company, from the letterhead |
 | `policy_no` | identifier | yes | `facts.value_text` | Policy the claim was made against, exactly as printed |
-| `claim_no` | identifier | yes | `facts.value_text` | Claim reference exactly as printed |
-| `claimant` | person | yes | `facts.value_text` | Name of the person the claim relates to |
-| `incident_date` | date | no | `facts.value_date` | Date of the event being claimed for |
-| `settled_amount` | money | no | `facts.value_num` | Amount paid out, in SGD, if the letter states one |
+| `claim_no` | identifier | yes | `facts.value_text` | Claim reference exactly as printed in the reference line |
+| `claimant` | person | yes | `facts.value_text` | Name of the person the claim relates to, as addressed |
+| `incident_date` | date | no | `facts.value_date` | Date of the event being claimed for, where the letter states one |
+| `settled_amount` | money | no | `facts.value_num` | Amount paid out in SGD, where the letter states a settlement |
 
 ### `benefit_illustration`
 
@@ -54,11 +56,25 @@ Illustration of benefits and values issued with a life or health policy.
 
 | Field | Type | Required | Stored in | Meaning |
 |---|---|---|---|---|
-| `insurer` | string | yes | `facts.value_text` | Name of the insurance company |
-| `policy_no` | identifier | no | `facts.value_text` | Policy number if the illustration carries one |
-| `life_assured` | person | yes | `facts.value_text` | Name of the person covered |
-| `sum_assured` | money | yes | `facts.value_num` | Headline sum assured, in SGD |
-| `annual_premium` | money | yes | `facts.value_num` | Premium payable each year, in SGD |
+| `insurer` | string | yes | `facts.value_text` | Name of the insurance company, from the illustration header |
+| `policy_no` | identifier | no | `facts.value_text` | Policy number if the illustration carries one, exactly as printed |
+| `life_assured` | person | yes | `facts.value_text` | Name of the person covered, as printed on the illustration |
+| `sum_assured` | money | yes | `facts.value_num` | Headline sum assured as printed, never a projected value, in SGD |
+| `annual_premium` | money | yes | `facts.value_num` | Premium payable each year as printed, in SGD |
+
+### `policy_anniversary_statement`
+
+Annual statement issued on the anniversary of a life or investment-linked policy.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `insurer` | string | yes | `facts.value_text` | Name of the insurance company, from the statement letterhead |
+| `policy_no` | identifier | yes | `facts.value_text` | Policy number exactly as printed, not normalised |
+| `life_assured` | person | yes | `facts.value_text` | Name of the person covered, as printed on the statement |
+| `sum_assured` | money | yes | `facts.value_num` | Sum assured as at the statement date, in SGD |
+| `annual_premium` | money | yes | `facts.value_num` | Premium payable each year as printed on the statement, in SGD |
+| `surrender_value` | money | no | `facts.value_num` | Cash or surrender value as at the statement date, in SGD |
+| `premiums_paid_to_date` | money | no | `facts.value_num` | Total premiums paid since inception where the statement prints it, in SGD |
 
 ## Tax and Reliefs (`iras_tax` v0.1.0)
 

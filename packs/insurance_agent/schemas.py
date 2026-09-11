@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -16,19 +15,33 @@ class PolicySchedule(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    insurer: str = Field(description="Name of the insurance company as printed on the schedule")
-    policy_no: str = Field(description="Policy number exactly as printed, not normalised")
-    insured: str = Field(description="Name of the policyholder or life assured")
-    policy_type: Literal["motor", "home", "life", "health", "travel", "personal_accident"] = Field(
-        description="Which kind of cover this policy provides",
+    insurer: str = Field(
+        description="Name of the insurance company as printed on the schedule letterhead",
     )
-    cover_from: date = Field(description="First day of the period of insurance")
-    expiry_date: date = Field(description="Last day of the period of insurance")
-    annual_premium: Decimal = Field(ge=0, description="Premium payable for the period, in SGD")
+    policy_no: str = Field(description="Policy number exactly as printed, not normalised")
+    insured: str = Field(description="Name of the policyholder as printed against Name of Insured")
+    product_name: str = Field(
+        description="Product name as printed at the head of the schedule, not a category",
+    )
+    cover_from: date = Field(
+        description="First day of the period of insurance, the from date on that line",
+    )
+    expiry_date: date = Field(
+        description="Last day of the period of insurance, the to date on that line",
+    )
+    premium_payable: Decimal = Field(
+        ge=0,
+        description="Total premium payable for the period of insurance shown, in SGD",
+    )
+    sum_insured: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Sum insured or limit of liability where the schedule prints one, in SGD",
+    )
     excess: Decimal | None = Field(
         default=None,
         ge=0,
-        description="Amount the policyholder bears per claim, in SGD",
+        description="Amount the policyholder bears per claim, printed as Excess, in SGD",
     )
 
 
@@ -37,13 +50,20 @@ class RenewalNotice(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    insurer: str = Field(description="Name of the insurance company issuing the notice")
-    policy_no: str = Field(description="Policy number exactly as printed")
-    insured: str = Field(description="Name of the policyholder")
-    expiry_date: date = Field(description="Date the current cover ends")
+    insurer: str = Field(
+        description="Name of the insurance company issuing the notice, from the letterhead",
+    )
+    policy_no: str = Field(description="Policy number exactly as printed, not normalised")
+    insured: str = Field(description="Name of the policyholder the notice is addressed to")
+    expiry_date: date = Field(
+        description="Date the current cover ends, as printed in the expiry sentence",
+    )
     renewal_premium: Decimal = Field(
         ge=0,
-        description="Premium quoted for the coming period, in SGD",
+        description="Premium quoted for the coming period of insurance, in SGD",
+    )
+    payment_due_date: date = Field(
+        description="Date the notice asks payment by, printed as Please pay by",
     )
 
 
@@ -52,18 +72,18 @@ class ClaimLetter(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    insurer: str = Field(description="Name of the insurance company")
+    insurer: str = Field(description="Name of the insurance company, from the letterhead")
     policy_no: str = Field(description="Policy the claim was made against, exactly as printed")
-    claim_no: str = Field(description="Claim reference exactly as printed")
-    claimant: str = Field(description="Name of the person the claim relates to")
+    claim_no: str = Field(description="Claim reference exactly as printed in the reference line")
+    claimant: str = Field(description="Name of the person the claim relates to, as addressed")
     incident_date: date | None = Field(
         default=None,
-        description="Date of the event being claimed for",
+        description="Date of the event being claimed for, where the letter states one",
     )
     settled_amount: Decimal | None = Field(
         default=None,
         ge=0,
-        description="Amount paid out, in SGD, if the letter states one",
+        description="Amount paid out in SGD, where the letter states a settlement",
     )
 
 
@@ -72,14 +92,47 @@ class BenefitIllustration(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    insurer: str = Field(description="Name of the insurance company")
+    insurer: str = Field(description="Name of the insurance company, from the illustration header")
     policy_no: str | None = Field(
         default=None,
-        description="Policy number if the illustration carries one",
+        description="Policy number if the illustration carries one, exactly as printed",
     )
-    life_assured: str = Field(description="Name of the person covered")
-    sum_assured: Decimal = Field(ge=0, description="Headline sum assured, in SGD")
-    annual_premium: Decimal = Field(ge=0, description="Premium payable each year, in SGD")
+    life_assured: str = Field(
+        description="Name of the person covered, as printed on the illustration",
+    )
+    sum_assured: Decimal = Field(
+        ge=0,
+        description="Headline sum assured as printed, never a projected value, in SGD",
+    )
+    annual_premium: Decimal = Field(
+        ge=0,
+        description="Premium payable each year as printed, in SGD",
+    )
+
+
+class PolicyAnniversaryStatement(BaseModel):
+    """Annual statement issued on the anniversary of a life or investment-linked policy."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    insurer: str = Field(description="Name of the insurance company, from the statement letterhead")
+    policy_no: str = Field(description="Policy number exactly as printed, not normalised")
+    life_assured: str = Field(description="Name of the person covered, as printed on the statement")
+    sum_assured: Decimal = Field(ge=0, description="Sum assured as at the statement date, in SGD")
+    annual_premium: Decimal = Field(
+        ge=0,
+        description="Premium payable each year as printed on the statement, in SGD",
+    )
+    surrender_value: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Cash or surrender value as at the statement date, in SGD",
+    )
+    premiums_paid_to_date: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Total premiums paid since inception where the statement prints it, in SGD",
+    )
 
 
 # doc_type -> model, used by the ingestion worker to pick a decode constraint.
@@ -88,6 +141,7 @@ MODELS: dict[str, type[BaseModel]] = {
     "renewal_notice": RenewalNotice,
     "claim_letter": ClaimLetter,
     "benefit_illustration": BenefitIllustration,
+    "policy_anniversary_statement": PolicyAnniversaryStatement,
 }
 
 # field name -> the facts column it is stored in, used by the extractor and the scorer.
@@ -102,9 +156,14 @@ FACT_COLUMNS: dict[str, str] = {
     "insured": "value_text",
     "insurer": "value_text",
     "life_assured": "value_text",
+    "payment_due_date": "value_date",
     "policy_no": "value_text",
-    "policy_type": "value_text",
+    "premium_payable": "value_num",
+    "premiums_paid_to_date": "value_num",
+    "product_name": "value_text",
     "renewal_premium": "value_num",
     "settled_amount": "value_num",
     "sum_assured": "value_num",
+    "sum_insured": "value_num",
+    "surrender_value": "value_num",
 }
