@@ -86,8 +86,9 @@ pastes its numbers into the pull request with one line on why they moved.
 unusual advantage for reading a policy schedule. Use it as review of Zee's field list,
 not as a second build lane.
 
-**The demonstration.** Record a three-minute screen capture of the full happy path in
-week 9, before demo night. It is the cheapest insurance in the project.
+**The demonstration.** The run sheet is [`docs/demo-run-sheet.md`](../../docs/demo-run-sheet.md)
+— nine steps, under eight minutes, rehearse against it. Record a three-minute screen capture of
+the full happy path in week 9, before demo night. It is the cheapest insurance in the project.
 
 **The graph.** See `docs/GRAPHIFY.md` — you regenerate it, at the weekly integration
 session, and nobody else commits `graphify-out/`.

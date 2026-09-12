@@ -39,6 +39,7 @@ demonstrates both axes.
 | New to the project | [`docs/artefacts/architecture-review.html`](docs/artefacts/architecture-review.html) — open it in a browser |
 | Looking for your brief and tasks | [`team/`](team/README.md) |
 | Zee | [`team/zee/README.md`](team/zee/README.md), then [`packs/README.md`](packs/README.md) |
+| **Rehearsing the demonstration** | [`docs/demo-run-sheet.md`](docs/demo-run-sheet.md) |
 | About to open a PR | [`CONTRIBUTING.md`](CONTRIBUTING.md) |
 | Wiring up Notion | [`docs/NOTION.md`](docs/NOTION.md) |
 | Setting up a machine | [`FIRST-RUN.md`](FIRST-RUN.md) |
