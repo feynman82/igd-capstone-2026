@@ -18,6 +18,41 @@ parent relief, elderly hospital cover and a child's policy all sit in one regist
 | Lim Ah Kow | parent | 1958-10-12 | Marcus's father, retiree; hypertension and diabetes; lives with the household from 2021 |
 | Tan Mei Ling | parent | 1961-04-25 | Marcus's mother, retiree; osteoporosis; lives with the household from 2021 |
 
+## The family tree, and why three of them are not called Lim
+
+Singapore Chinese convention: a woman who marries into a family keeps her own surname, and
+the children take their father's. So the household holds three surnames and is still one
+household.
+
+| Person | Surname | Relation to the owner | Why the surname |
+|---|---|---|---|
+| Marcus Lim Jun Wei | Lim | **the owner** | — |
+| Rachel Ng Hui Shan | **Ng** | wife | married in, kept her own surname |
+| Lucas Lim Kai En | Lim | son | takes his father's |
+| Lim Ah Kow | Lim | father | — |
+| Tan Mei Ling | **Tan** | mother | married in, kept her own surname |
+
+Two consequences, and both of them decide membership:
+
+- **A different surname does not mean a different household.** Rachel Ng and Tan Mei Ling are
+  Lim household members.
+- **The same surname does not mean the same household.** Membership is decided by what a
+  document says about relationships and addresses, never by the name alone.
+
+**This is the only household in the corpus.** `corpus/batches/batch0-personas/` previously
+held 22 persona sketches spanning three households — the Lims in Tampines, a Tan household at
+Blk 123B Bishan St 12 (Sarah Tan Li Ling, David Tan Wei Ming, Emma Tan Jia Xin, Ethan Tan Jia
+Le) and Priya Singh at Cecil Street. The folder was deleted in full: every one of its files
+named a real institution, and none carried the required footer, so it could not be made
+compliant by deleting a subset. **Those people are not in the canon and must not be
+reintroduced.** `Tan Mei Ling` is Marcus's mother; `Sarah Tan Li Ling` was a different
+persona family and is gone.
+
+**Rachel Ng Hui Shan has no identity document in the corpus, deliberately.** She is evidenced
+by six register rows (`b1-0011`, `b1-0018`, `b1-0020`, `b1-0023`, `b1-0027`, `b1-0029`), which
+is what the household roster needs: she arrives off a document, as ADR 0011 requires, rather
+than off a persona sketch that never ingests.
+
 ## Address
 Current: Blk 45B Tampines Ave 8 #07-21 Singapore 521045 (from 2021-03-06)
 Previous: Blk 210 Hougang Ave 1 #05-14 Singapore 530210 (until 2021-03-05)
@@ -40,9 +75,45 @@ Previous: Blk 210 Hougang Ave 1 #05-14 Singapore 530210 (until 2021-03-05)
 | HM-2024-559013 | home contents | Meridian Assurance | 2024-02-01 | yes |
 | HS-2023-771904 | hospital income, on Lim Ah Kow | Lionhead Life Assurance | 2023-01-15 | yes |
 | LF-2015-330277 | whole life, on Marcus | Lionhead Life Assurance | 2015-06-01 | yes |
+| PH-2022-604188 | private hospital and surgical, on Marcus | Meridian Assurance | 2022-03-01 | yes |
+| CI-2019-215736 | critical illness, on Marcus | Lionhead Life Assurance | 2019-09-01 | yes |
 
 A policy number is written identically everywhere it appears, and carries the same insurer
 and the same insured on every document. The validator enforces this.
+
+### The three policies on Marcus are three different products
+
+Deliberately, because a household that holds life cover, hospital cover and critical illness
+cover at once is the normal case and the three are easy to conflate:
+
+| | `LF-2015-330277` | `PH-2022-604188` | `CI-2019-215736` |
+|---|---|---|---|
+| Product | whole life | private hospital and surgical | critical illness |
+| Insurer | Lionhead Life Assurance | Meridian Assurance | Lionhead Life Assurance |
+| Pays on | death, or surrender | hospitalisation and surgery, as incurred | diagnosis of a listed condition |
+| Sum | 300,000.00 | 1,000,000.00 annual limit | 200,000.00 |
+| Annual premium | 3,600.00 | 1,860.00 | 2,040.00 |
+| Period | whole of life | 2026-03-01 → 2027-02-28, annually renewable | 2019-09-01 → 2049-08-31 |
+
+`PH-2022-604188` sits with **Meridian** and carries a `PH-` prefix specifically so it cannot
+be confused with `HS-2023-771904`, which is **Lim Ah Kow's** hospital income plan with
+Lionhead. Two hospital-shaped policies, two different people, two different insurers, two
+different prefixes. The 40 per cent premium jump at the 2027 renewal belongs to
+`HS-2023-771904` and to Lim Ah Kow, and nothing about Marcus's plan may touch it.
+
+### Whole life has no expiry, and `policy_schedule` requires one
+
+`packs/insurance_agent/pack.yaml` marks `expiry_date` required on `policy_schedule` — "last
+day of the period of insurance". A whole life policy has no period of insurance. The corpus
+convention is to register **maturity at age 100**: Marcus was born 1987-05-08, so
+`LF-2015-330277` carries `expiry_date 2087-05-07`, and the document prints it as a maturity
+date rather than as an expiry.
+
+This is a workaround, not a modelling decision, and it is recorded here so the next person
+does not reinvent it. The real fix is upstream — `expiry_date` should be optional on
+`policy_schedule`, or the pack should carry a `maturity_date` — and that is Zee's `pack.yaml`,
+raised rather than patched here. The practical cost is one dead `policy_expiry` obligation 61
+years out, which no `lead_days` window in the Reminder register will ever reach.
 
 ## Invented issuers for the documents that have no `insurer` field
 
