@@ -23,6 +23,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from core import household
 from core.ingest.pipeline import process
 from core.ingest.quarantine import Recovery, queue, recovery_rate, retry
 from core.ingest.source import SourceMissing, bytes_for, digest_of_document
@@ -69,6 +70,20 @@ def ingest(
         mime=mime,
         original_name=original_name,
     )
+    # Any name on this document that the household does not yet account for becomes a question
+    # on Today. Deliberately after the document is filed rather than inside the pipeline: a
+    # document that has been read should not also wait on a second model call before it counts
+    # as filed, and a name that appears on six documents should be asked about once. A model
+    # that is not running costs nothing here — the name is still recorded and still asked
+    # about, simply without a suggestion attached. See ADR 0011.
+    try:
+        asked = household.sweep_unknown_subjects(conn, client)
+        conn.commit()  # autocommit is off; `core/household.py` leaves the commit to its caller
+        if asked:
+            log.info("%s: %d new name(s) to place", original_name, asked)
+    except Exception as error:  # placing a name must never fail a document that was read
+        log.warning("could not place the names on %s: %s", original_name, error)
+
     log.info("%s: %s", original_name, outcome.line())
     return outcome.line()
 

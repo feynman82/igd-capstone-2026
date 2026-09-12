@@ -53,15 +53,21 @@ from api.models import (
     AskResponse,
     Claim,
     CloseRequest,
+    ConfirmNameRequest,
     CorrectionRequest,
     CorrectionResponse,
     EnabledRequest,
     ErrorEvent,
     FinishedEvent,
+    HouseholdResponse,
     ModuleSummary,
     ObligationChanged,
+    OwnerRequest,
     PacksResponse,
     PackSummary,
+    PendingName,
+    PersonModel,
+    PersonRequest,
     QuarantinedDocument,
     QuarantineResponse,
     ReadingEvent,
@@ -69,16 +75,18 @@ from api.models import (
     RetryAccepted,
     SentenceEvent,
     Source,
+    TelegramLinkRequest,
     TodayItem,
     TodayResponse,
     VaultDocument,
     VaultFact,
     VaultResponse,
 )
-from core import corrections, registry, vault
+from core import corrections, household, registry, vault
 from core.graph import answer as graph
 from core.graph.answer import Answer, AnswerGraph
 from core.graph.baseline import DenseRetriever, NoReranker
+from core.graph.scope import HouseholdScope
 from core.ingest import quarantine, source
 from core.pages import PageUnavailable, RendererUnavailable, render_page
 from core.runtime.db import DatabaseUnavailable, connect
@@ -252,6 +260,9 @@ def build_router() -> APIRouter:
             client,
             DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
             NoReranker(),
+            # Who is asking. Built here because this is where the connection is; the graph
+            # itself holds none. See `core/graph/scope.py` and ADR 0011.
+            household=HouseholdScope(conn),
         )
 
     @router.post("/ask", response_model=AskResponse)
@@ -539,6 +550,130 @@ def build_router() -> APIRouter:
             ) from error
         return RetryAccepted(document_id=document_id, task_id=task_id)
 
+    # ------------------------------------------------------------------------ household
+    #
+    # Who lives here, and which one of them is you. The interface never touches the database,
+    # so every one of these exists because a screen needs it. See ADR 0011.
+    #
+    # The shape to notice: there is no endpoint that *enumerates* the household. Setup names
+    # one person -- you -- and everybody else arrives off a document, is classified by the
+    # generator, and is confirmed by a person through `/household/names/{id}`. A roster you
+    # type from memory before filing anything does not match what your documents say, and the
+    # match is the only thing that matters.
+
+    def _household(conn: Any) -> HouseholdResponse:
+        people = household.roster(conn)
+        owner = next((p for p in people if p.is_owner), None)
+        return HouseholdResponse(
+            people=[_as_person(p) for p in people],
+            owner=_as_person(owner) if owner else None,
+            pending=[
+                PendingName(
+                    id=row.id,
+                    alias=row.alias,
+                    suggested_person_id=row.person_id,
+                    suggested_person_name=row.person_name,
+                    confidence=row.confidence,
+                    document_id=str(row.document_id) if row.document_id else None,
+                    document_name=row.document_name,
+                )
+                for row in household.pending(conn)
+            ],
+            configured=owner is not None,
+        )
+
+    # `core/runtime/db.py` opens with autocommit off and says "the caller commits". For the
+    # household the caller is the request: one screen action is one transaction, and a person
+    # answering "who is this?" must not have it undone by the next handler that raises.
+    # `core/registry.py` and `core/corrections.py` commit inside the domain function instead —
+    # the difference is that those are called from a worker and a script as well as from here,
+    # and `core/household.py` is deliberately kept free of that decision so its own tests can
+    # roll back.
+    def _saved(conn: Any) -> HouseholdResponse:
+        conn.commit()
+        return _household(conn)
+
+    @router.get("/household", response_model=HouseholdResponse)
+    def get_household(conn: Conn) -> HouseholdResponse:
+        return _household(conn)
+
+    @router.post("/household/owner", response_model=HouseholdResponse)
+    def set_owner(request: OwnerRequest, conn: Conn) -> HouseholdResponse:
+        """First run, and every later change of hands.
+
+        Names an existing person as owner if one of their aliases already matches what was
+        typed -- so correcting a spelling does not create a second copy of the same person --
+        and otherwise creates them.
+        """
+        existing = household.resolve(conn, request.display_name)
+        if existing is not None:
+            household.set_owner(conn, existing.id)
+        else:
+            household.add_person(
+                conn,
+                request.display_name,
+                "self",
+                is_owner=True,
+                aliases=tuple(request.aliases),
+            )
+        return _saved(conn)
+
+    @router.put("/household/owner/{person_id}", response_model=HouseholdResponse)
+    def hand_over(person_id: int, conn: Conn) -> HouseholdResponse:
+        """Hand the household to somebody already in it. A daughter takes over her father's
+        paperwork; the install follows rather than being abandoned."""
+        try:
+            household.set_owner(conn, person_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return _saved(conn)
+
+    @router.post("/household/people", response_model=HouseholdResponse)
+    def add_person(request: PersonRequest, conn: Conn) -> HouseholdResponse:
+        household.add_person(
+            conn,
+            request.display_name,
+            request.relation,
+            aliases=tuple(request.aliases),
+            external=request.external,
+        )
+        return _saved(conn)
+
+    @router.post("/household/names/{alias_id}", response_model=HouseholdResponse)
+    def confirm_name(alias_id: int, request: ConfirmNameRequest, conn: Conn) -> HouseholdResponse:
+        """The answer to "who is this?" -- an existing person, or a new one in the same tap."""
+        person_id = request.person_id
+        if person_id is None:
+            if not request.display_name:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Name an existing person, or give a name for a new one.",
+                )
+            person_id = household.add_person(
+                conn,
+                request.display_name,
+                request.relation,
+                external=request.external,
+            ).id
+        try:
+            household.confirm(conn, alias_id, person_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return _saved(conn)
+
+    @router.delete("/household/names/{alias_id}", response_model=HouseholdResponse)
+    def dismiss_name(alias_id: int, conn: Conn) -> HouseholdResponse:
+        """None of the answers was right. The name is forgotten and asked about again when it
+        is next seen, which is better than recording something nobody agreed with."""
+        household.dismiss(conn, alias_id)
+        return _saved(conn)
+
+    @router.post("/household/telegram", response_model=HouseholdResponse)
+    def link_telegram(request: TelegramLinkRequest, conn: Conn) -> HouseholdResponse:
+        """Whose phone is whose. The only ownership signal that arrives before parsing."""
+        household.link_telegram(conn, request.chat_id, request.person_id)
+        return _saved(conn)
+
     return router
 
 
@@ -562,7 +697,7 @@ def _as_source(citation: graph.Citation) -> Source:
 
 def _as_event(event: graph.Event) -> Any:
     if isinstance(event, graph.Reading):
-        return ReadingEvent(passages_read=event.passages_read)
+        return ReadingEvent(passages_read=event.passages_read, person=event.person)
     if isinstance(event, graph.Sentence):
         return SentenceEvent(
             text=event.text,
@@ -575,6 +710,7 @@ def _as_event(event: graph.Event) -> Any:
             missing=event.missing,
             passages_read=event.passages_read,
             dropped=event.dropped,
+            person=event.person,
         )
     if isinstance(event, graph.Refused):
         return RefusalEvent(text=event.text)
@@ -583,6 +719,7 @@ def _as_event(event: graph.Event) -> Any:
         disclaimer=event.disclaimer,
         passages_read=event.passages_read,
         dropped=event.dropped,
+        person=event.person,
     )
 
 
@@ -596,6 +733,7 @@ def _as_response(answer: Answer) -> AskResponse:
             text=answer.text,
             reason=answer.reason,
             missing=answer.missing,
+            person=answer.person,
             passages_read=answer.passages_read,
             dropped=answer.dropped,
         )
@@ -619,6 +757,7 @@ def _as_response(answer: Answer) -> AskResponse:
             }.values()
         ),
         disclaimer=answer.disclaimer,
+        person=answer.person,
         passages_read=answer.passages_read,
         dropped=answer.dropped,
     )
@@ -651,6 +790,17 @@ def _as_vault_document(document: vault.VaultDocument) -> VaultDocument:
             )
             for fact in document.facts
         ],
+    )
+
+
+def _as_person(person: household.Person) -> PersonModel:
+    return PersonModel(
+        id=person.id,
+        display_name=person.display_name,
+        relation=person.relation,
+        is_owner=person.is_owner,
+        external=person.external,
+        aliases=list(person.aliases),
     )
 
 

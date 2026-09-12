@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ItemRow } from "@/components/today/item-row";
 import { EmptyState, ProblemState } from "@/components/states";
-import { quarantine, today, vault, type TodayItem } from "@/lib/api";
+import { OwnerForm } from "@/components/household/owner-form";
+import { WhoIsThis } from "@/components/household/who-is-this";
+import { household, quarantine, today, vault, type TodayItem } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -57,11 +59,29 @@ export default async function TodayPage({
   const { as_of } = await searchParams;
   // The vault call is for one number — how many documents this is all drawn from — and it is
   // the claim in the footer. `limit=1` because the list itself is not wanted here.
-  const [result, waiting, filed] = await Promise.all([
+  const [result, waiting, filed, who] = await Promise.all([
     today(as_of),
     quarantine(),
     vault({ limit: "1" }),
+    household(),
   ]);
+
+  // The setup step, and the reason it is here rather than on the unlock screen: the passphrase
+  // locks the machine, and this says who you are. They are different questions, an install can
+  // be past one and not the other, and asking both on one screen makes the second look like
+  // part of signing in.
+  if (who.ok && !who.data.configured) {
+    return (
+      <>
+        <Header as_of={as_of ?? null} />
+        <div className="mt-[var(--s-6)]">
+          <OwnerForm />
+        </div>
+      </>
+    );
+  }
+  const names = who.ok ? who.data.pending : [];
+  const people = who.ok ? who.data.people : [];
 
   if (!result.ok) {
     return (
@@ -114,6 +134,14 @@ export default async function TodayPage({
         <div className="mt-[var(--s-6)]">
           <NothingToDo />
         </div>
+      ) : null}
+
+      {names.length > 0 ? (
+        <Section label={names.length === 1 ? "One name to place" : "Names to place"}>
+          {names.map((name, at) => (
+            <WhoIsThis key={name.id} name={name} people={people} index={at} />
+          ))}
+        </Section>
       ) : null}
 
       {urgent.length > 0 || needsEyes > 0 ? (

@@ -5,6 +5,7 @@ import { LockButton } from "@/components/lock-button";
 import { TabBar, Tabs } from "@/components/nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WordmarkLockup } from "@/components/wordmark";
+import { household } from "@/lib/api";
 import { SESSION_COOKIE, isUnlocked } from "@/lib/lock";
 
 export const runtime = "nodejs";
@@ -29,6 +30,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/unlock");
   }
 
+  // Who is asking. Read once, in the chrome, because the header greets them on every surface
+  // and because the setup step is gated on it. A household Parrot cannot reach is not an error
+  // here — the name simply does not appear, and every screen below still works.
+  const who = await household();
+  const owner = who.ok ? who.data.owner : null;
+
   return (
     <div className="flex min-h-dvh flex-col">
       {/* Skip link. First thing in the tab order on every surface, visible the moment it has
@@ -52,10 +59,24 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="ml-auto flex items-center gap-[var(--s-4)]">
             {/* Said once, in the chrome, because it is the claim the whole product rests on and
                 it is true on every surface. It is not a status that can change. */}
-            <span className="hidden items-center gap-[var(--s-2)] text-meta text-ink-3 md:flex">
+            {/* One item, two facts. The dot and the phrase are the privacy claim the whole
+                product rests on; the name is who Parrot thinks you are, and putting them in
+                one line is what stops the right-hand side becoming a row of five things.
+                It is a link because the place to correct it is one tap from seeing it wrong. */}
+            <Link
+              href="/household"
+              className="hidden items-center gap-[var(--s-2)] text-meta text-ink-3 no-underline transition-colors hover:text-ink md:flex"
+            >
               <span aria-hidden className="size-[7px] rounded-[var(--r-pill)] bg-accent" />
-              On this computer
-            </span>
+              {owner ? (
+                <>
+                  <span className="font-medium text-ink-2">{owner.display_name}</span>
+                  <span aria-hidden>—</span> on this computer
+                </>
+              ) : (
+                "On this computer"
+              )}
+            </Link>
             <ThemeToggle />
             <LockButton />
           </div>

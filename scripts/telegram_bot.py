@@ -44,6 +44,7 @@ def main(argv: list[str] | None = None) -> int:
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.WARNING)
 
+    from core import household
     from core.adapters.telegram import TelegramAdapter, TelegramSettings, TelegramUnavailable
     from core.ingest.dispatch import Inline
     from core.ingest.intake import Intake
@@ -76,7 +77,21 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         with connect(settings) as conn:
-            adapter = TelegramAdapter(Intake(conn, Inline(conn, Ollama(settings))), telegram)
+
+            def attribute(document_id: object, chat_id: int) -> None:
+                """Whose phone this arrived on, recorded before anything is read off it.
+
+                Silent when the chat is not linked to anybody: most installs never link one,
+                and a bot that refused documents from unmapped chats would be a worse bot.
+                """
+                person_id = household.person_for_chat(conn, chat_id)
+                if person_id is not None:
+                    household.attribute(conn, document_id, person_id, source="telegram")
+                    conn.commit()  # autocommit is off; the caller commits
+
+            adapter = TelegramAdapter(
+                Intake(conn, Inline(conn, Ollama(settings))), telegram, attribute
+            )
             try:
                 name = adapter.whoami()
             except TelegramUnavailable as error:

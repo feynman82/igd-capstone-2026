@@ -20,8 +20,14 @@ import type { Source } from "@/lib/api";
 export type ParrotMessage = UIMessage<
   never,
   {
-    /** Evidence gathered and above the pack's floor. Nothing is claimed yet. */
-    reading: { passages_read: number };
+    /**
+     * Evidence gathered and above the pack's floor. Nothing is claimed yet.
+     *
+     * `person` is set when the question was first-person and the evidence was narrowed to one
+     * member of the household. It is shown for the same reason a citation is: the defence
+     * against answering about the wrong person is showing whose answer this is.
+     */
+    reading: { passages_read: number; person?: string | null };
 
     /** One verified sentence. It will not be withdrawn, reworded or re-cited. */
     sentence: { text: string; chunk_ids: number[]; citations: Source[] };
@@ -32,13 +38,19 @@ export type ParrotMessage = UIMessage<
       missing: string;
       passages_read: number;
       dropped: number;
+      person?: string | null;
     };
 
     /** `never_acts` is `Literal[True]` in every pack. This is that, surfaced. */
     refusal: { text: string };
 
     /** The trace line under a finished answer, and the pack's disclaimer. */
-    finished: { disclaimer: string; passages_read: number; dropped: number };
+    finished: {
+      disclaimer: string;
+      passages_read: number;
+      dropped: number;
+      person?: string | null;
+    };
 
     /** The connection died mid-answer. Sentences already shown stay; they were verified. */
     error: { detail: string };

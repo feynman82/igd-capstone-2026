@@ -48,6 +48,15 @@ committed evaluation result, a governance artefact, an ADR, the corpus register.
 section cannot point at a file, it is being invented, and invented content is exactly
 what the Sources rubric line penalises.
 
+### Source documents written for the report
+
+These exist so that a section can be *written from* something rather than recalled. Each
+one carries the argument, not the build log, and each names the decision record behind it.
+
+| Document | Feeds | What it argues |
+|---|---|---|
+| [`docs/household-and-identity.md`](../household-and-identity.md) | §3, §4, §5, §6, §8 | Why "what is **my** premium?" is the one question citation cannot make safe, and what had to be built so that it could be. Carries the data model, the three-bucket resolution rule, the abstention design, and two limitations stated plainly. Decision: [ADR 0011](../adr/0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md). |
+
 **Do not start the body before week 8.** Sections 5 and 7 cannot be written truthfully
 until the evaluation has run three times, and a report drafted early becomes a document
 the team defends rather than one that reports what happened.

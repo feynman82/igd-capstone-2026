@@ -43,6 +43,7 @@ from typing import Any, Literal, TypedDict
 
 from core.graph.gate import Claim, check_one, precheck
 from core.graph.ports import Passage, Reranker, Retriever
+from core.graph.scope import HouseholdScope
 from core.graph.sentences import SentenceScanner
 from core.packs import InstalledPack, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
@@ -144,9 +145,15 @@ class Cited:
 
 @dataclass(frozen=True, slots=True)
 class Reading:
-    """Evidence gathered, floor cleared, the model is now writing. Nothing is claimed yet."""
+    """Evidence gathered, floor cleared, the model is now writing. Nothing is claimed yet.
+
+    `person` is set when the question was first-person and the evidence was narrowed to one
+    member of the household. It is shown for the same reason a citation is: the defence against
+    answering about the wrong person is showing whose answer this is, not being careful.
+    """
 
     passages_read: int
+    person: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -168,6 +175,7 @@ class Abstained:
     missing: str
     passages_read: int
     dropped: int
+    person: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -183,6 +191,7 @@ class Finished:
     disclaimer: str
     passages_read: int
     dropped: int
+    person: str | None = None
 
 
 Event = Reading | Sentence | Abstained | Refused | Finished
@@ -200,6 +209,7 @@ class Answer:
     claims: list[Cited] = field(default_factory=list)
     reason: str = ""  # why it abstained, when it did
     missing: str = ""  # what document would have answered it
+    person: str = ""  # whose documents this was narrowed to, when it was
 
     @property
     def grounded(self) -> bool:
@@ -260,12 +270,17 @@ class AnswerGraph:
         *,
         candidates: int = CANDIDATES,
         keep: int = KEEP,
+        household: HouseholdScope | None = None,
     ) -> None:
         self._client = client
         self._retriever = retriever
         self._reranker = reranker
         self._candidates = candidates
         self._keep = keep
+        # Injected rather than built here, because this class holds no connection and scoping
+        # needs one. `None` is the honest state of a fresh install: nobody has said who they
+        # are yet, so no question is first-person and every answer is about the household.
+        self._household = household
         self._graph = self._build()
 
     # ------------------------------------------------------------------------ the nodes
@@ -339,6 +354,33 @@ class AnswerGraph:
             return
 
         passages = final.get("reranked") or []
+
+        # Whose question is this? Asked after reranking, so the filter runs over the passages
+        # that were actually going to be used, and before the floor, so an abstention about the
+        # wrong person is not reported as weak evidence. See `core/graph/scope.py`.
+        scoped = self._household.apply(question, passages) if self._household else None
+        person = scoped.person_name if scoped is not None and scoped.scoped else None
+        if scoped is not None and scoped.scoped:
+            passages = scoped.passages
+
+        # The interesting failure, and the one worth its own sentence: they asked about their
+        # own policy and the vault holds somebody else's. Saying so is more use than a number
+        # they did not ask for, and it tells them something they did not know.
+        if scoped is not None and scoped.empty_for_owner:
+            others = ", ".join(scoped.dropped_people)
+            yield Abstained(
+                f"nothing filed under {scoped.person_name} answers that",
+                (
+                    f"There are documents for {others}, but none for {scoped.person_name}."
+                    if others
+                    else f"No document in your vault is filed under {scoped.person_name}."
+                ),
+                0,
+                0,
+                person,
+            )
+            return
+
         installed = _pack_for(passages, installed_packs())
         floor = installed.manifest.guardrails.abstain_below if installed else 0.42
         disclaimer = installed.manifest.guardrails.disclaimer.strip() if installed else ""
@@ -347,14 +389,20 @@ class AnswerGraph:
         # not a retrieval and a generation that is then thrown away.
         refusal = precheck(passages, abstain_below=floor)
         if refusal is not None:
-            yield Abstained(refusal, "", len(passages), 0)
+            yield Abstained(refusal, "", len(passages), 0, person)
             return
 
-        yield Reading(len(passages))
+        yield Reading(len(passages), person)
 
         by_id = {passage.chunk_id: passage for passage in passages}
         retrieved = set(by_id)
-        prompt = f"Question: {question}\n\nPassages:\n{_numbered(passages)}"
+        # Naming the asker is not what makes the answer right — the passages were already
+        # narrowed to them — it is what stops the model writing "Marcus's premium is" when the
+        # question said "my". The filter does the work; this only does the wording.
+        whose = (
+            f"The person asking is {person}. 'My', 'I' and 'mine' mean them.\n\n" if person else ""
+        )
+        prompt = f"{whose}Question: {question}\n\nPassages:\n{_numbered(passages)}"
         scanner = SentenceScanner()
         kept: list[str] = []
         dropped = 0
@@ -386,9 +434,9 @@ class AnswerGraph:
             # Sentences already yielded were verified and stay said. What follows is the honest
             # account of why there are no more of them.
             if kept:
-                yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped)
+                yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped, person)
             else:
-                yield Abstained(str(error), "", len(passages), dropped)
+                yield Abstained(str(error), "", len(passages), dropped, person)
             return
 
         if not kept:
@@ -399,10 +447,11 @@ class AnswerGraph:
                 scanner.missing(),
                 len(passages),
                 dropped,
+                person,
             )
             return
 
-        yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped)
+        yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped, person)
 
     def ask(self, question: str, *, thread_id: str = "local") -> Answer:
         """Every event, collected. `scripts/ask.py` and the screen ask the same question of the
@@ -428,6 +477,7 @@ class AnswerGraph:
                     dropped=event.dropped,
                     reason=event.reason,
                     missing=event.missing,
+                    person=event.person or "",
                 )
             elif isinstance(event, Finished):
                 lines = [
@@ -443,6 +493,7 @@ class AnswerGraph:
                     dropped=event.dropped,
                     disclaimer=event.disclaimer,
                     claims=claims,
+                    person=event.person or "",
                 )
 
         # Unreachable: `stream` always ends on a terminal event. Kept because a silent `None`

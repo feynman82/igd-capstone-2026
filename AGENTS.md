@@ -27,6 +27,18 @@ repository. Humans should read it too — it is the shortest description of how 
    has no supporting chunk id attached.
 4. **Do not edit `core/contracts.py` or `db/migrations/` as part of a feature PR.** Those are
    separate, reviewed PRs.
+
+   **One exception, and it is narrow: a purely additive migration.** A feature PR may add a
+   *new* migration file when every statement in it is `CREATE` — new tables, their indexes,
+   their constraints — and nothing in it alters, drops or backfills anything that already
+   exists. Say so in the PR title, and name the migration in the body. The reason for the
+   exception is that a new table nothing else reads yet cannot break anyone's work in flight,
+   so holding the feature behind a second review buys nothing and costs a week.
+
+   `ALTER`, `DROP`, a data backfill, or any edit to a migration that has already been applied
+   stays behind the original rule, without exception — those *can* break work in flight, which
+   is the whole point. `core/contracts.py` also stays behind it: it defines what a pack and a
+   module are, and four lanes build against it.
 5. **No new runtime dependency without an ADR** in `docs/adr/`. Dev/test dependencies are fine.
 6. **Sources of truth generate their outputs; never edit the output.** `pack.yaml`
    generates `packs/*/schemas.py`, `corpus/register/*_columns.csv` and

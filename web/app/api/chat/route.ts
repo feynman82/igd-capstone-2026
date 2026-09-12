@@ -23,11 +23,24 @@ export const dynamic = "force-dynamic";
 
 /** What `/api/ask/stream` emits. Mirrors `api/models.py`; `kind` discriminates. */
 type ParrotEvent =
-  | { kind: "reading"; passages_read: number }
+  | { kind: "reading"; passages_read: number; person?: string | null }
   | { kind: "sentence"; text: string; chunk_ids: number[]; citations: Source[] }
-  | { kind: "abstention"; reason: string; missing: string; passages_read: number; dropped: number }
+  | {
+      kind: "abstention";
+      reason: string;
+      missing: string;
+      passages_read: number;
+      dropped: number;
+      person?: string | null;
+    }
   | { kind: "refusal"; text: string }
-  | { kind: "finished"; disclaimer: string; passages_read: number; dropped: number }
+  | {
+      kind: "finished";
+      disclaimer: string;
+      passages_read: number;
+      dropped: number;
+      person?: string | null;
+    }
   | { kind: "error"; detail: string };
 
 export async function POST(request: Request) {
@@ -77,7 +90,10 @@ export async function POST(request: Request) {
         // than something silently swallowed.
         switch (event.kind) {
           case "reading":
-            writer.write({ type: "data-reading", data: { passages_read: event.passages_read } });
+            writer.write({
+              type: "data-reading",
+              data: { passages_read: event.passages_read, person: event.person },
+            });
             break;
           case "sentence":
             writer.write({
@@ -102,6 +118,7 @@ export async function POST(request: Request) {
                 disclaimer: event.disclaimer,
                 passages_read: event.passages_read,
                 dropped: event.dropped,
+                person: event.person,
               },
             });
             break;

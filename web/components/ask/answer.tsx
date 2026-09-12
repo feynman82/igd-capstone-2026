@@ -33,6 +33,16 @@ export function Turn({ message }: { message: ParrotMessage }) {
   const failure = parts.find((part) => part.type === "data-error");
   const reading = parts.find((part) => part.type === "data-reading");
 
+  // Whose answer this is, when the question was first-person and the evidence was narrowed to
+  // one member of the household. Shown for exactly the reason a citation is shown: the defence
+  // against answering about the wrong person is putting the person on the screen that used
+  // them, not being careful. A wrong alias is then a thing you can see. See ADR 0011.
+  const person = (
+    [finished, abstention, reading].find(
+      (part) => part && (part as { data: { person?: string | null } }).data.person,
+    ) as { data: { person?: string | null } } | undefined
+  )?.data.person;
+
   return (
     /*
      * `aria-live="polite"` on the assistant's turn, and this is not decoration either.
@@ -51,6 +61,15 @@ export function Turn({ message }: { message: ParrotMessage }) {
         <p className="flex items-center gap-[var(--s-2)] text-meta text-ink-3">
           <span aria-hidden className="inline-block size-1.5 animate-pulse rounded-full bg-accent" />
           Reading {(reading as { data: { passages_read: number } }).data.passages_read} passages
+        </p>
+      ) : null}
+
+      {person && sentences.length > 0 ? (
+        <p className="mb-[var(--s-3)] flex items-center gap-[var(--s-2)] text-meta text-ink-3">
+          <span className="rounded-[var(--r-sm)] border border-hairline bg-surface-2 px-[var(--s-2)] py-[2px] font-medium text-ink-2">
+            for {person}
+          </span>
+          <span>only their documents were read</span>
         </p>
       ) : null}
 

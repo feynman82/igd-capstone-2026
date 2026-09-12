@@ -180,7 +180,13 @@ export type Result<T> = { ok: true; data: T } | { ok: false; problem: Problem };
  * not Parrot. Worth telling apart: 8000 is a popular port, and "Not Found" sends somebody
  * hunting for a bug in code that is working.
  */
-const ALWAYS_EXISTS = ["/api/today", "/api/vault", "/api/packs", "/api/quarantine"];
+const ALWAYS_EXISTS = [
+  "/api/today",
+  "/api/vault",
+  "/api/packs",
+  "/api/quarantine",
+  "/api/household",
+];
 
 async function get<T>(path: string): Promise<Result<T>> {
   let response: Response;
@@ -262,4 +268,46 @@ export function quarantine(): Promise<Result<QuarantineResponse>> {
  */
 export function pageImage(documentId: string, page: number): string {
   return `/api/parrot/documents/${encodeURIComponent(documentId)}/page/${page}`;
+}
+
+/* --------------------------------------------------------------------------------- household
+ *
+ * Who lives here, and which one of them is you. Without it "what is my term life premium?"
+ * answers from whichever term life policy ranked first — with a correct citation to the wrong
+ * person's document, which is the one wrong answer the grounding gate cannot catch. See
+ * ADR 0011.
+ */
+
+export type Relation = "self" | "partner" | "child" | "parent" | "other";
+
+export type Person = {
+  id: number;
+  display_name: string;
+  relation: Relation;
+  is_owner: boolean;
+  external: boolean;
+  aliases: string[];
+};
+
+/** A name off a document that nobody has placed yet, and what the model thinks it is. */
+export type PendingName = {
+  id: number;
+  alias: string;
+  suggested_person_id: number | null;
+  suggested_person_name: string | null;
+  confidence: number | null;
+  document_id: string | null;
+  document_name: string | null;
+};
+
+export type HouseholdResponse = {
+  people: Person[];
+  owner: Person | null;
+  pending: PendingName[];
+  /** False until somebody has said who they are. The setup step is shown on this. */
+  configured: boolean;
+};
+
+export function household(): Promise<Result<HouseholdResponse>> {
+  return get<HouseholdResponse>("/api/household");
 }

@@ -39,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
 
     from core.graph.answer import AnswerGraph
     from core.graph.baseline import DenseRetriever, NoReranker
+    from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
@@ -62,6 +63,7 @@ def main(argv: list[str] | None = None) -> int:
                 NoReranker(),
                 candidates=args.candidates,
                 keep=args.keep,
+                household=HouseholdScope(conn),
             )
             if args.question:
                 _ask(graph, " ".join(args.question), args.show_evidence)

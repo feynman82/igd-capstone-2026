@@ -82,6 +82,9 @@ class ReadingEvent(BaseModel):
 
     kind: Literal["reading"] = "reading"
     passages_read: int
+    # Set when the question was first-person and the evidence was narrowed to one member of
+    # the household. Shown for the same reason a citation is: whose answer this is.
+    person: str | None = None
 
 
 class SentenceEvent(BaseModel):
@@ -103,6 +106,7 @@ class AbstentionEvent(BaseModel):
     missing: str = ""
     passages_read: int = 0
     dropped: int = 0
+    person: str | None = None
 
 
 class RefusalEvent(BaseModel):
@@ -116,6 +120,7 @@ class FinishedEvent(BaseModel):
     disclaimer: str = ""
     passages_read: int = 0
     dropped: int = 0
+    person: str | None = None
 
 
 class ErrorEvent(BaseModel):
@@ -133,6 +138,7 @@ class AskResponse(BaseModel):
     disclaimer: str = ""
     reason: str = ""  # why it abstained
     missing: str = ""  # what document would have answered it
+    person: str = ""  # whose documents this was narrowed to, when it was
     passages_read: int = 0
     dropped: int = 0
 
@@ -290,3 +296,73 @@ class RetryAccepted(BaseModel):
     document_id: str
     task_id: str
     status: Literal["queued"] = "queued"
+
+
+# ------------------------------------------------------------------------------- household
+#
+# Who lives here, what they are called on paper, and which one of them is you. See ADR 0011.
+# The interface never touches the database, so this is the only way it learns any of it.
+
+
+class PersonModel(BaseModel):
+    id: int
+    display_name: str
+    relation: Literal["self", "partner", "child", "parent", "other"]
+    is_owner: bool
+    external: bool = False
+    aliases: list[str] = Field(default_factory=list)
+
+
+class PendingName(BaseModel):
+    """A name off a document that nobody has placed yet, and what the model thinks it is.
+
+    `person_id` is a suggestion and is never treated as settled: nothing unconfirmed scopes an
+    answer. It is here so a screen can offer one tap instead of a form.
+    """
+
+    id: int
+    alias: str
+    suggested_person_id: int | None = None
+    suggested_person_name: str | None = None
+    confidence: float | None = None
+    document_id: str | None = None
+    document_name: str | None = None
+
+
+class HouseholdResponse(BaseModel):
+    people: list[PersonModel]
+    owner: PersonModel | None = None
+    pending: list[PendingName] = Field(default_factory=list)
+    # False until somebody has said who they are. The interface shows the setup step on this,
+    # rather than on whether a passphrase exists — the two are different questions and an
+    # install can be past one and not the other.
+    configured: bool = False
+
+
+class OwnerRequest(BaseModel):
+    """First run: the name on your documents. One field, because the owner is the one person
+    anybody can name without thinking, and everybody else arrives off a document."""
+
+    display_name: str = Field(min_length=1, max_length=120)
+    aliases: list[str] = Field(default_factory=list, max_length=12)
+
+
+class PersonRequest(BaseModel):
+    display_name: str = Field(min_length=1, max_length=120)
+    relation: Literal["self", "partner", "child", "parent", "other"] = "other"
+    aliases: list[str] = Field(default_factory=list, max_length=12)
+    external: bool = False
+
+
+class ConfirmNameRequest(BaseModel):
+    """The answer to "who is this?". Either an existing person, or a new one to create."""
+
+    person_id: int | None = None
+    display_name: str | None = Field(default=None, max_length=120)
+    relation: Literal["self", "partner", "child", "parent", "other"] = "other"
+    external: bool = False
+
+
+class TelegramLinkRequest(BaseModel):
+    chat_id: int
+    person_id: int

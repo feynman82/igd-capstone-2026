@@ -18,6 +18,7 @@ behalf, which is what `core/adapters/README.md` promises.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -55,13 +56,29 @@ class TelegramAdapter:
 
     channel = CHANNEL
 
-    def __init__(self, registrar: Registrar, settings: TelegramSettings) -> None:
+    def __init__(
+        self,
+        registrar: Registrar,
+        settings: TelegramSettings,
+        attribute: Callable[[Any, int], None] | None = None,
+    ) -> None:
         if not settings.configured:
             raise TelegramUnavailable(
                 "No Telegram bot token is configured. Set TELEGRAM_BOT_TOKEN in .env."
             )
         self._register = registrar
         self._settings = settings
+        # Whose chat this was, recorded against the document. Injected rather than imported
+        # because attribution needs a connection and this class holds none -- the same reason
+        # `registrar` is injected. `None` means nobody has linked any chats to any people,
+        # which is every install until somebody does.
+        #
+        # This is the only ownership signal that arrives BEFORE the document is parsed: a
+        # payslip photographed on Rachel's phone is Rachel's payslip, whatever the OCR makes
+        # of the name at the top. Extraction may still read a different name off the page, and
+        # when it does the disagreement becomes a question on Today rather than a silent
+        # overwrite of either. See ADR 0011.
+        self._attribute = attribute
         self._offset: int | None = None
 
     # ------------------------------------------------------------------ the interface
@@ -161,6 +178,12 @@ class TelegramAdapter:
             stamp,
             original_name=name,
         )
+
+        if self._attribute is not None and not job.already_registered:
+            try:
+                self._attribute(job.document_id, chat_id)
+            except Exception as error:  # attribution is a nicety; capture is not
+                log.info("could not attribute %s to chat %s: %s", name, chat_id, error)
 
         if inbox is not None:
             _write_local_copy(inbox, name, payload)
