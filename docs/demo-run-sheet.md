@@ -18,7 +18,7 @@ is done and **checked on the presenting machine**, not on the machine it was bui
 - [ ] `docker compose -f infra/docker-compose.yml up -d` — database up
 - [ ] Ollama running, all three models pulled (`ollama list` shows generator, embedder, reranker)
 - [ ] Window one: `make dev`, and `http://127.0.0.1:8000` reports every component found
-- [ ] Window two: `cd web && npm run dev`, `http://localhost:3000` loads
+- [ ] `http://localhost:3000` loads — `START.cmd` opens it; give the first compile a moment
 - [ ] Passphrase already entered. **Do not demonstrate the lock screen.** It is thirty seconds
       of typing that shows nothing, and a forgotten passphrase in front of an audience costs
       the whole slot

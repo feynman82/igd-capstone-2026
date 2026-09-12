@@ -1,20 +1,29 @@
-"""Run the local diagnostic server, the folder watcher and the ingestion worker together.
+"""Run the engine, the folder watcher, the ingestion worker and the screens together.
 
-Three things start here and they fail independently on purpose. The server is the one a person
-is looking at, so it comes up even when the other two cannot. The watcher registers whatever is
+Four things start here and they fail independently on purpose. The engine is the API and the
+setup-check page, so it comes up even when nothing else can. The watcher registers whatever is
 dropped into the inbox. The worker reads those documents off the queue, and when it cannot start
 — no broker, no Celery — the reason is printed in one line and capture falls back to reading
-documents on the watcher thread, which is slower and says so.
+documents on the watcher thread, which is slower and says so. The screens are the Next.js app in
+`web/`, and they are the thing a person actually opens.
+
+The screens used to be a second window somebody had to know to open. They are not any more:
+`START.cmd` is the one button, and a button that starts three of the four things a product needs
+is a button that does not work. Everything except Docker and Ollama starts from here, and when
+those two move into the container set they will start from here too.
 """
 
 from __future__ import annotations
 
 import argparse
 import logging
+import os
+import shutil
 import socket
 import subprocess
 import sys
 import threading
+import time
 import webbrowser
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -23,6 +32,12 @@ if TYPE_CHECKING:
     from core.runtime.settings import Settings
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# How long the screens get to answer before the browser is opened at the engine instead. A cold
+# `next dev` compiles the first route on the first request, which on a laptop is twenty seconds
+# and on a cold npm cache is more, so this is generous on purpose: opening the browser early
+# shows a person a connection error for something that was about to work.
+WEB_READY_TIMEOUT = 90.0
 
 
 def start_worker(settings: Settings) -> subprocess.Popen[bytes] | None:
@@ -69,19 +84,119 @@ def stop_worker(worker: subprocess.Popen[bytes] | None) -> None:
         worker.kill()
 
 
+def port_answers(port: int, timeout: float = 0.4) -> bool:
+    """Whether something is listening on loopback. Not whether it is ours."""
+    try:
+        with socket.create_connection(("127.0.0.1", port), timeout=timeout):
+            return True
+    except OSError:
+        return False
+
+
+def start_web(api_port: int, web_port: int) -> subprocess.Popen[bytes] | None:
+    """Start `npm run dev` in `web/`, or say plainly why it could not.
+
+    Three reasons it does not start, and each one is a sentence rather than a stack trace:
+    npm is not on PATH, `web/node_modules` has never been installed, or something is already
+    listening on the port — which on a developer's machine almost always means their own
+    `npm run dev`, so we use theirs rather than fighting it for the port.
+
+    The child is told `PARROT_API_URL` through its environment rather than through
+    `web/.env.local`. Next.js does not override a variable that is already set, so this wins,
+    and it means the screens follow the engine to whatever port it actually got instead of
+    depending on two files being edited together.
+    """
+    if port_answers(web_port):
+        print(
+            f"Screens: already running on http://localhost:{web_port} — using that one. "
+            "Nothing new was started.",
+            flush=True,
+        )
+        return None
+    npm = shutil.which("npm")
+    if npm is None:
+        print(
+            "Screens: not started. npm is not on PATH. Install Node.js 20 or newer; "
+            "until then the engine below still answers and the worker still files documents.",
+            flush=True,
+        )
+        return None
+    if not (ROOT / "web/node_modules").is_dir():
+        print(
+            "Screens: not started. Dependencies are not installed. Run `npm ci` in web/ once; "
+            "it takes a couple of minutes and is not repeated.",
+            flush=True,
+        )
+        return None
+    environment = dict(os.environ)
+    environment["PARROT_API_URL"] = f"http://127.0.0.1:{api_port}"
+    environment["PORT"] = str(web_port)
+    # A new process group, so the whole tree can be signalled at once. npm is a shell wrapper
+    # around node: terminating the wrapper leaves node holding the port, and the next
+    # double-click then fails with "address already in use" on a port with no visible owner.
+    # See `stop_web`.
+    group = (
+        {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
+        if sys.platform == "win32"
+        else {"start_new_session": True}
+    )
+    try:
+        web = subprocess.Popen([npm, "run", "dev"], cwd=ROOT / "web", env=environment, **group)  # type: ignore[call-overload]
+    except OSError as error:
+        print(f"Screens: not started ({error}).", flush=True)
+        return None
+    print(f"Screens: starting on http://localhost:{web_port} — first load compiles.", flush=True)
+    return web
+
+
+def stop_web(web: subprocess.Popen[bytes] | None) -> None:
+    """Stop the whole npm tree, not just the wrapper that was launched.
+
+    This is the difference between a second double-click that works and one that reports a busy
+    port. `Popen.terminate()` reaches `npm.cmd` on Windows and the `node` process it spawned
+    outlives it, still bound to 3000.
+    """
+    if web is None or web.poll() is not None:
+        return
+    if sys.platform == "win32":
+        taskkill = shutil.which("taskkill")
+        if taskkill is not None:
+            subprocess.run(
+                [taskkill, "/PID", str(web.pid), "/T", "/F"],
+                capture_output=True,
+                check=False,
+                timeout=15,
+            )
+    else:
+        import contextlib
+        import signal
+
+        with contextlib.suppress(OSError, ProcessLookupError):
+            os.killpg(os.getpgid(web.pid), signal.SIGTERM)
+    try:
+        web.wait(timeout=10)
+    except subprocess.TimeoutExpired:
+        web.kill()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bind-address", choices=["127.0.0.1"], default="127.0.0.1")
     # No default here: an unset port means "whatever PARROT_PORT says", which is read from
     # .env below once Settings has loaded. An explicit --port still wins over it.
     parser.add_argument("--port", type=int, default=None)
+    # Same reasoning as --port: unset means "whatever PARROT_WEB_PORT says".
+    parser.add_argument("--web-port", type=int, default=None)
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument(
         "--no-worker", action="store_true", help="do not start the ingestion worker"
     )
+    parser.add_argument("--no-web", action="store_true", help="do not start the screens in web/")
     args = parser.parse_args(argv)
     if args.port is not None and not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
+    if args.web_port is not None and not 1 <= args.web_port <= 65535:
+        parser.error("web port must be between 1 and 65535")
     sys.path.insert(0, str(ROOT))
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     try:
@@ -103,6 +218,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Cannot read local configuration. Check .env access and UTF-8 encoding.")
         return 2
     port = args.port if args.port is not None else settings.api_port
+    web_port = args.web_port if args.web_port is not None else settings.web_port
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         try:
             listener.bind((args.bind_address, port))
@@ -122,27 +238,57 @@ def main(argv: list[str] | None = None) -> int:
             )
         )
         finished = threading.Event()
+        # Set by the supervisor below once it knows whether there are screens to wait for.
+        screens = threading.Event()
 
         def open_browser() -> None:
+            """Announce the engine, then open whichever front door actually exists.
+
+            The browser goes to the screens when there are screens, because that is the
+            product; the engine's page is a setup check and is what a person needs precisely
+            when the screens did not come up. Opening both would be two tabs, one of which is
+            always the wrong one.
+            """
             while not finished.wait(0.1):
-                if server.started:
-                    url = f"http://127.0.0.1:{port}/"
-                    print(
-                        f"Parrot engine: {url} — setup checks and the local API.\n"
-                        "The screens are a second process: cd web && npm run dev, "
-                        "then open http://localhost:3000",
-                        flush=True,
-                    )
-                    if not args.no_browser:
-                        try:
-                            webbrowser.open(url)
-                        except webbrowser.Error:
-                            print("Open the setup URL above in your browser.")
+                if not server.started:
+                    continue
+                engine = f"http://127.0.0.1:{port}/"
+                print(f"Parrot engine: {engine} — setup checks and the local API.", flush=True)
+                url = engine
+                if screens.is_set():
+                    answered = False
+                    deadline = time.monotonic() + WEB_READY_TIMEOUT
+                    while not finished.is_set() and time.monotonic() < deadline:
+                        answered = port_answers(web_port)
+                        if answered:
+                            break
+                        finished.wait(0.5)
+                    if answered:
+                        url = f"http://localhost:{web_port}/"
+                        print(f"Parrot: {url} — this is the one to use.", flush=True)
+                    elif not finished.is_set():
+                        print(
+                            "The screens did not answer in time. Opening the engine's setup "
+                            "page instead; they may still come up on "
+                            f"http://localhost:{web_port}.",
+                            flush=True,
+                        )
+                if finished.is_set() or args.no_browser:
                     return
+                try:
+                    webbrowser.open(url)
+                except webbrowser.Error:
+                    print("Open the URL above in your browser.")
+                return
 
         watcher = threading.Thread(target=open_browser, daemon=True)
         watcher.start()
         worker = None if args.no_worker else start_worker(settings)
+        web = None if args.no_web else start_web(port, web_port)
+        # The browser waits for the screens whenever they are expected to appear — whether we
+        # started them or somebody else already had them running.
+        if not args.no_web and (web is not None or port_answers(web_port)):
+            screens.set()
         # --no-worker means "I am running the worker myself", so let capture look for the
         # broker rather than assuming there is nothing listening.
         capture = FolderCapture(settings, use_queue=None if args.no_worker else worker is not None)
@@ -154,6 +300,7 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             capture.stop()
             stop_worker(worker)
+            stop_web(web)
             finished.set()
             watcher.join(timeout=1)
         return 0 if server.started else 1

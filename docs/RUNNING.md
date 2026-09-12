@@ -63,17 +63,27 @@ Installed tools are reported separately from runtime readiness.
 
 ## The screens
 
-Two processes, deliberately: the engine and the interface are separate, and neither can guess
-the other's port. Start the engine first, then, in a second terminal:
+`START.cmd` starts them. They are still a separate process — a Next.js server, which fails
+and restarts on its own schedule and must not be able to take the engine down with it — but
+it is a child of the one you double-clicked, it is stopped with it, and the browser opens on
+it rather than on the engine's setup page.
+
+The one thing to do once, before the first start:
 
 ```powershell
 cd web
-npm ci          # first time only
-npm run dev
+npm ci          # first time only, a couple of minutes
 ```
 
-Then open <http://localhost:3000>. If the engine is not on port 8000, set `PARROT_PORT` in
-`.env` **and** `PARROT_API_URL` in `web/.env.local` — both, for the reason above.
+Without it the Parrot window says so and starts everything else. The screens are on
+<http://localhost:3000>; change it with `PARROT_WEB_PORT` in `.env`. You no longer have to
+keep `PARROT_API_URL` in `web/.env.local` in step with `PARROT_PORT`: the engine passes its
+real port to the screens when it starts them, and Next.js does not override a variable that
+is already set. Set `PARROT_API_URL` yourself only when you are running `npm run dev` by hand.
+
+To run them yourself — a second window, a different port, or a production build — start the
+engine with `--no-web`. If something is already listening on the port, `START.cmd` leaves it
+alone and uses it rather than fighting for the port.
 
 The screens call the same code as `scripts/today.py`, `scripts/ask.py` and
 `scripts/quarantine.py`, so they cannot disagree with the terminal about what is due today.

@@ -109,36 +109,39 @@ repository. Everything else:
 make dev
 ```
 
-A browser tab opens at <http://127.0.0.1:8000>. That is not the product — it is the setup
-page, and it tells you whether the database, Ollama and the three models are all found.
-**If something is missing, this page names it.** Check it is happy before going on.
+That one window starts four things: the engine, the folder watcher, the ingestion worker, and
+the screens. It prints a line for each. Then a browser tab opens at
+**<http://localhost:3000>**. That is PARROT.
 
-Leave this window open. It is watching the `inbox` folder: anything you drop in there is read
+The first load takes twenty seconds or so — the interface compiles itself the first time it
+is asked for a page, once per start. After that it is immediate.
+
+The engine also has a page of its own, at <http://127.0.0.1:8000>. It is not the product: it
+is the setup page, and it tells you whether the database, Ollama, the three models and the
+screens are all found. **If something is missing, this page names it.** If the screens did not
+open, this is the page the browser lands on instead, and the row to read is *Household
+interface*.
+
+Leave the window open. It is watching the `inbox` folder: anything you drop in there is read
 within a few seconds. A document takes roughly five to fifteen seconds depending on your
 graphics card.
 
-**Window two — the screens.**
-
-```bash
-cd web
-npm run dev
-```
-
-Then open **<http://localhost:3000>**. That is PARROT.
-
-> **If port 8000 is already taken.** It often is — Docker Desktop binds `127.0.0.1:8000` on
-> some machines, and so do other projects. `START.cmd` will say `Cannot use local port 8000`.
+> **If a port is already taken.** 8000 often is — Docker Desktop binds `127.0.0.1:8000` on
+> some machines — and 3000 is the most contested port on a developer's laptop. `START.cmd`
+> says `Cannot use local port 8000` for the first, and for the second it quietly uses whatever
+> is already on 3000 rather than fighting it.
 >
-> Move PARROT, in **two** files, because the engine and the screens are separate processes and
-> neither can guess the other's port:
+> Move PARROT in `.env` at the repository root, and only there:
 >
-> 1. in `.env` (repository root): `PARROT_PORT=8010`
-> 2. in `web/.env.local`: `PARROT_API_URL=http://127.0.0.1:8010`
+> ```
+> PARROT_PORT=8010
+> PARROT_WEB_PORT=3100
+> ```
 >
-> Then `START.cmd` works with no arguments, every time. Both files are per-machine and neither
-> is committed, so your port is yours.
+> The engine tells the screens which port it got, so there is no second file to keep in step.
+> `.env` is per-machine and is not committed, so your ports are yours.
 
-To stop PARROT, press **Ctrl+C** in each window.
+To stop PARROT, press **Ctrl+C** in that window. The screens and the worker stop with it.
 
 ---
 
@@ -239,12 +242,12 @@ is due today. The raw JSON is on the engine's port as well — `/api/today`, `/a
 | What you see | What it means |
 |---|---|
 | The setup page lists a component as missing | Start Docker Desktop, or start Ollama, or run the `ollama pull` commands from step 2 |
-| `Cannot use local port 8000` | Something else is on it, often Docker Desktop. Set `PARROT_PORT` in `.env` and `PARROT_API_URL` in `web/.env.local` — see the note in step 5 |
+| `Cannot use local port 8000` | Something else is on it, often Docker Desktop. Set `PARROT_PORT` in `.env` — see the note in step 5 |
 | `Cannot reach the local database` | Docker Desktop is not running, or `docker compose ... up -d` was not run |
 | `Python is missing` | Install Python 3.12 and tick "Add python.exe to PATH", then reopen the terminal |
-| **"Parrot is not running on this computer"** on every screen | Window one is not running, or it is on a different port than the screens expect. See the port note in step 5 |
-| **The screens will not start**, or `next: not found` | You skipped `npm ci` in `web/`, or Node is older than 20 |
-| **Port 3000 is already in use** | Another Next app is running. `cd web && npx next dev -p 3001` |
+| **"Parrot is not running on this computer"** on every screen | The engine stopped. Close the PARROT window and double-click `START.cmd` again |
+| `Screens: not started. Dependencies are not installed` | You skipped `npm ci` in `web/`. Run it once; everything else started without it |
+| `Screens: already running on http://localhost:3000` | Another Next app has the port. PARROT used it rather than starting a second one — if it is not PARROT, stop it, or set `PARROT_WEB_PORT` in `.env` |
 | **You forgot the passphrase** | Delete `web/.parrot/lock.json` and choose a new one. Nothing is lost |
 | **Today is empty** | Either nothing is due — which is the normal state — or no documents have been read yet. Check Vault |
 | Answers are very slow | Expected on a laptop without a discrete GPU. It is a 4B model running on your own machine |

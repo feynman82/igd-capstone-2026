@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import socket
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal
@@ -97,6 +98,36 @@ def redis_check(settings: Settings) -> Check:
         return Check("Queue broker", "blocked", "Cannot reach Redis. Start the local queue broker.")
 
 
+def interface_check(settings: Settings) -> Check:
+    """Whether the screens are answering on their port.
+
+    This used to be a sentence asserting that the interface existed, which is not a check —
+    it was true whether or not anything was running, and the one time a person reads this page
+    is the time something is not running. `scripts/run_parrot.py` starts the screens beside
+    this server now, so "did that work" is a real question with a real answer.
+
+    It asks for a connection and nothing more. Fetching a page would make the setup screen wait
+    on a Next.js cold compile, and a check that takes twenty seconds is a check people stop
+    waiting for.
+    """
+    try:
+        with socket.create_connection(("127.0.0.1", settings.web_port), timeout=2):
+            pass
+    except OSError:
+        return Check(
+            "Household interface",
+            "blocked",
+            f"Nothing is answering on port {settings.web_port}. Today, Ask, Vault and Packs are "
+            "built; they are served by a Next.js process, which START.cmd starts beside this "
+            "one. If it did not start, this window says why.",
+        )
+    return Check(
+        "Household interface",
+        "available",
+        f"Today, Ask, Vault and Packs are answering on http://localhost:{settings.web_port}.",
+    )
+
+
 def worker_check(settings: Settings) -> Check:
     """Whether a worker is listening — which is a different question from whether Redis is up.
 
@@ -176,6 +207,7 @@ async def collect_checks(settings: Settings) -> list[Check]:
             asyncio.to_thread(redis_check, settings),
             asyncio.to_thread(worker_check, settings),
             asyncio.to_thread(capture_check, settings),
+            asyncio.to_thread(interface_check, settings),
             model_check(
                 client,
                 "Generator and vision",
@@ -199,12 +231,5 @@ async def collect_checks(settings: Settings) -> list[Check]:
             "unverified",
             "Parse, classify, extract and quarantine run. Retrieval is the dense-only stopgap "
             "in core/graph/baseline.py, so answer quality is not yet measured.",
-        ),
-        Check(
-            "Household interface",
-            "available",
-            "Today, Ask, Vault and Packs are built, and are served by a Next.js process this "
-            "server neither starts nor supervises — so this row says the screens exist, not "
-            "that they are running. In web/: `npm run dev`, then http://localhost:3000.",
         ),
     ]

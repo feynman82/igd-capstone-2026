@@ -67,21 +67,25 @@ def _positive(value: str) -> int:
     return tokens
 
 
-def _port(value: str) -> int:
-    """The port the local server listens on.
+def _port(value: str, name: str, fallback: str) -> int:
+    """A port a local process listens on.
 
-    It is configuration rather than an argument because two processes have to agree on it:
-    this server, and the Next.js interface in `web/`, which is told the same number through
-    `PARROT_API_URL`. A port that lives only in a command line is a port one of them gets
-    wrong. 8000 is the default and is not always free — Docker Desktop binds it on some
-    machines — so this exists to be changed.
+    These are configuration rather than arguments because more than one process has to agree
+    on each of them. `PARROT_PORT` is the engine's, and the Next.js interface in `web/` is
+    told the same number through `PARROT_API_URL`. `PARROT_WEB_PORT` is the interface's, and
+    the supervisor in `scripts/run_parrot.py` needs it to know whether the screens are already
+    up and where to point the browser. A port that lives only in a command line is a port one
+    of them gets wrong.
+
+    Neither default is always free — Docker Desktop binds 8000 on some machines, and 3000 is
+    the most contested port on a developer's laptop — so both exist to be changed.
     """
     try:
-        port = int(value.strip() or "8000")
+        port = int(value.strip() or fallback)
     except ValueError as error:
-        raise ConfigurationError("PARROT_PORT must be a whole number.") from error
+        raise ConfigurationError(f"{name} must be a whole number.") from error
     if not 1 <= port <= 65535:
-        raise ConfigurationError("PARROT_PORT must be between 1 and 65535.")
+        raise ConfigurationError(f"{name} must be between 1 and 65535.")
     return port
 
 
@@ -103,6 +107,7 @@ class Settings:
     context_tokens: int
     watch_folder: str
     api_port: int
+    web_port: int
 
     @classmethod
     def load(cls, root: Path, environment: Mapping[str, str] | None = None) -> Settings:
@@ -137,5 +142,6 @@ class Settings:
             rerank_model=rerank_model,
             context_tokens=_positive(values.get("PARROT_CONTEXT_TOKENS", "16384")),
             watch_folder=_folder(values.get("WATCH_FOLDER", ""), root),
-            api_port=_port(values.get("PARROT_PORT", "8000")),
+            api_port=_port(values.get("PARROT_PORT", "8000"), "PARROT_PORT", "8000"),
+            web_port=_port(values.get("PARROT_WEB_PORT", "3000"), "PARROT_WEB_PORT", "3000"),
         )

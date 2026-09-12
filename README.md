@@ -60,22 +60,19 @@ ollama pull hf.co/gpustack/bge-reranker-v2-m3-GGUF:latest           # reranker
 
 uv run python -m corpus.validate corpus/register/batch1.csv   # check a handed-over batch
 make corpus-load BATCH=batch1                         # load it into this machine's database
-make dev                                              # engine on :8000, watcher and worker
-```
-
-Then the screens, in a second window:
-
-```bash
-cd web && npm ci && npm run dev                       # http://localhost:3000
+(cd web && npm ci)                                    # first time only
+make dev                                              # everything: engine, watcher, worker, screens
 ```
 
 No `.env` is needed: every default already matches `infra/docker-compose.yml`. Copy
-`infra/.env.example` to `.env` only to change a port, a model or the watched folder. If the
-engine is not on `:8000`, put `PARROT_API_URL=http://127.0.0.1:<port>` in `web/.env.local`.
+`infra/.env.example` to `.env` only to change a port, a model or the watched folder. The
+engine tells the screens which port it got, so those two cannot drift apart.
 
-`make dev` starts three things: the setup page, the folder watcher and the ingestion worker
-with its nightly sweeps. To run the worker on its own — a second window, or a machine where
-the server is already up:
+`make dev` — and `START.cmd`, which is the same thing with a preflight in front of it —
+starts four things: the engine on `:8000`, the folder watcher, the ingestion worker with its
+nightly sweeps, and the screens on `:3000`. Add `--no-web` to leave the screens to you.
+
+To run the worker on its own — a second window, or a machine where the server is already up:
 
 ```bash
 uv run python scripts/worker.py --beat

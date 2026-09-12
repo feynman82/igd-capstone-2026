@@ -1,9 +1,9 @@
 """Startup tests do not ingest documents or need the corpus: they check process boundaries."""
 
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
-from scripts import start_parrot
+from scripts import run_parrot, start_parrot
 
 
 def test_incomplete_checkout_never_launches_a_process(tmp_path: Path) -> None:
@@ -50,3 +50,84 @@ def test_launch_preserves_paths_and_loopback_and_exit_code(tmp_path: Path) -> No
         command = launch.call_args.args[0]
         assert command[1:] == [str(root / "scripts/run_parrot.py"), "--bind-address", "127.0.0.1"]
         assert launch.call_args.kwargs == {"cwd": root}
+
+
+# The screens are a fourth process. These check that the supervisor starts and stops one
+# without ever launching npm, so the boundary is testable on a machine with no Node at all.
+
+
+def test_screens_are_not_started_twice_when_something_already_holds_the_port() -> None:
+    """A developer's own `npm run dev` is used rather than fought for the port."""
+    with (
+        patch.object(run_parrot, "port_answers", return_value=True),
+        patch.object(run_parrot.subprocess, "Popen") as launch,
+    ):
+        assert run_parrot.start_web(8000, 3000) is None
+        launch.assert_not_called()
+
+
+def test_screens_are_not_started_without_dependencies(tmp_path: Path) -> None:
+    """`npm run dev` against an empty web/ fails slowly and cryptically. Say so instead."""
+    (tmp_path / "web").mkdir()
+    with (
+        patch.object(run_parrot, "ROOT", tmp_path),
+        patch.object(run_parrot, "port_answers", return_value=False),
+        patch.object(run_parrot.shutil, "which", return_value="npm"),
+        patch.object(run_parrot.subprocess, "Popen") as launch,
+    ):
+        assert run_parrot.start_web(8000, 3000) is None
+        launch.assert_not_called()
+
+
+def test_screens_are_not_started_without_npm(tmp_path: Path) -> None:
+    (tmp_path / "web/node_modules").mkdir(parents=True)
+    with (
+        patch.object(run_parrot, "ROOT", tmp_path),
+        patch.object(run_parrot, "port_answers", return_value=False),
+        patch.object(run_parrot.shutil, "which", return_value=None),
+        patch.object(run_parrot.subprocess, "Popen") as launch,
+    ):
+        assert run_parrot.start_web(8000, 3000) is None
+        launch.assert_not_called()
+
+
+def test_screens_are_told_the_engine_port_they_must_actually_reach(tmp_path: Path) -> None:
+    """The screens follow the engine to whatever port it got, rather than to web/.env.local.
+
+    This is the whole reason the variable is passed through the environment: a person who set
+    PARROT_PORT in one file and not the other used to get screens that could not reach the
+    engine, with nothing on either screen saying why.
+    """
+    (tmp_path / "web/node_modules").mkdir(parents=True)
+    with (
+        patch.object(run_parrot, "ROOT", tmp_path),
+        patch.object(run_parrot, "port_answers", return_value=False),
+        patch.object(run_parrot.shutil, "which", return_value="/usr/bin/npm"),
+        patch.object(run_parrot.subprocess, "Popen") as launch,
+    ):
+        run_parrot.start_web(8010, 3100)
+        assert launch.call_args.args[0] == ["/usr/bin/npm", "run", "dev"]
+        environment = launch.call_args.kwargs["env"]
+        assert environment["PARROT_API_URL"] == "http://127.0.0.1:8010"
+        assert environment["PORT"] == "3100"
+        assert launch.call_args.kwargs["cwd"] == tmp_path / "web"
+
+
+def test_stopping_the_screens_kills_the_tree_not_the_wrapper() -> None:
+    """npm is a wrapper around node. Killing only the wrapper orphans the port."""
+    web = MagicMock()
+    web.poll.return_value = None
+    web.pid = 4242
+    with (
+        patch.object(run_parrot.sys, "platform", "win32"),
+        patch.object(run_parrot.shutil, "which", return_value="taskkill"),
+        patch.object(run_parrot.subprocess, "run") as kill,
+    ):
+        run_parrot.stop_web(web)
+        assert kill.call_args.args[0] == ["taskkill", "/PID", "4242", "/T", "/F"]
+
+
+def test_stopping_screens_that_were_never_started_does_nothing() -> None:
+    with patch.object(run_parrot.subprocess, "run") as kill:
+        run_parrot.stop_web(None)
+        kill.assert_not_called()
