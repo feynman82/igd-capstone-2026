@@ -33,6 +33,13 @@ Every artefact here reflects the current generation model, **`Qwen-SEA-LION-v4-4
 seven Southeast Asian languages, vision-language). Earlier drafts named a 12B model on
 the demo path with a 27B comparison; those are superseded.
 
+**The 27B is out of scope entirely, not merely off the demo path.** The architecture review
+in this folder still asks for it to be benchmarked "for the comparison table", and
+`docs/team-tasks.csv` used to say the same. It no longer does. The review is kept as it was
+written, because it is a dated record of what was reviewed and rewriting it would falsify
+that — but it is not a current instruction, and the 27B line in it is the one thing in this
+folder that is known to be wrong. Nothing should benchmark a 27B on the strength of it.
+
 Two consequences carried through every artefact:
 
 - The whole stack — generator, embedder, reranker, parser — fits inside **8 GB**, so the

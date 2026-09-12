@@ -197,12 +197,14 @@ async def collect_checks(settings: Settings) -> list[Check]:
         Check(
             "Document processing",
             "unverified",
-            "Parse, classify, extract and quarantine run. Hybrid retrieval is not built yet, "
-            "so answer quality is not yet measured.",
+            "Parse, classify, extract and quarantine run. Retrieval is the dense-only stopgap "
+            "in core/graph/baseline.py, so answer quality is not yet measured.",
         ),
         Check(
             "Household interface",
-            "blocked",
-            "The Today, Ask, Vault and Packs interface is not built yet.",
+            "available",
+            "Today, Ask, Vault and Packs are built, and are served by a Next.js process this "
+            "server neither starts nor supervises — so this row says the screens exist, not "
+            "that they are running. In web/: `npm run dev`, then http://localhost:3000.",
         ),
     ]

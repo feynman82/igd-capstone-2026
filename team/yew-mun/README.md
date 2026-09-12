@@ -29,10 +29,16 @@ not be the only person scoring it.
 
 **Week 1 — the benchmark nobody else can do.**
 Run the machine, not the model. Produce a table: model, quantisation, context length,
-decode tokens per second, peak VRAM, for `Qwen-SEA-LION-v4-4B-VL` on one card and for
-the 27B variants as the quality comparison. Every VRAM number currently in the proposal
-is a planning estimate; your table replaces all of them. Commit it as
+decode tokens per second, peak VRAM, for `Qwen-SEA-LION-v4-4B-VL` — the generator named in
+`core/runtime/settings.py`, and the only model in scope. Every VRAM number currently in the
+proposal is a planning estimate; your table replaces all of them. Commit it as
 `eval/results/w1-hardware.md`.
+
+Report the **run-to-run spread**, not a bare median: on a machine in normal desktop use the
+spread between invocations is wider than the spread inside one, so a single number is not
+comparable across the five of us. `scripts/bench_runtime.py` measures it the same way on
+every machine — decode rate from Ollama's own `eval_count / eval_duration`, peak VRAM sampled
+against a measured idle baseline — and writes the file. Run it; do not hand-assemble a table.
 
 **Week 2 — retrieval baseline, deliberately naive.**
 Dense-only pgvector search, no reranking, no fusion, no contextualisation. Measure it.

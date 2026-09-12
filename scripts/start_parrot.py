@@ -20,7 +20,8 @@ def startup_gaps(root: Path) -> list[str]:
         gaps.append("Python environment: install Python 3.12 and uv; run uv sync --extra dev.")
     if not (root / "scripts/run_parrot.py").is_file():
         gaps.append(
-            "Application runtime is not built yet. This checkout contains startup diagnostics only."
+            "scripts/run_parrot.py is missing from this checkout, so only the startup "
+            "diagnostics can run. Re-clone or restore the file."
         )
     return gaps
 

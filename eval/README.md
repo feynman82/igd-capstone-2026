@@ -21,11 +21,17 @@ A question file is JSONL:
 ```json
 {"id": "a-042", "set": "A", "lane": "packs", "question": "When does the motor policy on SJ4821B expire?",
  "expected": {"kind": "fact", "pack": "insurance_agent", "key": "expiry_date", "value": "2027-03-31"},
- "must_cite_doc": "0001-motor-0007", "notes": "expiry is on page 1 of the schedule"}
+ "must_cite_doc": "0001-motor-0007", "must_cite_page": 1, "notes": "on the schedule"}
 ```
 
 `expected.kind` is `fact` (exact match against a typed column), `passage` (must cite a
 specific document), or `abstain` (the system must decline).
+
+`must_cite_page` is the page the value is **printed** on, read from the register's
+`field_pages` column — `expiry_date=2` there means `must_cite_page: 2` here, and a field
+absent from `field_pages` is on page 1. It is not free text and it is not a guess: it is why
+a citation can be graded without a person opening the document. An `abstain` question has
+neither `must_cite_doc` nor `must_cite_page`, because there is nothing correct to cite.
 
 ## Ground truth comes free
 

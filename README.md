@@ -58,7 +58,7 @@ ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M   # generation
 ollama pull embeddinggemma:300m                                     # embedding
 ollama pull hf.co/gpustack/bge-reranker-v2-m3-GGUF:latest           # reranker
 
-python -m corpus.validate corpus/register/batch1.csv  # check a handed-over batch
+uv run python -m corpus.validate corpus/register/batch1.csv   # check a handed-over batch
 make corpus-load BATCH=batch1                         # load it into this machine's database
 make dev                                              # engine on :8000, watcher and worker
 ```
@@ -101,7 +101,7 @@ uv run python scripts/worker.py --beat
 | `docs/governance/` | PDPA, ISO, IMDA artefacts | Siew |
 | `team/<name>/` | Each person's brief and their generated task list | — |
 | `.claude/` | Project skills and slash commands every session loads | Christian |
-| `scripts/` | Repository generators — currently the task-list builder | Christian |
+| `scripts/` | The command line: `ask`, `today`, `quarantine`, the watcher, the worker, the Telegram bot, the corpus loader, the benchmark, and the repository generators | Christian |
 | `docs/artefacts/` | Proposal, deck, diagrams, review, source material | Christian |
 | `docs/adr/` | Architecture decision records — one per non-obvious choice | anyone |
 
@@ -116,15 +116,25 @@ uv run python scripts/worker.py --beat
 | Reranking | `bge-reranker-v2-m3` |
 | Embeddings | EmbeddingGemma-300M, 768 dimensions |
 | Generation | `Qwen-SEA-LION-v4-4B-VL` — AI Singapore, MIT, vision-language, English plus seven SEA languages |
-| Orchestration | LangGraph with a Postgres checkpointer |
+| Orchestration | LangGraph. The checkpointer is `MemorySaver` — see the note below |
 | Parsing | Docling (MIT, CPU-capable), with a vision second pass on quarantine |
 | Interface | Next.js 15, Tailwind, shadcn/ui |
 | Evaluation | Ragas with a locally served judge |
 
+**Two rows in that table are the choice, not yet the code.** Retrieval is dense-only
+pgvector today — the RRF fusion and the reranker are Lane B's and are not built, so
+`core/graph/baseline.py` stands in behind a port and answer *quality* is not a number
+anybody should quote. And the checkpointer is `MemorySaver`, not `PostgresSaver`: the
+Postgres one creates its own tables at runtime, which rule 4 forbids in a feature PR, so the
+swap is owed to a separate reviewed migration. Both are recorded in
+[ADR 0007](docs/adr/0007-the-graph-ships-before-retrieval-and-before-a-checkpoint-table.md).
+
 The target is consumer hardware; fitting the full workflow on an 8 GB GPU remains a
 planning estimate. The first demo target is Christian's onboard RTX 4060, without the
 external development GPU. Minimum specifications will follow measured quality, latency
-and memory use. See [`docs/RUNNING.md`](docs/RUNNING.md) for startup and qualification.
+and memory use. Measured numbers, and the method, are in
+[`eval/results/w1-hardware.md`](eval/results/w1-hardware.md); see
+[`docs/RUNNING.md`](docs/RUNNING.md) for startup and qualification.
 
 Two processes. On Windows, double-click [`START.cmd`](START.cmd) — or `make dev` — to start
 the engine: the local API, the folder watcher and the ingestion worker, plus a setup page on

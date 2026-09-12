@@ -5,6 +5,13 @@
 # Dates are YYYY-MM-DD. Money is a plain number, no currency symbol, two decimals.
 # Identifiers are copied exactly as printed: no spaces removed, no case changed.
 #
+# field_pages: which page each value is PRINTED on, for the fields not on page 1.
+#   Semicolon-separated name=page, 1-based: expiry_date=2;premium_payable=2
+#   Anything left out is page 1, so a single-page document leaves this empty.
+#   Filled AFTER the mail merge, when the page layout exists — it is the one column
+#   that cannot be known while the register is being written. It is what lets a
+#   golden-set question say which page the answer should be cited from.
+#
 # policy_schedule: required = insurer, policy_no, insured, product_name, cover_from, expiry_date, premium_payable
 #                  optional = sum_insured, excess
 # renewal_notice: required = insurer, policy_no, insured, expiry_date, renewal_premium, payment_due_date
@@ -15,4 +22,4 @@
 # policy_anniversary_statement: required = insurer, policy_no, life_assured, sum_assured, annual_premium
 #                               optional = surrender_value, premiums_paid_to_date
 #
-doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,sum_assured,annual_premium,surrender_value,premiums_paid_to_date,notes
+doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,sum_assured,annual_premium,surrender_value,premiums_paid_to_date,field_pages,notes

@@ -80,6 +80,47 @@ pastes its numbers into the pull request with one line on why they moved.
 
 ---
 
+## Starter prompt: what can I actually pick up?
+
+Use this at the start of a session when you do not yet know what to work on. It is a triage
+prompt, and it deliberately ends without writing code — the answer to "what next" is a
+decision, and it is yours rather than the agent's.
+
+> Read `AGENTS.md` and `team/christian/README.md`, then `team/christian/tasks.md`.
+>
+> Triage my open tasks. For each one that is not ticked, put it in exactly one bucket and
+> say which, in one line each:
+>
+> 1. **Doable now** — nothing outside this repository is missing.
+> 2. **Blocked on another lane** — name the lane, the person, and the artefact you are
+>    waiting for.
+> 3. **Blocked on the world** — a supervisor, a submission date, an external registration,
+>    a rehearsal that needs other people in a room.
+> 4. **Already done but not marked** — the Done when is true in the working tree. Say what
+>    evidence makes it true.
+>
+> Rules for the triage, because the obvious reading is wrong more often than it is right:
+>
+> - **Check the tree, not the checkbox.** `Status` in `docs/team-tasks.csv` is hand-
+>   maintained and lags. A task can be finished and still say Not started. Verify each one
+>   against the code, the committed artefacts and `git log`.
+> - **"Done when" is the test, not the title.** Read that column and say specifically which
+>   part is and is not true. "Mostly done" is not a bucket.
+> - **A dependency that has been designed around is not a blocker.** `Depends on` in the CSV
+>   predates the ADRs. Check `docs/adr/` before believing it — ADR 0007 discharged the graph's
+>   dependency on Lane B by making retrieval a port.
+> - **Name the cost of the blocked ones.** If something is blocked on a corpus batch, say
+>   what lands the moment it arrives, so the wait is visible rather than silent.
+>
+> Then recommend **one** task to start, and say why that one rather than the others — what
+> it unblocks for somebody else, or what risk it retires. If the honest answer is that
+> everything doable is low value and the real problem is a blocker on another lane, say
+> that instead of picking something to look busy.
+>
+> Do not start work. Do not edit anything. Wait for me to choose.
+
+---
+
 ## Also yours
 
 **Domain reviewer for the Insurance pack.** Nineteen years of wholesale banking is an
