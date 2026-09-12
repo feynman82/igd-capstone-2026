@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hospital Income Protection Plan - Policy Schedule</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: Georgia, "Times New Roman", Times, serif;
+    font-size: 10pt;
+    line-height: 1.45;
+    color: #2b1810;
+    margin: 0;
+    padding: 0;
+    background-color: #ffffff;
+  }
+
+  .wrapper {
+    width: 100%;
+    max-width: 100%;
+    position: relative;
+    padding-bottom: 40px;
+  }
+
+  .header-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-bottom: 3px double #6b1d2f;
+    padding-bottom: 10px;
+    margin-bottom: 22px;
+  }
+
+  .insurer-wordmark {
+    font-family: Georgia, serif;
+    font-size: 19pt;
+    font-weight: 700;
+    color: #6b1d2f;
+    letter-spacing: 0.8px;
+  }
+
+  .issuer-meta {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 8pt;
+    color: #665550;
+    margin-top: 5px;
+  }
+
+  .issue-date-cell {
+    text-align: right;
+    vertical-align: top;
+    font-size: 9pt;
+    color: #4a3832;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .doc-title-container {
+    text-align: left;
+    margin-bottom: 22px;
+    padding: 10px 14px;
+    background-color: #fcf8f9;
+    border-left: 4px solid #6b1d2f;
+    border-top: 1px solid #e8d5db;
+    border-right: 1px solid #e8d5db;
+    border-bottom: 1px solid #e8d5db;
+  }
+
+  .product-name {
+    font-family: Georgia, serif;
+    font-size: 15pt;
+    font-weight: 700;
+    color: #6b1d2f;
+    margin: 0 0 3px 0;
+  }
+
+  .schedule-subtitle {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #8c243b;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    margin: 0;
+  }
+
+  .section-heading {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 9.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b1d2f;
+    background-color: #f7ede8;
+    padding: 5px 10px;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    letter-spacing: 0.8px;
+    border-radius: 2px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+  }
+
+  .data-table td {
+    padding: 7px 10px;
+    vertical-align: top;
+    border-bottom: 1px solid #f0e6e8;
+  }
+
+  .label {
+    width: 34%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 9pt;
+    font-weight: 600;
+    color: #554038;
+  }
+
+  .value {
+    width: 66%;
+    font-size: 10pt;
+    color: #1a0f0a;
+  }
+
+  .policy-no-value {
+    font-family: "Courier New", Courier, monospace;
+    font-weight: 700;
+    color: #6b1d2f;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .period-value {
+    white-space: nowrap;
+    font-weight: 600;
+  }
+
+  .amount-value {
+    font-weight: 700;
+    color: #6b1d2f;
+  }
+
+  .signature-block {
+    margin-top: 36px;
+    page-break-inside: avoid;
+  }
+
+  .signature-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .signature-line {
+    border-bottom: 1px solid #8c243b;
+    width: 230px;
+    height: 42px;
+    margin-bottom: 5px;
+  }
+
+  .signature-label {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 8.5pt;
+    color: #665550;
+  }
+
+  .footer-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 8pt;
+    color: #665550;
+    background-color: #ffffff;
+    padding-top: 6px;
+    border-top: 1px solid #e8d5db;
+  }
+
+  .doc-id-ref {
+    float: left;
+    font-size: 7.5pt;
+    color: #998880;
+    font-family: monospace;
+  }
+
+  .synthetic-notice {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrapper">
+  <!-- Letterhead -->
+  <table class="header-table">
+    <tr>
+      <td>
+        <div class="insurer-wordmark">Lionhead Life Assurance</div>
+        <div class="issuer-meta">Servicing Center: Lionhead Life Plaza &bull; Customer Care Hotline: 1800-888-2233</div>
+      </td>
+      <td class="issue-date-cell">
+        <strong>Date of Issue:</strong> 20/12/2025
+      </td>
+    </tr>
+  </table>
+
+  <!-- Title at Head of Schedule -->
+  <div class="doc-title-container">
+    <h1 class="product-name">Hospital Income Protection Plan</h1>
+    <div class="schedule-subtitle">Policy Schedule</div>
+  </div>
+
+  <!-- Policy Details -->
+  <div class="section-heading">Policy Particulars</div>
+  <table class="data-table">
+    <tr>
+      <td class="label">Policy Number</td>
+      <td class="value policy-no-value">HS-2023-771904</td>
+    </tr>
+    <tr>
+      <td class="label">Name of Insured</td>
+      <td class="value">Lim Ah Kow</td>
+    </tr>
+    <tr>
+      <td class="label">Address of Insured</td>
+      <td class="value">Address held on file</td>
+    </tr>
+    <tr>
+      <td class="label">Period of Insurance</td>
+      <td class="value period-value">15 January 2026 to 14 January 2027</td>
+    </tr>
+  </table>
+
+  <!-- Coverage Details -->
+  <div class="section-heading">Coverage Schedule</div>
+  <table class="data-table">
+    <tr>
+      <td class="label">Sum Insured</td>
+      <td class="value amount-value">SGD 150,000.00</td>
+    </tr>
+    <tr>
+      <td class="label">Excess</td>
+      <td class="value">SGD 1,500.00</td>
+    </tr>
+  </table>
+
+  <!-- Premium Summary -->
+  <div class="section-heading">Premium Payable</div>
+  <table class="data-table">
+    <tr>
+      <td class="label">Total Premium Payable</td>
+      <td class="value amount-value">SGD 2,140.00</td>
+    </tr>
+  </table>
+
+  <!-- Authorised Signatory -->
+  <div class="signature-block">
+    <table class="signature-table">
+      <tr>
+        <td>
+          <div class="signature-line"></div>
+          <div class="signature-label">Authorised Signatory</div>
+          <div class="signature-label">For and on behalf of Lionhead Life Assurance</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer-container">
+    <span class="doc-id-ref">Ref: b1-0003</span>
+    <span class="synthetic-notice">SYNTHETIC DOCUMENT &mdash; NOT A REAL RECORD</span>
+  </div>
+</div>
+
+</body>
+</html>
