@@ -126,16 +126,17 @@ npm run dev
 
 Then open **<http://localhost:3000>**. That is PARROT.
 
-> **If the setup page is not on port 8000.** Some machines already have something there — a
-> reranker, another project. `START.cmd` will say `Cannot use local port 8000`. Start the
-> engine on another port and tell the screens where it went:
+> **If port 8000 is already taken.** It often is — Docker Desktop binds `127.0.0.1:8000` on
+> some machines, and so do other projects. `START.cmd` will say `Cannot use local port 8000`.
 >
-> ```bash
-> uv run python scripts/run_parrot.py --port 8010
-> ```
+> Move PARROT, in **two** files, because the engine and the screens are separate processes and
+> neither can guess the other's port:
 >
-> then create `web/.env.local` containing `PARROT_API_URL=http://127.0.0.1:8010` and restart
-> window two. That file is per-machine and is not committed.
+> 1. in `.env` (repository root): `PARROT_PORT=8010`
+> 2. in `web/.env.local`: `PARROT_API_URL=http://127.0.0.1:8010`
+>
+> Then `START.cmd` works with no arguments, every time. Both files are per-machine and neither
+> is committed, so your port is yours.
 
 To stop PARROT, press **Ctrl+C** in each window.
 
@@ -238,7 +239,7 @@ is due today. The raw JSON is on the engine's port as well — `/api/today`, `/a
 | What you see | What it means |
 |---|---|
 | The setup page lists a component as missing | Start Docker Desktop, or start Ollama, or run the `ollama pull` commands from step 2 |
-| `Cannot use local port 8000` | Something else is on that port. Use `--port 8010` and set `PARROT_API_URL` — see the note in step 5 |
+| `Cannot use local port 8000` | Something else is on it, often Docker Desktop. Set `PARROT_PORT` in `.env` and `PARROT_API_URL` in `web/.env.local` — see the note in step 5 |
 | `Cannot reach the local database` | Docker Desktop is not running, or `docker compose ... up -d` was not run |
 | `Python is missing` | Install Python 3.12 and tick "Add python.exe to PATH", then reopen the terminal |
 | **"Parrot is not running on this computer"** on every screen | Window one is not running, or it is on a different port than the screens expect. See the port note in step 5 |

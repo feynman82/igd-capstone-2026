@@ -67,6 +67,24 @@ def _positive(value: str) -> int:
     return tokens
 
 
+def _port(value: str) -> int:
+    """The port the local server listens on.
+
+    It is configuration rather than an argument because two processes have to agree on it:
+    this server, and the Next.js interface in `web/`, which is told the same number through
+    `PARROT_API_URL`. A port that lives only in a command line is a port one of them gets
+    wrong. 8000 is the default and is not always free — Docker Desktop binds it on some
+    machines — so this exists to be changed.
+    """
+    try:
+        port = int(value.strip() or "8000")
+    except ValueError as error:
+        raise ConfigurationError("PARROT_PORT must be a whole number.") from error
+    if not 1 <= port <= 65535:
+        raise ConfigurationError("PARROT_PORT must be between 1 and 65535.")
+    return port
+
+
 def _folder(value: str, root: Path) -> str:
     """The watched folder, absolute, so a check and a worker never disagree about where it is."""
     folder = Path(value.strip() or "./inbox").expanduser()
@@ -84,6 +102,7 @@ class Settings:
     rerank_model: str
     context_tokens: int
     watch_folder: str
+    api_port: int
 
     @classmethod
     def load(cls, root: Path, environment: Mapping[str, str] | None = None) -> Settings:
@@ -118,4 +137,5 @@ class Settings:
             rerank_model=rerank_model,
             context_tokens=_positive(values.get("PARROT_CONTEXT_TOKENS", "16384")),
             watch_folder=_folder(values.get("WATCH_FOLDER", ""), root),
+            api_port=_port(values.get("PARROT_PORT", "8000")),
         )

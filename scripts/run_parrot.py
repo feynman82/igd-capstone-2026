@@ -72,13 +72,15 @@ def stop_worker(worker: subprocess.Popen[bytes] | None) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bind-address", choices=["127.0.0.1"], default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8000)
+    # No default here: an unset port means "whatever PARROT_PORT says", which is read from
+    # .env below once Settings has loaded. An explicit --port still wins over it.
+    parser.add_argument("--port", type=int, default=None)
     parser.add_argument("--no-browser", action="store_true")
     parser.add_argument(
         "--no-worker", action="store_true", help="do not start the ingestion worker"
     )
     args = parser.parse_args(argv)
-    if not 1 <= args.port <= 65535:
+    if args.port is not None and not 1 <= args.port <= 65535:
         parser.error("port must be between 1 and 65535")
     sys.path.insert(0, str(ROOT))
     logging.basicConfig(level=logging.INFO, format="%(message)s")
@@ -100,16 +102,23 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, UnicodeError):
         print("Cannot read local configuration. Check .env access and UTF-8 encoding.")
         return 2
+    port = args.port if args.port is not None else settings.api_port
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
         try:
-            listener.bind((args.bind_address, args.port))
+            listener.bind((args.bind_address, port))
             listener.listen(128)
         except OSError:
-            print(f"Cannot use local port {args.port}. Close the other server or select --port.")
+            # Naming the fix matters more than naming the failure: on a machine where Docker
+            # Desktop holds 8000, every future start hits this unless the port is written down.
+            print(
+                f"Cannot use local port {port}. Something else on this computer is using it.\n"
+                f"Set PARROT_PORT in .env to a free port (8010 is a good second choice), and\n"
+                f"put the same port in web/.env.local as PARROT_API_URL so the screens follow."
+            )
             return 2
         server = uvicorn.Server(
             uvicorn.Config(
-                app, host=args.bind_address, port=args.port, access_log=False, proxy_headers=False
+                app, host=args.bind_address, port=port, access_log=False, proxy_headers=False
             )
         )
         finished = threading.Event()
@@ -117,8 +126,13 @@ def main(argv: list[str] | None = None) -> int:
         def open_browser() -> None:
             while not finished.wait(0.1):
                 if server.started:
-                    url = f"http://127.0.0.1:{args.port}/"
-                    print(f"Parrot setup: {url} (household assistant not yet ready)", flush=True)
+                    url = f"http://127.0.0.1:{port}/"
+                    print(
+                        f"Parrot engine: {url} — setup checks and the local API.\n"
+                        "The screens are a second process: cd web && npm run dev, "
+                        "then open http://localhost:3000",
+                        flush=True,
+                    )
                     if not args.no_browser:
                         try:
                             webbrowser.open(url)
