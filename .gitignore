@@ -7,9 +7,16 @@ __pycache__/
 .pytest_cache/
 node_modules/
 web/.next/
-corpus/batches/
 inbox/
-!corpus/batches/.gitkeep
+
+# corpus/batches/ IS committed. Synthetic batches travel through git so Lane E can hand a
+# batch over by pushing it, rather than by a USB stick at the weekly session. Everything in
+# it is generated from an invented canon and carries a SYNTHETIC DOCUMENT footer.
+#
+# corpus/holdout/ is NOT, and must never be. It is 40 *real* documents from team members,
+# redacted under the consent protocol in docs/governance/. Committing one is not recoverable
+# by deleting it — git keeps it. See NOTICE.md.
+corpus/holdout/
 
 # Celery beat's record of when it last ran each sweep. Local state, not a decision.
 var/

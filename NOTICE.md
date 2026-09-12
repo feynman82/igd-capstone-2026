@@ -13,10 +13,18 @@ The corpus is **synthetic**. Every document is generated from an invented househ
 canon, carries a visible `SYNTHETIC DOCUMENT` footer, and names invented organisations
 only — never a real insurer, bank or agency.
 
-The 40-document real-document holdout is collected under the consent and redaction
-protocol in `docs/governance/`, is redacted before use, and **is never committed to this
-repository**. `corpus/batches/` and `corpus/holdout/` are gitignored, and
-`.graphifyignore` excludes them from knowledge-graph extraction as a second lock.
+`corpus/batches/` **is** committed. Those documents are synthetic, so git is the right way
+to hand a batch from Lane E to the other four — a batch arrives by pulling rather than by a
+USB stick at the weekly session.
+
+The 40-document real-document holdout is different in kind. It is collected under the
+consent and redaction protocol in `docs/governance/`, is redacted before use, and **is never
+committed to this repository**. `corpus/holdout/` is gitignored, and `.graphifyignore`
+excludes both it and `corpus/batches/` from knowledge-graph extraction as a second lock.
+
+That distinction is the whole control, so it is worth stating why it is an ignore rule and
+not a convention: deleting a committed file does not remove it from the repository. It stays
+in history, in every clone, and in every fork. There is no undo.
 
 ## Third-party components
 

@@ -121,11 +121,12 @@ repository's language statistics, so a PR that touches it still reads as a two-f
 Code extraction is local: tree-sitter, no model. The semantic pass sends **documentation
 and markdown** to whichever backend you have configured — for us, Claude Code.
 
-This matters for Siew's data inventory, so state it precisely: **the repository contains
-no personal data.** The household corpus lives in `corpus/batches/` and the redacted
-holdout in `corpus/holdout/`; both are gitignored, and `.graphifyignore` excludes them
-from extraction as a second lock. The holdout must never be committed to this repository
-at all — see `NOTICE.md`.
+This matters for Siew's data inventory, so state it precisely: **the repository contains no
+personal data.** The synthetic corpus in `corpus/batches/` *is* committed — it is generated
+from an invented canon and there is no person behind it. The redacted holdout in
+`corpus/holdout/` is gitignored and must never be committed at all; it is real documents
+from team members. `.graphifyignore` excludes **both** folders from extraction, so neither
+the synthetic batch nor the holdout is ever sent to a model backend — see `NOTICE.md`.
 
 ---
 
@@ -139,19 +140,25 @@ The post-commit hook keeps the code graph current by itself. Two things it canno
 - **After a refactor that deletes code** — `graphify update . --force`, because the
   rebuild refuses to shrink the graph without it.
 
-### The hook leaves your tree dirty, and that is expected
+### The hook leaves your tree dirty. Amend it into the commit you just made.
 
 The post-commit hook rebuilds the graph *after* the commit lands, so `git status` shows
 `graphify-out/` modified immediately after every commit you make. That is the hook working,
-not a mistake. Two ways to live with it:
+not a mistake. **Fold it back into that commit:**
 
 ```bash
-git commit --amend --no-edit -- graphify-out/   # fold the refresh into the commit you just made
+git commit --amend --no-edit -- graphify-out/
 ```
 
-or leave it and let the next commit pick it up. Either is fine; what is not fine is
-reverting it, because then the committed graph describes the commit before last.
+This is the convention, not one of two options. The alternative — leaving it for the next
+commit to absorb — means every feature commit carries somebody else's graph refresh, which
+is the thing that makes a graph commit unreviewable and is what rule 9 exists to prevent.
+Amending keeps each commit self-consistent: the graph in a commit describes that commit.
 
-Regenerating deliberately at the weekly integration session — in a commit containing
-nothing else — is still the habit to keep, because that is when the semantic pass gets
-run as well.
+Two things not to do. **Do not revert it**, or the committed graph describes the commit
+before last. **Do not amend a commit you have already pushed** — if it is pushed, let the
+next commit pick the refresh up and carry on.
+
+The semantic pass over markdown is the part the hook cannot do. Run `/graphify .` in Claude
+Code after editing a lane brief, `AGENTS.md` or a skill, and commit that refresh on its own.
+The weekly integration session is when that happens as a matter of course.

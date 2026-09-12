@@ -300,12 +300,21 @@ the corpus batch and the register that describes it; the database is rebuilt fro
 | Services | `infra/docker-compose.yml` | yes |
 | Ground truth | `corpus/register/*.csv` | yes |
 | Pack definitions | `packs/*/pack.yaml` | yes |
-| **The documents themselves** | `corpus/batches/<batch>/` | **no — gitignored** |
+| **The documents themselves** | `corpus/batches/<batch>/` | yes |
+| The real-document holdout | `corpus/holdout/` | **no — gitignored, and never committed** |
 
-`corpus/batches/` is excluded by `.gitignore` on purpose: hundreds of PDFs, scans and phone
-photographs would bloat the repository, and git handles binaries badly. So the batch is the
-one artifact that has to be handed over out of band — shared drive, or a USB stick at the
-weekly integration session. Put it in `corpus/batches/<batch>/` and load it:
+`corpus/batches/` is committed, so a batch arrives by pulling rather than by a USB stick at
+the weekly session. The documents in it are synthetic — generated from an invented canon,
+with no person behind them — which is what makes that safe.
+
+Watch the weight. Hundreds of scans and phone photographs are binaries that git stores whole
+and forever, so a batch that is pushed is a batch nobody can un-push. Keep the photo tier to
+the sample the evaluation actually needs, and raise it at the weekly before pushing a batch
+that runs to hundreds of megabytes.
+
+`corpus/holdout/` is the opposite case and is gitignored: 40 real documents from team
+members, redacted under the consent protocol. See `NOTICE.md`. Put a batch in
+`corpus/batches/<batch>/` and load it:
 
 ```bash
 uv run python -m corpus.validate corpus/register/batch1.csv   # never load an invalid batch

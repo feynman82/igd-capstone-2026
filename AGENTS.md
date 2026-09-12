@@ -39,8 +39,13 @@ repository. Humans should read it too — it is the shortest description of how 
 8. **`never_acts: true` in every pack manifest.** v1 advises. It does not pay, book or file.
    This is enforced by the type system, not by convention: `core/contracts.py` declares it
    `Literal[True]`, so a pack that sets anything else will not load.
-9. **Do not commit `graphify-out/`.** Only the integration lead regenerates it, at the weekly
-   session, in a commit containing nothing else. See `docs/GRAPHIFY.md`.
+9. **Amend the graph refresh into the commit that caused it.** The post-commit hook rebuilds
+   `graphify-out/` after your commit lands, so your tree is dirty immediately afterwards.
+   Fold it back in with `git commit --amend --no-edit -- graphify-out/`, so the graph in a
+   commit describes that commit. Do not revert it, and do not amend a commit you have already
+   pushed — let the next one carry it. The **semantic** pass over markdown (`/graphify .`) is
+   the integration lead's, at the weekly session, in a commit containing nothing else. See
+   `docs/GRAPHIFY.md`.
 
 ## Style
 
