@@ -59,11 +59,18 @@ ollama pull hf.co/gpustack/bge-reranker-v2-m3-GGUF:latest           # reranker
 
 python -m corpus.validate corpus/register/batch1.csv  # check a handed-over batch
 make corpus-load BATCH=batch1                         # load it into this machine's database
-make dev                                              # server on :8000, watcher and worker
+make dev                                              # engine on :8000, watcher and worker
+```
+
+Then the screens, in a second window:
+
+```bash
+cd web && npm ci && npm run dev                       # http://localhost:3000
 ```
 
 No `.env` is needed: every default already matches `infra/docker-compose.yml`. Copy
-`infra/.env.example` to `.env` only to change a port, a model or the watched folder.
+`infra/.env.example` to `.env` only to change a port, a model or the watched folder. If the
+engine is not on `:8000`, put `PARROT_API_URL=http://127.0.0.1:<port>` in `web/.env.local`.
 
 `make dev` starts three things: the setup page, the folder watcher and the ingestion worker
 with its nightly sweeps. To run the worker on its own — a second window, or a machine where
@@ -118,11 +125,14 @@ planning estimate. The first demo target is Christian's onboard RTX 4060, withou
 external development GPU. Minimum specifications will follow measured quality, latency
 and memory use. See [`docs/RUNNING.md`](docs/RUNNING.md) for startup and qualification.
 
-On Windows, double-click [`START.cmd`](START.cmd). It starts the local server, the folder
-watcher and the ingestion worker, and opens the setup page — which reports whether Docker,
-Ollama and the three models are all present. Documents dropped into `inbox/` are read
-automatically; ask about them with `scripts/ask.py` or the loopback API. The product
-interface is still being built. Step-by-step: [`TRY-PARROT.md`](TRY-PARROT.md).
+Two processes. On Windows, double-click [`START.cmd`](START.cmd) — or `make dev` — to start
+the engine: the local API, the folder watcher and the ingestion worker, plus a setup page on
+`:8000` reporting whether Docker, Ollama and the three models are present. Then `cd web && npm
+run dev` and open <http://localhost:3000> for the screens: Today, Ask, Vault and Packs, behind
+a local passphrase. Documents dropped into `inbox/` are read automatically.
+
+Step-by-step, written for somebody who has not seen the code:
+[`TRY-PARROT.md`](TRY-PARROT.md).
 
 ---
 
