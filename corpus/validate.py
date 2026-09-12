@@ -23,7 +23,7 @@ import argparse
 import csv
 import sys
 from collections import defaultdict
-from collections.abc import Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from datetime import date, datetime
 from pathlib import Path
 
@@ -90,6 +90,21 @@ def _wide_format(fieldnames: Sequence[str]) -> bool:
     return any(name.startswith("field_") and name.endswith("_name") for name in fieldnames)
 
 
+def _without_guide(lines: Iterable[str]) -> Iterator[str]:
+    """Drop the `#` guide block the generated header files open with.
+
+    Only the leading block: once a real row has been seen, a `#` is somebody's data and is
+    left alone. Row numbers in the messages therefore count from the header, which is what a
+    spreadsheet shows, not from the top of the file.
+    """
+    started = False
+    for line in lines:
+        if not started and line.lstrip().startswith("#"):
+            continue
+        started = True
+        yield line
+
+
 def _pages(raw: str) -> tuple[dict[str, int], list[str]]:
     """Parse `field_pages`: semicolon-separated `name=page`, 1-based. Empty means page 1."""
     out: dict[str, int] = {}
@@ -133,7 +148,10 @@ def validate(path: Path) -> list[str]:
     declared = {name for _, name in fields}
 
     with path.open(encoding="utf-8-sig") as fh:
-        reader = csv.DictReader(fh)
+        # The generated header files open with `#` guide lines naming the document types, the
+        # tiers and the required fields per type. Copying one whole and filling rows under it
+        # is the obvious way to start a batch, so the guide must not become the header row.
+        reader = csv.DictReader(_without_guide(fh))
         header = reader.fieldnames or []
         if _wide_format(header):
             return [

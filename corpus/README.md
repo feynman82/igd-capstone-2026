@@ -19,10 +19,41 @@ evaluation dataset instead of a pile of PDFs.
 7. batches/              the finished documents, named by register row id
 ```
 
-**Start from the generated header.** `corpus/register/<pack>_columns.csv` is written by
-`python -m packs.build` from `pack.yaml`, one column per field. Copy that header to start a
-batch; do not write one by hand, or the column names and the field names drift and nothing
-downstream can join them back up.
+**Start from the generated header.** `corpus/register/batch.template.csv` is written by
+`python -m packs.build` from every installed `pack.yaml`, one column per field across all
+packs. Copy it and fill rows underneath. Do not write a header by hand and do not merge the
+per-pack files yourself — the column names and the field names drift the moment anybody
+types one out.
+
+The per-pack `<pack>_columns.csv` files are for reference: they show what one pack can
+extract. A batch is a *household's* documents, so it mixes payslips and policy schedules in
+one register with one row each, which is why the template spans both packs.
+
+---
+
+## Handing a batch over
+
+```bash
+cp corpus/register/batch.template.csv corpus/register/batch1.csv   # then fill it in
+mkdir -p corpus/batches/batch1                                     # documents go here
+uv run python -m corpus.validate corpus/register/batch1.csv        # must pass before pushing
+git add corpus/register/batch1.csv corpus/batches/batch1 && git commit && git push
+```
+
+Four things that decide whether the batch is usable:
+
+1. **The register is committed with the documents**, in the same push. A batch without its
+   register is a pile of PDFs; the register is the part that makes it an evaluation dataset.
+2. **`doc_id` is the filename.** `b1-0001` in the register is `b1-0001.pdf` in the batch
+   folder. Anything else and nothing can join a fact back to the row it should match.
+3. **Keep the guide lines.** The `#` block at the top of the template can stay exactly where
+   it is — the validator skips it. Leaving it in means the next person reads the rules.
+4. **Every `doc_type` must be one a pack declares.** The validator lists them. A document
+   type no pack owns cannot be registered, and at ingestion it goes to quarantine rather
+   than into `facts` — so it contributes no ground truth however good the document is.
+
+The validator is the handover gate. If it passes, push; if it does not, nothing downstream
+can use the batch, so there is no value in pushing it early.
 
 **Step 5 is the one that cannot be done in order.** `field_pages` records which page each
 value is *printed* on — `expiry_date=2;premium_payable=2`, and anything left out is page 1 —

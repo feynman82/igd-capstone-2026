@@ -47,6 +47,61 @@ def test_the_generated_header_is_the_one_the_validator_reads() -> None:
         )
 
 
+def test_the_batch_template_is_usable_exactly_as_generated(tmp_path: Path) -> None:
+    """Copy it, fill rows under the guide block, validate. That is the whole handover path.
+
+    The guide block is `#` lines, and `csv.DictReader` would otherwise read the first of them
+    as the header row — which turned a correctly filled register into 122 errors, none of
+    which named the real problem.
+    """
+    template = Path("corpus/register/batch.template.csv")
+    lines = template.read_text(encoding="utf-8").splitlines()
+    header = next(line for line in lines if not line.startswith("#"))
+    columns = header.split(",")
+
+    def row(**values: str) -> str:
+        return ",".join(values.get(column, "") for column in columns)
+
+    filled = tmp_path / "batch1.csv"
+    filled.write_text(
+        "\n".join(
+            [
+                *lines,
+                row(
+                    doc_id="b1-0001",
+                    doc_type="payslip",
+                    pack_id="iras_tax",
+                    issued_date="2026-01-25",
+                    subject="Marcus Fernandez",
+                    tier="clean",
+                    employee="Marcus Fernandez",
+                    employer="Harborline Logistics Pte Ltd",
+                    pay_period="2026-01",
+                    gross_salary="8900.00",
+                    net_pay="7120.00",
+                ),
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    assert validate(filled) == []
+
+
+def test_a_batch_mixes_packs_in_one_register(tmp_path: Path) -> None:
+    """A batch is a household's documents, not one pack's, so the template spans both."""
+    header = next(
+        line
+        for line in Path("corpus/register/batch.template.csv")
+        .read_text(encoding="utf-8")
+        .splitlines()
+        if not line.startswith("#")
+    ).split(",")
+    assert "premium_payable" in header, "insurance fields missing from the batch template"
+    assert "gross_salary" in header, "tax fields missing from the batch template"
+    assert "field_pages" in header
+
+
 def test_expiry_before_start_is_caught(tmp_path: Path) -> None:
     p = _write(
         tmp_path,
