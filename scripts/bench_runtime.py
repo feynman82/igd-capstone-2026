@@ -238,6 +238,8 @@ class Measurement:
     prompt_label: str
     prompt_tokens: int
     decode_tps: float
+    decode_low: float
+    decode_high: float
     prompt_tps: float
     peak_mib: int
     baseline_mib: int
@@ -266,6 +268,8 @@ def measure(
         prompt_label=prompt_label,
         prompt_tokens=max(run.prompt_tokens for run in runs),
         decode_tps=statistics.median(run.decode_tps for run in runs),
+        decode_low=min(run.decode_tps for run in runs),
+        decode_high=max(run.decode_tps for run in runs),
         prompt_tps=statistics.median(run.prompt_tps for run in runs),
         peak_mib=max(run.peak_mib for run in runs),
         baseline_mib=baseline_mib,
@@ -392,7 +396,8 @@ def report(
     )
     rows = "\n".join(
         f"| `{model_tag}` | {quant} | {m.num_ctx // 1024}K | {m.prompt_label} "
-        f"({m.prompt_tokens} tok) | {m.decode_tps:.1f} | {m.prompt_tps:.0f} | "
+        f"({m.prompt_tokens} tok) | {m.decode_tps:.0f} "
+        f"({m.decode_low:.0f} to {m.decode_high:.0f}) | {m.prompt_tps:.0f} | "
         f"{gib(m.peak_mib)} | {gib(m.model_mib)} | {m.processor} |"
         for m in measurements
     )
@@ -428,20 +433,26 @@ from `ollama show`.
 ## How to read this
 
 **Decode tok/s** is `eval_count / eval_duration` as Ollama reports it, so it excludes model
-load and prompt processing. Median of {MEASURED_RUNS} runs after {WARMUP_RUNS} warm-up run,
-`num_predict` {NUM_PREDICT}, temperature 0.
+load and prompt processing. It is the median of {MEASURED_RUNS} measured runs taken after
+{WARMUP_RUNS} warm-up run, with the slowest and the fastest of those runs in brackets, at a
+`num_predict` of {NUM_PREDICT} and temperature 0.
 
-**Peak VRAM** is whole-device `nvidia-smi memory.used`, sampled every
-{int(SAMPLE_INTERVAL_S * 1000)} ms for the life of the request, worst of the measured runs.
+**The spread is part of the result.** This is a desktop in normal use, not an idle bench
+machine, and repeated invocations of this script have differed by more than the bracket within
+any one of them. Compare rows within a single run of the script; do not compare a row here
+against a row someone generated on another day without checking both brackets.
+
+**Peak VRAM** is whole-device `nvidia-smi memory.used`, sampled for the life of the request
+every {int(SAMPLE_INTERVAL_S * 1000)} ms, and reported as the worst of the measured runs.
 The WDDM driver on Windows reports per-process VRAM as `N/A`, so the model's own share cannot
 be isolated directly — the **Model VRAM** column subtracts the idle baseline instead, which
 is an estimate and is labelled as one.
 
 **Context** is `num_ctx`. Ollama allocates the KV cache for the whole window at load time, so
 peak VRAM rises with `num_ctx` regardless of prompt length. Decode rate does not behave the
-same way, which is why the filled row exists: it is the same window with the prompt actually
-occupying it, and it is the honest figure for the configured operating point of
-{context_default // 1024}K.
+same way, which is why the filled row exists: it is the {context_default // 1024}K window with
+the prompt actually occupying it, and it is the honest figure for the configured operating
+point.
 
 **Placement** is the `PROCESSOR` column of `ollama ps`. Anything other than 100% GPU means
 layers spilled to CPU and the decode figure on that row is a number about this machine's
