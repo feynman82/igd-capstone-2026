@@ -9,7 +9,11 @@ that has never opened `core/contracts.py` still knows that a field name in
 on the integration machine. This page is what everyone else needs to do, and how the
 thing works.
 
-Current graph: **436 nodes · 473 edges · 51 communities**, built from commit `9d49a3a`.
+The size and the commit it was built from are in the **Graph Freshness** section at the top
+of [`graphify-out/GRAPH_REPORT.md`](../graphify-out/GRAPH_REPORT.md). Read it there rather
+than here: that section is generated, so it is right, and a number copied into this page is
+wrong within a week. (It was `436 nodes · 473 edges · 51 communities` when this page was
+written, and it is several times that now, which is the point.)
 
 ---
 
