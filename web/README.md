@@ -2,9 +2,10 @@
 
 **Owner: Zee.** Next.js 15 (App Router), Tailwind, shadcn/ui, AI SDK `useChat`.
 
-Four surfaces. The design pack with the screens and user stories is
+Four surfaces. The design pack with the screens and the original user stories is
 [`docs/artefacts/interface-design-pack.html`](../docs/artefacts/interface-design-pack.html) —
-open it in a browser.
+open it in a browser. The buildable version of those stories, with acceptance criteria bound
+to the corpus fixtures that test them, is [`docs/user-stories.md`](docs/user-stories.md).
 
 | Surface | What it is for |
 |---|---|
