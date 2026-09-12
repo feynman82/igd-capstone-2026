@@ -221,9 +221,18 @@
       <td class="label">Address of Insured</td>
       <td class="value">Address held on file</td>
     </tr>
+    <!-- cover_from and expiry_date are TWO pack fields and must print in TWO cells.
+         Printing them as "{{cover_from}} to {{expiry_date}}" in one cell defeated both the
+         text pass and the vision second pass: every document built that way quarantined with
+         "required fields not found on any page: cover_from, expiry_date". One cell, one
+         field. -->
     <tr>
-      <td class="label">Period of Insurance</td>
-      <td class="value period-value">{{cover_from}} to {{expiry_date}}</td>
+      <td class="label">Period of Insurance From</td>
+      <td class="value period-value">{{cover_from}}</td>
+    </tr>
+    <tr>
+      <td class="label">Period of Insurance To</td>
+      <td class="value period-value">{{expiry_date}}</td>
     </tr>
   </table>
 
