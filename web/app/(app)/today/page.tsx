@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ItemRow } from "@/components/today/item-row";
 import { EmptyState, ProblemState } from "@/components/states";
-import { quarantine, today, type TodayItem } from "@/lib/api";
+import { quarantine, today, vault, type TodayItem } from "@/lib/api";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +28,11 @@ export const metadata: Metadata = {
  * **Opening this page does not consume a lead window.** `/api/today` is a GET and the handler
  * calls the sweep with `mark=False`; the nightly Celery pass owns `last_notified_at`. A person
  * who refreshes twice has not used up their thirty-day warning.
+ *
+ * The shape is one hero and a list. The most urgent thing gets a card with the countdown as its
+ * figure; everything else is a compact row. Before this, eight equal cards meant a person had to
+ * read all eight to find out which one was the problem — the list was sorted and did not look
+ * it. A hero says "this one" without asking anybody to compare dates.
  */
 
 /**
@@ -50,7 +55,13 @@ export default async function TodayPage({
   searchParams: Promise<{ as_of?: string }>;
 }) {
   const { as_of } = await searchParams;
-  const [result, waiting] = await Promise.all([today(as_of), quarantine()]);
+  // The vault call is for one number — how many documents this is all drawn from — and it is
+  // the claim in the footer. `limit=1` because the list itself is not wanted here.
+  const [result, waiting, filed] = await Promise.all([
+    today(as_of),
+    quarantine(),
+    vault({ limit: "1" }),
+  ]);
 
   if (!result.ok) {
     return (
@@ -86,11 +97,16 @@ export default async function TodayPage({
   const needsEyes = waiting.ok ? waiting.data.count : 0;
   const attention = urgent.length + (needsEyes > 0 ? 1 : 0);
 
+  // The first urgent thing is the hero, and there is never a second one. If nothing is urgent
+  // there is no hero — a "coming up" item promoted to 34px would be telling a person something
+  // is wrong when nothing is.
+  const [hero, ...rest] = urgent;
+
   return (
     <>
       <Header as_of={result.data.as_of} />
 
-      <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-lead text-ink-2">
+      <p className="mt-[var(--s-3)] max-w-[var(--measure)] text-lead text-ink-2">
         {summary(attention, later.length)}
       </p>
 
@@ -102,20 +118,28 @@ export default async function TodayPage({
 
       {urgent.length > 0 || needsEyes > 0 ? (
         <Section label="Needs you now">
-          {needsEyes > 0 ? <QuarantineRow count={needsEyes} /> : null}
-          {urgent.map((item) => (
-            <ItemRow key={item.id} item={item} asOf={as_of} />
+          {hero ? <ItemRow item={hero} asOf={as_of} variant="hero" index={0} /> : null}
+          {needsEyes > 0 ? <QuarantineRow count={needsEyes} index={hero ? 1 : 0} /> : null}
+          {rest.map((item, at) => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              asOf={as_of}
+              index={at + (hero ? 1 : 0) + (needsEyes > 0 ? 1 : 0)}
+            />
           ))}
         </Section>
       ) : null}
 
       {later.length > 0 ? (
         <Section label="Coming up">
-          {later.map((item) => (
-            <ItemRow key={item.id} item={item} asOf={as_of} />
+          {later.map((item, at) => (
+            <ItemRow key={item.id} item={item} asOf={as_of} index={at} />
           ))}
         </Section>
       ) : null}
+
+      {filed.ok ? <Provenance total={filed.data.total} /> : null}
     </>
   );
 }
@@ -123,9 +147,21 @@ export default async function TodayPage({
 function Header({ as_of }: { as_of: string | null }) {
   const when = as_of ? new Date(`${as_of}T00:00:00`) : new Date();
   return (
-    <h1 className="font-display text-screen lg:text-display">
-      {when.toLocaleDateString("en-SG", { weekday: "long", day: "numeric", month: "long" })}
-    </h1>
+    <div className="flex flex-wrap items-baseline justify-between gap-[var(--s-4)]">
+      <h1 className="font-display text-screen lg:text-display">
+        {when.toLocaleDateString("en-SG", { weekday: "long", day: "numeric", month: "long" })}
+      </h1>
+      {/* Not decoration. It is the answer to "is this stale", which is the first thing anybody
+          asks of a screen that claims to know what is due. */}
+      <span className="num text-meta text-ink-3">
+        checked{" "}
+        {new Date().toLocaleTimeString("en-SG", {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true,
+        })}
+      </span>
+    </div>
   );
 }
 
@@ -148,32 +184,47 @@ function Section({ label, children }: { label: string; children: React.ReactNode
 }
 
 /**
+ * The footer sentence, and the reason it is on the busiest screen rather than in an about box.
+ * It is the product's one promise — nothing here came from the internet, and nothing here went
+ * to it — and it is worth repeating under the thing it is a promise about.
+ */
+function Provenance({ total }: { total: number }) {
+  return (
+    <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-meta text-ink-3">
+      Based only on your own documents · <span className="num">{total}</span> on this computer ·
+      nothing left it
+    </p>
+  );
+}
+
+/**
  * The quarantine queue, as one row rather than as its own screen. It is a thing that needs a
  * person, so it belongs with the other things that need a person.
  */
-function QuarantineRow({ count }: { count: number }) {
+function QuarantineRow({ count, index }: { count: number; index: number }) {
   return (
-    <li className="overflow-hidden rounded-[var(--r)] border border-hairline bg-surface">
-      <div className="flex gap-[var(--s-3)] p-[var(--s-4)]">
-        <span aria-hidden className="w-[3px] shrink-0 rounded-[2px] bg-warn" />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-[var(--s-3)]">
-            <h3 className="text-lead font-medium">
-              {count === 1 ? "One document could not be read" : `${count} documents could not be read`}
-            </h3>
-            <span className="num ml-auto shrink-0 text-meta text-warn">now</span>
-          </div>
-          <p className="mt-[var(--s-1)] text-body text-ink-2">
-            Nothing from {count === 1 ? "it" : "them"} has been filed. A minute to confirm.
-          </p>
-          <Link
-            href="/vault?status=quarantined"
-            className="mt-[var(--s-3)] inline-block rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium no-underline"
-          >
-            Review
-          </Link>
-        </div>
+    <li
+      className="flex items-center gap-[var(--s-4)] rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)]"
+      style={{
+        animation: "parrot-rise var(--dur-enter) var(--ease) both",
+        animationDelay: `${index * 50}ms`,
+      }}
+    >
+      <span aria-hidden className="w-[3px] shrink-0 self-stretch rounded-[2px] bg-warn" />
+      <div className="min-w-0 flex-1">
+        <h3 className="font-display text-title font-semibold">
+          {count === 1 ? "One document could not be read" : `${count} documents could not be read`}
+        </h3>
+        <p className="mt-[2px] text-meta text-ink-2">
+          Nothing from {count === 1 ? "it" : "them"} has been filed. A minute to confirm.
+        </p>
       </div>
+      <Link
+        href="/vault?status=quarantined"
+        className="shrink-0 rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium no-underline"
+      >
+        Review
+      </Link>
     </li>
   );
 }
@@ -184,7 +235,7 @@ function QuarantineRow({ count }: { count: number }) {
  */
 function NothingToDo() {
   return (
-    <EmptyState title="Nothing needs you today">
+    <EmptyState title="You are up to date" tick>
       Parrot is watching your inbox folder and will say so here when something is due. Drop a
       document in, or send one to the bot, and it will appear within a minute.
     </EmptyState>

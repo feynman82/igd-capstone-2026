@@ -18,7 +18,7 @@ export const metadata: Metadata = {
  */
 
 const SECTIONS = [
-  ["accent", "The accent"],
+  ["colour", "Brand and accent"],
   ["surfaces", "Surfaces and ink"],
   ["status", "Status"],
   ["type", "Type"],
@@ -40,7 +40,7 @@ export default function TokensPage() {
               <a
                 key={id}
                 href={`#${id}`}
-                className="text-meta text-ink-2 no-underline transition-colors hover:text-accent"
+                className="text-meta text-ink-2 no-underline transition-colors hover:text-brand"
               >
                 {label}
               </a>
@@ -69,7 +69,7 @@ export default function TokensPage() {
           </p>
         </div>
 
-        <Accent />
+        <Colour />
         <Surfaces />
         <Status />
         <Type />
@@ -79,9 +79,12 @@ export default function TokensPage() {
         <Motion />
 
         <footer className="mt-[var(--s-8)] border-t border-hairline pt-[var(--s-5)] text-meta text-ink-3">
-          Source: <span className="num">web/app/theme.css</span>. Derived from{" "}
-          <span className="num">docs/artefacts/interface-design-pack.html</span>, with the muted ink
-          and the control border changed to clear WCAG AA.
+          Source: <span className="num">web/app/theme.css</span>. The values are the Kitchen
+          Table resolution in{" "}
+          <span className="num">
+            docs/artefacts/Parrot UIUX refinement/Parrot Kitchen Table.dc.html
+          </span>
+          , artboard 1o, with the muted ink and the control border held to WCAG AA.
         </footer>
       </main>
     </div>
@@ -145,33 +148,33 @@ function Swatch({
   );
 }
 
-/* ----------------------------------------------------------------------------------- accent */
+/* ----------------------------------------------------------------------------------- colour */
 
-function Accent() {
+function Colour() {
   return (
     <Section
-      id="accent"
-      title="One accent, spent on three things"
-      note="Deep evergreen. It marks the primary action, the thing currently selected, and a citation — and nothing else. It is dark enough in light mode and light enough in dark mode to pass AA as text, which means a source chip can be accent-coloured writing rather than an accent-coloured box."
+      id="colour"
+      title="Two colours, and each one has one job"
+      note="Terracotta is intent: the wordmark, the current tab, the primary action, the left edge of the card that needs you now. Evergreen is evidence, and only evidence: a source chip, a field somebody verified, a switch that is on. They were one colour in the first pass, and they are not one thing — a citation is a claim about the world, a button is a thing you press. Keeping them apart is what lets a person learn that green means there is a page behind this."
     >
       <div className="grid gap-[var(--s-3)] sm:grid-cols-2 lg:grid-cols-4">
-        <Swatch name="--accent" value="--accent" ink="--accent-ink" ratio="7.56 / 8.77" on="its own text, light / dark" />
+        <Swatch name="--brand" value="--brand" ink="--brand-ink" ratio="5.33 / 6.56" on="its own text, light / dark" />
         <Swatch
-          name="--accent-soft"
-          value="--accent-soft"
-          ink="--accent"
-          ratio="6.10 / 6.54"
-          on="accent on it, light / dark"
+          name="--brand-soft"
+          value="--brand-soft"
+          ink="--brand-strong"
+          ratio="6.28 / 7.00"
+          on="brand-strong on it, light / dark"
         />
-        <Swatch name="--accent-line" value="--accent-line" />
+        <Swatch name="--brand-line" value="--brand-line" />
         <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-4)]">
           <div className="group-label">In use</div>
           <div className="mt-[var(--s-3)] flex flex-wrap items-center gap-[var(--s-2)]">
             <button
               type="button"
-              className="rounded-[var(--r-sm)] bg-accent px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium text-accent-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] font-display text-meta font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
             >
-              Renew now
+              Mark done
             </button>
             <button
               type="button"
@@ -179,10 +182,39 @@ function Accent() {
             >
               Snooze
             </button>
+            <span className="inline-flex items-center rounded-[var(--r-pill)] bg-brand-soft px-[var(--s-4)] py-[var(--s-2)] font-display text-meta font-semibold text-brand-strong">
+              Today
+            </span>
           </div>
+          {/* `--brand-strong` exists because terracotta at 4.40:1 on its own tint is under AA.
+              A colour that works as a 40px button does not automatically work as 14px type on
+              a tint, and the current tab above is 14px type on a tint. */}
+          <p className="mt-[var(--s-3)] text-meta text-ink-3">
+            The tab&rsquo;s label is <span className="num">--brand-strong</span>, not{" "}
+            <span className="num">--brand</span>: the fill and the type on its tint are two
+            different measurements.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-[var(--s-3)] grid gap-[var(--s-3)] sm:grid-cols-2 lg:grid-cols-4">
+        <Swatch name="--accent" value="--accent" ink="--accent-ink" ratio="7.38 / 9.59" on="its own text, light / dark" />
+        <Swatch
+          name="--accent-soft"
+          value="--accent-soft"
+          ink="--accent"
+          ratio="6.13 / 8.10"
+          on="accent on it, light / dark"
+        />
+        <Swatch name="--accent-line" value="--accent-line" />
+        <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-4)]">
+          <div className="group-label">In use</div>
+          <p className="mt-[var(--s-3)] text-body text-ink-2">
+            If it is green, there is a document behind it.
+          </p>
           <a
-            href="#accent"
-            className="mt-[var(--s-3)] inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[var(--s-1)] text-meta text-accent no-underline"
+            href="#colour"
+            className="mt-[var(--s-3)] inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent no-underline"
           >
             Motor renewal notice <span className="num">p.1</span>
           </a>
@@ -360,20 +392,20 @@ function Status() {
 const SCALE = [
   ["--fs-label", "11", "group-label font-display", "NEEDS YOU NOW"],
   ["--fs-meta", "13", "text-meta text-ink-3", "NTUC Income home insurance renewal, page 3"],
-  ["--fs-body", "15", "text-body", "You are at $12,400 of the $15,300 cap."],
-  ["--fs-lead", "18", "text-lead", "Renew before cover lapses. Last premium was $742."],
-  ["--fs-title", "22", "text-title font-display", "Motor policy expires for SLK8842J"],
-  ["--fs-screen", "26", "text-screen font-display", "Three things need you"],
-  ["--fs-display", "31", "text-display font-display", "Wednesday, 2 September"],
-  ["--fs-figure", "37", "text-figure font-display num", "$2,184"],
+  ["--fs-body", "15.5", "text-body", "You are at $12,400 of the $15,300 cap."],
+  ["--fs-lead", "17.5", "text-lead", "Renew before cover lapses. Last premium was $742."],
+  ["--fs-title", "19", "text-title font-display", "Motor policy expires for SLK8842J"],
+  ["--fs-screen", "24", "text-screen font-display", "Your motor policy has expired"],
+  ["--fs-display", "28", "text-display font-display", "Wednesday, 2 September"],
+  ["--fs-figure", "34", "text-figure num", "115"],
 ] as const;
 
 function Type() {
   return (
     <Section
       id="type"
-      title="One ratio, eight steps, fixed in rem"
-      note="Spectral carries the name of the thing you are looking at and the one figure worth reading across the room; Archivo carries everything you operate; JetBrains Mono carries anything measured or identified. Sizes step by 1.2 and do not scale with the viewport — this is read at a consistent distance on a consistent screen, and a heading that shrinks inside a narrow column looks broken rather than responsive."
+      title="Two sans faces, eight steps, fixed in rem"
+      note="Outfit names things — the wordmark, a surface’s title, a card’s headline, the text on a button. Figtree is read: prose, an answer, a value, a meta line. JetBrains Mono carries anything measured or identified, and the largest step belongs to it, because the biggest thing on Today is a countdown. There is no serif anywhere; the previous pass had one, and it was the part of the interface people described rather than used. Sizes do not scale with the viewport — this is read at a consistent distance on a consistent screen, and a heading that shrinks inside a narrow column looks broken rather than responsive."
     >
       <div className="rounded-[var(--r)] border border-hairline bg-surface">
         {SCALE.map(([token, px, cls, sample], i) => (
@@ -393,15 +425,15 @@ function Type() {
       <div className="mt-[var(--s-4)] grid gap-[var(--s-3)] md:grid-cols-3">
         <FaceCard
           family="font-display"
-          name="Spectral"
-          role="The name of the thing, and the one big figure. Never a control."
+          name="Outfit 600"
+          role="Names things: the wordmark, a title, a status label, the text on a button."
           sample="Insurance and Coverage"
         />
         <FaceCard
           family="font-sans"
-          name="Archivo"
-          role="Everything you operate: headings, labels, buttons, prose, table cells."
-          sample="Confirm this field"
+          name="Figtree 400/500"
+          role="Everything you read: prose, answers, values, meta lines, table cells."
+          sample="Cover ended on 30 November 2026."
         />
         <FaceCard
           family="font-mono"
@@ -437,9 +469,9 @@ function FaceCard({
 /* ----------------------------------------------------------------------------------- radius */
 
 const RADII = [
-  ["--r-sm", "6px", "chips, badges, inputs, small buttons — things the size of a word"],
-  ["--r", "10px", "cards, panels, dialogs — things the size of a paragraph"],
-  ["--r-pill", "999px", "a toggle or a status dot, where the shape is the affordance"],
+  ["--r-sm", "8px", "chips, badges, inputs, small buttons — things the size of a word"],
+  ["--r", "14px", "cards, panels, dialogs — things the size of a paragraph"],
+  ["--r-pill", "999px", "a toggle, a nav tab or a status dot, where the shape is the affordance"],
 ] as const;
 
 function Radius() {
@@ -447,7 +479,7 @@ function Radius() {
     <Section
       id="radius"
       title="Three radii, and a screen may not invent a fourth"
-      note="10px is the deliberate centre: enough that the interface looks made rather than drawn by a browser, not so much that something holding your insurance policies looks like a toy."
+      note="Both went up one notch in the Kitchen Table pass — cards 10 to 14, chips 6 to 8. On warm paper a tight corner reads as a form and a soft one reads as a card, and this is a thing you are meant to sit down with. Not further: something holding your insurance policies should not look like a toy."
     >
       <div className="grid gap-[var(--s-3)] md:grid-cols-3">
         {RADII.map(([token, px, use]) => (
@@ -498,9 +530,9 @@ function Space() {
       </div>
       <div className="mt-[var(--s-4)] grid gap-[var(--s-3)] md:grid-cols-4">
         {[
-          ["--shell", "1088px", "the widest content ever gets"],
-          ["--measure", "68ch", "an answer never runs wider"],
-          ["--rail", "216px", "the navigation rail on a wide screen"],
+          ["--shell", "1088px", "the widest the chrome ever gets"],
+          ["--column", "880px", "the content column, centred under it"],
+          ["--measure", "62ch", "an answer never runs wider"],
           ["--gutter", "24px", "the page's side padding"],
         ].map(([token, v, use]) => (
           <div key={token} className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-3)]">

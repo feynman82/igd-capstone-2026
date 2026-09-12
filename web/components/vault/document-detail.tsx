@@ -133,7 +133,7 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
                   aria-current={number === page ? "true" : undefined}
                   className={`num size-7 rounded-[var(--r-sm)] text-meta ${
                     number === page
-                      ? "bg-accent text-accent-ink"
+                      ? "bg-brand text-brand-ink"
                       : "border border-edge text-ink-2 hover:bg-surface-2"
                   }`}
                 >

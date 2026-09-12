@@ -40,7 +40,7 @@ export function ThemeToggle() {
               "grid h-7 w-8 cursor-pointer place-items-center rounded-[var(--r-pill)]",
               "transition-colors duration-[var(--dur-press)]",
               "focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus",
-              on ? "bg-surface text-accent shadow-lift-1" : "text-ink-3 hover:text-ink-2",
+              on ? "bg-surface text-brand shadow-lift-1" : "text-ink-3 hover:text-ink-2",
             ].join(" ")}
           >
             <input

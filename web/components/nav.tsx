@@ -24,12 +24,25 @@ const SURFACES = [
   { href: "/packs", label: "Packs", Icon: Package, hint: "What this assistant knows about" },
 ] as const;
 
-export function Rail() {
+/**
+ * The four, as pills in the top bar, on a wide screen.
+ *
+ * This was a left rail. It moved for one reason: a rail 13.5rem wide inside a 68rem shell pushes
+ * the content column off centre, so the thing a person is actually reading sits to the right of
+ * the middle of their screen all day. Four words do not need a column of their own. With the
+ * navigation on one line above, the content can be a single centred column of a readable width,
+ * which is what `--column` is.
+ *
+ * No icons here. In a rail an icon gives the eye something to land on down a vertical list; in a
+ * horizontal row of four short words it is decoration beside a word that already says it. The
+ * bottom bar below keeps them, because there the label is 11px and the icon is the target.
+ */
+export function Tabs() {
   const here = usePathname();
   return (
     <nav aria-label="Surfaces" className="hidden lg:block">
-      <ul className="space-y-[var(--s-1)]">
-        {SURFACES.map(({ href, label, Icon, hint }) => {
+      <ul className="flex items-center gap-[var(--s-1)]">
+        {SURFACES.map(({ href, label, hint }) => {
           const on = here.startsWith(href);
           return (
             <li key={href}>
@@ -38,14 +51,14 @@ export function Rail() {
                 aria-current={on ? "page" : undefined}
                 title={hint}
                 className={[
-                  "flex items-center gap-[var(--s-3)] rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] no-underline",
+                  "inline-flex items-center rounded-[var(--r-pill)] px-[var(--s-4)] py-[10px]",
+                  "font-display text-[0.90625rem] leading-[var(--lh-flat)] no-underline",
                   on
-                    ? "bg-accent-soft font-medium text-accent"
-                    : "text-ink-2 hover:bg-surface-2 hover:text-ink",
+                    ? "bg-brand-soft font-semibold text-brand-strong"
+                    : "font-medium text-ink-2 hover:bg-surface-2 hover:text-ink",
                 ].join(" ")}
               >
-                <Icon aria-hidden size={17} strokeWidth={on ? 2.2 : 1.9} />
-                <span className="text-body">{label}</span>
+                {label}
               </Link>
             </li>
           );
@@ -78,7 +91,7 @@ export function TabBar() {
                 aria-current={on ? "page" : undefined}
                 className={[
                   "flex flex-col items-center gap-[var(--s-1)] py-[var(--s-2)] no-underline",
-                  on ? "text-accent" : "text-ink-3",
+                  on ? "text-brand" : "text-ink-3",
                 ].join(" ")}
               >
                 <Icon aria-hidden size={19} strokeWidth={on ? 2.2 : 1.9} />

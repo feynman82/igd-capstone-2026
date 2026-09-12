@@ -1,4 +1,4 @@
-import { CircleSlash, Database, PlugZap, Shuffle } from "lucide-react";
+import { Check, CircleSlash, Database, PlugZap, Shuffle } from "lucide-react";
 import type { Problem } from "@/lib/api";
 
 /**
@@ -70,17 +70,30 @@ export function ProblemState({
  * An empty state teaches the interface rather than announcing its own emptiness. Filing happens
  * in a watched folder and in Telegram, so the first run says where to put something — the app is
  * for reading, not for filing.
+ *
+ * `tick` is for the one empty state that is a success: "Nothing needs you today" is the outcome
+ * this product is for, and a green mark says so faster than the sentence does. It is off by
+ * default, because an empty vault is not an achievement.
  */
 export function EmptyState({
   title,
+  tick = false,
   children,
 }: {
   title: string;
+  tick?: boolean;
   children?: React.ReactNode;
 }) {
   return (
     <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-6)]">
-      <h2 className="text-title font-medium">{title}</h2>
+      {tick ? (
+        <span className="grid size-11 place-items-center rounded-[var(--r-pill)] border border-accent-line bg-accent-soft text-accent">
+          <Check aria-hidden size={20} strokeWidth={2.4} />
+        </span>
+      ) : null}
+      <h2 className={`font-display text-screen font-semibold ${tick ? "mt-[var(--s-4)]" : ""}`}>
+        {title}
+      </h2>
       {children ? (
         <div className="mt-[var(--s-2)] max-w-[46ch] text-body text-ink-2">{children}</div>
       ) : null}

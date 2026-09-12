@@ -116,7 +116,7 @@ export function UnlockForm({ configured }: { configured: boolean }) {
           <button
             type="submit"
             disabled={busy}
-            className="mt-[var(--s-1)] w-full rounded-[var(--r-sm)] bg-accent px-[var(--s-4)] py-[var(--s-3)] text-body font-medium text-accent-ink transition-transform duration-[var(--dur-press)] active:scale-[0.99] disabled:opacity-70"
+            className="mt-[var(--s-1)] w-full rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-3)] font-display text-body font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.99] disabled:opacity-70"
           >
             {busy ? "Checking…" : configured ? "Unlock" : "Set it and open Parrot"}
           </button>

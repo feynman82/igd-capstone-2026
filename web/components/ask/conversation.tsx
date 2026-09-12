@@ -39,8 +39,13 @@ export function Conversation() {
     void sendMessage({ text: asked });
   }
 
+  // The one surface that is a viewport rather than a page: the thread scrolls and the composer
+  // stays put. The subtraction is the chrome above it and the padding around it, which is why
+  // `--bar` is a fixed height rather than whatever the header happens to measure. Below `lg`
+  // the bottom tab bar takes another 3.5rem, and without subtracting it the honest sentence
+  // under the composer sits behind the tabs.
   return (
-    <div className="flex h-[calc(100dvh-var(--s-8))] flex-col">
+    <div className="flex h-[calc(100dvh-var(--bar)-var(--s-6)-var(--s-7)-3.5rem)] flex-col lg:h-[calc(100dvh-var(--bar)-var(--s-6)-var(--s-7))]">
       <div ref={thread} className="min-h-0 flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <Opening onPick={ask} />
@@ -103,7 +108,7 @@ export function Conversation() {
           <button
             type="submit"
             disabled={!draft.trim()}
-            className="grid size-9 shrink-0 place-items-center rounded-[var(--r-sm)] bg-accent text-accent-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-40"
+            className="grid size-9 shrink-0 place-items-center rounded-[var(--r-sm)] bg-brand text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-40"
           >
             <ArrowUp aria-hidden size={16} strokeWidth={2.5} />
             <span className="sr-only">Ask</span>

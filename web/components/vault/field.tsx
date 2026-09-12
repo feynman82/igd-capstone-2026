@@ -103,7 +103,7 @@ export function Field({
             <button
               type="submit"
               disabled={busy}
-              className="rounded-[var(--r-sm)] bg-accent px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium text-accent-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
             >
               {busy ? "Saving…" : "Save"}
             </button>

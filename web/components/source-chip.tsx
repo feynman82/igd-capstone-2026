@@ -28,7 +28,7 @@ export function SourceChip({ source }: { source: Source }) {
 
   if (!openable) {
     return (
-      <span className="inline-flex items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[var(--s-2)] py-[2px] text-meta text-ink-3">
+      <span className="inline-flex items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[11px] py-[7px] text-meta text-ink-3">
         {source.text}
       </span>
     );
@@ -40,7 +40,7 @@ export function SourceChip({ source }: { source: Source }) {
         ref={chip}
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[2px] text-meta text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+        className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
       >
         <span className="truncate">{source.document_name}</span>
         <span className="num">p.{source.page}</span>
@@ -104,7 +104,7 @@ function SourcePanel({ source, onClose }: { source: Source; onClose: () => void 
       // The backdrop closes it, which is what everyone expects of a panel over a page.
       onClick={(event) => event.target === dialog.current && dialog.current?.close()}
       aria-label={`${source.document_name}, page ${source.page}`}
-      className="m-auto w-[min(52rem,92vw)] rounded-[var(--r)] border border-hairline bg-surface p-0 text-ink shadow-lift-2 backdrop:bg-[rgb(20_27_24/0.45)]"
+      className="m-auto w-[min(52rem,92vw)] rounded-[var(--r)] border border-hairline bg-surface p-0 text-ink shadow-lift-2 backdrop:bg-[rgb(27_24_20/0.5)]"
     >
       <div className="flex items-center gap-[var(--s-3)] border-b border-hairline px-[var(--s-4)] py-[var(--s-3)]">
         <div className="min-w-0">
