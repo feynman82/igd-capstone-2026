@@ -10,9 +10,18 @@ It does not require enabling PowerShell scripts or changing execution policy.
 registered, parsed, classified against an installed pack, and either indexed with cited facts
 or sent to quarantine with a reason. `scripts/ask.py` answers questions from it with a document
 and a page, or abstains. `scripts/today.py` shows what the Reminder and Alert modules have to
-say. The household interface — Today, Ask, Vault and Packs as screens — is Lane D's and is not
-built yet, and hybrid retrieval is Lane B's and is not built yet, so answer *quality* is not yet
-a number anybody should quote.
+say.
+
+The household interface is built: Today, Ask, Vault and Packs are screens under
+`web/app/(app)/`, served by a **separate Next.js process** that the launcher does not start —
+see "The screens" below. The page at `http://127.0.0.1:8000` is the engine and its setup
+diagnostics; it is not the product and never will be.
+
+Hybrid retrieval is still Lane B's and is not built yet. `core/retrieve/` holds a README, and
+both `scripts/ask.py` and `api/routes.py` import `DenseRetriever` and `NoReranker` from the
+dense-only stopgap in `core/graph/baseline.py`. So answer *quality* is still not a number
+anybody should quote — the mechanism works, the ranking is naive on purpose, and the numbers
+come from Yew Mun's harness against a golden set.
 
 The Python environment must already contain the project dependencies. No `.env` is
 required for diagnostics: the defaults use local services and the example credentials.
@@ -51,6 +60,24 @@ For `-CheckOnly`, exit code `0` means startup files are present (not a health gu
 Diagnostics print locally; they do not upload information, read household documents,
 print `.env` values, download models, install tools, or change service configuration.
 Installed tools are reported separately from runtime readiness.
+
+## The screens
+
+Two processes, deliberately: the engine and the interface are separate, and neither can guess
+the other's port. Start the engine first, then, in a second terminal:
+
+```powershell
+cd web
+npm ci          # first time only
+npm run dev
+```
+
+Then open <http://localhost:3000>. If the engine is not on port 8000, set `PARROT_PORT` in
+`.env` **and** `PARROT_API_URL` in `web/.env.local` — both, for the reason above.
+
+The screens call the same code as `scripts/today.py`, `scripts/ask.py` and
+`scripts/quarantine.py`, so they cannot disagree with the terminal about what is due today.
+`TRY-PARROT.md` walks through using them; this file is about starting them.
 
 ## Dropping a document in
 
@@ -192,8 +219,11 @@ at this stage. Other bind addresses are rejected. Its socket is owned before the
 opens. The HTTP endpoints have distinct meanings:
 
 - `/healthz`: HTTP 200 means the diagnostic API is alive.
-- `/readyz`: HTTP 503 and `ready: false` mean the household assistant is unfinished,
-  even when dependency checks succeed. Checks are read-only and cached for five seconds.
+- `/readyz`: **always** HTTP 503 with `ready: false` and `stage: setup`. It is hardcoded, and
+  it does not turn true when the screens are running — this server supervises the engine and
+  the worker, never the Next.js process, so it is in no position to declare the product ready.
+  Read it as "the setup stage is still the stage", not as a health signal. Checks are read-only
+  and cached for five seconds.
 - `/`: the human-readable setup page. It remains usable when dependencies are unavailable.
 
 Database checks verify PostgreSQL 17, pgvector and base-table presence, not every column,
