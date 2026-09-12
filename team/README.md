@@ -1,7 +1,10 @@
 # The team
 
 Five people, ten weeks, three committers. Ownership is by **directory**, not by task, so
-the split is enforced by [`CODEOWNERS`](../.github/CODEOWNERS) rather than by memory.
+the split is written down in [`CODEOWNERS`](../.github/CODEOWNERS) rather than left to
+memory. `CODEOWNERS` requests the right reviewer automatically, but it cannot block a
+merge — `main` is unprotected, see
+[ADR 0010](../docs/adr/0010-main-is-unprotected-by-convention.md).
 
 Each folder here holds a person's **brief** and their **task list**. Their actual work
 lives in the functional directories — that is deliberate, and section "Why work does not
@@ -59,8 +62,11 @@ generator, the CI gate, the imports and `CODEOWNERS` would all have to be rewrit
 person — and the moment somebody left a lane, every path would move again.
 
 Accountability comes from `CODEOWNERS`, which maps each directory to the person who
-reviews changes to it. It is stronger than folder naming, because it is enforced by
-GitHub on every pull request rather than by everyone remembering.
+reviews changes to it. It is better than folder naming, because GitHub applies it to every
+pull request rather than leaving it to everyone remembering — but it *requests* a review,
+it does not require one. `main` is unprotected and a merge can happen without the owner's
+approval, so the last step is still a person choosing to wait for it. See
+[ADR 0010](../docs/adr/0010-main-is-unprotected-by-convention.md).
 
 ---
 

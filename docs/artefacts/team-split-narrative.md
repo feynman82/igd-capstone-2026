@@ -1,7 +1,9 @@
 # Project PARROT — team split
 
 Five people, nine weeks, three builders. Ownership is by **directory**, not by task, so the
-split is enforced by `CODEOWNERS` rather than by memory.
+split is written down in `CODEOWNERS` rather than left to memory. `CODEOWNERS` requests
+the right reviewer; it cannot block a merge, because `main` is unprotected — see
+[ADR 0010](../adr/0010-main-is-unprotected-by-convention.md).
 
 ---
 

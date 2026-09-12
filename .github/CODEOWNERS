@@ -1,5 +1,10 @@
 # Ownership is how five people and their agents stay out of each other's way.
 # A PR touching a path needs a review from that path's owner.
+#
+# This file REQUESTS that review automatically. It does not enforce it: `main` is
+# unprotected and always will be on this plan, so a merge without the owner's approval
+# is possible. See docs/adr/0010-main-is-unprotected-by-convention.md. Treat a review
+# request from this file as an obligation, not a suggestion.
 # Christian @feynman82 Â· Yew Mun @Yewhoo Â· Siew @nsiewsiew Â· Zee @fjzeetr-smuigd Â· Desmond @strawberries2026
 # Confirmed: @feynman82 (Christian) · @Yewhoo (Yew Mun) · @nsiewsiew (Siew) · @fjzeetr-smuigd (Zee) · @strawberries2026 (Desmond).
 

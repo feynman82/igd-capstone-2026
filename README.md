@@ -176,6 +176,24 @@ evaluation score in week 8.
 3. **`pack.yaml` is the only place a field name is written down**, and
    `docs/team-tasks.csv` the only place a task is. Everything else is generated from them.
 
+All three are conventions. None of them is enforced by GitHub.
+
+---
+
+## `main` is not protected
+
+This repository is private under a personal account, and GitHub does not enforce branch
+rulesets there. There is no ruleset, deliberately — a saved one would be inert and would
+read like a gate that is not there. So **`git push` to `main` will succeed**, and that is
+not the same as permission.
+
+[`CODEOWNERS`](.github/CODEOWNERS) still auto-requests the right reviewer; it just cannot
+block a merge. Branch per lane, one vertical slice per PR, get the review, and if you do
+land something directly, say so in the team channel the same day. The weekly integration
+pass is the only backstop. Reasoning in
+[ADR 0010](docs/adr/0010-main-is-unprotected-by-convention.md); the loop itself is in
+[`CONTRIBUTING.md`](CONTRIBUTING.md).
+
 ---
 
 ## Working with agents

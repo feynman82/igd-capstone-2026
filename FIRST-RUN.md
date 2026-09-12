@@ -4,16 +4,22 @@ Where the repository stands, and what is left to switch on.
 
 **Done:** the repository is on GitHub at `feynman82/igd-capstone-2026` (private), the
 local checkout on `sunshine` mirrors it, the knowledge graph is built and committed, the
-graphify hooks are installed on that machine, and the four setup items below are
-configured — collaborators, the branch ruleset, the Actions permission, and the project
-board. The Notion hub (item 5) is a decision, not a setup step, and it has been made: see
-below.
+graphify hooks are installed on that machine, and the setup items below are settled —
+collaborators, the Actions permission, and the project board. The Notion hub (item 5) is a
+decision, not a setup step, and it has been made: see below.
 
-**Note on enforcement:** this repo stays on Christian's personal GitHub account rather
-than moving to a Team org, so GitHub does not enforce rulesets here regardless of how they
-are configured — the branch ruleset below is saved and will activate automatically if the
-repo ever moves to a Team org, but for now `main` has no real protection. Treat this as a
-convention the team follows, not a technical guardrail.
+**`main` is not protected, and will not be.** This repo stays on Christian's personal
+GitHub account rather than moving to a Team org, and GitHub does not enforce branch
+rulesets on a private repo under a personal account regardless of how they are configured.
+A saved-but-inert ruleset is worse than none: it reads like a guardrail on the settings
+page while merges land unchecked, so we do not keep one. See
+[ADR 0010](docs/adr/0010-main-is-unprotected-by-convention.md).
+
+**What replaces it** is convention, and the convention has to carry the weight alone:
+branch per lane, one PR per vertical slice, and the review named in
+[`CODEOWNERS`](.github/CODEOWNERS) requested and given before merge. `CODEOWNERS` still
+does useful work — it auto-requests the right reviewer — it simply cannot *block* anyone.
+The weekly integration pass is where drift gets caught instead.
 
 ---
 
@@ -31,19 +37,17 @@ convention the team follows, not a technical guardrail.
 `.github/CODEOWNERS` now carries all five real logins — `@feynman82`, `@Yewhoo`,
 `@nsiewsiew`, `@fjzeetr-smuigd`, and `@strawberries2026`. No placeholders remain.
 
-## 2 · Branch protection
+## 2 · Branch protection — deliberately not configured
 
-**Settings → Rules → Rulesets → New branch ruleset**, targeting `main`:
+Nothing to switch on here. See the note at the top: rulesets do not enforce on a private
+repo under a personal account, so we do not save one. `main` is unprotected and the
+discipline is human.
 
-- Require a pull request before merging — **1 approval**
-- Require review from **Code Owners** — not offered by GitHub's ruleset UI on this plan;
-  skipped, see the enforcement note above
-- Require status checks to pass — add `check` and `web` once CI has run once
-- Require branches to be up to date before merging
-- Block force pushes
-
-Do this while the repository is still young. Doing it in week 6 feels like an accusation;
-doing it now is just how the repository works.
+If the repository ever moves to a Team org or goes public, this is the ten-minute change
+that becomes worth making — **Settings → Rules → Rulesets → New branch ruleset** on `main`,
+requiring a pull request with 1 approval, review from Code Owners, the `check` and `web`
+status checks, branches up to date, and force pushes blocked. Until then, do not configure
+it: an inert ruleset misleads the next person who reads the settings page.
 
 ## 3 · Actions permissions
 

@@ -77,7 +77,10 @@ export function DesignPreview() {
 
   useEffect(() => () => { if (timer.current) clearInterval(timer.current); }, []);
   const stopStream = () => { if (timer.current) clearInterval(timer.current); setStreaming(false); };
-  const closeSource = () => { setSource(null); sourceTrigger.current?.focus(); };
+  const closeSource = () => {
+    setSource(null);
+    requestAnimationFrame(() => sourceTrigger.current?.focus());
+  };
   const changeScreen = (next: Screen) => { stopStream(); setVisible(3); setScreen(next); setSource(null); };
   const changeOutcome = (next: Outcome) => { stopStream(); setOutcome(next); setQuestion(questions[next]); setSubmitted(questions[next]); setVisible(3); setSource(null); };
   const runQuestion = () => {
@@ -106,7 +109,7 @@ export function DesignPreview() {
   const palette = palettes[direction][dark ? "dark" : "light"];
   const theme = Object.fromEntries(tokenNames.map((name, index) => [`--p-${name}`, palette[index]])) as CSSProperties;
 
-  return <div className={`${styles.preview} ${styles[direction]}`} style={{ ...theme, colorScheme: dark ? "dark" : "light" }}>
+  return <div data-design-preview className={`${styles.preview} ${styles[direction]}`} style={{ ...theme, colorScheme: dark ? "dark" : "light" }}>
     <a className={styles.skip} href="#preview-content">Skip to preview</a>
     <header className={styles.evaluation} aria-label="Design evaluation controls">
       <div className={styles.evaluationTitle}><span className={styles.sampleDot} />Interface study<span className={styles.sampleLabel}>Sample data only</span></div>
@@ -190,12 +193,26 @@ function SourceViewer({ source, onClose }: { source: Source; onClose: () => void
   const [textView, setTextView] = useState(false);
   const panel = useRef<HTMLElement>(null);
   useEffect(() => {
-    panel.current?.focus();
     setZoom(100);
-    const narrow = window.matchMedia("(max-width: 1199px)").matches;
+    const viewport = window.matchMedia("(max-width: 1199px)");
+    const backgroundClasses = [styles.skip, styles.evaluation, styles.scenarios, styles.notes,
+      styles.navigation, styles.topline, styles.content, styles.studyFooter];
+    const background = Array.from(panel.current?.closest("[data-design-preview]")
+      ?.querySelectorAll<HTMLElement>(backgroundClasses.map((name) => `.${name}`).join(",")) ?? []);
     const previousOverflow = document.body.style.overflow;
-    if (narrow) document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = previousOverflow; };
+    const syncModality = () => {
+      background.forEach((element) => { element.inert = viewport.matches; });
+      panel.current?.setAttribute("aria-modal", String(viewport.matches));
+      document.body.style.overflow = viewport.matches ? "hidden" : previousOverflow;
+    };
+    syncModality();
+    panel.current?.focus();
+    viewport.addEventListener("change", syncModality);
+    return () => {
+      viewport.removeEventListener("change", syncModality);
+      background.forEach((element) => { element.inert = false; });
+      document.body.style.overflow = previousOverflow;
+    };
   }, [source]);
   return <aside ref={panel} id="source-viewer" tabIndex={-1} className={styles.sourceViewer} role="dialog" aria-label={`${source.name}, page ${source.page}`} onKeyDown={(event) => {
     if (event.key === "Escape") { event.preventDefault(); onClose(); }

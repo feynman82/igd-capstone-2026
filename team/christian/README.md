@@ -47,7 +47,9 @@ discovering the divergence in week 8.
 
 **Nobody edits `core/contracts.py` in a feature pull request.** The most common way a
 multi-agent repository degrades is a contract quietly widened to make one feature
-easier. `CODEOWNERS` enforces the review; you enforce the principle.
+easier. `CODEOWNERS` requests the review; nothing enforces it — `main` is unprotected, see
+[ADR 0010](../../docs/adr/0010-main-is-unprotected-by-convention.md) — so you enforce both
+the review and the principle. This is the part of the lane that is actually yours.
 
 **Vertical slices, not layers.** A pull request should let somebody do something new.
 
@@ -131,5 +133,16 @@ not as a second build lane.
 — nine steps, under eight minutes, rehearse against it. Record a three-minute screen capture of
 the full happy path in week 9, before demo night. It is the cheapest insurance in the project.
 
-**The graph.** See `docs/GRAPHIFY.md` — you regenerate it, at the weekly integration
-session, and nobody else commits `graphify-out/`.
+**The graph.** See `docs/GRAPHIFY.md`. Two passes, two owners, and the distinction matters:
+
+- **The code pass is everyone's.** The post-commit hook rebuilds it locally after any
+  commit, and the author folds that refresh into their own commit —
+  `git commit --amend --no-edit -- graphify-out/`, AGENTS.md rule 9. Several people
+  therefore touch `graphify-out/graph.json` in a week; the union merge driver declared in
+  `.gitattributes` exists for exactly that, and each clone has to register it once.
+- **The semantic pass is yours alone.** `/graphify .` over the markdown, plus
+  `graphify label`, at the weekly integration session, in a commit containing nothing else.
+  That is the pass that makes the graph useful rather than merely structural.
+
+Nobody hand-builds `graphify-out/` and nobody uploads one from another machine — a graph
+that describes a tree no one else has is worse than a stale one.

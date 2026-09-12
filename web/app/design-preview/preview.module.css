@@ -7,7 +7,7 @@
 .preview h1, .preview h2, .preview h3, .preview p { margin: 0; }
 .preview h1, .preview h2, .preview h3 { letter-spacing: -.025em; }
 .preview button, .preview textarea { font: inherit; }
-.preview button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; color: var(--p-accent); border: 1px solid transparent; border-radius: 6px; padding: 8px 12px; background: transparent; text-align: left; }
+.preview button { cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 44px; min-height: 44px; color: var(--p-accent); border: 1px solid transparent; border-radius: 6px; padding: 8px 12px; background: transparent; text-align: left; }
 .preview button:hover { text-decoration: underline; text-underline-offset: 4px; }
 .preview button:active { outline: 1px solid var(--p-accent); outline-offset: -3px; }
 .preview button:focus-visible, .preview textarea:focus-visible, .preview a:focus-visible { outline: 2px solid var(--p-accent); outline-offset: 3px; }

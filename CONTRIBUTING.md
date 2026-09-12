@@ -30,6 +30,17 @@ add a layer. If you cannot describe it as "now you can X", it is probably two PR
 **Stay in your directories.** [`CODEOWNERS`](.github/CODEOWNERS) maps each path to the
 person who reviews it. A PR that touches another lane needs that owner's review.
 
+**`main` is not protected, and nothing stops you pushing straight to it.** GitHub does not
+enforce branch rulesets on a private repo under a personal account, so we do not pretend
+otherwise — see [ADR 0010](docs/adr/0010-main-is-unprotected-by-convention.md). `CODEOWNERS`
+still requests the right reviewer automatically; it just cannot block the merge. That makes
+the loop above a promise rather than a gate, and it means two things in practice:
+
+- **Branch anyway.** `git push` to `main` will succeed. It being possible is not permission.
+- **A push that skips review is invisible until the weekly pass.** If you do land something
+  directly — a typo, a hotfix mid-demo — say so in the team channel the same day. The cost
+  of an unreviewed change is not the change; it is the week nobody knew it happened.
+
 **Contracts are their own PR.** A change to `core/contracts.py` or `db/migrations/` is
 reviewed on its own, before anything depends on it. Never bundled with a feature — this
 one is enforced by review every time, including when the change is obviously fine.
