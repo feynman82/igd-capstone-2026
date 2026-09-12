@@ -75,15 +75,24 @@ not the plan.
 
 For everyone who is not Christian:
 
+Only trying PARROT rather than building on it? [`TRY-PARROT.md`](TRY-PARROT.md) is the
+shorter path and assumes nothing.
+
 ```bash
 git clone https://github.com/feynman82/igd-capstone-2026.git
 cd igd-capstone-2026
 
-cp infra/.env.example .env
 docker compose -f infra/docker-compose.yml up -d     # postgres+pgvector, redis
 uv sync --python 3.12 --extra dev
-psql "$DATABASE_URL" -f db/migrations/0001_init.sql
+
+# The database in Docker runs the migration, so no local psql is needed.
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
+  < db/migrations/0001_init.sql
+
+# All three models are required: generation and the image pass, embedding, reranking.
 ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
+ollama pull embeddinggemma:300m
+ollama pull hf.co/gpustack/bge-reranker-v2-m3-GGUF:latest
 
 # knowledge graph
 uv tool install graphifyy
@@ -93,6 +102,14 @@ graphify hook install
 
 make check                             # know what green looks like before you change anything
 ```
+
+No `.env` is required — every default already matches `infra/docker-compose.yml`. Copy
+`infra/.env.example` to `.env` only to change a port, a model or the watched folder.
+
+Corpus batches are **not in git** (`corpus/batches/` is gitignored, deliberately). A batch is
+handed over by Lane E out of band; drop it in and load it with `make corpus-load BATCH=batch1`.
+See "Moving a corpus between machines" in [`docs/RUNNING.md`](docs/RUNNING.md) for why the
+database is rebuilt on each machine rather than shared.
 
 Then open Claude Code in the repository and run **`/orient`**.
 

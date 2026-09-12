@@ -1,4 +1,4 @@
-.PHONY: check dev packs tasks graph graph-setup corpus-check eval eval-quick fmt
+.PHONY: check dev packs tasks graph graph-setup corpus-check corpus-load eval eval-quick fmt
 
 check:
 	uv run python -m packs.build --check
@@ -33,6 +33,13 @@ dev:
 # Validate a register handed over by Lane E before anyone builds against it.
 corpus-check:
 	uv run python -m corpus.validate corpus/register/batch1.csv
+
+# Load a handed-over batch into this computer's database. The database is a derived
+# artifact: what travels between the five of us is the batch and its register, not a dump.
+#   make corpus-load BATCH=batch1
+BATCH ?= batch1
+corpus-load:
+	uv run python scripts/load_corpus.py --batch $(BATCH)
 
 eval:
 	uv run python -m eval.run --corpus a --out eval/results

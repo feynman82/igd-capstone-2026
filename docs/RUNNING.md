@@ -258,6 +258,53 @@ changes, preserve original results, and keep the final holdout out of tuning. Re
 quality alongside speed so a faster but less reliable configuration does not appear better.
 The corpus is authored by Lane E; do not generate household documents in benchmark code.
 
+## Moving a corpus between machines
+
+**The database is a derived artifact. Nobody ships one.** Each of the five runs their own
+Postgres in their own Docker, and none of them are networked to each other. What travels is
+the corpus batch and the register that describes it; the database is rebuilt from those.
+
+| Input | Where | In git? |
+|---|---|---|
+| Schema | `db/migrations/0001_init.sql` | yes |
+| Services | `infra/docker-compose.yml` | yes |
+| Ground truth | `corpus/register/*.csv` | yes |
+| Pack definitions | `packs/*/pack.yaml` | yes |
+| **The documents themselves** | `corpus/batches/<batch>/` | **no — gitignored** |
+
+`corpus/batches/` is excluded by `.gitignore` on purpose: hundreds of PDFs, scans and phone
+photographs would bloat the repository, and git handles binaries badly. So the batch is the
+one artifact that has to be handed over out of band — shared drive, or a USB stick at the
+weekly integration session. Put it in `corpus/batches/<batch>/` and load it:
+
+```bash
+uv run python -m corpus.validate corpus/register/batch1.csv   # never load an invalid batch
+make corpus-load BATCH=batch1                                 # copy into the watched folder
+make dev                                                      # the watcher registers and reads
+```
+
+Re-reading the same bytes updates in place, because `documents.sha256` is unique, so loading
+a batch twice costs time and changes nothing.
+
+### Three things that decide whether two people's numbers are comparable
+
+**Score against the register, never against a `facts` table.** Extraction is a model call,
+not a pure function. `core/runtime/ollama.py` asks for `temperature=0.0` but sets no seed, so
+greedy decoding is near-deterministic for one model and quantisation and is *not* guaranteed
+identical across different GPUs and drivers. Two people can therefore hold slightly different
+`facts` rows for the same document, and only `corpus/register/*.csv` is the same on both
+machines. `eval/README.md` already states this — "ground truth comes free" — and it is the
+reason evaluation never reads anybody's live database for an expected answer.
+
+**Record the models, not just the scores.** Embeddings depend on the embedding model and its
+quantisation; a different pull is a different vector space and therefore a different ranking.
+Every file in `eval/results/` names the model, the quantisation and the context length, which
+is what the week-1 hardware table is for.
+
+**The holdout is different in kind.** `corpus/holdout/` is 40 real, redacted documents from
+team members — personal data under the consent and redaction protocol, scored once in week 8.
+It does not travel on the same terms as a synthetic batch, and it is never used for tuning.
+
 ## Access and privacy
 
 Confirmed with Christian on 2026-09-10: same-computer access first, then an explicitly

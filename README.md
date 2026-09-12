@@ -34,6 +34,7 @@ demonstrates both axes.
 
 | You are | Read |
 |---|---|
+| **Just want to run it and try it** | [`TRY-PARROT.md`](TRY-PARROT.md) |
 | Any agent working here | [`AGENTS.md`](AGENTS.md), then [`CLAUDE.md`](CLAUDE.md) — or just run `/orient` |
 | New to the project | [`docs/artefacts/architecture-review.html`](docs/artefacts/architecture-review.html) — open it in a browser |
 | Looking for your brief and tasks | [`team/`](team/README.md) |
@@ -47,14 +48,22 @@ demonstrates both axes.
 ## Quick start
 
 ```bash
-cp infra/.env.example .env
 docker compose -f infra/docker-compose.yml up -d     # postgres+pgvector, redis
-uv sync                                              # or: pip install -e ".[dev]"
-psql "$DATABASE_URL" -f db/migrations/0001_init.sql
-ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
+uv sync --python 3.12 --extra dev
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
+  < db/migrations/0001_init.sql                      # no local psql needed
+
+ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M   # generation + vision
+ollama pull embeddinggemma:300m                                     # embedding
+ollama pull hf.co/gpustack/bge-reranker-v2-m3-GGUF:latest           # reranker
+
 python -m corpus.validate corpus/register/batch1.csv  # check a handed-over batch
-make dev                                             # setup page on :8000, watcher and worker
+make corpus-load BATCH=batch1                         # load it into this machine's database
+make dev                                              # server on :8000, watcher and worker
 ```
+
+No `.env` is needed: every default already matches `infra/docker-compose.yml`. Copy
+`infra/.env.example` to `.env` only to change a port, a model or the watched folder.
 
 `make dev` starts three things: the setup page, the folder watcher and the ingestion worker
 with its nightly sweeps. To run the worker on its own — a second window, or a machine where
@@ -109,8 +118,11 @@ planning estimate. The first demo target is Christian's onboard RTX 4060, withou
 external development GPU. Minimum specifications will follow measured quality, latency
 and memory use. See [`docs/RUNNING.md`](docs/RUNNING.md) for startup and qualification.
 
-On Windows, double-click [`START.cmd`](START.cmd). It currently opens the local setup
-page; document ingestion, questions and the product interface are still being built.
+On Windows, double-click [`START.cmd`](START.cmd). It starts the local server, the folder
+watcher and the ingestion worker, and opens the setup page — which reports whether Docker,
+Ollama and the three models are all present. Documents dropped into `inbox/` are read
+automatically; ask about them with `scripts/ask.py` or the loopback API. The product
+interface is still being built. Step-by-step: [`TRY-PARROT.md`](TRY-PARROT.md).
 
 ---
 
