@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Starting Parrot</title>
+<!--
+  The startup page. Served by the engine, not by Next.js, so `web/app/theme.css`'s light and dark
+  tokens are resolved here rather than imported. See api/startup.py for why the engine serves it.
+  __NONCE__ and __CONFIG__ are filled in per response.
+-->
+<style nonce="__NONCE__">
+:root {
+  --ground: #f7f2e9; --surface: #fffcf6; --surface-2: #f1e9db;
+  --ink: #2b2621; --ink-2: #554c41; --ink-3: #6e6354;
+  --hairline: #e3d9c8; --rule: #cfc2ac;
+  --brand: #b4462a; --brand-strong: #8e3620; --brand-ink: #fffcf6;
+  --ok: #26623a; --ok-soft: #e0ebdf; --ok-line: #84b795;
+  --warn: #7e5c0d; --warn-soft: #f5ead2; --warn-line: #c9a85f;
+  --lift-1: 0 1px 2px rgb(43 38 33 / 0.05), 0 10px 26px -18px rgb(43 38 33 / 0.28);
+  --shimmer: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.72) 50%, transparent 80%);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ground: #1b1814; --surface: #25211b; --surface-2: #302a22;
+    --ink: #f8f0e3; --ink-2: #d6cbbb; --ink-3: #a99a85;
+    --hairline: #332c24; --rule: #4a4036;
+    --brand: #e8825e; --brand-strong: #f0a183; --brand-ink: #1b1814;
+    --ok: #8ccb9e; --ok-soft: #15281b; --ok-line: #3a6b47;
+    --warn: #e0b252; --warn-soft: #2d2413; --warn-line: #6e5825;
+    --lift-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 28px -18px rgb(0 0 0 / 0.9);
+    --shimmer: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.06) 50%, transparent 80%);
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink);
+  font: 15.5px/1.55 "Segoe UI", system-ui, -apple-system, sans-serif; letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+a { color: var(--brand-strong); }
+a:hover { color: var(--brand); }
+.page { display: flex; justify-content: center; padding: min(120px, 14vh) 24px 64px; }
+.column { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 32px; }
+.mark { display: flex; align-items: center; gap: 8px; }
+.wordmark, h1, .title { font-family: "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+.wordmark { font-size: 21px; line-height: 1; font-weight: 600; }
+.heading { display: flex; flex-direction: column; gap: 8px; }
+h1 { margin: 0; font-size: 28px; line-height: 1.15; font-weight: 600; }
+.lead { margin: 0; font-size: 17.5px; line-height: 1.3; color: var(--ink-2); text-wrap: pretty; }
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px;
+  box-shadow: var(--lift-1); overflow: hidden; padding: 4px 0; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 24px; }
+.row + .row { border-top: 1px solid var(--hairline); }
+.row.waiting { margin: 4px 8px; padding: 12px 16px; align-items: flex-start; border-radius: 8px;
+  background: var(--warn-soft); border: 1px solid var(--warn-line); }
+.row.waiting + .row, .row + .row.waiting { border-top-color: transparent; }
+.icon { width: 22px; height: 22px; flex-shrink: 0; border-radius: 999px; display: grid; place-items: center; }
+.icon.done { background: var(--ok-soft); border: 1px solid var(--ok-line); color: var(--ok); }
+.icon.alert { background: var(--surface); border: 1px solid var(--warn-line); color: var(--warn); }
+.icon.later { border: 1.5px dashed var(--rule); }
+.text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.title { font-size: 15.5px; line-height: 1.3; font-weight: 600; }
+.later-row .title { color: var(--ink-2); }
+.detail { font-size: 13px; line-height: 1.55; color: var(--ink-3); }
+.waiting .detail { font-size: 15.5px; color: var(--ink-2); text-wrap: pretty; }
+.status { min-width: 64px; display: flex; justify-content: flex-end; font-size: 13px; font-weight: 500; }
+.status.ok { color: var(--ok); }
+.status.warn { color: var(--warn); padding-top: 2px; }
+.status.quiet { color: var(--ink-3); }
+.skeleton { position: relative; overflow: hidden; background: var(--surface-2); }
+.skeleton::after { content: ""; position: absolute; inset: 0; background: var(--shimmer);
+  transform: translateX(-100%); animation: sweep 1400ms linear infinite; }
+.dot { width: 22px; height: 22px; border-radius: 999px; flex-shrink: 0; }
+.bar { width: 56px; height: 10px; border-radius: 8px; }
+.arrive { animation: arrive 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+.next { margin: 0; display: flex; align-items: center; gap: 8px; color: var(--ink-2); }
+.next svg { color: var(--brand); flex-shrink: 0; }
+.foot { margin: 0; font-size: 13px; color: var(--ink-3); }
+@keyframes sweep { to { transform: translateX(100%); } }
+@keyframes arrive { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { display: none; }
+  .arrive { animation-name: fade; }
+}
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<main class="page" data-config="__CONFIG__">
+  <div class="column">
+    <div class="mark">
+      <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8.8" fill="var(--brand)"></rect><path d="M11 24V9.5A1.5 1.5 0 0 1 12.5 8h5.8a5.6 5.6 0 0 1 0 11.2H14" fill="none" stroke="var(--brand-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+      <span class="wordmark">parrot</span>
+    </div>
+
+    <div class="heading" role="status" aria-live="polite">
+      <h1 id="headline">Getting Parrot ready</h1>
+      <p class="lead" id="lead">Everything runs on this computer, so the first start takes a moment. Today opens by itself as soon as your documents are reachable.</p>
+    </div>
+
+    <div class="card" id="rows"></div>
+
+    <p class="next" id="next" hidden>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+      <span id="next-text">Opening Today.</span>
+    </p>
+
+    <p class="foot">This page checks again every few seconds. Nothing is sent to a cloud service. <a href="/setup">Setup details</a></p>
+  </div>
+</main>
+<script nonce="__NONCE__">
+(() => {
+  "use strict";
+  const config = JSON.parse(document.querySelector("main").dataset.config);
+  const POLL_MS = 1500;
+  const SCREENS_PATIENCE_MS = 120000;
+  const started = Date.now();
+  const TICK = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>';
+  const BANG = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 6.5v7"></path><path d="M12 17.5h.01"></path></svg>';
+
+  const ROWS = [
+    { id: "engine", title: "Parrot", detail: "Starting on this computer" },
+    { id: "documents", title: "Your documents", detail: "Where everything you have filed is kept" },
+    { id: "filing", title: "Filing", detail: "Reads what you drop into the inbox" },
+    { id: "screens", title: "Screens", detail: "Today, Ask, Vault and Packs" },
+    { id: "model", title: "Local model", detail: "Writes answers and reads difficult pages" },
+  ];
+
+  const container = document.getElementById("rows");
+  const drawn = {};
+  for (const row of ROWS) {
+    const element = document.createElement("div");
+    element.className = "row";
+    container.appendChild(element);
+    drawn[row.id] = { element, key: "" };
+  }
+
+  // One row, in one of five states: pending, loading, ready, waiting, later. Redrawn only when
+  // its state or sentence changes, so a tick arrives once rather than on every poll.
+  function draw(row, state, detail, label) {
+    const slot = drawn[row.id];
+    const key = state + "|" + detail + "|" + label;
+    if (slot.key === key) return;
+    const arriving = slot.key !== "" && (state === "ready" || state === "waiting");
+    slot.key = key;
+    const element = slot.element;
+    element.className = "row" + (state === "waiting" ? " waiting" : "") + (state === "later" ? " later-row" : "");
+    element.replaceChildren();
+
+    const icon = document.createElement("span");
+    if (state === "ready") { icon.className = "icon done"; icon.innerHTML = TICK; }
+    else if (state === "waiting") { icon.className = "icon alert"; icon.innerHTML = BANG; }
+    else if (state === "later") { icon.className = "icon later"; }
+    else { icon.className = "skeleton dot"; }
+    icon.setAttribute("aria-hidden", "true");
+    if (arriving) icon.classList.add("arrive");
+
+    const text = document.createElement("span");
+    text.className = "text";
+    const title = document.createElement("span");
+    title.className = "title";
+    title.textContent = row.title;
+    const sentence = document.createElement("span");
+    sentence.className = "detail";
+    sentence.textContent = detail;
+    text.append(title, sentence);
+
+    const status = document.createElement("span");
+    if (state === "pending") {
+      status.className = "status";
+      const bar = document.createElement("span");
+      bar.className = "skeleton bar";
+      bar.setAttribute("aria-hidden", "true");
+      status.appendChild(bar);
+    } else {
+      status.className = "status " + (state === "ready" ? "ok" : state === "waiting" ? "warn" : "quiet");
+      status.textContent = label;
+      if (arriving) status.classList.add("arrive");
+    }
+    const spoken = document.createElement("span");
+    spoken.className = "sr-only";
+    spoken.textContent = row.title + ": " + (state === "pending" ? "not yet" : label) + ".";
+    element.append(icon, text, status, spoken);
+  }
+
+  function check(status, name) {
+    return ((status && status.checks) || []).find((item) => item.name === name);
+  }
+
+  let leaving = false;
+  function apply(status) {
+    const running = Boolean(status && status.engine === "running");
+    const database = check(status, "Database");
+    const broker = check(status, "Queue broker");
+    const screens = check(status, "Household interface");
+    const generator = check(status, "Generator and vision");
+    const model = (running && status.model) || { state: "waiting" };
+    const screensExpected = !(status && status.screens && status.screens.expected === false);
+
+    draw(ROWS[0], running ? "ready" : "pending", ROWS[0].detail, "Ready");
+
+    const documentsReady = Boolean(database && database.state === "available");
+    const documentsBlocked = Boolean(database && database.state === "blocked");
+    if (documentsReady) draw(ROWS[1], "ready", ROWS[1].detail, "Ready");
+    else if (documentsBlocked) draw(ROWS[1], "waiting", "The database is not answering. If Docker Desktop is closed, start it and Parrot carries on by itself.", "Waiting");
+    else draw(ROWS[1], "pending", ROWS[1].detail, "");
+
+    if (documentsBlocked) draw(ROWS[2], "later", "Starts once your documents are reachable", "Not yet");
+    else if (broker && broker.state === "available") draw(ROWS[2], "ready", ROWS[2].detail, "Ready");
+    else if (broker && broker.state === "blocked") draw(ROWS[2], "waiting", "The queue is not answering, so documents are read one at a time until it is. Nothing is lost.", "Slower");
+    else draw(ROWS[2], "pending", ROWS[2].detail, "");
+
+    const screensReady = Boolean(screens && screens.state === "available");
+    if (screensReady) draw(ROWS[3], "ready", ROWS[3].detail, "Ready");
+    else if (!screensExpected) draw(ROWS[3], "later", "Not started this time. Setup details below say how.", "Off");
+    else if (Date.now() - started > SCREENS_PATIENCE_MS) draw(ROWS[3], "waiting", "The screens have not answered yet. The Parrot window says why.", "Waiting");
+    else draw(ROWS[3], "pending", "Today, Ask, Vault and Packs. The first start compiles them.", "");
+
+    if (generator && generator.state === "blocked") draw(ROWS[4], "waiting", "Ollama is not answering, so answers and filing wait for it. Everything else works.", "Waiting");
+    else if (model.state === "unavailable") draw(ROWS[4], "waiting", "The local model did not load. Answers and filing wait until Ollama is running.", "Waiting");
+    else if (model.state === "ready" && model.device === "cpu") draw(ROWS[4], "ready", "Running on this computer's processor, so an answer can take a few minutes.", "Ready");
+    else if (model.state === "ready") draw(ROWS[4], "ready", ROWS[4].detail, "Ready");
+    else draw(ROWS[4], "loading", ROWS[4].detail, "Loading");
+
+    const headline = document.getElementById("headline");
+    const lead = document.getElementById("lead");
+    if (documentsBlocked) {
+      headline.textContent = "Parrot is waiting for its database";
+      lead.textContent = "As soon as the database answers, Today opens by itself. There is nothing to restart.";
+    } else {
+      headline.textContent = "Getting Parrot ready";
+      lead.textContent = "Everything runs on this computer, so the first start takes a moment. Today opens by itself as soon as your documents are reachable.";
+    }
+
+    if (documentsReady && screensReady && !leaving) {
+      leaving = true;
+      document.getElementById("next-text").textContent = model.state === "ready"
+        ? "Opening Today."
+        : "Opening Today. Answers get quicker once the local model has loaded.";
+      document.getElementById("next").hidden = false;
+      const target = (status.screens && status.screens.url) || config.screens;
+      setTimeout(() => window.location.replace(new URL("today", target).href), 900);
+    }
+  }
+
+  async function poll() {
+    let status = null;
+    try {
+      const response = await fetch("/api/system", { cache: "no-store" });
+      if (response.ok) status = await response.json();
+    } catch (error) {
+      status = null; // the engine restarting underneath this page; the next poll decides
+    }
+    apply(status);
+    if (!leaving) setTimeout(poll, POLL_MS);
+  }
+
+  apply({ engine: "running", checks: [] });
+  poll();
+})();
+</script>
+</body>
+</html>

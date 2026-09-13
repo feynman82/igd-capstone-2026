@@ -114,7 +114,11 @@ export default async function TodayPage({
   const items = result.data.items;
   const urgent = items.filter(isUrgent);
   const later = items.filter((item) => !isUrgent(item));
-  const needsEyes = waiting.ok ? waiting.data.count : 0;
+  // Only a document that can still be read again needs a person. One whose file has left the inbox
+  // can only be forgotten, which is a line at the foot of the page, not a thing that needs you.
+  const quarantined = waiting.ok ? waiting.data.documents : [];
+  const needsEyes = quarantined.filter((document) => document.retryable).length;
+  const gone = quarantined.length - needsEyes;
   const attention = urgent.length + (needsEyes > 0 ? 1 : 0);
 
   // The first urgent thing is the hero, and there is never a second one. If nothing is urgent
@@ -168,7 +172,22 @@ export default async function TodayPage({
       ) : null}
 
       {filed.ok ? <Provenance total={filed.data.total} /> : null}
+      {gone > 0 ? <GoneNote count={gone} /> : null}
     </>
+  );
+}
+
+/** Quiet on purpose: nothing here needs doing today, and the Vault is where it is forgotten. */
+function GoneNote({ count }: { count: number }) {
+  return (
+    <p className="mt-[var(--s-2)] text-meta text-ink-3">
+      {count === 1
+        ? "One document left the inbox before Parrot could read it."
+        : `${count} documents left the inbox before Parrot could read them.`}{" "}
+      <Link href="/vault?status=quarantined" className="text-ink-2">
+        Forget {count === 1 ? "it" : "them"} in the Vault
+      </Link>
+    </p>
   );
 }
 

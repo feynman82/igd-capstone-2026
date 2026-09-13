@@ -29,9 +29,8 @@ Because the schedule is section 1 of every document, every extracted value lands
 
 ```
 You are a Singapore insurance product drafter. Write a COMPLETE, INTERNALLY CONSISTENT
-policy document for a FICTIONAL insurer. This is synthetic material for a university
-project's test corpus. It must never name a real insurer, hospital, bank or government
-agency.
+policy document for the insurer named below. This is synthetic material for a university
+project's test corpus.
 
 LIFE ASSURED / INSURED:    Marcus Lim Jun Wei, born 8 May 1987, Singapore
 ADDRESS:                   Blk 45B Tampines Ave 8 #07-21 Singapore 521045
@@ -48,8 +47,7 @@ STRUCTURE - produce all of these, in this order, with numbered clauses:
   8. General conditions, including free-look, cancellation and governing law
 
 RULES:
-  - Every organisation you name is invented. Do not name a real hospital, clinic,
-    insurer, bank or government agency anywhere in the document.
+  - Name real Singapore hospitals, schemes and public bodies wherever a real policy would.
   - Use Singapore conventions: SGD, DD Month YYYY dates, CPF/MediSave where realistic.
   - Every figure must be consistent everywhere it appears in the document.
   - Do NOT print a document reference, form number or "Ref:" line anywhere: the
@@ -134,10 +132,6 @@ recovery, and a personal accident benefit for the driver.
 Include a NO CLAIM DISCOUNT clause and a clause on how the discount is affected by a
 claim. Include an AUTHORISED DRIVERS clause, a clause on named-driver versus any-driver
 cover, and a young or inexperienced driver additional excess.
-
-Do not name a real workshop, motoring association, or government transport agency. If
-the policy needs to refer to a panel of repairers, refer to it as a class - "an
-authorised repairer within the insurer's panel" - and do not list any by name.
 ```
 
 **Two things this must agree with.** `b1-0004` is the renewal notice that led to this period —
@@ -200,10 +194,10 @@ appendicitis falls. Pre-existing conditions excluded unless declared and accepte
 ```
 
 **This is the one the demo question turns on.** *"If I have appendicitis, can I claim the
-operation at Raffles Hospital?"* — Raffles Hospital is real and `corpus/README.md` rule 1
-forbids naming it in the corpus, so the name appears **in the question only, never in the
-document**. Parrot must answer by reading the entitlement clause (any private hospital, as a
-class) together with the surgical benefit table (appendicectomy, and which table it sits in).
+operation at Raffles Hospital?"* — the entitlement clause states the class (any private
+hospital) so the answer is a reading rather than a name match. Parrot must answer by reading
+the entitlement clause together with the surgical benefit table (appendicectomy, and which
+table it sits in).
 Two citations, two clauses, one answer.
 
 **`PH-2022-604188` must not touch `HS-2023-771904`.** That is Lim Ah Kow's hospital income plan
@@ -247,11 +241,6 @@ period for cancer and heart conditions; an exclusion for pre-existing conditions
 exclusion for conditions arising from self-inflicted injury; and a clause stating
 clearly that the policy has NO surrender value and NO maturity benefit, because it is a
 term plan.
-
-Do not name a real hospital, laboratory, medical register or specialist accreditation
-body. Where the definitions need a diagnosing authority, describe it as a class - "a
-registered medical practitioner holding a specialist qualification in the relevant
-discipline".
 ```
 
 ---
@@ -265,8 +254,7 @@ uv run python -m corpus.validate corpus/register/batch1.csv
 Then check, per document, before committing:
 
 - [ ] No `Ref:` line anywhere — it gets extracted as the policy number
-- [ ] No real institution anywhere — search the text for hospital, clinic, bank and agency names
 - [ ] Every figure matches the register row character for character
 - [ ] `b1-0031`: the surrender table's years 9, 10 and 11 match `b1-0013`/`b1-0014`/`b1-0015`
-- [ ] `b1-0032`: appendicectomy is named, and no hospital is
+- [ ] `b1-0032`: appendicectomy is named, and the private-hospital entitlement is stated
 - [ ] `field_pages` checked, not assumed

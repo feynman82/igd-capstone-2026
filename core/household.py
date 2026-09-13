@@ -155,6 +155,15 @@ RETURNING alias
 
 DELETE_ALIAS = "DELETE FROM person_aliases WHERE id = %(id)s RETURNING alias"
 
+# Where somebody sits in the household, decided by a person on a screen. Never the owner: the
+# owner's relation is `self` by definition, and changing who that is is `set_owner`.
+SET_PLACE = """
+UPDATE people
+   SET relation = %(relation)s, external = %(external)s
+ WHERE id = %(id)s AND NOT is_owner
+RETURNING id
+"""
+
 CLEAR_OWNER = "UPDATE people SET is_owner = false WHERE is_owner"
 
 SET_OWNER = """
@@ -353,6 +362,22 @@ def confirm(conn: Any, alias_id: int, person_id: int) -> None:
         cur.execute(CONFIRM_ALIAS, {"id": alias_id, "person_id": person_id})
         if cur.fetchone() is None:
             raise ValueError(f"No pending name with id {alias_id}")
+
+
+def place(conn: Any, person_id: int, relation: Relation, *, external: bool = False) -> None:
+    """Say how somebody is related to the owner, or that they are not part of the household.
+
+    The model proposes a relation when it creates a person off a document, and a person answers
+    it. Before this existed the only answer on Today was "someone else here", which recorded
+    `other` whatever the truth was: on 13 September "Lim Ah Kow" could not be recorded as the
+    owner's father, and the screen said "Lim Ah Kow is Lim Ah Kow".
+    """
+    if relation not in RELATIONS or relation == "self":
+        raise ValueError(f"Not a relation somebody other than the owner can have: {relation}")
+    with conn.cursor() as cur:
+        cur.execute(SET_PLACE, {"id": person_id, "relation": relation, "external": external})
+        if cur.fetchone() is None:
+            raise ValueError(f"No household member with id {person_id} other than the owner")
 
 
 def dismiss(conn: Any, alias_id: int) -> None:

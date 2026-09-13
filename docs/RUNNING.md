@@ -5,17 +5,33 @@ you can read setup problems. It works independently of the terminal's current di
 It uses the project's Python environment, or Python on PATH for initial diagnostics.
 It does not require enabling PowerShell scripts or changing execution policy.
 
-**Current build stage:** double-click startup opens a local setup page at
-`http://127.0.0.1:8000` **and starts watching the inbox folder**. A document dropped in is
+**Current build stage:** double-click startup opens the startup page at
+`http://127.0.0.1:8000` within a second **and starts watching the inbox folder**. The page shows
+what Parrot is waiting for — the database, filing, the screens and the local model — and moves to
+Today by itself once the database and the screens answer; if something is not coming by itself,
+that row turns into a sentence saying what to do. While it waits, the local model is loaded in
+the background, and the page says whether it landed on the graphics card or the processor. The
+dependency table that used to be the whole page is at `/setup`. A document dropped in is
 registered, parsed, classified against an installed pack, and either indexed with cited facts
 or sent to quarantine with a reason. `scripts/ask.py` answers questions from it with a document
 and a page, or abstains. `scripts/today.py` shows what the Reminder and Alert modules have to
 say.
 
 The household interface is built: Today, Ask, Vault and Packs are screens under
-`web/app/(app)/`, served by a **separate Next.js process** that the launcher does not start —
-see "The screens" below. The page at `http://127.0.0.1:8000` is the engine and its setup
-diagnostics; it is not the product and never will be.
+`web/app/(app)/`, served by a **separate Next.js process** that the launcher starts beside the engine —
+see "The screens" below. The pages at `http://127.0.0.1:8000` are the engine's startup page and
+its setup diagnostics; they are not the product and never will be.
+
+**After a change to chunking or embedding, rebuild the vault's vectors once:**
+
+```powershell
+uv run python scripts/reindex.py
+```
+
+It re-parses each indexed document from the inbox, re-chunks it and re-embeds it, and leaves its
+facts, obligations and corrections alone. A vault embedded the old way is not searchable the new
+way — queries and passages must be embedded alike — so questions answer badly until it has run.
+On a processor-only machine it takes a minute or two per long document, mostly parsing.
 
 Hybrid retrieval is still Lane B's and is not built yet. `core/retrieve/` holds a README, and
 both `scripts/ask.py` and `api/routes.py` import `DenseRetriever` and `NoReranker` from the
@@ -40,6 +56,11 @@ docker compose -f infra/docker-compose.yml up -d
 This command may download container images. The launcher itself does not run it.
 An existing database must have the reviewed migration applied by the integration owner;
 the diagnostic server only reads schema metadata and never applies migrations.
+
+To restart or stop Parrot from the screens, use **Power** in the header. Restart stops the engine
+and starts a fresh one with whatever code is on disk, while the screens stay open and reconnect;
+Shut down stops the engine, the ingestion worker, its nightly schedule and the screens, and the
+`START.cmd` window closes with it. Neither touches PostgreSQL, Redis or Ollama.
 
 Keep the Parrot terminal open. Press Ctrl+C there to stop the diagnostic server. Existing
 PostgreSQL, Redis and Ollama services are not stopped. A second launch refuses a busy port
@@ -155,6 +176,12 @@ fields.
 The retry matches quarantined rows to files by SHA-256, so the original must still be in the
 inbox. See [ADR 0006](adr/0006-pypdfium2-for-the-quarantine-image-pass.md).
 
+A quarantined document whose file has **left** the inbox cannot be retried, so it no longer
+counts as something that needs you: Today mentions it in one quiet line, and the Vault lists it
+under "No longer in the inbox" with **Forget it**, which removes Parrot's record of it
+(`DELETE /api/quarantine/{id}`). Your files are not touched. A document whose file is still in the
+inbox is not forgotten — capture would register it again within a minute — so take it out first.
+
 ## Asking a question
 
 ```powershell
@@ -234,7 +261,11 @@ opens. The HTTP endpoints have distinct meanings:
   the worker, never the Next.js process, so it is in no position to declare the product ready.
   Read it as "the setup stage is still the stage", not as a health signal. Checks are read-only
   and cached for five seconds.
-- `/`: the human-readable setup page. It remains usable when dependencies are unavailable.
+- `/`: the startup page. It polls `/api/system`, never waits on the checks to render, and runs
+  only its own nonce-tagged script; nothing on it leaves the machine.
+- `/setup`: the human-readable setup page. It remains usable when dependencies are unavailable.
+- `/api/system`: the checks, whether the engine can restart itself, whether the local model is
+  loaded and where (`gpu`, `partial`, `cpu`), and where the screens are.
 
 Database checks verify PostgreSQL 17, pgvector and base-table presence, not every column,
 constraint or migration state. Model metadata checks do not run inference and therefore
@@ -425,16 +456,18 @@ Database and broker integration were verified on 2026-09-11: the compose stack s
 `db/migrations/0001_init.sql` applies, and all seven base tables are present. A file
 dropped into `inbox/` produced a `documents` row, and a copy of it was recognised as
 already filed. Redis needed a host-port change on this machine because another project's
-Redis already owned 6379: set **`PARROT_REDIS_PORT=6380`** in `.env` and nothing else.
+Redis already owned 6379: set **`PARROT_REDIS_PORT=6380`** in `.env`, then start the containers
+with `docker compose --env-file .env -f infra/docker-compose.yml up -d`.
 
-`PARROT_REDIS_PORT` is the one variable for the broker port and `PARROT_DB_PORT` the one for
-the database: `infra/docker-compose.yml` publishes the container on it and
-`core/runtime/settings.py` derives the client URL from it, so the two cannot drift. Setting
-only `PARROT_REDIS_PORT` used to move the container while leaving the engine dialling 6379,
-which surfaces as "the queue broker did not answer" and silently drops ingestion to inline —
-several seconds per document instead of a worker. `REDIS_URL` and `DATABASE_URL` still
-override outright if you need a different host or database. The earlier failure below is kept
-for the record.
+`PARROT_REDIS_PORT` is the one variable for the broker port and `PARROT_DB_PORT` the one for the
+database, and `core/runtime/settings.py` derives the client URL from it. `infra/docker-compose.yml`
+publishes the container on it **only when the root `.env` is passed with `--env-file`**: Compose
+reads `${...}` from its project directory, which is `infra/`, so without the flag a changed port is
+silently ignored and the engine dials a port nothing is listening on — "the queue broker did not
+answer", and ingestion dropped to inline. On a machine with no `.env`, leave the flag off: Compose
+refuses a file that does not exist, and the defaults already agree. `REDIS_URL` and `DATABASE_URL`
+still override outright if you need a different host or database. The earlier failure below is
+kept for the record.
 
 Previously, Docker Desktop
 failed to start because its transient `sailor-ingest.sock` file could not be accessed.

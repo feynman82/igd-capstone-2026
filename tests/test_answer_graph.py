@@ -91,6 +91,9 @@ class ScriptedOllama:
     def embed(self, texts: list[str]) -> list[list[float]]:
         return [[0.0] * 768 for _ in texts]
 
+    def embed_query(self, text: str) -> list[float]:
+        return self.embed([text])[0]
+
 
 class FixedRetriever:
     def __init__(self, passages: list[Passage]) -> None:

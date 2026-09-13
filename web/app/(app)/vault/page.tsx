@@ -49,7 +49,11 @@ export default async function VaultPage({
   }
 
   const { documents, total } = listing.data;
-  const needsEyes = waiting.ok ? waiting.data.documents : [];
+  const quarantined = waiting.ok ? waiting.data.documents : [];
+  // A document whose file has left the inbox cannot be read again, only forgotten, so it is listed
+  // quietly under its own label rather than as something that needs a person's eyes.
+  const needsEyes = quarantined.filter((document) => document.retryable);
+  const gone = quarantined.filter((document) => !document.retryable);
 
   return (
     <>
@@ -64,6 +68,13 @@ export default async function VaultPage({
         <section className="mt-[var(--s-6)]">
           <h2 className="group-label">Needs your eyes</h2>
           <QuarantineQueue documents={needsEyes} />
+        </section>
+      ) : null}
+
+      {gone.length > 0 ? (
+        <section className="mt-[var(--s-6)]">
+          <h2 className="group-label">No longer in the inbox</h2>
+          <QuarantineQueue documents={gone} />
         </section>
       ) : null}
 

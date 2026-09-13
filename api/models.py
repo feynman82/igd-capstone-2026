@@ -359,8 +359,25 @@ class ConfirmNameRequest(BaseModel):
 
     person_id: int | None = None
     display_name: str | None = Field(default=None, max_length=120)
-    relation: Literal["self", "partner", "child", "parent", "other"] = "other"
+    # Unset means "leave it as it is" for an existing person and `other` for a new one. Set with
+    # `person_id`, it places the person the model created off the document in the same tap.
+    relation: Literal["partner", "child", "parent", "other"] | None = None
     external: bool = False
+
+
+class PlaceRequest(BaseModel):
+    """How somebody already in the roster is related to the owner. The owner's own is `self`."""
+
+    relation: Literal["partner", "child", "parent", "other"]
+    external: bool = False
+
+
+class ForgottenDocument(BaseModel):
+    """A quarantined document Parrot no longer remembers."""
+
+    document_id: str
+    original_name: str
+    status: Literal["forgotten"] = "forgotten"
 
 
 class TelegramLinkRequest(BaseModel):

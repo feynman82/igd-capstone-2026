@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;family=Outfit:wght@500;600;700&amp;display=swap">
+  <style>
+    .t-light {
+      --ground: #f7f2e9; --surface: #fffcf6; --surface-2: #f1e9db;
+      --ink: #2b2621; --ink-2: #554c41; --ink-3: #6e6354;
+      --hairline: #e3d9c8;
+      --shimmer: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.72) 50%, transparent 80%);
+    }
+    body { margin: 0; background: #f7f2e9; }
+    a { color: #8e3620; }
+    a:hover { color: #b4462a; }
+    .page { font-family: Figtree, "Segoe UI", system-ui, sans-serif; font-size: 15.5px; line-height: 1.55; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+    .skeleton { position: relative; overflow: hidden; background: var(--surface-2); border-radius: 8px; }
+    .skeleton::after { content: ""; position: absolute; inset: 0; background: var(--shimmer); transform: translateX(-100%); animation: parrot-sweep 1400ms linear infinite; }
+    @keyframes parrot-sweep { to { transform: translateX(100%); } }
+    @media (prefers-reduced-motion: reduce) { .skeleton::after { display: none; } }
+  </style>
+</helmet>
+<div class="page t-light" style="min-height: 900px; box-sizing: border-box; background: var(--ground); color: var(--ink); display: flex; flex-direction: column;">
+
+  <div style="background: var(--surface); border-bottom: 1px solid var(--hairline);">
+    <div style="max-width: 1088px; margin: 0 auto; height: 64px; padding: 0 24px; box-sizing: border-box; display: flex; align-items: center; gap: 32px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="skeleton" style="width: 28px; height: 28px;"></div>
+        <div class="skeleton" style="width: 64px; height: 16px;"></div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <div class="skeleton" style="width: 72px; height: 36px; border-radius: 999px;"></div>
+        <div class="skeleton" style="width: 52px; height: 36px; border-radius: 999px;"></div>
+        <div class="skeleton" style="width: 60px; height: 36px; border-radius: 999px;"></div>
+        <div class="skeleton" style="width: 62px; height: 36px; border-radius: 999px;"></div>
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 16px;">
+        <span style="font-size: 13px; color: var(--ink-3);">Starting Parrot · 3 of 5 ready</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width: 100%; max-width: 880px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px;">
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div class="skeleton" style="width: 220px; height: 28px;"></div>
+      <div class="skeleton" style="width: 360px; height: 16px;"></div>
+    </div>
+    <div class="skeleton" style="width: 120px; height: 10px;"></div>
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <div style="display: flex; gap: 12px; border-radius: 14px; border: 1px solid var(--hairline); background: var(--surface); padding: 16px;">
+        <div class="skeleton" style="width: 3px; height: 40px; flex-shrink: 0;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <div class="skeleton" style="width: 40%; height: 16px;"></div>
+          <div class="skeleton" style="width: 80%; height: 12px;"></div>
+          <div class="skeleton" style="width: 144px; height: 20px;"></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; border-radius: 14px; border: 1px solid var(--hairline); background: var(--surface); padding: 16px;">
+        <div class="skeleton" style="width: 3px; height: 40px; flex-shrink: 0;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <div class="skeleton" style="width: 34%; height: 16px;"></div>
+          <div class="skeleton" style="width: 72%; height: 12px;"></div>
+          <div class="skeleton" style="width: 144px; height: 20px;"></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; border-radius: 14px; border: 1px solid var(--hairline); background: var(--surface); padding: 16px;">
+        <div class="skeleton" style="width: 3px; height: 40px; flex-shrink: 0;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <div class="skeleton" style="width: 46%; height: 16px;"></div>
+          <div class="skeleton" style="width: 64%; height: 12px;"></div>
+          <div class="skeleton" style="width: 144px; height: 20px;"></div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 12px; border-radius: 14px; border: 1px solid var(--hairline); background: var(--surface); padding: 16px;">
+        <div class="skeleton" style="width: 3px; height: 40px; flex-shrink: 0;"></div>
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 8px;">
+          <div class="skeleton" style="width: 38%; height: 16px;"></div>
+          <div class="skeleton" style="width: 76%; height: 12px;"></div>
+          <div class="skeleton" style="width: 144px; height: 20px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

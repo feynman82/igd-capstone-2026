@@ -24,18 +24,19 @@ medical letter belonging to a team member or a third party is ingested during de
 
 ## What we do not do
 
-We do not render documents bearing the name, logo or letterhead of a real insurer, bank or
-government agency. A realistic-looking fake notice from a real institution is a fabricated
-official record regardless of the intent behind it, and it would also make the corpus
-unpublishable alongside the report. All organisations in the corpus are invented.
+We do not ingest a real person's document. The people, addresses, policy numbers and figures
+on every document come from the household canon.
 
-A visible `SYNTHETIC DOCUMENT — NOT A REAL RECORD` footer on every page was part of this
-control and has been withdrawn. The reasoning: the invented issuer is what makes a document
-unusable as a record of anything, and it is verifiable by inspection, whereas the footer was
-not being produced reliably — generators placed it on the final page only, and where it was
-placed it overlapped the body text. A control that is asserted but not met is worse than one
-that is not claimed. **This is a change to a stated control and needs Siew's review**, since
-the case below rests on it.
+Two controls that used to sit here have been withdrawn. **Invented organisations only** was
+withdrawn on 13 September 2026 at the integration lead's direction: full-length policies name
+hospitals, schemes and dispute bodies, and forbidding them made the corpus a weaker test of
+retrieval than the documents a household actually holds. A visible
+`SYNTHETIC DOCUMENT — NOT A REAL RECORD` footer on every page was withdrawn earlier, because
+generators placed it on the final page only and overlapped the body text where it did land.
+
+What follows for publication: a corpus document that names a real insurer is not publishable
+as-is alongside the report, so anything published is reviewed for that first. **This is a
+change to a stated control and needs Siew's review**, since the case below rests on it.
 
 ## What synthetic data does not prove
 

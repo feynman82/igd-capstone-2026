@@ -129,10 +129,8 @@ From page two onward, write the policy in full. Use numbered clauses throughout 
       with its own number, effective date and wording.
 
 RULES throughout:
-  - Every organisation you name is invented. Never name a real insurer, hospital, clinic,
-    bank, government agency, court, or professional body. Where the wording needs an
-    authority, describe it as a class: "a registered medical practitioner holding a
-    specialist qualification in the relevant discipline".
+  - Name real Singapore hospitals, schemes, courts and dispute bodies wherever a real policy
+    would. The insurer is the one named above.
   - Singapore conventions: SGD, DD Month YYYY, and CPF or MediSave only as generic
     concepts where a real policy would mention them.
   - Every figure must be identical everywhere it appears. If the sum insured is
@@ -172,9 +170,9 @@ This plan must also contain, in the benefit section:
     general waiting period has passed.
 ```
 
-Raffles Hospital is a real institution, so the name belongs **in the question only, never in
-the document**. Parrot answers by reading the entitlement clause together with the surgical
-table — two citations, two clauses, one answer — which is the harder and more honest retrieval.
+The entitlement is stated as a class of hospital, so a question naming a specific private
+hospital is answered by reading the entitlement clause together with the surgical table — two
+citations, two clauses, one answer — rather than by matching a name.
 
 ---
 

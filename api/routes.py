@@ -59,6 +59,7 @@ from api.models import (
     EnabledRequest,
     ErrorEvent,
     FinishedEvent,
+    ForgottenDocument,
     HouseholdResponse,
     ModuleSummary,
     ObligationChanged,
@@ -68,6 +69,7 @@ from api.models import (
     PendingName,
     PersonModel,
     PersonRequest,
+    PlaceRequest,
     QuarantinedDocument,
     QuarantineResponse,
     ReadingEvent,
@@ -550,6 +552,22 @@ def build_router() -> APIRouter:
             ) from error
         return RetryAccepted(document_id=document_id, task_id=task_id)
 
+    @router.delete("/quarantine/{document_id}", response_model=ForgottenDocument)
+    def forget_one(document_id: str, conn: Conn, config: Config) -> ForgottenDocument:
+        """Forget a document whose file has left the inbox, so it stops asking for attention.
+
+        409 while the file is still there, because capture would register it again at once.
+        """
+        try:
+            name = quarantine.forget(conn, document_id, Path(config.watch_folder))
+        except quarantine.StillInInbox as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        if name is None:
+            raise HTTPException(
+                status_code=404, detail=f"document {document_id} is not in quarantine"
+            )
+        return ForgottenDocument(document_id=document_id, original_name=name)
+
     # ------------------------------------------------------------------------ household
     #
     # Who lives here, and which one of them is you. The interface never touches the database,
@@ -652,11 +670,29 @@ def build_router() -> APIRouter:
             person_id = household.add_person(
                 conn,
                 request.display_name,
-                request.relation,
+                request.relation or "other",
                 external=request.external,
             ).id
+        elif request.relation is not None or request.external:
+            # The person the model created off the document, placed in the same tap: "my
+            # parent" or "not one of us" answers both who the name is and where they sit.
+            try:
+                household.place(
+                    conn, person_id, request.relation or "other", external=request.external
+                )
+            except ValueError as error:
+                raise HTTPException(status_code=404, detail=str(error)) from error
         try:
             household.confirm(conn, alias_id, person_id)
+        except ValueError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+        return _saved(conn)
+
+    @router.patch("/household/people/{person_id}", response_model=HouseholdResponse)
+    def place_person(person_id: int, request: PlaceRequest, conn: Conn) -> HouseholdResponse:
+        """Correct how somebody is related to the owner, after the question was answered."""
+        try:
+            household.place(conn, person_id, request.relation, external=request.external)
         except ValueError as error:
             raise HTTPException(status_code=404, detail=str(error)) from error
         return _saved(conn)

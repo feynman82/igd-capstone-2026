@@ -578,6 +578,112 @@ def test_retrying_something_not_in_quarantine_is_a_404(client: TestClient) -> No
     assert response.status_code == 404
 
 
+def test_a_document_that_left_the_inbox_can_be_forgotten(settings: Settings) -> None:
+    """b1-0032.pdf on 13 September: deleted from the inbox, and still asking for attention."""
+    conn = FakeConn(
+        rows_for(
+            **{
+                "WHERE status = 'quarantined'": [
+                    (SCAN, "b1-0032.pdf", "application/pdf", "not recognised", 1)
+                ],
+                "SELECT id, sha256": [],  # no file behind it
+                "DELETE FROM documents": [("b1-0032.pdf",)],
+            }
+        )
+    )
+    response = client_for(settings, conn).delete(f"/api/quarantine/{SCAN}")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "document_id": str(SCAN),
+        "original_name": "b1-0032.pdf",
+        "status": "forgotten",
+    }
+    assert "status = 'quarantined'" in next(s for s in conn.statements if "DELETE" in s), (
+        "only a quarantined document may be forgotten; an indexed one is cited evidence"
+    )
+    assert conn.commits == 1
+
+
+def test_a_document_still_in_the_inbox_is_not_forgotten(settings: Settings, tmp_path: Path) -> None:
+    """Capture would register it again within a minute, so the button would only appear to work."""
+    (tmp_path / "faint-scan.png").write_bytes(PNG)
+    conn = FakeConn(
+        rows_for(
+            **{
+                "WHERE status = 'quarantined'": [
+                    (SCAN, "faint-scan.png", "image/png", "docling produced no text", None)
+                ],
+                "SELECT id, sha256": [(SCAN, sha256(PNG))],
+            }
+        )
+    )
+    present = replace(settings, watch_folder=str(tmp_path))
+    response = client_for(present, conn).delete(f"/api/quarantine/{SCAN}")
+
+    assert response.status_code == 409
+    assert "still in the inbox" in response.json()["detail"]
+    assert not any("DELETE" in statement for statement in conn.statements)
+
+
+def test_forgetting_something_not_in_quarantine_is_a_404(client: TestClient) -> None:
+    assert client.delete(f"/api/quarantine/{uuid4()}").status_code == 404
+
+
+# ------------------------------------------------------------------------ household places
+
+
+def test_a_new_name_is_placed_as_a_parent_in_the_same_tap(settings: Settings) -> None:
+    """13 September: the only answer was "someone else here", and the screen said
+    "Lim Ah Kow is Lim Ah Kow". The person the model created is now placed, then confirmed."""
+    conn = FakeConn(
+        rows_for(
+            **{
+                "SET relation = %(relation)s": [(47,)],
+                "UPDATE person_aliases": [("Lim Ah Kow",)],
+            }
+        )
+    )
+    response = client_for(settings, conn).post(
+        "/api/household/names/9", json={"person_id": 47, "relation": "parent"}
+    )
+
+    assert response.status_code == 200
+    assert conn.params_for("SET relation = %(relation)s") == {
+        "id": 47,
+        "relation": "parent",
+        "external": False,
+    }
+    assert conn.params_for("UPDATE person_aliases")["person_id"] == 47
+    assert conn.commits == 1
+
+
+def test_choosing_somebody_already_here_does_not_change_their_relation(
+    settings: Settings,
+) -> None:
+    conn = FakeConn(rows_for(**{"UPDATE person_aliases": [("MARCUS LIM JUN WEI",)]}))
+    response = client_for(settings, conn).post("/api/household/names/9", json={"person_id": 25})
+
+    assert response.status_code == 200
+    assert not any("SET relation" in statement for statement in conn.statements)
+
+
+def test_a_relation_can_be_corrected_later(settings: Settings) -> None:
+    conn = FakeConn(rows_for(**{"SET relation = %(relation)s": [(47,)]}))
+    response = client_for(settings, conn).patch(
+        "/api/household/people/47", json={"relation": "parent"}
+    )
+
+    assert response.status_code == 200
+    assert conn.params_for("SET relation")["relation"] == "parent"
+
+
+def test_nobody_can_be_given_the_owners_relation(client: TestClient) -> None:
+    response = client.patch("/api/household/people/47", json={"relation": "self"})
+
+    assert response.status_code == 422
+
+
 # -------------------------------------------------------------------------------- registry
 
 

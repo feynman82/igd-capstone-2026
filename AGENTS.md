@@ -76,7 +76,8 @@ repository. Humans should read it too — it is the shortest description of how 
 - [ ] If it touches retrieval, extraction or the gate: `make eval-quick` run and the numbers
       pasted into the PR body, with a sentence on why they moved
 - [ ] If it changes a decision: an ADR
-- [ ] CODEOWNERS review from the owning lane
+- [ ] CODEOWNERS review from the owning lane — or from Christian or Yew Mun, who can approve
+      any path, `web/` included
 
 ## Before you read files at random
 

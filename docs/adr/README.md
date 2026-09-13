@@ -20,6 +20,8 @@ the difference matters when a supervisor asks.
 | [0008](0008-ingestion-runs-on-a-celery-worker.md) | Ingestion runs on a Celery worker; the queue carries a digest, not the document | Accepted |
 | [0009](0009-two-web-dependencies-beyond-the-stack.md) | `next-themes` and `lucide-react` are the only two web dependencies beyond the named stack | Accepted |
 | [0010](0010-main-is-unprotected-by-convention.md) | `main` is unprotected, and the discipline is human | Accepted |
+| [0011](0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md) | The household is people and aliases, and the owner is one of them | Accepted |
+| [0012](0012-chunks-follow-the-document-and-embeddings-use-task-prompts.md) | Chunks follow the document's headings, and embeddings use the model's task prompts | Accepted |
 
 Add a row when you add a record.
 

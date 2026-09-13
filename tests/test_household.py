@@ -178,16 +178,16 @@ def conn() -> Iterator[Any]:
 def test_the_owner_is_found_by_any_of_their_names(conn: Any) -> None:
     household.add_person(
         conn,
-        "Marcus Lim",
+        "Testowner Quah",
         "self",
         is_owner=True,
-        aliases=("MARCUS LIM JUN WEI", "Lim Jun Wei, Marcus"),
+        aliases=("TESTOWNER QUAH ZI", "Quah Zi, Testowner"),
     )
     owner = household.owner(conn)
     assert owner is not None
-    assert set(owner.aliases) >= {"MARCUS LIM JUN WEI", "Lim Jun Wei, Marcus", "Marcus Lim"}
+    assert set(owner.aliases) >= {"TESTOWNER QUAH ZI", "Quah Zi, Testowner", "Testowner Quah"}
     # The comparison the resolver does: case and surrounding space are not a different person.
-    assert household.resolve(conn, "  marcus lim jun wei ") is not None
+    assert household.resolve(conn, "  testowner quah zi ") is not None
 
 
 def test_an_unconfirmed_alias_resolves_to_nobody(conn: Any) -> None:
@@ -216,9 +216,9 @@ def test_an_unconfirmed_alias_resolves_to_nobody(conn: Any) -> None:
 
 def test_one_name_cannot_belong_to_two_people(conn: Any) -> None:
     """A second document must never silently move a name from one member to another."""
-    first = household.add_person(conn, "Marcus Lim", "self", is_owner=True)
-    household.add_person(conn, "Marcus Lim", "other")  # same printed name, different row
-    resolved = household.resolve(conn, "Marcus Lim")
+    first = household.add_person(conn, "Testowner Quah", "self", is_owner=True)
+    household.add_person(conn, "Testowner Quah", "other")  # same printed name, different row
+    resolved = household.resolve(conn, "Testowner Quah")
     assert resolved is not None and resolved.id == first.id
 
 
@@ -236,6 +236,20 @@ def test_the_owner_can_be_handed_over(conn: Any) -> None:
     # The previous owner needs a relation and Parrot does not know which. `other`, not a guess.
     previous = next(p for p in household.roster(conn) if p.id == father.id)
     assert previous.relation == "other"
+
+
+def test_a_member_can_be_placed_but_the_owner_cannot(conn: Any) -> None:
+    owner = household.add_person(conn, "Testowner Quah", "self", is_owner=True)
+    father = household.add_person(conn, "Testparent Quah", "other")
+
+    household.place(conn, father.id, "parent")
+    placed = next(p for p in household.roster(conn) if p.id == father.id)
+    assert placed.relation == "parent" and not placed.external
+
+    with pytest.raises(ValueError):
+        household.place(conn, owner.id, "parent")
+    with pytest.raises(ValueError):
+        household.place(conn, father.id, "self")
 
 
 def test_handing_over_to_nobody_is_an_error(conn: Any) -> None:

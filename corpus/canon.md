@@ -1,9 +1,9 @@
 # Household canon
 
 Every document in the corpus must agree with this page. It was written before any document
-existed, and nothing may contradict it. **Every organisation named here is invented** —
-`corpus/README.md` rule 1. There is no footer requirement: the `SYNTHETIC DOCUMENT` stamp was
-dropped, and the invented issuer is what keeps the corpus publishable.
+existed, and nothing may contradict it. The household's own insurers and employers below are
+the canon's and are used consistently; a document may also name real hospitals, schemes and
+agencies where a real document would (`corpus/README.md`). There is no footer requirement.
 
 The household is the **Lim household, Tampines**: a sandwich-generation family supporting a
 young child and two resident grandparents. That is what makes the paperwork interesting —
@@ -42,9 +42,8 @@ Two consequences, and both of them decide membership:
 **This is the only household in the corpus.** `corpus/batches/batch0-personas/` previously
 held 22 persona sketches spanning three households — the Lims in Tampines, a Tan household at
 Blk 123B Bishan St 12 (Sarah Tan Li Ling, David Tan Wei Ming, Emma Tan Jia Xin, Ethan Tan Jia
-Le) and Priya Singh at Cecil Street. The folder was deleted in full: every one of its files
-named a real institution, and none carried the required footer, so it could not be made
-compliant by deleting a subset. **Those people are not in the canon and must not be
+Le) and Priya Singh at Cecil Street. The folder was deleted in full, because the canon holds one
+household. **Those people are not in the canon and must not be
 reintroduced.** `Tan Mei Ling` is Marcus's mother; `Sarah Tan Li Ling` was a different
 persona family and is gone.
 
@@ -115,10 +114,10 @@ does not reinvent it. The real fix is upstream — `expiry_date` should be optio
 raised rather than patched here. The practical cost is one dead `policy_expiry` obligation 61
 years out, which no `lead_days` window in the Reminder register will ever reach.
 
-## Invented issuers for the documents that have no `insurer` field
+## Issuers for the documents that have no `insurer` field
 
-These never appear as a register column, so they live here instead — the templates must use
-these names and not their real-world counterparts.
+These never appear as a register column, so they live here instead. They are the canon's, so
+every document of that type uses the same name.
 
 | Document | Issuer on the letterhead (invented) |
 |---|---|

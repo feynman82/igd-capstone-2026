@@ -1,0 +1,55 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Startup", "x": 0, "y": 0, "w": 1440, "h": 900 },
+    { "file": "StartupBlocked.dc.html", "title": "Startup · waiting for the database", "x": 1540, "y": 0, "w": 1440, "h": 900 },
+    { "file": "StartupSkeleton.dc.html", "title": "Alternate · a skeleton of Today", "x": 3080, "y": 0, "w": 1440, "h": 900 },
+    { "file": "PowerMenu.dc.html", "title": "Restart and shut down · header", "x": 0, "y": 1180, "w": 1440, "h": 760 },
+    { "file": "Restarting.dc.html", "title": "Restarting", "x": 1540, "y": 1180, "w": 1440, "h": 900 },
+    { "file": "ShutDown.dc.html", "title": "Shut down", "x": 3080, "y": 1180, "w": 1440, "h": 900 }
+  ],
+  "annotations": [
+    {
+      "id": "note-startup",
+      "x": 0,
+      "y": -200,
+      "w": 640,
+      "text": "Startup. Served by the engine, which answers in about a second, so there is something on screen before Today, Ask, Vault and Packs exist. It opens Today as soon as your documents are reachable; the local model can still be loading. No spinner: the skeleton shimmer is the only looping motion in the system."
+    },
+    {
+      "id": "note-blocked",
+      "x": 1540,
+      "y": -200,
+      "w": 640,
+      "text": "The state people hit on their first day, and the one that happened on 13 September when Docker Desktop restarted and the database stayed down. It names the fix, and it says nothing needs restarting, because nothing does."
+    },
+    {
+      "id": "note-alternate",
+      "x": 3080,
+      "y": -200,
+      "w": 640,
+      "text": "Alternate: show what is coming instead of what is happening. Calmer, and nothing jumps when Today lands. But on a bad day it hides the one line that matters, which is the part that is missing."
+    },
+    {
+      "id": "note-power",
+      "x": 0,
+      "y": 990,
+      "w": 640,
+      "text": "Restart and shut down. A quiet control beside Lock, in the same voice. Restart keeps the screens up and reconnects by itself. Shut down stops everything, the screens included, so its last state is drawn before they go."
+    },
+    {
+      "id": "note-restarting",
+      "x": 1540,
+      "y": 990,
+      "w": 640,
+      "text": "The screens stay open through a restart, so this is drawn inside the app rather than on the engine's startup page."
+    },
+    {
+      "id": "note-off",
+      "x": 3080,
+      "y": 990,
+      "w": 640,
+      "text": "No buttons: nothing is left running to press them against."
+    }
+  ],
+  "launch": { "view": "canvas" }
+}

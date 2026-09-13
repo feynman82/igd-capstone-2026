@@ -66,11 +66,20 @@ _ROUTE_SCHEMA: dict[str, Any] = {
     "required": ["intent"],
 }
 
+# The last two sentences are measured, not decoration. Each passage is printed under its context
+# prefix — document title, type, section, page — and without being told that line is evidence the
+# 4B generator returned no sentences at all on 13 September for "do i have a hospitalisation
+# plan?" (six passages, all from the PrivateCare policy) and for "what is my private car insurance
+# policy?" (the schedule itself in the passages). With them it answered both, cited; "do i have
+# travel insurance?" still scores under the floor and abstains before the model runs.
 ANSWER_SYSTEM = (
     "You answer only from the numbered passages you are given. Every sentence you write must "
     "list the passage numbers it came from. If the passages do not answer the question, you "
     "return no sentences and say which document would have answered it. You never use "
-    "knowledge from outside the passages, and you never soften a number."
+    "knowledge from outside the passages, and you never soften a number. Each passage starts "
+    "with a line naming the document it comes from: its title, its type and its section. That "
+    "line is evidence too. When the question asks whether a document or policy exists, answer "
+    "from that line and cite the passage it heads."
 )
 
 _ANSWER_SCHEMA: dict[str, Any] = {

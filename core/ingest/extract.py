@@ -14,14 +14,16 @@ rule 2 in AGENTS.md doing its job rather than being worked around.
 
 from __future__ import annotations
 
+import copy
 import logging
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from core.contracts import FACT_COLUMN, FieldSpec
+from core.contracts import FACT_COLUMN, DocumentTypeSpec, FieldSpec
 from core.ingest.parse import ParsedPage
 from core.packs import InstalledPack
 from core.runtime.ollama import ModelUnavailable, Ollama
@@ -138,6 +140,78 @@ def find_page(value: str, pages: list[ParsedPage]) -> int | None:
     return None
 
 
+_MONTH_NUMBER: dict[str, int] = {}
+for _number, _name in enumerate(_MONTHS, start=1):
+    _MONTH_NUMBER[_name.casefold()] = _number
+    _MONTH_NUMBER[_name[:3].casefold()] = _number
+_MONTH_NUMBER["sept"] = 9
+
+_ISO_DATE = re.compile(r"^\s*(\d{4})-(\d{2})-(\d{2})\s*$")
+_DAY_MONTH_YEAR = re.compile(r"^\s*(\d{1,2})\s+([A-Za-z]+)\.?,?\s+(\d{4})\s*$")
+_MONTH_DAY_YEAR = re.compile(r"^\s*([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})\s*$")
+_NUMERIC_DAY_FIRST = re.compile(r"^\s*(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\s*$")
+
+
+def printed_date(value: str) -> str | None:
+    """A date as a document prints it, as YYYY-MM-DD, or None when it is not a date.
+
+    The model copies the date and this converts it, because the conversion is where the model
+    failed. With `format: date` in the decode schema Ollama builds a grammar that makes the model
+    write four year digits before it has read the whole date, and it copied the day into them:
+    "01 March 2026" came back as 0120-03-20 and "31 August 2049" as 3108-08-19. Converting in code
+    is exact, and the string the model copied is still the string printed on the page, which is
+    what page attribution looks for.
+
+    Numeric dates are read day first, never month first: these are a Singapore household's
+    documents, and 01/03/2026 is the first of March. Anything that is not a real calendar date —
+    "For the whole of life", 31 February — is None, so it fails validation and says so rather than
+    becoming a plausible wrong date.
+    """
+    patterns = (
+        (_ISO_DATE, "ymd"),
+        (_DAY_MONTH_YEAR, "dmy"),
+        (_MONTH_DAY_YEAR, "mdy"),
+        (_NUMERIC_DAY_FIRST, "dmy"),
+    )
+    for pattern, order in patterns:
+        match = pattern.match(value)
+        if match is None:
+            continue
+        parts = dict(zip(order, match.groups(), strict=True))
+        month_text = parts["m"]
+        month = (
+            int(month_text) if month_text.isdigit() else _MONTH_NUMBER.get(month_text.casefold())
+        )
+        if month is None:
+            return None
+        try:
+            return date(int(parts["y"]), month, int(parts["d"])).isoformat()
+        except ValueError:
+            return None
+    return None
+
+
+def decode_schema(schema: dict[str, Any], fields: Sequence[FieldSpec]) -> dict[str, Any]:
+    """The pack's schema as the model is held to it while it writes: dates are plain strings.
+
+    Only the decode constraint is loosened. The generated Pydantic model still requires a real
+    date, and `_prepare` converts what the model copied before that validation runs.
+    """
+    loosened = copy.deepcopy(schema)
+    properties = loosened.get("properties", {})
+    for field in fields:
+        if field.type == "date" and field.name in properties:
+            _drop_format(properties[field.name])
+    return loosened
+
+
+def _drop_format(node: Any) -> None:
+    if isinstance(node, dict):
+        node.pop("format", None)
+        for option in node.get("anyOf", []):
+            _drop_format(option)
+
+
 NUMERIC_TYPES = frozenset({"money", "integer", "percent"})
 _CURRENCY = re.compile(r"(?i)\b(sgd|usd|myr|rm)\b|[$,\s]")
 
@@ -184,6 +258,8 @@ def _prepare(index: dict[str, FieldSpec], reported: dict[str, Any]) -> dict[str,
         value = prepared.get(name)
         if spec.type in NUMERIC_TYPES and isinstance(value, str):
             prepared[name] = _CURRENCY.sub("", value).strip() or None
+        elif spec.type == "date" and isinstance(value, str):
+            prepared[name] = printed_date(value) or value
     return prepared
 
 
@@ -206,6 +282,17 @@ def _coerce(spec: FieldSpec, raw: Any) -> tuple[str | None, Decimal | None, date
     return text, None, None
 
 
+# How much of a document an extraction reads, first and at most.
+#
+# Every field the pack declares for a policy schedule is printed near the front, and a long
+# contract behind it costs a CPU-bound model minutes of prompt evaluation for nothing. On
+# 2026-09-13 a four-page policy's extraction was cut off after the engine's 180 seconds: about
+# 6,000 tokens of clauses at 31 ms a token, to find values on page 1. The front is read first; the
+# whole document, up to the old limit, only when the front did not satisfy the pack.
+FRONT_CHARS = 8000
+FULL_CHARS = 24000
+
+
 def extract(
     client: Ollama,
     installed: InstalledPack,
@@ -217,19 +304,46 @@ def extract(
     """Never raises. A failure is a reason, and a reason routes the document to quarantine."""
     spec = installed.spec(doc_type)
     model_cls = installed.models[doc_type]
-    schema = model_cls.model_json_schema()
+    schema = decode_schema(model_cls.model_json_schema(), spec.fields)
 
+    full_text = "\n\n".join(f"[page {p.page}]\n{p.text}" for p in pages)
+    windows = [full_text[:FRONT_CHARS]]
+    if len(full_text) > FRONT_CHARS:
+        windows.append(full_text[:FULL_CHARS])
+    result = Extraction(False, [], reason="there was no text to read")
+    for document_text in windows:
+        result = _read(client, spec, model_cls, schema, doc_type, pages, document_text, confidence)
+        # A model that did not answer a short prompt will not answer a longer one.
+        if result.ok or result.model is None:
+            return result
+    return result
+
+
+def _read(
+    client: Ollama,
+    spec: DocumentTypeSpec,
+    model_cls: Any,
+    schema: dict[str, Any],
+    doc_type: str,
+    pages: list[ParsedPage],
+    document_text: str,
+    confidence: float,
+) -> Extraction:
+    """One extraction attempt against one window of the document's text.
+
+    Page attribution still searches every page: a window limits what the model reads, not where a
+    value it reports is allowed to be found.
+    """
     # The rules below are not generic prompt padding: each one names a mistake the 4B generator
     # actually made on batch 1's full policy documents. On b1-0033 it reported the insurer as the
-    # insured, took "Ref: b1-0033" from the page footer as the policy number, and invented
-    # cover_from 0120-01-20 and expiry_date 0120-12-31 — dates in the year 120 that appear
-    # nowhere. Page attribution caught the invented dates, but a document only has to lose one
-    # required field to quarantine with its chunks, so it is cheaper to say what not to do.
+    # insured and took "Ref: b1-0033" from the page footer as the policy number. Its year-120
+    # dates were not invented but forced — see `printed_date` — which is why dates are copied
+    # as printed and converted afterwards rather than converted by the model.
     prompt = "\n".join(
         [
             f"This document is a {doc_type.replace('_', ' ')}: {spec.description}.",
             "Report the fields defined by the schema, copying each value exactly as printed.",
-            "Write amounts as plain numbers: 8900.00, not SGD 8,900.00. Write dates as YYYY-MM-DD.",
+            "Write amounts as plain numbers: 8900.00, not SGD 8,900.00.",
             "",
             "The document may run to many pages. The schedule table near the front is where these",
             "fields are printed; the wording, benefit tables and clauses after it are not.",
@@ -238,13 +352,13 @@ def extract(
             "- The company on the letterhead is the insurer. The person the policy covers is the",
             "  insured. They are never the same value.",
             "- A reference like 'Ref: b1-0007' is a filing reference, not a policy number.",
-            "- Every date you report must be printed on the document. Convert 12 April 2026 to",
-            "  2026-04-12; never construct a date, and never report a year before 1900.",
+            "- Copy every date exactly as it is printed, for example 12 April 2026. Do not",
+            "  convert it to another format, and never construct a date that is not printed.",
             "- Read an amount digit by digit. 2,040.00 is 2040.00, not 2000.00.",
             "- If a field is not printed anywhere, omit it. Do not write null as the value.",
             "",
             "<<<",
-            "\n\n".join(f"[page {p.page}]\n{p.text}" for p in pages)[:24000],
+            document_text,
             ">>>",
         ]
     )

@@ -1,6 +1,8 @@
 """Setup diagnostics use controlled service responses, never live household documents."""
 
+import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import httpx
@@ -61,6 +63,31 @@ def test_an_explicit_url_still_wins_over_the_port_variable(tmp_path: Path) -> No
         {"PARROT_REDIS_PORT": "6380", "REDIS_URL": "redis://127.0.0.1:6399/2"},
     )
     assert settings.redis_url == "redis://127.0.0.1:6399/2"
+
+
+# With Postgres stopped, a connection attempt with no timeout was still waiting after more than
+# 80 seconds, and every /api route opens one per request, so every screen hung rather than saying
+# the database is down. The attempt must be bounded, and the timeout must arrive as the one safe
+# error the routes turn into a 503 — this raises the exact class psycopg raised on 2026-09-13.
+def test_a_database_that_does_not_answer_fails_in_seconds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import psycopg
+    from psycopg.errors import ConnectionTimeout
+
+    from core.runtime import db
+
+    passed: dict[str, object] = {}
+
+    def never_answers(url: str, **kwargs: object) -> object:
+        passed.update(kwargs)
+        raise ConnectionTimeout("connection timeout expired")
+
+    monkeypatch.setattr(psycopg, "connect", never_answers)
+    with pytest.raises(db.DatabaseUnavailable), db.connect(Settings.load(tmp_path, {})):
+        pass
+    timeout = passed["connect_timeout"]
+    assert isinstance(timeout, int | float) and 0 < timeout <= 5
 
 
 def test_env_file_is_literal_and_process_environment_wins(tmp_path: Path) -> None:
@@ -125,7 +152,7 @@ def test_setup_does_not_claim_assistant_readiness_and_escapes_content(tmp_path: 
         "api.main.collect_checks", return_value=[Check("<script>", "available", "<bad>")]
     ) as probe:
         client = TestClient(create_app(Settings.load(tmp_path, {})), base_url="http://127.0.0.1")
-        response = client.get("/")
+        response = client.get("/setup")
         assert response.status_code == 200
         assert "&lt;script&gt;" in response.text
         assert "<script>" not in response.text
@@ -134,6 +161,114 @@ def test_setup_does_not_claim_assistant_readiness_and_escapes_content(tmp_path: 
         assert ready.json()["ready"] is False
         assert probe.call_count == 1
         assert response.headers["cache-control"] == "no-store"
+
+
+def test_the_startup_page_opens_without_probing_and_runs_only_its_own_script(
+    tmp_path: Path,
+) -> None:
+    """The browser opens on this within a second of a double-click, so it must not wait on the
+    checks, and it is the one engine page with a script, so the policy has to allow exactly that
+    script and nothing from anywhere else."""
+    with patch("api.main.collect_checks", side_effect=AssertionError("must not probe")):
+        client = TestClient(create_app(Settings.load(tmp_path, {})), base_url="http://127.0.0.1")
+        first = client.get("/")
+        second = client.get("/")
+    assert first.status_code == 200
+    assert "Getting Parrot ready" in first.text
+    policy = first.headers["content-security-policy"]
+    nonce = policy.split("'nonce-")[1].split("'")[0]
+    assert f'<script nonce="{nonce}">' in first.text
+    assert "connect-src 'self'" in policy and "default-src 'none'" in policy
+    assert nonce not in second.headers["content-security-policy"], "a nonce is per response"
+    assert "http://localhost:3000/" in first.text, "where Today is, as data rather than script"
+    assert "fonts.googleapis" not in first.text, "nothing on this page leaves the machine"
+
+
+def test_system_status_carries_the_model_and_the_screens(tmp_path: Path) -> None:
+    from api.startup import ModelWarmth
+
+    with patch("api.main.collect_checks", return_value=[]):
+        app = create_app(Settings.load(tmp_path, {}))
+        app.state.model = ModelWarmth("ready", "cpu")
+        body = TestClient(app, base_url="http://127.0.0.1").get("/api/system").json()
+    assert body["model"] == {"state": "ready", "device": "cpu", "detail": ""}
+    assert body["screens"] == {"url": "http://localhost:3000/", "expected": True}
+
+
+def _ollama_answering(tmp_path: Path, handler: Any) -> Any:
+    from core.runtime.ollama import Ollama
+
+    client = Ollama(Settings.load(tmp_path, {}))
+    client._client = lambda base_url: httpx.Client(  # type: ignore[method-assign]
+        base_url=base_url, transport=httpx.MockTransport(handler)
+    )
+    return client
+
+
+@pytest.mark.parametrize(
+    "size,in_vram,placement", [(100, 100, "gpu"), (100, 40, "partial"), (100, 0, "cpu")]
+)
+def test_warming_says_where_the_generator_landed(
+    tmp_path: Path, size: int, in_vram: int, placement: str
+) -> None:
+    """13 September: size_vram was 0 on every model and nothing on screen said so."""
+    settings = Settings.load(tmp_path, {})
+    asked: list[str] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        asked.append(request.url.path)
+        if request.url.path == "/api/ps":
+            model = {"name": settings.generation_model, "size": size, "size_vram": in_vram}
+            return httpx.Response(200, json={"models": [model]})
+        return httpx.Response(200, json={})
+
+    assert _ollama_answering(tmp_path, handler).warm() == placement
+    assert asked == ["/api/generate", "/api/ps", "/api/embed"]
+
+
+def test_a_model_that_cannot_load_is_recorded_rather_than_raised(tmp_path: Path) -> None:
+    from api.startup import ModelWarmth, warm_models
+
+    client = _ollama_answering(tmp_path, lambda request: httpx.Response(500))
+    warmth = ModelWarmth()
+    warm_models(warmth, client)
+    assert warmth.state == "unavailable"
+    assert "could not be loaded" in warmth.detail
+
+
+def test_queries_and_passages_are_embedded_with_the_models_task_prompts(tmp_path: Path) -> None:
+    sent: list[list[str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        texts = json.loads(request.content)["input"]
+        sent.append(texts)
+        return httpx.Response(200, json={"embeddings": [[0.0] * 768 for _ in texts]})
+
+    client = _ollama_answering(tmp_path, handler)
+    client.embed_query("do i have a hospitalisation plan?")
+    client.embed_documents([("PrivateCare Hospital and Surgical Plan", "6.1 Waiting Period")])
+    assert sent == [
+        ["task: search result | query: do i have a hospitalisation plan?"],
+        ["title: PrivateCare Hospital and Surgical Plan | text: 6.1 Waiting Period"],
+    ]
+
+
+def test_an_embedding_model_without_task_prompts_is_sent_the_text_alone(tmp_path: Path) -> None:
+    from core.runtime.ollama import Ollama
+
+    sent: list[list[str]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        texts = json.loads(request.content)["input"]
+        sent.append(texts)
+        return httpx.Response(200, json={"embeddings": [[0.0] * 768 for _ in texts]})
+
+    client = Ollama(Settings.load(tmp_path, {"PARROT_EMBED_MODEL": "nomic-embed-text"}))
+    client._client = lambda base_url: httpx.Client(  # type: ignore[method-assign]
+        base_url=base_url, transport=httpx.MockTransport(handler)
+    )
+    client.embed_query("premium")
+    assert sent == [["premium"]]
 
 
 def test_untrusted_host_is_rejected(tmp_path: Path) -> None:

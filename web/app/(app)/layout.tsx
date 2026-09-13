@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { LockButton } from "@/components/lock-button";
+import { PowerMenu } from "@/components/power-menu";
 import { TabBar, Tabs } from "@/components/nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { WordmarkLockup } from "@/components/wordmark";
@@ -79,6 +80,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </Link>
             <ThemeToggle />
             <LockButton />
+            <PowerMenu />
           </div>
         </div>
       </header>

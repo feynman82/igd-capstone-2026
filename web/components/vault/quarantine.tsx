@@ -1,6 +1,7 @@
 "use client";
 
 import { RotateCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { QuarantinedDocument } from "@/lib/api";
 
@@ -12,16 +13,22 @@ import type { QuarantinedDocument } from "@/lib/api";
  * second stage of quarantine and takes tens of seconds on a 4B, so the API queues it and
  * answers 202. This row says "queued" rather than pretending to have finished.
  *
- * A document whose file has left the inbox cannot be retried at all. Offering a button that is
- * certain to fail is worse than explaining why there is no button, so the API works out which
- * ones are blocked and this renders the reason.
+ * **A document whose file has left the inbox is not a job.** Nothing can be done with it except
+ * forget it, so it gets a quiet one-line row with exactly that button instead of the full row. On
+ * 13 September `b1-0032.pdf` had been deleted from the inbox and still sat on Today as something
+ * needing attention, with a reason and no action — which is the one thing a row that asks for a
+ * person must never be.
  */
 export function QuarantineQueue({ documents }: { documents: QuarantinedDocument[] }) {
   return (
     <ul className="mt-[var(--s-3)] space-y-[var(--s-2)]">
-      {documents.map((document) => (
-        <QuarantineRow key={document.document_id} document={document} />
-      ))}
+      {documents.map((document) =>
+        document.retryable ? (
+          <QuarantineRow key={document.document_id} document={document} />
+        ) : (
+          <GoneRow key={document.document_id} document={document} />
+        ),
+      )}
     </ul>
   );
 }
@@ -59,26 +66,20 @@ function QuarantineRow({ document }: { document: QuarantinedDocument }) {
           </p>
 
           <div className="mt-[var(--s-3)] flex flex-wrap items-center gap-[var(--s-3)]">
-            {document.retryable ? (
-              state === "queued" ? (
-                <p className="text-meta text-ok">
-                  Queued. The vision pass takes a minute or so — reload to see the result.
-                </p>
-              ) : (
-                <button
-                  type="button"
-                  disabled={state === "queueing"}
-                  onClick={retry}
-                  className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
-                >
-                  <RotateCw aria-hidden size={13} />
-                  {state === "queueing" ? "Queueing…" : "Read it again"}
-                </button>
-              )
-            ) : (
-              <p className="text-meta text-ink-2">
-                {document.blocked ?? "This one cannot be retried."}
+            {state === "queued" ? (
+              <p className="text-meta text-ok">
+                Queued. The vision pass takes a minute or so — reload to see the result.
               </p>
+            ) : (
+              <button
+                type="button"
+                disabled={state === "queueing"}
+                onClick={retry}
+                className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              >
+                <RotateCw aria-hidden size={13} />
+                {state === "queueing" ? "Queueing…" : "Read it again"}
+              </button>
             )}
             <span className="num text-meta text-ink-3">{document.mime}</span>
           </div>
@@ -90,6 +91,57 @@ function QuarantineRow({ document }: { document: QuarantinedDocument }) {
           ) : null}
         </div>
       </div>
+    </li>
+  );
+}
+
+function GoneRow({ document }: { document: QuarantinedDocument }) {
+  const router = useRouter();
+  const [state, setState] = useState<"idle" | "forgetting" | "forgotten">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function forget() {
+    setState("forgetting");
+    setError(null);
+    const response = await fetch(`/api/parrot/quarantine/${document.document_id}`, {
+      method: "DELETE",
+    }).catch(() => null);
+    if (!response?.ok) {
+      const body = (await response?.json().catch(() => null)) as { detail?: string } | null;
+      setError(body?.detail ?? "Parrot could not forget that.");
+      setState("idle");
+      return;
+    }
+    setState("forgotten");
+    router.refresh();
+  }
+
+  return (
+    <li className="rounded-[var(--r)] border border-hairline px-[var(--s-4)] py-[var(--s-2)]">
+      <div className="flex flex-wrap items-center gap-x-[var(--s-3)] gap-y-[var(--s-1)]">
+        <p className="min-w-0 flex-1 text-meta text-ink-3">
+          <span className="font-medium break-words text-ink-2">{document.original_name}</span>{" "}
+          {state === "forgotten"
+            ? "is forgotten."
+            : "left the inbox before Parrot could read it. Nothing from it was filed."}
+        </p>
+        {state === "forgotten" ? null : (
+          <button
+            type="button"
+            disabled={state === "forgetting"}
+            onClick={forget}
+            title="Removes Parrot's record of this document. Your files are not touched."
+            className="shrink-0 rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-meta font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60"
+          >
+            {state === "forgetting" ? "Forgetting…" : "Forget it"}
+          </button>
+        )}
+      </div>
+      {error ? (
+        <p role="alert" className="mt-[var(--s-1)] text-meta text-crit">
+          {error}
+        </p>
+      ) : null}
     </li>
   );
 }

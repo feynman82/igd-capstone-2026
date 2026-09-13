@@ -10,8 +10,8 @@ prior art in the report.
 ## This repository contains no personal data
 
 The corpus is **synthetic**. Every document is generated from an invented household
-canon and names invented organisations only — never a real insurer, bank or agency. The
-household, its members, its employers, its policy numbers and its insurers do not exist.
+canon. The household, its members, its employers, its policy numbers and its insurers do not
+exist. A document may name a real hospital, scheme or public body where a real one would.
 
 `corpus/batches/` **is** committed. Those documents are synthetic, so git is the right way
 to hand a batch from Lane E to the other four — a batch arrives by pulling rather than by a

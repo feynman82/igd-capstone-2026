@@ -57,7 +57,8 @@ class DenseRetriever:
     packs: tuple[str, ...] | None = None  # the enabled pack ids; None means do not filter
 
     def search(self, question: str, *, candidates: int) -> list[Passage]:
-        vector = self.client.embed([question])[0]
+        # The query prompt must match the one chunks were embedded with. See `QUERY_PROMPT`.
+        vector = self.client.embed_query(question)
         literal = "[" + ",".join(f"{value:.6f}" for value in vector) + "]"
         allowed = sorted(self.packs) if self.packs is not None else None
         with self.conn.cursor() as cur:

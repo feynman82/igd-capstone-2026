@@ -62,19 +62,18 @@ evaluation result.
 
 ---
 
-## Two rules you cannot bend
+## The rule you cannot bend
 
-1. **Invented organisations only.** Never render a document bearing the name, logo or
-   letterhead of a real insurer, bank or agency. A realistic fake notice from a real
-   institution is a fabricated official record whatever the intent, and it would make
-   the corpus unpublishable alongside the report. Invent the issuers — Meridian
-   Assurance, Harborline Logistics.
+**Real organisations may be named.** The invented-organisations rule was withdrawn on
+13 September 2026: a full policy names the hospitals, schemes and dispute bodies a real one
+names, and that is a better retrieval test. The household's own issuers stay the canon's —
+Meridian Assurance, Lionhead Life Assurance, Harborline Logistics — so every document agrees.
 
-   **No footer is required.** A visible `SYNTHETIC DOCUMENT` stamp on every page used to be
-   part of this rule and was dropped: the invented issuer is the protection that matters, and
-   the stamp reliably landed on the last page only and overlapped the body text where it did
-   land. Keep it where a template already prints it; do not chase it.
-2. **Say what synthetic data does not prove.** Generated documents are cleaner and more
+**No footer is required.** A visible `SYNTHETIC DOCUMENT` stamp on every page used to be
+required and was dropped: it landed on the last page only and overlapped the body text where it
+did land. Keep it where a template already prints it; do not chase it.
+
+1. **Say what synthetic data does not prove.** Generated documents are cleaner and more
    consistent than real ones, so a score measured only on them overstates the system.
    That is what the 40-document redacted holdout is for. Report both numbers and the
    gap. The gap is a finding, not a defect.
@@ -94,10 +93,8 @@ Read this before you generate anything, because it is the part that goes stale.
 | `corpus/batches/batch0-personas/` | **deleted, and not coming back.** See below |
 
 **batch0-personas is gone and must not be recreated.** It held 22 persona sketches spanning
-three households — the Lims, a Tan household in Bishan, and Priya Singh — and every single
-file named a real institution (ICA, KKH, Raffles Medical, Great Eastern, NTUC Income, KTPH,
-MediShield Life, CHAS) while carrying a `SPECIMEN` footer rather than the required one. It
-failed both of the rules below, in every file, so there was no subset of it worth keeping.
+three households — the Lims, a Tan household in Bishan, and Priya Singh — and the canon holds
+one household, so there was no subset of it worth keeping.
 If a future session proposes bringing back `Sarah Tan Li Ling` or `Priya Singh`: they were
 never in the canon. `Tan Mei Ling` is Marcus's mother and is the only `Tan` in the household.
 

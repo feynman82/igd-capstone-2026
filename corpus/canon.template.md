@@ -1,7 +1,7 @@
 # Household canon
 
 Every document in the corpus must agree with this page. Fill it in once, then never
-contradict it. Use invented organisations throughout.
+contradict it. Real organisations may be named where a real document would name them.
 
 ## People
 | Name | Role | Date of birth | Notes |

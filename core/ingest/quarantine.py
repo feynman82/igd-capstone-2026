@@ -35,7 +35,7 @@ from core.ingest.chunk import chunk_pages
 from core.ingest.classify import classification_sample, classify
 from core.ingest.extract import extract
 from core.ingest.parse import ParsedDocument, ParsedPage
-from core.ingest.pipeline import commit_both_lanes
+from core.ingest.pipeline import commit_both_lanes, document_title
 from core.ingest.source import index_folder
 from core.packs import PackUnavailable, pack
 from core.pages import PageUnavailable, RendererUnavailable, page_count, render_page
@@ -122,6 +122,36 @@ def blocked_reasons(
         else:
             blocked[document.document_id] = None
     return blocked
+
+
+class StillInInbox(ValueError):
+    """Safe to show. Forgetting a document whose file is still there would not last."""
+
+
+def forget(conn: Any, document_id: Any, folder: Path) -> str | None:
+    """Remove a quarantined document from Parrot's memory. Its name, or `None` if there is no such
+    quarantined document.
+
+    Refused while the file is still in the inbox. Capture registers any file whose digest it has
+    not seen, so a forgotten document that is still there is registered and read again within a
+    minute — a button that appears to work and does not. On 13 September the case that asked for
+    this was the other one: `b1-0032.pdf` had been deleted from the inbox, its row stayed
+    quarantined, and Today said it needed attention with nothing a person could do about it.
+    """
+    waiting = [item for item in queue(conn, limit=200) if str(item.document_id) == str(document_id)]
+    if not waiting:
+        return None
+    if blocked_reasons(conn, waiting, folder).get(waiting[0].document_id) is None:
+        raise StillInInbox(
+            "The file is still in the inbox, so Parrot would read it again. Take it out of the "
+            "inbox first, or read it again instead."
+        )
+    with conn.cursor() as cur:
+        cur.execute(sql.DELETE_QUARANTINED, {"document_id": str(document_id)})
+        row = cur.fetchone()
+    conn.commit()
+    log.info("forgot quarantined document %s", document_id)
+    return str(row[0]) if row else None
 
 
 def page_images(payload: bytes, mime: str) -> list[str]:
@@ -219,9 +249,14 @@ def retry(
             conn, document_id, extraction.reason or "the pack's fields are still not satisfied"
         )
 
-    chunks = chunk_pages(read.pages, original_name=original_name, doc_type=classification.doc_type)
+    chunks = chunk_pages(
+        read.pages,
+        original_name=original_name,
+        doc_type=classification.doc_type,
+        title=document_title(installed, classification.doc_type, extraction.facts, original_name),
+    )
     try:
-        vectors = client.embed([chunk.embedding_input for chunk in chunks])
+        vectors = client.embed_documents([(chunk.title, chunk.embedding_input) for chunk in chunks])
     except ModelUnavailable as error:
         return _still_quarantined(conn, document_id, str(error))
 

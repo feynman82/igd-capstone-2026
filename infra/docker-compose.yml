@@ -1,7 +1,22 @@
+# Run from the repository root:
+#
+#     docker compose -f infra/docker-compose.yml up -d                  # no .env: the defaults
+#     docker compose --env-file .env -f infra/docker-compose.yml up -d  # a root .env moves ports
+#
+# Compose reads variables for ${...} from the *project directory*, which is this file's folder
+# (infra/), not from wherever the command is typed. So a root .env that sets PARROT_REDIS_PORT or
+# PARROT_DB_PORT is silently ignored unless it is passed with --env-file: the containers publish
+# the defaults, and core/runtime/settings.py — which does read the root .env — dials ports nothing
+# is listening on. That mismatch is what "the queue broker did not answer" meant on 2026-09-13.
+# Leave --env-file off on a machine with no .env: Compose refuses a file that does not exist.
 name: parrot
 services:
   db:
     image: pgvector/pgvector:pg17
+    # Docker Desktop restarting (an update, sleep, a crash) stops every container. Without a
+    # policy the database stays down afterwards while another project's containers come back —
+    # and every screen hangs on a connection to a port that no longer answers.
+    restart: unless-stopped
     environment:
       POSTGRES_USER: parrot
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parrot}
@@ -15,7 +30,13 @@ services:
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports: ["127.0.0.1:${PARROT_REDIS_PORT:-6379}:6379"]
+    # A health state lets startup wait for the broker to answer instead of guessing a delay.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
 
   # Ollama runs on the host, using one endpoint by default.
   # The external RTX 3080 is development-only. Demo runs use the onboard RTX 4060.

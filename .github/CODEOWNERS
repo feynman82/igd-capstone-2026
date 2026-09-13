@@ -1,39 +1,44 @@
 # Ownership is how five people and their agents stay out of each other's way.
-# A PR touching a path needs a review from that path's owner.
+# A PR touching a path needs a review from ONE of that path's owners.
 #
 # This file REQUESTS that review automatically. It does not enforce it: `main` is
 # unprotected and always will be on this plan, so a merge without the owner's approval
 # is possible. See docs/adr/0010-main-is-unprotected-by-convention.md. Treat a review
 # request from this file as an obligation, not a suggestion.
-# Christian @feynman82 Â· Yew Mun @Yewhoo Â· Siew @nsiewsiew Â· Zee @fjzeetr-smuigd Â· Desmond @strawberries2026
+#
+# Christian (@feynman82) and Yew Mun (@Yewhoo) can approve every path, so both are listed on
+# every line: the last matching pattern wins, and a line without them would take that away.
+# Decided 13 September 2026. The lane owner is still named first, and still the right reviewer
+# when they are available.
+#
 # Confirmed: @feynman82 (Christian) · @Yewhoo (Yew Mun) · @nsiewsiew (Siew) · @fjzeetr-smuigd (Zee) · @strawberries2026 (Desmond).
 
-*                       @feynman82
+*                       @feynman82 @Yewhoo
 
-/core/contracts.py      @feynman82
-/core/graph/            @feynman82
-/modules/               @feynman82
-/db/migrations/         @feynman82
+/core/contracts.py      @feynman82 @Yewhoo
+/core/graph/            @feynman82 @Yewhoo
+/modules/               @feynman82 @Yewhoo
+/db/migrations/         @feynman82 @Yewhoo
 
-/core/retrieve/         @Yewhoo
-/eval/                  @Yewhoo
+/core/retrieve/         @Yewhoo @feynman82
+/eval/                  @Yewhoo @feynman82
 
-/core/adapters/         @feynman82
-/core/ingest/           @feynman82
-/corpus/                @strawberries2026
+/core/adapters/         @feynman82 @Yewhoo
+/core/ingest/           @feynman82 @Yewhoo
+/corpus/                @strawberries2026 @feynman82 @Yewhoo
 
-/packs/                 @fjzeetr-smuigd
-/grounding/             @fjzeetr-smuigd @nsiewsiew
-/web/                   @fjzeetr-smuigd
+/packs/                 @fjzeetr-smuigd @feynman82 @Yewhoo
+/grounding/             @fjzeetr-smuigd @nsiewsiew @feynman82 @Yewhoo
+/web/                   @fjzeetr-smuigd @feynman82 @Yewhoo
 
-/team/christian/        @feynman82
-/team/yew-mun/          @Yewhoo
-/team/siew/             @nsiewsiew
-/team/zee/              @fjzeetr-smuigd
-/team/desmond/          @strawberries2026
-/docs/team-tasks.csv    @feynman82
-/scripts/               @feynman82
-/.claude/               @feynman82
+/team/christian/        @feynman82 @Yewhoo
+/team/yew-mun/          @Yewhoo @feynman82
+/team/siew/             @nsiewsiew @feynman82 @Yewhoo
+/team/zee/              @fjzeetr-smuigd @feynman82 @Yewhoo
+/team/desmond/          @strawberries2026 @feynman82 @Yewhoo
+/docs/team-tasks.csv    @feynman82 @Yewhoo
+/scripts/               @feynman82 @Yewhoo
+/.claude/               @feynman82 @Yewhoo
 
-/docs/governance/       @nsiewsiew
-/eval/sets/adversarial/ @nsiewsiew
+/docs/governance/       @nsiewsiew @feynman82 @Yewhoo
+/eval/sets/adversarial/ @nsiewsiew @feynman82 @Yewhoo

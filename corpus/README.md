@@ -78,20 +78,20 @@ once carries identical values everywhere, that every `doc_type` is owned by an i
 pack, that every column is a field some pack declares, and that `field_pages` names only
 fields the row actually fills. A batch that fails validation is not handed over.
 
-## Two rules
+## One rule
 
-1. **Invented organisations only.** Never produce a document bearing the name, logo or
-   letterhead of a real insurer, bank or government agency. A realistic fake notice from a
-   real institution is a fabricated official record whatever the intent, and it would make
-   the corpus unpublishable alongside the report.
+**Real organisations may be named.** An earlier rule required every insurer, hospital, bank and
+agency on a document to be invented. It was withdrawn on 13 September 2026: a full policy
+names the hospitals, schemes and dispute bodies a real Singapore policy names, and a corpus
+that cannot say "restructured hospital" or "FIDREC" tests a weaker retriever than the one a
+household needs. The people, addresses, policy numbers and figures remain the canon's.
 
-   **There is no footer requirement.** Every page used to have to carry a visible
-   `SYNTHETIC DOCUMENT — NOT A REAL RECORD` stamp. That was dropped deliberately: the
-   protection that matters is the invented issuer above — a document naming an insurer that
-   does not exist is not a forgeable record of anything — and the stamp was costing more than
-   it bought, landing on the last page only and overlapping the body text where it did land.
-   Keep it where a template already prints it; nothing fails for its absence.
-2. **State what synthetic data does not prove.** Generated documents are cleaner and more
+**There is no footer requirement.** Every page used to have to carry a visible
+`SYNTHETIC DOCUMENT — NOT A REAL RECORD` stamp. It was dropped because the stamp landed on the
+last page only and overlapped the body text where it did land. Keep it where a template already
+prints it; nothing fails for its absence.
+
+1. **State what synthetic data does not prove.** Generated documents are cleaner and more
    consistent than real ones. That is what the 40-document redacted holdout is for. Report
    both numbers and the gap.
 

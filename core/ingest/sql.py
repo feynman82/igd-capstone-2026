@@ -62,6 +62,31 @@ SELECT id, original_name, mime, quarantine_reason, pages
  LIMIT %(limit)s
 """
 
+# Forgetting a document a person has given up on. Only a quarantined one: an indexed document is
+# evidence that answers and reminders already cite, and removing that is not this statement's
+# job. Its chunks, facts and attribution cascade; a household name it raised keeps its answer and
+# loses only the pointer back to it (`ON DELETE SET NULL`).
+DELETE_QUARANTINED = """
+DELETE FROM documents
+ WHERE id = %(document_id)s::uuid
+   AND status = 'quarantined'
+RETURNING original_name
+"""
+
+# What `core/ingest/reindex.py` rebuilds: every indexed document, and what its facts say.
+SELECT_INDEXED = """
+SELECT id, original_name, mime, doc_type, pack_id
+  FROM documents
+ WHERE status = 'indexed'
+ ORDER BY ingested_at, id
+"""
+
+SELECT_FACT_VALUES = """
+SELECT key, value_text
+  FROM facts
+ WHERE document_id = %(document_id)s
+"""
+
 COUNT_BY_STATUS = "SELECT status, count(*) FROM documents GROUP BY status ORDER BY status"
 
 # The idempotency keys for a set of documents at once, so a screen listing the quarantine queue

@@ -17,6 +17,8 @@ if exist "%~dp0.venv\Scripts\python.exe" (
 )
 set "PARROT_EXIT_CODE=%ERRORLEVEL%"
 echo.
-if /i not "%~1"=="-CheckOnly" pause
+rem Shut down from the screens is a clean exit, and the window closes with it. Anything else,
+rem a failed start or Ctrl+C, stays open so the reason can be read.
+if not "%PARROT_EXIT_CODE%"=="0" if /i not "%~1"=="-CheckOnly" pause
 popd
 exit /b %PARROT_EXIT_CODE%

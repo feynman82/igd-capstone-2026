@@ -26,6 +26,20 @@ log = logging.getLogger(__name__)
 
 EMBED_DIM = 768  # chunks.embedding is vector(768); a model of another size cannot be stored
 
+# EmbeddingGemma was trained with a task prompt on each side, and scores without them are both
+# lower and flatter. Measured on the household vault on 13 September: "do i have a
+# hospitalisation plan?" scored 0.42 against the best chunk without prompts and abstained under
+# the pack's 0.45 floor; with both prompts and clause-aligned chunks it scored 0.55. The two
+# sides must always agree, so a vault embedded one way is re-embedded with
+# `scripts/reindex.py` before a query is embedded the other way.
+QUERY_PROMPT = "task: search result | query: {text}"
+DOCUMENT_PROMPT = "title: {title} | text: {text}"
+
+
+def uses_task_prompts(model: str) -> bool:
+    """Whether this embedding model expects `QUERY_PROMPT` and `DOCUMENT_PROMPT`."""
+    return "embeddinggemma" in model.lower()
+
 
 class ModelUnavailable(RuntimeError):
     """Safe to show: names what could not be done, never the document it was doing it to."""
@@ -88,6 +102,64 @@ class Ollama:
                     f"chunks.embedding is vector({EMBED_DIM})"
                 )
         return vectors
+
+    def embed_query(self, text: str) -> list[float]:
+        """A question, embedded the way the model was trained to embed a search query."""
+        model = self._settings.embedding_model
+        return self.embed([QUERY_PROMPT.format(text=text) if uses_task_prompts(model) else text])[0]
+
+    def embed_documents(self, items: list[tuple[str, str]]) -> list[list[float]]:
+        """Passages as `(title, text)`, embedded the way the model was trained to embed a document.
+
+        The title is the document as a person would name it. It is what lets a chunk from the
+        middle of a contract still say which contract it is from.
+        """
+        if not uses_task_prompts(self._settings.embedding_model):
+            return self.embed([text for _title, text in items])
+        return self.embed(
+            [DOCUMENT_PROMPT.format(title=title or "none", text=text) for title, text in items]
+        )
+
+    # ------------------------------------------------------------------- warming up
+
+    def warm(self, keep_alive: str = "30m") -> str | None:
+        """Load the generator and the embedder now, and say where the generator landed.
+
+        An empty prompt is Ollama's documented way to load a model without generating anything.
+        The answer is `gpu`, `partial` (split between graphics memory and the processor), `cpu`,
+        or `None` when Ollama does not report a placement. On 13 September every model call ran
+        on the processor because the graphics driver had failed — `size_vram` was 0 — and nothing
+        on screen said so; a three-minute answer simply looked broken.
+        """
+        model = self._settings.generation_model
+        try:
+            with self._client(self._settings.generation_url) as client:
+                client.post(
+                    "/api/generate", json={"model": model, "prompt": "", "keep_alive": keep_alive}
+                ).raise_for_status()
+                listing = client.get("/api/ps")
+                listing.raise_for_status()
+                running = listing.json().get("models") or []
+            with self._client(self._settings.auxiliary_url) as client:
+                client.post(
+                    "/api/embed",
+                    json={
+                        "model": self._settings.embedding_model,
+                        "input": [QUERY_PROMPT.format(text="warm")],
+                        "keep_alive": keep_alive,
+                    },
+                ).raise_for_status()
+        except (httpx.HTTPError, ValueError, AttributeError) as error:
+            raise ModelUnavailable(f"{model} could not be loaded") from error
+
+        for entry in running:
+            if not isinstance(entry, dict) or model not in (entry.get("name"), entry.get("model")):
+                continue
+            size, in_vram = int(entry.get("size") or 0), int(entry.get("size_vram") or 0)
+            if size <= 0:
+                return None
+            return "gpu" if in_vram >= size else ("partial" if in_vram else "cpu")
+        return None
 
     # ------------------------------------------------------------------- generation
 

@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600&amp;family=Outfit:wght@500;600;700&amp;display=swap">
+  <style>
+    .t-light {
+      --ground: #f7f2e9; --surface: #fffcf6; --surface-2: #f1e9db; --surface-3: #e9dfcd;
+      --ink: #2b2621; --ink-2: #554c41; --ink-3: #6e6354;
+      --hairline: #e3d9c8; --rule: #cfc2ac; --edge: #8b7d6b;
+      --brand: #b4462a; --brand-strong: #8e3620; --brand-soft: #f7e3d9; --brand-ink: #fffcf6;
+      --accent: #0f5f52;
+      --ok: #26623a; --ok-soft: #e0ebdf; --ok-line: #84b795;
+      --lift-1: 0 1px 2px rgb(43 38 33 / 0.05), 0 10px 26px -18px rgb(43 38 33 / 0.28);
+      --shimmer: linear-gradient(100deg, transparent 20%, rgb(255 255 255 / 0.72) 50%, transparent 80%);
+    }
+    body { margin: 0; background: #f7f2e9; }
+    a { color: #8e3620; }
+    a:hover { color: #b4462a; }
+    .page { font-family: Figtree, "Segoe UI", system-ui, sans-serif; font-size: 15.5px; line-height: 1.55; letter-spacing: -0.005em; -webkit-font-smoothing: antialiased; font-variant-numeric: tabular-nums; }
+    .display { font-family: Outfit, "Segoe UI", system-ui, sans-serif; letter-spacing: -0.02em; }
+    .skeleton { position: relative; overflow: hidden; background: var(--surface-2); }
+    .skeleton::after { content: ""; position: absolute; inset: 0; background: var(--shimmer); transform: translateX(-100%); animation: parrot-sweep 1400ms linear infinite; }
+    .stack { display: grid; align-items: center; }
+    .stack > * { grid-area: 1 / 1; }
+    .leave { animation: parrot-leave 240ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+    .arrive { animation: parrot-arrive 300ms cubic-bezier(0.23, 1, 0.32, 1) both; }
+    @keyframes parrot-sweep { to { transform: translateX(100%); } }
+    @keyframes parrot-leave { to { opacity: 0; visibility: hidden; } }
+    @keyframes parrot-arrive { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: none; } }
+    @keyframes parrot-fade { from { opacity: 0; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .skeleton::after { display: none; }
+      .arrive { animation-name: parrot-fade; }
+    }
+  </style>
+</helmet>
+<div class="page t-light" style="min-height: 900px; box-sizing: border-box; background: var(--ground); color: var(--ink); display: flex; flex-direction: column;">
+
+  <div style="background: var(--surface); border-bottom: 1px solid var(--hairline);">
+    <div style="max-width: 1088px; margin: 0 auto; height: 64px; padding: 0 24px; box-sizing: border-box; display: flex; align-items: center; gap: 32px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <svg viewBox="0 0 32 32" width="28" height="28"><rect width="32" height="32" rx="8.8" style="fill: var(--brand);"></rect><path d="M11 24V9.5A1.5 1.5 0 0 1 12.5 8h5.8a5.6 5.6 0 0 1 0 11.2H14" style="fill: none; stroke: var(--brand-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"></path></svg>
+        <span class="display" style="font-size: 21px; line-height: 1; font-weight: 600;">parrot</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 4px;">
+        <span class="display" style="border-radius: 999px; padding: 10px 16px; font-size: 14.5px; line-height: 1.2; font-weight: 600; background: var(--brand-soft); color: var(--brand-strong);">Today</span>
+        <span class="display" style="border-radius: 999px; padding: 10px 16px; font-size: 14.5px; line-height: 1.2; font-weight: 500; color: var(--ink-2);">Ask</span>
+        <span class="display" style="border-radius: 999px; padding: 10px 16px; font-size: 14.5px; line-height: 1.2; font-weight: 500; color: var(--ink-2);">Vault</span>
+        <span class="display" style="border-radius: 999px; padding: 10px 16px; font-size: 14.5px; line-height: 1.2; font-weight: 500; color: var(--ink-2);">Packs</span>
+      </div>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 16px;">
+        <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-3);"><span style="display: block; width: 7px; height: 7px; border-radius: 999px; background: var(--accent);"></span><span style="font-weight: 500; color: var(--ink-2);">Marcus Lim</span><span>— on this computer</span></span>
+        <span style="display: flex; align-items: center; padding: 4px 8px; color: var(--ink-3);"><svg viewBox="0 0 24 24" width="14" height="14" style="fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></span>
+        <span style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 13px; color: var(--ink-3);"><svg viewBox="0 0 24 24" width="14" height="14" style="fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;"><rect x="3" y="11" width="18" height="11" rx="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>Lock</span>
+        <span style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; font-size: 13px; color: var(--ink-3);"><svg viewBox="0 0 24 24" width="14" height="14" style="fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round;"><path d="M12 2v10"></path><path d="M18.4 6.6a9 9 0 1 1-12.77.04"></path></svg>Power</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="width: 100%; max-width: 880px; margin: 0 auto; padding: 32px 24px 48px; box-sizing: border-box;">
+    <div style="max-width: 560px; display: flex; flex-direction: column; gap: 32px;">
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <h1 class="display" style="margin: 0; font-size: 28px; line-height: 1.15; font-weight: 600;">Restarting Parrot</h1>
+        <p style="margin: 0; font-size: 17.5px; line-height: 1.3; color: var(--ink-2); text-wrap: pretty;">Your documents stay exactly where they are. This page reconnects by itself, usually within a minute.</p>
+      </div>
+
+      <div style="background: var(--surface); border: 1px solid var(--hairline); border-radius: 14px; box-shadow: var(--lift-1); overflow: hidden; display: flex; flex-direction: column;">
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 24px;">
+          <div class="stack" style="width: 22px; height: 22px; flex-shrink: 0;">
+            <div class="skeleton leave" style="width: 22px; height: 22px; border-radius: 999px; animation-delay: 0.3s;"></div>
+            <div class="arrive" style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 999px; background: var(--ok-soft); border: 1px solid var(--ok-line); display: grid; place-items: center; animation-delay: 0.3s;">
+              <svg viewBox="0 0 24 24" width="13" height="13" style="fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>
+            </div>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+            <span class="display" style="font-size: 15.5px; line-height: 1.3; font-weight: 600;">The running engine</span>
+            <span style="font-size: 13px; line-height: 1.55; color: var(--ink-3);">Finished what it was doing, then stopped</span>
+          </div>
+          <div class="stack" style="justify-items: end; min-width: 64px;">
+            <div class="skeleton leave" style="width: 56px; height: 10px; border-radius: 8px; animation-delay: 0.3s;"></div>
+            <span class="arrive" style="font-size: 13px; font-weight: 500; color: var(--ok); animation-delay: 0.3s;">Stopped</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--hairline);">
+          <div class="stack" style="width: 22px; height: 22px; flex-shrink: 0;">
+            <div class="skeleton leave" style="width: 22px; height: 22px; border-radius: 999px; animation-delay: 1.3s;"></div>
+            <div class="arrive" style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 999px; background: var(--ok-soft); border: 1px solid var(--ok-line); display: grid; place-items: center; animation-delay: 1.3s;">
+              <svg viewBox="0 0 24 24" width="13" height="13" style="fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>
+            </div>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+            <span class="display" style="font-size: 15.5px; line-height: 1.3; font-weight: 600;">A fresh engine</span>
+            <span style="font-size: 13px; line-height: 1.55; color: var(--ink-3);">Starting with what is on this computer now</span>
+          </div>
+          <div class="stack" style="justify-items: end; min-width: 64px;">
+            <div class="skeleton leave" style="width: 56px; height: 10px; border-radius: 8px; animation-delay: 1.3s;"></div>
+            <span class="arrive" style="font-size: 13px; font-weight: 500; color: var(--ok); animation-delay: 1.3s;">Ready</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--hairline);">
+          <div class="stack" style="width: 22px; height: 22px; flex-shrink: 0;">
+            <div class="skeleton leave" style="width: 22px; height: 22px; border-radius: 999px; animation-delay: 2.1s;"></div>
+            <div class="arrive" style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 999px; background: var(--ok-soft); border: 1px solid var(--ok-line); display: grid; place-items: center; animation-delay: 2.1s;">
+              <svg viewBox="0 0 24 24" width="13" height="13" style="fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>
+            </div>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+            <span class="display" style="font-size: 15.5px; line-height: 1.3; font-weight: 600;">Your documents</span>
+            <span style="font-size: 13px; line-height: 1.55; color: var(--ink-3);">Reconnecting</span>
+          </div>
+          <div class="stack" style="justify-items: end; min-width: 64px;">
+            <div class="skeleton leave" style="width: 56px; height: 10px; border-radius: 8px; animation-delay: 2.1s;"></div>
+            <span class="arrive" style="font-size: 13px; font-weight: 500; color: var(--ok); animation-delay: 2.1s;">Ready</span>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-top: 1px solid var(--hairline);">
+          <div class="stack" style="width: 22px; height: 22px; flex-shrink: 0;">
+            <div class="skeleton leave" style="width: 22px; height: 22px; border-radius: 999px; animation-delay: 2.9s;"></div>
+            <div class="arrive" style="width: 22px; height: 22px; box-sizing: border-box; border-radius: 999px; background: var(--ok-soft); border: 1px solid var(--ok-line); display: grid; place-items: center; animation-delay: 2.9s;">
+              <svg viewBox="0 0 24 24" width="13" height="13" style="fill: none; stroke: var(--ok); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12.5l4.2 4.2L19 7"></path></svg>
+            </div>
+          </div>
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+            <span class="display" style="font-size: 15.5px; line-height: 1.3; font-weight: 600;">Filing</span>
+            <span style="font-size: 13px; line-height: 1.55; color: var(--ink-3);">Picks up where it left off</span>
+          </div>
+          <div class="stack" style="justify-items: end; min-width: 64px;">
+            <div class="skeleton leave" style="width: 56px; height: 10px; border-radius: 8px; animation-delay: 2.9s;"></div>
+            <span class="arrive" style="font-size: 13px; font-weight: 500; color: var(--ok); animation-delay: 2.9s;">Ready</span>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="arrive" style="display: flex; align-items: center; gap: 8px; animation-delay: 3.3s;">
+        <svg viewBox="0 0 24 24" width="16" height="16" style="flex-shrink: 0; fill: none; stroke: var(--brand); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;"><path d="M5 12h14"></path><path d="M13 6l6 6-6 6"></path></svg>
+        <span style="font-size: 15.5px; color: var(--ink-2);">Back. Reloading Today.</span>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

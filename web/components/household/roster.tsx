@@ -16,20 +16,41 @@ import type { Person } from "@/lib/api";
  * "my premium" returns somebody else's policy, this list is the explanation.
  */
 
-const RELATION_WORD: Record<Person["relation"], string> = {
-  self: "you",
-  partner: "partner",
-  child: "child",
-  parent: "parent",
-  other: "household",
-};
+// How a relation reads in the picker. `self` is not offered: the owner is changed by "This is me".
+const RELATION_CHOICES: { relation: Exclude<Person["relation"], "self">; label: string }[] = [
+  { relation: "parent", label: "Parent" },
+  { relation: "partner", label: "Partner" },
+  { relation: "child", label: "Child" },
+  { relation: "other", label: "Lives here" },
+];
 
 export function Roster({ people }: { people: Person[] }) {
   const [busy, setBusy] = useState<number | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
 
-  const household = people.filter((person) => !person.external);
-  const outside = people.filter((person) => person.external);
+  // A person with no confirmed name is the model's proposal for a question still on Today, not
+  // somebody in the household yet, so they are listed there rather than here.
+  const household = people.filter(
+    (person) => !person.external && (person.is_owner || person.aliases.length > 0),
+  );
+  const outside = people.filter((person) => person.external && person.aliases.length > 0);
+
+  async function place(personId: number, relation: string) {
+    setBusy(personId);
+    setFailed(null);
+    const response = await fetch(`/api/parrot/household/people/${personId}`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ relation }),
+    }).catch(() => null);
+    if (!response?.ok) {
+      const detail = (await response?.json().catch(() => null)) as { detail?: string } | null;
+      setFailed(detail?.detail ?? "Parrot did not save that.");
+      setBusy(null);
+      return;
+    }
+    window.location.reload();
+  }
 
   async function handOver(personId: number) {
     setBusy(personId);
@@ -65,7 +86,21 @@ export function Roster({ people }: { people: Person[] }) {
                       You
                     </span>
                   ) : (
-                    <span className="text-meta text-ink-3">{RELATION_WORD[person.relation]}</span>
+                    <label className="text-meta text-ink-3">
+                      <span className="sr-only">How {person.display_name} is related to you</span>
+                      <select
+                        value={person.relation}
+                        disabled={busy !== null}
+                        onChange={(event) => place(person.id, event.target.value)}
+                        className="rounded-[var(--r-sm)] border border-hairline bg-surface px-[var(--s-2)] py-[2px] text-meta text-ink-2 disabled:opacity-60"
+                      >
+                        {RELATION_CHOICES.map((choice) => (
+                          <option key={choice.relation} value={choice.relation}>
+                            {choice.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
                   )}
                 </div>
                 {/* The names their documents print. The reason an answer is right or wrong. */}

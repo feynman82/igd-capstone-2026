@@ -40,9 +40,21 @@ MIN_CHARS_PER_PAGE = 40
 
 
 @dataclass(frozen=True, slots=True)
+class Block:
+    """One thing the parser found on a page, and what kind of thing it is."""
+
+    kind: str  # heading | text | table
+    text: str
+
+
+@dataclass(frozen=True, slots=True)
 class ParsedPage:
     page: int  # 1-based, as a person would say it
     text: str
+    # The same page as the parser saw it, when it saw structure. `text` stays the plain join that
+    # classification and extraction read; `core/ingest/chunk.py` reads these to cut at headings
+    # instead of at a character count. Empty for plain text and the vision pass.
+    blocks: tuple[Block, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -141,17 +153,65 @@ def _pages_from(document: object) -> list[ParsedPage]:
 
     Docling's markdown export is one string for the whole document, which would throw away the
     page numbers `facts.page` needs. Its item provenance carries them, so they are read from
-    there instead.
+    there instead. A table carries its content in its cells rather than in `.text`, and is read
+    through `_table_text`.
     """
-    by_page: dict[int, list[str]] = {}
+    by_page: dict[int, list[Block]] = {}
     for item, _level in document.iterate_items():  # type: ignore[attr-defined]
         text = getattr(item, "text", None)
+        kind = _kind(item)
+        if not text or not str(text).strip():
+            text = _table_text(item)
+            kind = "table"
         if not text or not str(text).strip():
             continue
         provenance = getattr(item, "prov", None) or []
         page_no = getattr(provenance[0], "page_no", 1) if provenance else 1
-        by_page.setdefault(int(page_no), []).append(str(text).strip())
-    return [ParsedPage(page, "\n".join(lines)) for page, lines in sorted(by_page.items())]
+        by_page.setdefault(int(page_no), []).append(Block(kind, str(text).strip()))
+    return [
+        ParsedPage(page, "\n".join(block.text for block in blocks), tuple(blocks))
+        for page, blocks in sorted(by_page.items())
+    ]
+
+
+_HEADING_LABELS = frozenset({"title", "section_header"})
+
+
+def _kind(item: object) -> str:
+    """Docling's label, reduced to the one distinction chunking needs: is this a heading."""
+    label = getattr(item, "label", None)
+    value = str(getattr(label, "value", label) or "")
+    return "heading" if value in _HEADING_LABELS else "text"
+
+
+def _table_text(item: object) -> str | None:
+    """A table as lines of text, one row per line: `label: value` when a row has two cells.
+
+    Docling puts a table's content in its cells, not in `.text`, so keeping only items with text
+    dropped every table without a trace. On 2026-09-13 that was a policy's whole schedule — policy
+    number, insured, period and premium, all on page 1, all found by Docling as one table — and the
+    document quarantined as "required fields not found on any page" while the values sat in the
+    parsed document. A benefit table would have been lost to retrieval the same way.
+
+    Read through the cell grid and duck-typed, so nothing here imports Docling. A spanned cell is
+    repeated across the columns it covers, so consecutive identical cells are counted once.
+    """
+    try:
+        grid = getattr(getattr(item, "data", None), "grid", None)
+    except Exception:  # a malformed table must not take the rest of the page with it
+        return None
+    if not grid:
+        return None
+    lines: list[str] = []
+    for row in grid:
+        cells: list[str] = []
+        for cell in row:
+            value = " ".join(str(getattr(cell, "text", "") or "").split())
+            if value and (not cells or cells[-1] != value):
+                cells.append(value)
+        if cells:
+            lines.append(f"{cells[0]}: {cells[1]}" if len(cells) == 2 else " | ".join(cells))
+    return "\n".join(lines) or None
 
 
 PARSERS: tuple[Parser, ...] = (PlainTextParser(), DoclingParser())

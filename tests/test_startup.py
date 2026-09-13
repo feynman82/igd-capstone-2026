@@ -131,3 +131,42 @@ def test_stopping_screens_that_were_never_started_does_nothing() -> None:
     with patch.object(run_parrot.subprocess, "run") as kill:
         run_parrot.stop_web(None)
         kill.assert_not_called()
+
+
+def test_stopping_the_worker_kills_the_tree_not_the_launcher() -> None:
+    """The worker starts its nightly schedule as a process of its own. Terminating only the venv
+    launcher in front of the worker left that schedule running with no parent — two of them after
+    one restart and one shut-down from the screens on 2026-09-13."""
+    worker = MagicMock()
+    worker.poll.return_value = None
+    worker.pid = 5151
+    with (
+        patch.object(run_parrot.sys, "platform", "win32"),
+        patch.object(run_parrot.shutil, "which", return_value="taskkill"),
+        patch.object(run_parrot.subprocess, "run") as kill,
+    ):
+        run_parrot.stop_worker(worker)
+        assert kill.call_args.args[0] == ["taskkill", "/PID", "5151", "/T", "/F"]
+
+
+def test_a_worker_that_has_already_stopped_is_left_alone() -> None:
+    worker = MagicMock()
+    worker.poll.return_value = 0
+    with patch.object(run_parrot.subprocess, "run") as kill:
+        run_parrot.stop_worker(worker)
+        run_parrot.stop_worker(None)
+        kill.assert_not_called()
+
+
+def test_the_worker_gets_its_own_session_off_windows(tmp_path: Path) -> None:
+    """Stopping it signals its process group. Without a session of its own that group is this
+    launcher's, and stopping the worker would stop the engine that asked."""
+    from core.runtime.settings import Settings
+
+    with (
+        patch.object(run_parrot.sys, "platform", "linux"),
+        patch("core.runtime.capture.broker_available", return_value=True),
+        patch.object(run_parrot.subprocess, "Popen") as launch,
+    ):
+        run_parrot.start_worker(Settings.load(tmp_path, {}))
+        assert launch.call_args.kwargs.get("start_new_session") is True

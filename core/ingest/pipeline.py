@@ -89,10 +89,13 @@ def process(
     )
 
     chunks = chunk_pages(
-        parsed.pages, original_name=original_name, doc_type=classification.doc_type
+        parsed.pages,
+        original_name=original_name,
+        doc_type=classification.doc_type,
+        title=document_title(installed, classification.doc_type, extraction.facts, original_name),
     )
     try:
-        vectors = client.embed([chunk.embedding_input for chunk in chunks])
+        vectors = client.embed_documents([(chunk.title, chunk.embedding_input) for chunk in chunks])
     except ModelUnavailable as error:
         return _quarantine(conn, document_id, parsed, str(error))
 
@@ -125,6 +128,22 @@ def process(
         facts=written,
         reason=None,
     )
+
+
+def document_title(installed: Any, doc_type: str, facts: Any, original_name: str) -> str:
+    """The document as a person would name it: its `string` fields as read, in the pack's order.
+
+    For a policy schedule that is the insurer and the product name — "Meridian Assurance,
+    PrivateCare Hospital and Surgical Plan" — which is what a chunk from clause 6 of a contract
+    cannot say for itself, and what "do I have a hospitalisation plan?" is really asking about.
+    Which fields name a document is read from the pack's declared types rather than written here,
+    so no field name lives in this module. The filename when nothing was read.
+    """
+    spec = installed.manifest.document_types.get(doc_type)
+    named = [field.name for field in spec.fields if field.type == "string"] if spec else []
+    values = {fact.key: fact.value_text for fact in facts if getattr(fact, "value_text", None)}
+    parts = [str(values[name]).strip() for name in named if values.get(name)]
+    return ", ".join(dict.fromkeys(parts))[:160] or original_name
 
 
 def commit_both_lanes(

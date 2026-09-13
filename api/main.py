@@ -16,23 +16,37 @@ from __future__ import annotations
 import asyncio
 import html
 import logging
+import secrets
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import cast
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
+from api import startup
 from api.routes import build_router
 from core.registry import install_best_effort
 from core.runtime.checks import Check, collect_checks
+from core.runtime.lifecycle import ACTIONS, Action, Lifecycle
 from core.runtime.settings import Settings
 
 log = logging.getLogger(__name__)
 
 ROOT = Path(__file__).resolve().parents[1]
+
+# How long an accepted restart or shut-down waits before asking uvicorn to exit: long enough for
+# the 202 to leave this process, short enough that the person watching sees it happen.
+LIFECYCLE_DELAY_SECONDS = 0.25
+
+SCREENS_ONLY = "Restart and shut down are only accepted from Parrot's own screens."
+UNSUPERVISED = (
+    "This engine was not started by START.cmd or scripts/run_parrot.py, so it cannot restart "
+    "or stop itself from here. Stop it where it was started."
+)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -52,6 +66,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = config
+    # Set by `scripts/run_parrot.py` once the server exists. `None` means nothing supervises this
+    # engine — a test, or `uvicorn api.main:app` typed by hand — so it cannot restart itself.
+    app.state.lifecycle = None
+    # Written by `scripts/run_parrot.py`: whether the local model has been loaded, and where the
+    # screens are. The startup page reads both through `/api/system`.
+    app.state.model = startup.ModelWarmth()
+    app.state.screens = {"url": f"http://localhost:{config.web_port}/", "expected": True}
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "[::1]"])
     app.include_router(build_router())
     lock = asyncio.Lock()
@@ -83,7 +104,63 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             headers={"Cache-Control": "no-store"},
         )
 
+    @app.get("/api/system")
+    async def system_status(request: Request) -> JSONResponse:
+        """What the startup and restart screens poll: the engine is here, whether it can restart,
+        the same dependency checks the setup page shows, from the same five-second cache, whether
+        the local model is loaded yet, and where the screens are."""
+        return JSONResponse(
+            {
+                "engine": "running",
+                "can_restart": request.app.state.lifecycle is not None,
+                "checks": [check.payload() for check in await checks()],
+                "model": request.app.state.model.payload(),
+                "screens": request.app.state.screens,
+            },
+            headers={"Cache-Control": "no-store"},
+        )
+
+    @app.post("/api/system/{action}", status_code=202)
+    async def system_action(action: str, request: Request) -> JSONResponse:
+        """Restart or shut down, and only when Parrot's own screens asked.
+
+        The Host check this app relies on everywhere does not help here: a `POST` from any web
+        page the person has open arrives with a loopback Host. So two refusals come first. Every
+        browser sends `Sec-Fetch-Site` and the Next.js server calling from its own process never
+        does, so a request carrying it came from a page rather than from the screens, and is
+        refused whatever else it says. And the action must be named again in `x-parrot-intent`,
+        which a cross-origin page cannot set without a CORS preflight this app never grants.
+        """
+        if action not in ACTIONS:
+            return JSONResponse({"detail": "Not something Parrot does."}, status_code=404)
+        browser = "sec-fetch-site" in request.headers
+        if browser or request.headers.get("x-parrot-intent") != action:
+            return JSONResponse({"detail": SCREENS_ONLY}, status_code=403)
+        lifecycle: Lifecycle | None = request.app.state.lifecycle
+        if lifecycle is None:
+            return JSONResponse({"detail": UNSUPERVISED}, status_code=409)
+        asyncio.get_running_loop().call_later(
+            LIFECYCLE_DELAY_SECONDS, lifecycle.request, cast(Action, action)
+        )
+        return JSONResponse(
+            {"action": action}, status_code=202, headers={"Cache-Control": "no-store"}
+        )
+
     @app.get("/", response_class=HTMLResponse)
+    async def starting(request: Request) -> HTMLResponse:
+        """The startup page. See `api/startup.py`: it is what the browser opens on, within a
+        second of a double-click, and it moves to Today by itself."""
+        nonce = secrets.token_urlsafe(16)
+        return HTMLResponse(
+            startup.render(nonce, str(request.app.state.screens["url"])),
+            headers={
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+                "Content-Security-Policy": startup.content_security_policy(nonce),
+            },
+        )
+
+    @app.get("/setup", response_class=HTMLResponse)
     async def setup() -> HTMLResponse:
         rows = "".join(
             f"<tr><th scope='row'>{html.escape(check.name)}</th>"
@@ -124,7 +201,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "or send data to cloud services.</p>"
             "<p>Refresh this page after fixing setup. Checks are cached for five seconds.</p>"
             "<p>Everything runs on this computer. Nothing is sent to a cloud service.</p>"
-            "<p>To stop, press Ctrl+C in the Parrot window. "
+            "<p>To stop, use Power in the screens or press Ctrl+C in the Parrot window. "
             "See TRY-PARROT.md to get started, or docs/RUNNING.md for detail.</p>"
             "</main></body></html>",
             headers={

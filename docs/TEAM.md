@@ -96,15 +96,13 @@ Filling the register first gives you, at no extra cost:
 Without the register, someone spends week 8 labelling documents by hand, and the evaluation
 that carries the grade arrives late and thin.
 
-### Two rules for the corpus
+### The rule for the corpus
 
-1. **Invented organisations only.** Never render a document bearing the name, logo or
-   letterhead of a real insurer, bank or agency. A realistic fake notice from a real
-   institution is a fabricated official record whatever the intent, and it would make the
-   corpus unpublishable alongside the report. No footer stamp is required: the
-   `SYNTHETIC DOCUMENT` requirement was withdrawn, because the invented issuer is the
-   control that matters and the stamp was not being produced reliably.
-2. **Say what synthetic data does not prove.** Generated documents are cleaner and more
+Real organisations may be named — hospitals, schemes, dispute bodies — where a real document
+would name them; the invented-organisations rule was withdrawn on 13 September 2026. No footer
+stamp is required either.
+
+1. **Say what synthetic data does not prove.** Generated documents are cleaner and more
    consistent than real ones, so a score measured only on them overstates the system. That
    is what the 40-document holdout is for. Report both numbers and the gap — that gap is a
    finding, not a defect.
