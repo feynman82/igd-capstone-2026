@@ -73,3 +73,18 @@ def test_a_page_and_a_document_on_file_with_the_same_id_are_different_citations(
     on_file = Passage(7, DOC, 1, "a document on file", 1.0, kind="inventory")
     assert page.ref != on_file.ref
     assert check_one(Claim("x", (on_file.ref,)), {page.ref}) is not None
+
+
+def test_a_policy_number_is_kept_only_when_it_is_printed_whole() -> None:
+    printed = Passage(1, DOC, 1, "Policy MV-2026-448120. Reference 448121.", 0.5)
+    assert unprinted_numbers("Your policy number is MV-2026-448121.", [printed]) == [
+        "MV-2026-448121"
+    ]
+    assert unprinted_numbers("Your policy number is MV-2026-448120.", [printed]) == []
+
+
+def test_a_date_on_file_may_be_written_the_way_a_person_says_it() -> None:
+    on_file = Passage(
+        4, DOC, 1, "Private Car Insurance Policy. expiry date: 2027-04-11.", 1.0, kind="inventory"
+    )
+    assert unprinted_numbers("It expires on 11 April 2027.", [on_file]) == []

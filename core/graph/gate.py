@@ -141,6 +141,11 @@ def check(
 
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
+# A policy number, claim reference or the like: letters, a hyphen, then digits and letters —
+# "MV-2026-448120", "Covid-19". Digits inside one of these are not independent numbers; the
+# whole token is the identifier, and it either matches or it doesn't.
+_IDENTIFIER = re.compile(r"(?<![\w-])[A-Za-z]{1,10}-[A-Za-z0-9-]*\d[A-Za-z0-9-]*")
+
 
 def _normal(number: str) -> str:
     """ "1,860.00", "1860" and "01" → "1860", "1860", "1": formatting is not a different number."""
@@ -151,14 +156,37 @@ def _normal(number: str) -> str:
 
 
 def unprinted_numbers(text: str, cited: Sequence[Passage]) -> list[str]:
-    """Every number in a sentence that no passage it cites prints. The model copies; it never
-    computes — "SGD 1,000 a day for 3 days is SGD 3,000" ignores the deductible on the next page."""
+    """Every number or identifier in a sentence that no cited passage prints. An identifier (a
+    policy number, a claim reference) is copied whole, verbatim, or it is unprinted — its digits
+    are not independent numbers that can be satisfied by matching fragments elsewhere. Every other
+    number may be reformatted (comma grouping, trailing zeros, a leading zero) and is compared by
+    value."""
+    haystacks = [f"{passage.context_prefix}\n{passage.text}".lower() for passage in cited]
+
+    identifiers: list[str] = []
+    covered: list[tuple[int, int]] = []
+    for match in _IDENTIFIER.finditer(text):
+        identifier = match.group().rstrip("-.")
+        identifiers.append(identifier)
+        covered.append((match.start(), match.start() + len(identifier)))
+
+    missing = [
+        identifier
+        for identifier in identifiers
+        if not any(identifier.lower() in haystack for haystack in haystacks)
+    ]
+
     printed = {
         _normal(found)
         for passage in cited
         for found in _NUMBER.findall(f"{passage.context_prefix}\n{passage.text}")
     }
-    return [found for found in _NUMBER.findall(text) if _normal(found) not in printed]
+    for found in _NUMBER.finditer(text):
+        if any(start <= found.start() < end for start, end in covered):
+            continue  # part of an identifier already checked above
+        if _normal(found.group()) not in printed:
+            missing.append(found.group())
+    return missing
 
 
 def _says(text: str, phrases: Sequence[str]) -> bool:
