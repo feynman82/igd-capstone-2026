@@ -58,6 +58,7 @@ cd igd-capstone-2026
 docker compose -f infra/docker-compose.yml up -d
 uv sync --python 3.12 --extra dev
 docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot < db/migrations/0001_init.sql
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot < db/migrations/0002_household.sql
 ```
 
 Then the screens:
@@ -68,15 +69,16 @@ npm ci
 cd ..
 ```
 
-Line by line: start the database, install the Python packages, create the tables, install
-the interface.
+Line by line: start the database, install the Python packages, create the tables (every file
+in `db/migrations/`, in order — there are two today), install the interface.
 
-The third line uses the database *inside* Docker, so you do not need to install `psql`
-yourself. On Windows run it from **Git Bash** or **WSL** rather than `cmd`, because `<` works
-differently there. In PowerShell use this instead:
+The migration lines use the database *inside* Docker, so you do not need to install `psql`
+yourself. On Windows run them from **Git Bash** or **WSL** rather than `cmd`, because `<` works
+differently there. In PowerShell use this instead, once per migration file:
 
 ```powershell
 Get-Content db/migrations/0001_init.sql | docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot
+Get-Content db/migrations/0002_household.sql | docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot
 ```
 
 You do **not** need a `.env` file. The defaults already match the Docker setup. Copy
@@ -86,15 +88,19 @@ You do **not** need a `.env` file. The defaults already match the Docker setup. 
 
 ## 4 · Put some documents in
 
-Desmond's synthetic corpus is **not in the repository** — it is too large for git and is
-handed over separately. Once you have a batch, put the folder in `corpus/batches/` and:
+Desmond's synthetic corpus is **already in the repository** under `corpus/batches/` — it is
+generated from an invented canon with no person behind it, which is what makes committing it
+safe. Load a batch with:
 
 ```bash
 make corpus-load BATCH=batch1
 ```
 
-No batch yet? Put any PDF or photo of a bill, payslip or insurance letter into the `inbox`
-folder in this repository. That is genuinely all the "upload" there is.
+That copies the batch's documents into the `inbox` folder, where the engine picks them up
+when it starts in step 5. Loading the same batch twice does not duplicate anything.
+
+Want to try your own? Put any PDF or photo of a bill, payslip or insurance letter into the
+`inbox` folder in this repository. That is genuinely all the "upload" there is.
 
 ---
 
@@ -251,6 +257,7 @@ is due today. The raw JSON is on the engine's port as well — `/api/today`, `/a
 | **You forgot the passphrase** | Delete `web/.parrot/lock.json` and choose a new one. Nothing is lost |
 | **Today is empty** | Either nothing is due — which is the normal state — or no documents have been read yet. Check Vault |
 | Answers are very slow | Expected on a laptop without a discrete GPU. It is a 4B model running on your own machine |
+| **On a Mac**, the window repeats `exited with 'signal 6 (SIGABRT)'` and Vault shows every document as pending | Known — [issue #4](https://github.com/feynman82/igd-capstone-2026/issues/4). The worker's process pool cannot use the GPU on macOS. Until the fix lands, start with `uv run python scripts/run_parrot.py --no-worker` and run the worker yourself with `--pool=solo`, as described there |
 | It abstained and you think it should not have | **Tell Yew Mun.** That is an evaluation finding, not a bug report |
 | It answered something it could not support | **Tell everyone immediately.** That is the one failure the project exists to prevent |
 
