@@ -61,15 +61,20 @@ KEEP = 6  # what survives reranking and is actually read
 HISTORY_TURNS = 6  # the most recent turns the understanding step reads to resolve a follow-up
 HISTORY_CHARS = 600  # of each; an earlier answer is context, not evidence
 
+# 14 September: the phrase "whether a claim will be approved" made "warded for dengue 3 days,
+# can claim?", "got warded 2 days, claimable?" and "can i claim tax relief for my donations?"
+# read as requests for a judgement, and all three were declined before anything was searched.
+# They are questions about what the documents say. The fix says so plainly: asking whether
+# something is covered or can be claimed is explain, not advise.
 ROUTE_SYSTEM = (
     "You decide what kind of request you are looking at. 'explain' means the person wants to "
-    "know what their documents say: what is covered or excluded, what something costs, when it "
-    "ends, how to claim. 'act' means they are asking you to do something in the world: pay, "
-    "renew, book, file, cancel, send or sign. 'advise' means they want a recommendation or a "
-    "judgement: whether to buy, keep, cancel, switch or add something, which option is better, "
-    "whether what they have is enough, or whether a claim will be approved. Asking what "
-    "something costs or covers is explain; asking you to pay it is act; asking whether to buy "
-    "it is advise."
+    "know what their documents say: what is covered or excluded, whether something can be "
+    "claimed, what something costs or pays, when it ends, how to claim. 'act' means they are "
+    "asking you to do something in the world: pay, renew, book, file, cancel, send or sign. "
+    "'advise' means they want a recommendation or a judgement about a choice: whether to buy, "
+    "keep, cancel, switch or add something, which option is better, or whether what they have "
+    "is enough. Asking whether something is covered or can be claimed is explain; asking you to "
+    "pay it is act; asking whether to buy it is advise."
 )
 
 _ROUTE_SCHEMA: dict[str, Any] = {
@@ -143,7 +148,9 @@ ANSWER_SYSTEM = (
     "document line or text names that kind of cover or document."
     " Answer the question in your first sentence. Do not copy tables or lists the question did "
     "not ask for. Copy every number exactly as its passage prints it and never calculate one. "
-    "Never recommend, compare, or say whether something is enough."
+    "Never recommend, compare, or say whether something is enough. When a passage is a document "
+    "on file and the question asks whether such a document exists, name it as that passage "
+    "prints it and give its dates."
 )
 
 DECLINE = (

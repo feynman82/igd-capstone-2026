@@ -20,6 +20,7 @@ import pytest
 
 from core.graph.answer import (
     ANSWER_SYSTEM,
+    ROUTE_SYSTEM,
     Abstained,
     AnswerGraph,
     Declined,
@@ -835,3 +836,10 @@ def test_the_persona_speaks_before_the_rules_and_never_replaces_them() -> None:
     system = client.systems[-1]
     assert system.startswith(insurance().manifest.persona.system.strip())
     assert ANSWER_SYSTEM in system
+
+
+def test_asking_whether_something_can_be_claimed_is_described_as_explain_to_the_router() -> None:
+    """14 September: "warded for dengue 3 days, can claim?" was declined as advice because the
+    router was told a question about whether a claim will be approved is advise."""
+    assert "claim will be approved" not in ROUTE_SYSTEM
+    assert "can be claimed is explain" in ROUTE_SYSTEM
