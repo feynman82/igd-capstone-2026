@@ -47,7 +47,7 @@ from typing import Any, Literal, TypedDict
 from core.graph.gate import Claim, check_content, check_one, precheck
 from core.graph.inventory import Holding, Inventory
 from core.graph.knowledge import categories_asked, glossary, reworded
-from core.graph.ports import Passage, Reranker, Retriever
+from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped
 from core.graph.sentences import SentenceScanner
 from core.packs import InstalledPack, installed_packs
@@ -214,7 +214,7 @@ class Citation:
     document_name: str
     page: int
     text: str  # "policy.pdf, page 1"
-    kind: str = "document"  # a page of a document, or a document on file
+    kind: Kind = "document"  # a page of a document, or a document on file
 
 
 @dataclass(frozen=True, slots=True)
