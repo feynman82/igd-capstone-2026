@@ -1265,3 +1265,57 @@ def test_a_failure_after_the_stream_started_arrives_as_an_event(
 
     assert [event["kind"] for event in body] == ["reading", "error"]
     assert "stopped answering" in body[-1]["detail"]
+
+
+def test_a_declined_request_for_advice_is_the_whole_stream(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Declined
+
+    streaming.events = [
+        Declined(
+            "I cannot recommend whether to buy cover.",
+            "Not financial advice.",
+            "What does my CareShield Critical Illness Plan say?",
+        )
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(
+        client_for(settings, conn)
+        .post("/api/ask/stream", json={"question": "should i buy CI cover?"})
+        .text
+    )
+
+    assert [event["kind"] for event in body] == ["declined"]
+    assert body[0]["disclaimer"] == "Not financial advice."
+    assert body[0]["offer"] == "What does my CareShield Critical Illness Plan say?"
+
+
+def test_a_citation_says_whether_it_is_a_page_or_a_document_on_file(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Citation, Finished, Reading, Sentence
+
+    on_file = Citation(DOC, "b1-0001.pdf", 1, "b1-0001.pdf, page 1", "inventory")
+    streaming.events = [
+        Reading(passages_read=1),
+        Sentence("None of the 1 policies on file is a pet policy.", (), [on_file]),
+        Finished([], "Not financial advice.", 1, 0, None, 2, False),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "pet?"}).text)
+
+    sentence = next(event for event in body if event["kind"] == "sentence")
+    assert sentence["citations"][0]["kind"] == "inventory"
+    assert body[-1]["quarantined"] == 2 and body[-1]["truncated"] is False
+
+
+def test_an_abstention_carries_the_packs_disclaimer_on_the_wire(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Abstained
+
+    streaming.events = [Abstained("not close enough", "", 4, 0, None, "Not financial advice.")]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "eh?"}).text)
+    assert body[0]["disclaimer"] == "Not financial advice."

@@ -56,6 +56,7 @@ from api.models import (
     ConfirmNameRequest,
     CorrectionRequest,
     CorrectionResponse,
+    DeclinedEvent,
     EnabledRequest,
     ErrorEvent,
     FinishedEvent,
@@ -88,6 +89,7 @@ from core import corrections, household, registry, vault
 from core.graph import answer as graph
 from core.graph.answer import Answer, AnswerGraph
 from core.graph.baseline import DenseRetriever, NoReranker
+from core.graph.inventory import HouseholdInventory
 from core.graph.scope import HouseholdScope
 from core.ingest import quarantine, source
 from core.pages import PageUnavailable, RendererUnavailable, render_page
@@ -262,6 +264,8 @@ def build_router() -> APIRouter:
             client,
             DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
             NoReranker(),
+            inventory=HouseholdInventory(conn),
+            packs=registry.enabled_packs(conn),
             # Who is asking. Built here because this is where the connection is; the graph
             # itself holds none. See `core/graph/scope.py` and ADR 0011.
             household=HouseholdScope(conn),
@@ -739,6 +743,7 @@ def _as_source(citation: graph.Citation) -> Source:
         document_name=citation.document_name or None,
         page=citation.page,
         text=citation.text,
+        kind=citation.kind,
     )
 
 
@@ -758,20 +763,29 @@ def _as_event(event: graph.Event) -> Any:
             passages_read=event.passages_read,
             dropped=event.dropped,
             person=event.person,
+            disclaimer=event.disclaimer,
         )
     if isinstance(event, graph.Refused):
         return RefusalEvent(text=event.text)
+    if isinstance(event, graph.Declined):
+        return DeclinedEvent(text=event.text, disclaimer=event.disclaimer, offer=event.offer)
     return FinishedEvent(
         citations=[],  # every source is already on the sentence that used it
         disclaimer=event.disclaimer,
         passages_read=event.passages_read,
         dropped=event.dropped,
         person=event.person,
+        quarantined=event.quarantined,
+        truncated=event.truncated,
     )
 
 
 def _as_response(answer: Answer) -> AskResponse:
-    """One `Answer` to one of the three shapes a client has to handle."""
+    """One `Answer` to one of the shapes a client has to handle."""
+    if answer.declined:
+        return AskResponse(
+            kind="declined", text=answer.text, disclaimer=answer.disclaimer, offer=answer.offer
+        )
     if answer.refused:
         return AskResponse(kind="refusal", text=answer.text)
     if answer.abstained:
