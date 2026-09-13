@@ -6,7 +6,7 @@
 # Never edit a generated file by hand.
 
 id: insurance_agent
-version: 0.2.0
+version: 0.3.0
 display_name: Insurance and Coverage
 
 document_types:
@@ -196,17 +196,96 @@ registers:
 
 persona:
   system: >
-    You explain what the user's own insurance documents say: what is covered, what is
-    excluded, what it costs and when it ends. You answer only from the documents in front
-    of you, and you decline to compare products, recommend cover, or state a policy term
-    you cannot point at on a page.
+    You explain a household's insurance documents plainly and briefly, naming the policy and the
+    clause each point comes from.
 
 guardrails:
   must_cite: true
   abstain_below: 0.45
   never_acts: true
+  never_recommends: true
   disclaimer: >
     Informational analysis of your own policy documents only. This is not financial advice
     under the Financial Advisers Act, and it does not recommend or compare insurance
     products. Confirm cover, exclusions and renewal terms with your insurer or a licensed
     financial adviser before you act.
+  advice_decline: >
+    I can explain what your policies say, but I cannot recommend whether to buy, keep, change
+    or add cover, compare products, or judge whether your cover is enough. A licensed financial
+    adviser can help with that.
+
+# How people ask about insurance, applied by the core without a model. Nothing here is a field:
+# a category is a reading of the printed product name that a person reviewed, and it is never
+# stored. Order matters — the first rule whose printed words appear wins.
+answering:
+  max_sentences: 6
+  vocabulary:
+    kena warded: was hospitalised as an inpatient
+    warded: hospitalised as an inpatient
+    claimable: can claim
+    a&e: emergency department
+    maid: domestic helper
+  categories:
+    match_field: product_name
+    noun: policies
+    rules:
+      - id: hospital_cash
+        label: hospital cash or income plan
+        printed: [hospital income, hospital cash, daily cash]
+        asked: [hospital cash, hospital income, warded, hospitalised, hospitalized, hospital]
+      - id: critical_illness
+        label: critical illness plan
+        printed: [critical illness, early critical, multi-stage critical]
+        asked: [critical illness, ci plan, cancer, heart attack, stroke]
+      - id: long_term_care
+        label: long-term care plan
+        printed: [careshield life, eldershield, long-term care, long term care]
+        asked: [long-term care, long term care, severe disability, careshield life, eldershield]
+      - id: hospital_expense
+        label: hospital and surgical plan
+        printed: [integrated shield, hospital and surgical, hospital & surgical, healthshield, medishield]
+        asked: [warded, hospitalised, hospitalized, hospitalisation, hospitalization, hospital, surgery, operation, inpatient]
+      - id: personal_accident
+        label: personal accident plan
+        printed: [personal accident]
+        asked: [personal accident, accident, injury, fracture]
+      - id: whole_life
+        label: whole life plan
+        printed: [whole life]
+        asked: [life insurance, life policy, life cover, whole life, death benefit]
+      - id: term_life
+        label: term life plan
+        printed: [term life, term plan, term assurance]
+        asked: [life insurance, life policy, life cover, term life, death benefit]
+      - id: investment_linked
+        label: investment-linked plan
+        printed: [investment-linked, investment linked]
+        asked: [investment-linked, investment linked, ilp]
+      - id: motor
+        label: car or motor policy
+        printed: [private car, motor, motorcycle]
+        asked: [car, motor, vehicle, motorcycle]
+      - id: home
+        label: home or contents policy
+        printed: [home, contents, householder, fire insurance]
+        asked: [home, house, flat, contents, burglary, water damage]
+      - id: travel
+        label: travel policy
+        printed: [travel]
+        asked: [travel, trip, overseas, flight]
+      - id: domestic_helper
+        label: domestic helper policy
+        printed: [maid, domestic helper, domestic worker, foreign domestic]
+        asked: [maid, helper, domestic helper, domestic worker, fdw]
+      - id: pet
+        label: pet policy
+        printed: [pet]
+        asked: [pet, dog, cat]
+      - id: dental
+        label: dental plan
+        printed: [dental]
+        asked: [dental, dentist, teeth, tooth, braces]
+  exclusions:
+    headings: [exclusions, what is not covered, not covered]
+    claims: [covers, covered, cover, pays, payable, reimburses, can claim, claimable]
+    negations: [not, "no", excluded, except, exclusion, unless, never]

@@ -243,6 +243,55 @@ nothing. "Never states a rule it cannot cite" adds a great deal.
 
 ---
 
+## 6b. Answering: words, categories, exclusions
+
+This section is optional, and only the insurance pack uses it so far. It teaches the
+core three things about how people actually talk, so the assistant does not need a
+model to understand them. Nothing you write here is a field — none of it is stored,
+and none of it appears in Desmond's spreadsheet.
+
+**1. `vocabulary`** — the word a person says, mapped to the word the document prints.
+Someone asks "was I warded?", not "was I an inpatient?". You write:
+
+```yaml
+vocabulary:
+  warded: hospitalised as an inpatient
+```
+
+so the assistant reads the question in the household's own words and the document in
+the insurer's.
+
+**2. `categories`** — ordered rules that sort a policy by its printed product name,
+never by the insurer's name. The first rule that matches wins, so put the more specific
+kind first. Each rule has an `id`, a `label` that completes the sentence "None of the 5
+policies on file is a …" — so `label: dental plan` reads as "… is a dental plan" — a
+list of `printed` words to look for in the name, and a list of `asked` words a person
+might use when asking about it.
+
+**3. The traps that made this a section worth writing.** A Hospital *Income* Protection
+Plan pays a fixed cash amount per day in hospital — it is not the same as a plan that
+pays the hospital bill, so it gets its own category (`hospital_cash`), separate from
+`hospital_expense`. A CareShield *Critical Illness* Plan and CareShield *Life* are two
+different kinds of cover from the same brand name — the first is `critical_illness`,
+the second `long_term_care`. And an insurer whose own name contains "Life Assurance" —
+Lionhead Life Assurance, say — must not be filed as a life policy just because the word
+"life" appears; categories match the product name, not the company letterhead.
+
+**4. `exclusions`** — which headings on a document mark an exclusion clause, so a
+sentence claiming cover under a heading like "What is not covered" is dropped rather
+than quoted as if it were a benefit.
+
+**5. `advice_decline`** — the one sentence the assistant gives when someone asks it to
+recommend, compare or judge, rather than explain. Siew reviews this sentence, the same
+way she reviews the disclaimer.
+
+**6. None of this is a field.** A category is decided fresh each time a question is
+asked, from words a person reviewed — it is never written to a fact, never becomes a
+register column, and renaming a category `id` costs nothing because nothing downstream
+depends on the spelling of it.
+
+---
+
 ## 7. Grounding — the optional second half
 
 Some packs need more than the user's own documents. A tax pack, asked *"can I claim

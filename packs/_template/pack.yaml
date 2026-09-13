@@ -59,3 +59,17 @@ guardrails:
   never_acts: true
   disclaimer: >
     Informational analysis of your own documents. Not professional advice.
+
+# Optional. How people ask about this domain. See packs/README.md §6b.
+# answering:
+#   max_sentences: 6
+#   vocabulary:
+#     everyday word: what the document prints
+#   categories:
+#     match_field: a_string_field_above
+#     noun: documents
+#     rules:
+#       - id: first_kind
+#         label: first kind of document
+#         printed: [words printed in its name]
+#         asked: [words a person uses when asking about it]
