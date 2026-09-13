@@ -53,9 +53,17 @@ class TodayResponse(BaseModel):
 # -------------------------------------------------------------------------------------- ask
 
 
+class Turn(BaseModel):
+    """One earlier turn of the conversation. Read to make a follow-up whole; never evidence."""
+
+    role: Literal["user", "assistant"]
+    text: str = Field(max_length=4000)
+
+
 class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     thread_id: str = Field(default="local", max_length=64)
+    history: list[Turn] = Field(default_factory=list, max_length=12)
 
 
 class Claim(BaseModel):

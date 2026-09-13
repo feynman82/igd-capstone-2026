@@ -69,6 +69,8 @@ def main(argv: list[str] | None = None) -> int:
                 _ask(graph, " ".join(args.question), args.show_evidence)
                 return 0
             print("Ask about your documents. Ctrl+C or an empty line to stop.\n")
+            # The conversation so far, so a follow-up ("when does it expire?") is understood.
+            history: list[tuple[str, str]] = []
             while True:
                 try:
                     question = input("> ").strip()
@@ -77,14 +79,20 @@ def main(argv: list[str] | None = None) -> int:
                     return 0
                 if not question:
                     return 0
-                _ask(graph, question, args.show_evidence)
+                said = _ask(graph, question, args.show_evidence, history)
+                history += [("user", question), ("assistant", said)]
     except DatabaseUnavailable as error:
         print(str(error))
         return 2
 
 
-def _ask(graph: object, question: str, show_evidence: bool) -> None:
-    answer = graph.ask(question)  # type: ignore[attr-defined]
+def _ask(
+    graph: object,
+    question: str,
+    show_evidence: bool,
+    history: list[tuple[str, str]] | None = None,
+) -> str:
+    answer = graph.ask(question, history=history or [])  # type: ignore[attr-defined]
     print()
     print(answer.text)
     if answer.citations:
@@ -97,6 +105,7 @@ def _ask(graph: object, question: str, show_evidence: bool) -> None:
             detail += f", {answer.dropped} sentence(s) dropped by the grounding gate"
         print(f"\n({detail})")
     print()
+    return str(answer.text)
 
 
 if __name__ == "__main__":

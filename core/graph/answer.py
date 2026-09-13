@@ -37,13 +37,14 @@ a separate reviewed pull request. The swap is one line once that migration lands
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any, Literal, TypedDict
 
 from core.graph.gate import Claim, check_one, precheck
 from core.graph.ports import Passage, Reranker, Retriever
-from core.graph.scope import HouseholdScope
+from core.graph.scope import HouseholdScope, Scoped
 from core.graph.sentences import SentenceScanner
 from core.packs import InstalledPack, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
@@ -52,6 +53,9 @@ log = logging.getLogger(__name__)
 
 CANDIDATES = 40  # what retrieval returns
 KEEP = 6  # what survives reranking and is actually read
+
+HISTORY_TURNS = 6  # the most recent turns the understanding step reads to resolve a follow-up
+HISTORY_CHARS = 600  # of each; an earlier answer is context, not evidence
 
 ROUTE_SYSTEM = (
     "You decide what kind of request you are looking at. 'explain' means the person wants to "
@@ -66,20 +70,69 @@ _ROUTE_SCHEMA: dict[str, Any] = {
     "required": ["intent"],
 }
 
-# The last two sentences are measured, not decoration. Each passage is printed under its context
+# Understanding the question is its own model call, after routing. Measured on 13 September
+# against the household vault:
+#
+# - **The question as the documents would say it.** "if i had a fall, and warded for 1 night,
+#   does my insurance cover the cost?" put the right clause first at 0.416 and abstained under the
+#   pack's 0.45 floor, while "…warded in the hospital…" answered. Searching the question as asked
+#   *and* in the document's words, keeping each passage's best score, is what fixed it. One
+#   rewrite cleared the floor for 8 of 10 colloquial questions ("got warded 2 days, claimable?",
+#   "car kena scratched"); two or three short searches in the documents' words cleared it for all
+#   10, the fall question at 0.511, with the right document in the top six every time. The cost is
+#   that three near-miss questions of eight also clear it (a domestic helper, a maid's bills,
+#   dental insurance), so what reads them has to say "not covered" honestly — see ANSWER_SYSTEM
+#   and the possessive scoping in `core/graph/scope.py`.
+# - **A follow-up as a whole question.** "when does it expire?" after the car policy became a
+#   question about that policy, and was answered "11 April 2027", cited.
+#
+# Two things were tried and rejected. Folding this into the router's call saved about a second
+# and cost the router its judgement — "how much is my pet insurance premium?" was refused as a
+# request to act — and wrote weaker search wording, so the fall question fell back under the
+# floor. Lowering the floor instead let a 4B reader answer near-misses: "do i have travel
+# insurance?" (0.38) came back "You have travel insurance".
+UNDERSTAND_SYSTEM = (
+    "You turn a person's latest message about their own household documents into two things. "
+    "question: the message as a complete question that makes sense on its own, resolving words "
+    "like it, that, those and what about from the conversation so far, in the person's own "
+    "voice; with no conversation, repeat the message as it is. searches: two or three short "
+    "search queries, each in the words the document itself would print for what is being asked "
+    "about - the benefit, the event, the condition, the amount or the date - instead of "
+    "informal, abbreviated or Singapore colloquial wording. Keep every specific the question "
+    "gives. Do not answer the question."
+)
+
+MAX_SEARCHES = 3
+
+_UNDERSTAND_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "question": {"type": "string"},
+        "searches": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+            "maxItems": MAX_SEARCHES,
+        },
+    },
+    "required": ["question", "searches"],
+}
+
+# The last three sentences are measured, not decoration. Each passage is printed under its context
 # prefix — document title, type, section, page — and without being told that line is evidence the
 # 4B generator returned no sentences at all on 13 September for "do i have a hospitalisation
-# plan?" (six passages, all from the PrivateCare policy) and for "what is my private car insurance
-# policy?" (the schedule itself in the passages). With them it answered both, cited; "do i have
-# travel insurance?" still scores under the floor and abstains before the model runs.
+# plan?" and for "what is my private car insurance policy?", with the schedule itself in the
+# passages. The first wording that fixed those ("when the question asks whether a document exists,
+# answer from that line") also produced "You have travel insurance." from passages about car,
+# home and hospital cover; the last sentence is the one that stopped it while keeping both answers.
 ANSWER_SYSTEM = (
     "You answer only from the numbered passages you are given. Every sentence you write must "
     "list the passage numbers it came from. If the passages do not answer the question, you "
     "return no sentences and say which document would have answered it. You never use "
     "knowledge from outside the passages, and you never soften a number. Each passage starts "
     "with a line naming the document it comes from: its title, its type and its section. That "
-    "line is evidence too. When the question asks whether a document or policy exists, answer "
-    "from that line and cite the passage it heads."
+    "line is evidence too. Never say that a kind of cover or document exists unless a passage's "
+    "document line or text names that kind of cover or document."
 )
 
 _ANSWER_SCHEMA: dict[str, Any] = {
@@ -110,9 +163,13 @@ REFUSAL = (
 class State(TypedDict, total=False):
     """What the graph carries. It ends at the evidence; the answer is streamed, not stated."""
 
-    question: str
+    question: str  # as the person typed it
+    history: list[tuple[str, str]]  # earlier (role, text) turns, oldest first
     intent: str
+    standalone: str  # the question made whole, resolving a follow-up against the history
+    searches: list[str]  # the question in the words a document would print
     passages: list[Passage]
+    scoped: Scoped | None  # whose question it is, decided over every candidate
     reranked: list[Passage]
 
 
@@ -225,6 +282,40 @@ class Answer:
         return not self.abstained and not self.refused
 
 
+def _conversation(history: list[tuple[str, str]]) -> str:
+    turns = [
+        f"{'assistant' if role == 'assistant' else 'person'}: "
+        + " ".join(text.split())[:HISTORY_CHARS]
+        for role, text in history[-HISTORY_TURNS:]
+        if text and text.strip()
+    ]
+    return "\n".join(turns)
+
+
+def _asked(state: State) -> str:
+    """The question to answer and to scope. A follow-up is the whole question it was made into; a
+    first question keeps the person's own words, because a rewrite that dropped "my son's" would
+    scope the answer to the wrong person."""
+    question = state["question"]
+    return (state.get("standalone") or question) if state.get("history") else question
+
+
+def fuse(results: list[list[Passage]], limit: int) -> list[Passage]:
+    """Several searches as one list: each passage once, at the best score any phrasing gave it.
+
+    The best score rather than a rank fusion, because the pack's floor is a similarity and must
+    stay comparable with one: a passage the documents' own wording finds at 0.45 is as good as the
+    same passage found at 0.45 by the person's wording.
+    """
+    best: dict[int, Passage] = {}
+    for passages in results:
+        for passage in passages:
+            held = best.get(passage.chunk_id)
+            if held is None or passage.score > held.score:
+                best[passage.chunk_id] = passage
+    return sorted(best.values(), key=lambda passage: passage.score, reverse=True)[:limit]
+
+
 def _numbered(passages: list[Passage]) -> str:
     return "\n\n".join(
         f"[{index}] ({passage.cite()}) {passage.context_prefix}\n{passage.text}"
@@ -280,7 +371,9 @@ class AnswerGraph:
         candidates: int = CANDIDATES,
         keep: int = KEEP,
         household: HouseholdScope | None = None,
+        today: date | None = None,
     ) -> None:
+        self._today = today  # fixed for tests and the demonstration; otherwise the real date
         self._client = client
         self._retriever = retriever
         self._reranker = reranker
@@ -302,12 +395,51 @@ class AnswerGraph:
             intent = "explain"  # a router that cannot run must not block an explanation
         return {"intent": intent if intent in {"explain", "act"} else "explain"}
 
+    def understand(self, state: State) -> State:
+        """The question made whole, and said in the documents' words. See `UNDERSTAND_SYSTEM`."""
+        question = state["question"]
+        conversation = _conversation(state.get("history") or [])
+        prompt = (
+            f"Conversation so far:\n{conversation}\n\n" if conversation else ""
+        ) + f"Latest message: {question}"
+        try:
+            reply = self._client.constrained(UNDERSTAND_SYSTEM, prompt, _UNDERSTAND_SCHEMA).json()
+            standalone = " ".join(str(reply.get("question") or "").split()) or question
+            found = reply.get("searches")
+            searches = [
+                " ".join(str(search).split())
+                for search in (found if isinstance(found, list) else [])
+                if str(search).strip()
+            ][:MAX_SEARCHES]
+        except ModelUnavailable:
+            # A step that cannot run must not block an answer: the question as asked is still
+            # searched, exactly as it was before anything rewrote it.
+            standalone, searches = question, []
+        return {"standalone": standalone, "searches": searches}
+
     def retrieve(self, state: State) -> State:
-        return {"passages": self._retriever.search(state["question"], candidates=self._candidates)}
+        """Every phrasing of the question, searched and fused. The person's own words always
+        among them, so a rewrite can add a passage but never take one away."""
+        phrasings = [state["question"], state.get("standalone", ""), *(state.get("searches") or [])]
+        queries = list(dict.fromkeys(q for q in phrasings if q and q.strip()))
+        results = [self._retriever.search(q, candidates=self._candidates) for q in queries]
+        return {"passages": fuse(results, self._candidates)}
 
     def rerank(self, state: State) -> State:
+        """Whose question is it, over every candidate, and then the few that are read.
+
+        Scoping comes first, as `core/graph/scope.py` has always said it should. After the cut it
+        could only narrow six passages, and "is my dad's hospital cover still active?" lost his
+        own policy to six passages about the owner's before it was ever asked whose they were.
+        """
         passages = state.get("passages") or []
-        return {"reranked": self._reranker.rerank(state["question"], passages, keep=self._keep)}
+        question = state["question"]
+        asked = _asked(state)
+        scoped = self._household.apply(asked, passages) if self._household else None
+        if scoped is not None and scoped.scoped:
+            passages = scoped.passages
+        kept = self._reranker.rerank(asked or question, passages, keep=self._keep)
+        return {"reranked": kept, "scoped": scoped}
 
     def _claim(self, item: dict[str, Any], passages: list[Passage]) -> Claim:
         """One streamed sentence object, turned into the thing the gate understands.
@@ -333,6 +465,7 @@ class AnswerGraph:
 
         builder: Any = StateGraph(State)
         builder.add_node("route", self.route)
+        builder.add_node("understand", self.understand)
         builder.add_node("retrieve", self.retrieve)
         builder.add_node("rerank", self.rerank)
 
@@ -340,37 +473,61 @@ class AnswerGraph:
         builder.add_conditional_edges(
             "route",
             lambda state: "refuse" if state.get("intent") == "act" else "explain",
-            {"refuse": END, "explain": "retrieve"},
+            {"refuse": END, "explain": "understand"},
         )
+        builder.add_edge("understand", "retrieve")
         builder.add_edge("retrieve", "rerank")
         builder.add_edge("rerank", END)
         return builder.compile(checkpointer=MemorySaver())
 
     # ------------------------------------------------------------------------- the call
 
-    def stream(self, question: str, *, thread_id: str = "local") -> Iterator[Event]:
+    def stream(
+        self,
+        question: str,
+        *,
+        thread_id: str = "local",
+        history: Sequence[tuple[str, str]] = (),
+    ) -> Iterator[Event]:
         """The implementation. Yields each sentence once it has passed the gate, never before.
 
         The order is worth reading as a sequence of promises. Nothing is claimed until `Reading`;
         after that every `Sentence` is final; and exactly one of `Abstained`, `Refused` or
         `Finished` ends the stream.
+
+        `history` is the conversation before this question, as `(role, text)`. It is read by the
+        router alone, to make a follow-up whole; it is never evidence, and nothing an earlier
+        answer said can be cited by this one.
         """
         final: State = self._graph.invoke(
-            {"question": question}, {"configurable": {"thread_id": thread_id}}
+            {"question": question, "history": list(history)},
+            {"configurable": {"thread_id": thread_id}},
         )
         if final.get("intent") == "act":
             yield Refused(REFUSAL)
             return
 
         passages = final.get("reranked") or []
+        asked = _asked(final)
 
-        # Whose question is this? Asked after reranking, so the filter runs over the passages
-        # that were actually going to be used, and before the floor, so an abstention about the
-        # wrong person is not reported as weak evidence. See `core/graph/scope.py`.
-        scoped = self._household.apply(question, passages) if self._household else None
+        # Whose question is this? Decided in `rerank`, over every candidate, and acted on here
+        # before the floor, so an abstention about the wrong person is not reported as weak
+        # evidence. See `core/graph/scope.py`.
+        scoped = final.get("scoped")
+        if scoped is not None and scoped.unknown_relation:
+            word = scoped.unknown_relation
+            yield Abstained(
+                f"Parrot does not know who your {word} is yet",
+                (
+                    "When a document names them, say who they are on the Household page, and "
+                    f"questions about your {word} will be answered from their documents."
+                ),
+                0,
+                0,
+                None,
+            )
+            return
         person = scoped.person_name if scoped is not None and scoped.scoped else None
-        if scoped is not None and scoped.scoped:
-            passages = scoped.passages
 
         # The interesting failure, and the one worth its own sentence: they asked about their
         # own policy and the vault holds somebody else's. Saying so is more use than a number
@@ -408,10 +565,22 @@ class AnswerGraph:
         # Naming the asker is not what makes the answer right — the passages were already
         # narrowed to them — it is what stops the model writing "Marcus's premium is" when the
         # question said "my". The filter does the work; this only does the wording.
-        whose = (
-            f"The person asking is {person}. 'My', 'I' and 'mine' mean them.\n\n" if person else ""
-        )
-        prompt = f"{whose}Question: {question}\n\nPassages:\n{_numbered(passages)}"
+        if scoped is not None and scoped.scoped and scoped.about:
+            # Somebody else's documents, asked about by the owner. Telling the model that the
+            # person in the passages is the one asking made it write nothing at all on
+            # "is my dad's hospital cover still active?".
+            whose = (
+                f"The question is about {person}, the asker's {scoped.about}. "
+                f"'My {scoped.about}' means {person}.\n\n"
+            )
+        elif person:
+            whose = f"The person asking is {person}. 'My', 'I' and 'mine' mean them.\n\n"
+        else:
+            whose = ""
+        # "Still active", "due soon", "expired": a document's dates mean nothing without today's.
+        today = f"Today is {(self._today or date.today()):%d %B %Y}.\n"
+        words = f"\n(The person's own words: {question})" if asked != question else ""
+        prompt = f"{today}{whose}Question: {asked}{words}\n\nPassages:\n{_numbered(passages)}"
         scanner = SentenceScanner()
         kept: list[str] = []
         dropped = 0
@@ -462,13 +631,19 @@ class AnswerGraph:
 
         yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped, person)
 
-    def ask(self, question: str, *, thread_id: str = "local") -> Answer:
+    def ask(
+        self,
+        question: str,
+        *,
+        thread_id: str = "local",
+        history: Sequence[tuple[str, str]] = (),
+    ) -> Answer:
         """Every event, collected. `scripts/ask.py` and the screen ask the same question of the
         same code, so they cannot disagree about the answer."""
         claims: list[Cited] = []
         passages_read = 0
 
-        for event in self.stream(question, thread_id=thread_id):
+        for event in self.stream(question, thread_id=thread_id, history=history):
             if isinstance(event, Refused):
                 return Answer(event.text, refused=True)
             if isinstance(event, Reading):

@@ -22,6 +22,7 @@ the difference matters when a supervisor asks.
 | [0010](0010-main-is-unprotected-by-convention.md) | `main` is unprotected, and the discipline is human | Accepted |
 | [0011](0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md) | The household is people and aliases, and the owner is one of them | Accepted |
 | [0012](0012-chunks-follow-the-document-and-embeddings-use-task-prompts.md) | Chunks follow the document's headings, and embeddings use the model's task prompts | Accepted |
+| [0013](0013-a-question-is-understood-before-it-is-searched.md) | A question is understood before it is searched, and scoped before it is cut | Accepted |
 
 Add a row when you add a record.
 

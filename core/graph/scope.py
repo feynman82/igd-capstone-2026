@@ -55,6 +55,56 @@ _SOMEONE_ELSE = re.compile(
 )
 
 
+# "My son's", "my dad's": a possessive relationship word is a question about that member of the
+# household's own documents. Only the possessive: "does my policy cover my son?" may well be
+# answered by the owner's policy, and is left unscoped.
+#
+# Measured on 13 September: "how much is my son's life insurance?" retrieved the owner's whole
+# life policy above the pack's floor, and the generator wrote "the life insurance policy for your
+# son, Marcus Lim Jun Wei, has a Sum Assured of SGD 300,000.00" — cited, and about the wrong
+# person. No household member is recorded as a child, so the honest answer is that Parrot does
+# not know who that is yet.
+_RELATION_WORDS: dict[str, str] = {
+    **dict.fromkeys(("wife", "husband", "spouse", "partner"), "partner"),
+    **dict.fromkeys(("son", "daughter", "child", "children", "kid", "kids"), "child"),
+    **dict.fromkeys(
+        (
+            "father",
+            "mother",
+            "dad",
+            "daddy",
+            "mum",
+            "mummy",
+            "mom",
+            "mommy",
+            "mama",
+            "papa",
+            "parent",
+            "parents",
+        ),
+        "parent",
+    ),
+    # People who work for a household rather than belong to it. No relation matches them, so a
+    # question about "my maid's hospital bills" says Parrot does not know who that is rather than
+    # answering from the owner's own hospital plan — which it did, on 13 September.
+    **dict.fromkeys(("maid", "helper", "nanny", "driver", "tenant"), "outside"),
+}
+_RELATION = re.compile(
+    r"(?i)\bmy\s+("
+    + "|".join(sorted(_RELATION_WORDS, key=len, reverse=True))
+    + r")(?:'s|\u2019s|s'|'|\u2019)"  # a straight or a typographic apostrophe
+)
+
+
+def relation_asked(question: str) -> tuple[str, str] | None:
+    """`(word, relation)` when the question asks about a relation's own documents, else `None`."""
+    match = _RELATION.search(question)
+    if match is None:
+        return None
+    word = match.group(1).lower()
+    return word, _RELATION_WORDS[word]
+
+
 @dataclass(frozen=True, slots=True)
 class Scoped:
     """The result of asking "whose is this?" of a question and its passages."""
@@ -68,6 +118,16 @@ class Scoped:
     dropped_people: tuple[str, ...] = ()
     """Whose documents were set aside. This is what makes the abstention useful: "you have no
     term life policy filed; there is one for Rachel Ng Hui Shan" needs the name."""
+
+    about: str | None = None
+    """The relationship word when the question is about a household member rather than the person
+    asking — "dad" in "is my dad's hospital cover still active?". `person_name` is then who the
+    question is about, and the answer must not be told that they are the one asking."""
+
+    unknown_relation: str | None = None
+    """The relationship word asked about when nobody in the household holds that relation — "son"
+    in "my son's life insurance" when no child is recorded. The graph abstains on it rather than
+    answering from the owner's documents."""
 
     @property
     def scoped(self) -> bool:
@@ -123,8 +183,20 @@ def scope_passages(
     A document with no resolvable subject is the household's and is kept. That is the third
     bucket, and leaving it out is how "my home insurance" breaks quietly.
     """
+    return scope_to(conn, passages, person_ids=frozenset({owner_id}), name=owner_name)
+
+
+def scope_to(
+    conn: Any,
+    passages: list[Passage],
+    *,
+    person_ids: frozenset[int],
+    name: str,
+    about: str | None = None,
+) -> Scoped:
+    """Keep the passages of these people and of the household; set aside everybody else's."""
     if not passages:
-        return Scoped([], owner_name)
+        return Scoped([], name, about=about)
 
     ids = list({p.document_id for p in passages})
     with conn.cursor() as cur:
@@ -142,14 +214,14 @@ def scope_passages(
     for passage in passages:
         people = by_document.get(passage.document_id)
         # No resolvable subject: the household's, and everybody's. Keep it.
-        if not people or owner_id in people:
+        if not people or people & person_ids:
             kept.append(passage)
             continue
         dropped.update(names[person_id] for person_id in people)
 
     if dropped:
-        log.info("scope: kept %d of %d passages for %s", len(kept), len(passages), owner_name)
-    return Scoped(kept, owner_name, tuple(sorted(dropped)))
+        log.info("scope: kept %d of %d passages for %s", len(kept), len(passages), name)
+    return Scoped(kept, name, tuple(sorted(dropped)), about=about)
 
 
 @dataclass(frozen=True, slots=True)
@@ -171,9 +243,32 @@ class HouseholdScope:
             # exactly how Parrot behaved before any of this existed.
             return Scoped(passages, None)
 
+        roster = household.roster(self.conn)
+        asked = relation_asked(question)
+        if asked is not None:
+            word, relation = asked
+            # A person with no confirmed name is still a question on Today, not a member yet.
+            members = [
+                person
+                for person in roster
+                if not person.is_owner
+                and not person.external
+                and person.relation == relation
+                and person.aliases
+            ]
+            if not members:
+                return Scoped(passages, None, unknown_relation=word)
+            return scope_to(
+                self.conn,
+                passages,
+                person_ids=frozenset(person.id for person in members),
+                name=" and ".join(person.display_name for person in members),
+                about=word,
+            )
+
         others = tuple(
             name
-            for person in household.roster(self.conn)
+            for person in roster
             if person.id != owner.id
             for name in (person.display_name, *person.aliases)
         )

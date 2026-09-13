@@ -272,7 +272,11 @@ def build_router() -> APIRouter:
         """The whole answer, once. For `scripts/ask.py`, for tests, and for anything that would
         rather wait than render progressively."""
         return _as_response(
-            _graph_for(conn, config).ask(ask_request.question, thread_id=ask_request.thread_id)
+            _graph_for(conn, config).ask(
+                ask_request.question,
+                thread_id=ask_request.thread_id,
+                history=_history(ask_request),
+            )
         )
 
     @router.post("/ask/stream")
@@ -292,7 +296,9 @@ def build_router() -> APIRouter:
         def events() -> Iterator[str]:
             try:
                 for event in _graph_for(conn, config).stream(
-                    ask_request.question, thread_id=ask_request.thread_id
+                    ask_request.question,
+                    thread_id=ask_request.thread_id,
+                    history=_history(ask_request),
                 ):
                     yield _sse(_as_event(event))
             except Exception as error:  # the stream has started; a 500 would never be seen
@@ -714,6 +720,11 @@ def build_router() -> APIRouter:
 
 
 # ------------------------------------------------------------------------------- translation
+
+
+def _history(ask_request: AskRequest) -> list[tuple[str, str]]:
+    """The conversation so far, as the graph reads it. Empty for a first question."""
+    return [(turn.role, turn.text) for turn in ask_request.history]
 
 
 def _sse(event: Any) -> str:

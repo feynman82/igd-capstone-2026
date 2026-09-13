@@ -65,8 +65,13 @@ export async function POST(request: Request) {
         upstream = await fetch(`${PARROT_API}/api/ask/stream`, {
           method: "POST",
           headers: { "content-type": "application/json", accept: "text/event-stream" },
-          // A thread id per conversation: the graph's checkpointer is keyed on it.
-          body: JSON.stringify({ question, thread_id: (body.id ?? "local").slice(0, 64) }),
+          // A thread id per conversation: the graph's checkpointer is keyed on it. The earlier
+          // turns go too, so "what about 3 nights?" is understood as the question it follows.
+          body: JSON.stringify({
+            question,
+            thread_id: (body.id ?? "local").slice(0, 64),
+            history: priorTurns(body.messages ?? []),
+          }),
         });
       } catch {
         writer.write({
@@ -149,6 +154,54 @@ function lastQuestion(messages: ParrotMessage[]): string {
     if (text) return text.slice(0, 2000);
   }
   return "";
+}
+
+/** How many earlier turns the router reads, and how much of each. It resolves a follow-up. */
+const HISTORY_TURNS = 6;
+const TURN_CHARS = 1200;
+
+/**
+ * The conversation before the newest question, as Parrot's `history`: what the person asked,
+ * and what Parrot said back — its verified sentences, or why it did not answer.
+ *
+ * Context for understanding the next question, never evidence for answering it. The graph reads
+ * it in the router alone, and nothing an earlier answer said can be cited by a later one.
+ */
+function priorTurns(messages: ParrotMessage[]): { role: "user" | "assistant"; text: string }[] {
+  let last = -1;
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    if (messages[index].role === "user") {
+      last = index;
+      break;
+    }
+  }
+  const turns: { role: "user" | "assistant"; text: string }[] = [];
+  for (const message of messages.slice(0, Math.max(last, 0))) {
+    const parts = message.parts ?? [];
+    let text = "";
+    if (message.role === "user") {
+      text = parts
+        .filter((part) => part.type === "text")
+        .map((part) => (part as { text: string }).text)
+        .join(" ");
+    } else if (message.role === "assistant") {
+      text = parts
+        .map((part) => {
+          if (part.type === "data-sentence") return (part as { data: { text: string } }).data.text;
+          if (part.type === "data-abstention")
+            return `I could not answer: ${(part as { data: { reason: string } }).data.reason}.`;
+          if (part.type === "data-refusal") return (part as { data: { text: string } }).data.text;
+          return "";
+        })
+        .filter(Boolean)
+        .join(" ");
+    }
+    text = text.trim();
+    if (text && (message.role === "user" || message.role === "assistant")) {
+      turns.push({ role: message.role, text: text.slice(0, TURN_CHARS) });
+    }
+  }
+  return turns.slice(-HISTORY_TURNS);
 }
 
 async function upstreamDetail(response: Response): Promise<string> {

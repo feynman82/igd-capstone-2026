@@ -52,6 +52,7 @@ class ScriptedOllama:
 
     def __init__(self, *replies: dict[str, Any] | Exception) -> None:
         self._replies = list(replies)
+        self.prompts: list[str] = []
 
     def constrained(
         self,
@@ -62,6 +63,14 @@ class ScriptedOllama:
         images: list[str] | None = None,
         temperature: float = 0.0,
     ) -> Generated:
+        self.prompts.append(prompt)
+        # The understanding step, when a test did not script it: an empty reply, which the graph
+        # reads as "search the question as asked". Most tests here are about the gate, not it.
+        scripted = bool(self._replies) and isinstance(self._replies[0], dict)
+        if "searches" in schema.get("properties", {}) and not (
+            scripted and "searches" in self._replies[0]  # type: ignore[operator]
+        ):
+            return Generated("{}", "fake", 1)
         reply = self._replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
@@ -81,6 +90,7 @@ class ScriptedOllama:
         `SentenceScanner`, so a sentence that only survives when the whole reply arrives at once
         fails here rather than on the demonstration machine.
         """
+        self.prompts.append(prompt)
         reply = self._replies.pop(0)
         if isinstance(reply, Exception):
             raise reply
@@ -114,6 +124,164 @@ def build(client: Any, passages: list[Passage] | None = None) -> AnswerGraph:
         FixedRetriever(PASSAGES if passages is None else passages),
         PassThroughReranker(),
     )
+
+
+# ------------------------------------------------------------------ understanding the question
+#
+# 13 September: "if i had a fall, and warded for 1 night, does my insurance cover the cost?" put
+# the right clause first at 0.416 and abstained under the 0.45 floor; the same question with "in
+# the hospital" answered. The router now says the question in the document's words too, every
+# phrasing is searched, and each passage keeps its best score.
+
+
+class PhrasingRetriever:
+    """Scores one passage differently depending on which phrasing found it."""
+
+    def __init__(self, scores: dict[str, float]) -> None:
+        self.scores = scores
+        self.queries: list[str] = []
+
+    def search(self, question: str, *, candidates: int) -> list[Passage]:
+        self.queries.append(question)
+        score = self.scores.get(question, 0.2)
+        return [
+            Passage(
+                21,
+                DOC,
+                2,
+                "4.1 Room and board for Inpatient Confinement.",
+                score,
+                "privatecare.pdf",
+                pack_id="insurance_agent",
+            )
+        ]
+
+
+ANSWERED = {"sentences": [{"text": "Room and board is reimbursed.", "supports": [1]}]}
+
+
+def test_every_phrasing_is_searched_and_a_passage_keeps_its_best_score() -> None:
+    asked = "if i had a fall, and warded for 1 night, does my insurance cover the cost?"
+    search = "inpatient hospital confinement following an injury"
+    retriever = PhrasingRetriever({asked: 0.416, search: 0.452})
+    client = ScriptedOllama(
+        {"intent": "explain"},
+        {"question": asked, "searches": [search]},
+        ANSWERED,
+    )
+    graph = AnswerGraph(client, retriever, PassThroughReranker())
+
+    events = list(graph.stream(asked))
+
+    assert retriever.queries == [asked, search], "the person's words are always searched"
+    assert isinstance(events[0], Reading), "the document's wording cleared the floor"
+    assert isinstance(events[-1], Finished)
+
+
+def test_a_follow_up_is_understood_from_the_conversation_and_answered_whole() -> None:
+    whole = "When does my private car insurance policy expire?"
+    retriever = PhrasingRetriever({whole: 0.6})
+    client = ScriptedOllama(
+        {"intent": "explain"},
+        {"question": whole, "searches": ["policy expiry date MV-2026-448120"]},
+        ANSWERED,
+    )
+    graph = AnswerGraph(client, retriever, PassThroughReranker())
+
+    list(
+        graph.stream(
+            "when does it expire?",
+            history=[
+                ("user", "what is my private car insurance policy?"),
+                ("assistant", "MV-2026-448120 with Meridian Assurance."),
+            ],
+        )
+    )
+
+    route_prompt, understand_prompt, answer_prompt = client.prompts
+    assert route_prompt == "when does it expire?"
+    assert "Conversation so far" in understand_prompt
+    assert "what is my private car insurance policy?" in understand_prompt
+    assert f"Question: {whole}" in answer_prompt
+    assert "(The person's own words: when does it expire?)" in answer_prompt
+    assert whole in retriever.queries
+
+
+def test_a_router_that_cannot_run_still_searches_the_question_as_asked() -> None:
+    retriever = PhrasingRetriever({"what is my premium?": 0.8})
+    client = ScriptedOllama(ModelUnavailable("the router is down"), ANSWERED)
+    graph = AnswerGraph(client, retriever, PassThroughReranker())
+
+    events = list(graph.stream("what is my premium?"))
+
+    assert retriever.queries == ["what is my premium?"]
+    assert isinstance(events[-1], Finished)
+
+
+def test_a_question_about_a_relation_nobody_holds_is_not_answered_from_the_owners_documents() -> (
+    None
+):
+    """13 September: "how much is my son's life insurance?" came back as the owner's own policy,
+    cited, with the owner called "your son"."""
+    from core.graph.scope import Scoped
+
+    class NoChild:
+        def apply(self, question: str, passages: list[Passage]) -> Scoped:
+            return Scoped(passages, None, unknown_relation="son")
+
+    client = ScriptedOllama({"intent": "explain"})
+    graph = AnswerGraph(
+        client,
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        household=NoChild(),  # type: ignore[arg-type]
+    )
+
+    [event] = list(graph.stream("how much is my son's life insurance?"))
+
+    assert isinstance(event, Abstained)
+    assert "who your son is" in event.reason
+    assert len(client.prompts) == 2, "routed and understood, and the answer model never asked"
+
+
+def test_a_request_to_act_is_refused_before_anything_is_rewritten_or_searched() -> None:
+    retriever = PhrasingRetriever({})
+    client = ScriptedOllama({"intent": "act"})
+    graph = AnswerGraph(client, retriever, PassThroughReranker())
+
+    [event] = list(graph.stream("ok renew it for me"))
+
+    assert isinstance(event, Refused)
+    assert retriever.queries == []
+    assert client.prompts == ["ok renew it for me"]
+
+
+def test_a_question_about_a_parent_names_them_as_who_it_is_about_and_carries_todays_date() -> None:
+    """13 September: "is my dad's hospital cover still active?" was scoped to Lim Ah Kow, and the
+    model was told he was the one asking and not told the date, and wrote nothing."""
+    from datetime import date
+
+    from core.graph.scope import Scoped
+
+    class Dad:
+        def apply(self, question: str, passages: list[Passage]) -> Scoped:
+            return Scoped(passages, "Lim Ah Kow", about="dad")
+
+    client = ScriptedOllama({"intent": "explain"}, ANSWERED)
+    graph = AnswerGraph(
+        client,
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        household=Dad(),  # type: ignore[arg-type]
+        today=date(2026, 9, 13),
+    )
+
+    list(graph.stream("is my dad's hospital cover still active?"))
+
+    answer_prompt = client.prompts[-1]
+    assert answer_prompt.startswith("Today is 13 September 2026.")
+    assert "The question is about Lim Ah Kow, the asker's dad." in answer_prompt
+    assert "The person asking is Lim Ah Kow" not in answer_prompt
 
 
 # ------------------------------------------------------------------------------- the gate

@@ -77,9 +77,12 @@ def precheck(passages: list[Passage], *, abstain_below: float) -> str | None:
         return "no document in your vault covers this"
     best = max(passage.score for passage in passages)
     if best < abstain_below:
+        # Two places is how a person reads a similarity, until it would say "0.45, above 0.45"
+        # about a match of 0.4499 — which on 13 September it did.
+        places = 3 if f"{best:.2f}" == f"{abstain_below:.2f}" else 2
         return (
-            f"the closest document is not close enough (best match {best:.2f}, "
-            f"this pack answers above {abstain_below:.2f})"
+            f"the closest document is not close enough (best match {best:.{places}f}, "
+            f"this pack answers above {abstain_below:.{places}f})"
         )
     return None
 

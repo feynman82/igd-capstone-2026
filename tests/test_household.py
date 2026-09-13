@@ -252,6 +252,48 @@ def test_a_member_can_be_placed_but_the_owner_cannot(conn: Any) -> None:
         household.place(conn, father.id, "self")
 
 
+@pytest.mark.parametrize(
+    "question,expected",
+    [
+        ("how much is my son's life insurance?", ("son", "child")),
+        ("is my dad's hospital cover still active", ("dad", "parent")),
+        ("when does my wife\u2019s policy renew", ("wife", "partner")),
+        ("what are my parents' premiums", ("parents", "parent")),
+        # Not possessive: the owner's own policy may be what answers it.
+        ("does my policy cover my son?", None),
+        # Somebody who works for the household: no relation matches, so Parrot says so.
+        ("does my policy pay for my maid's hospital bills?", ("maid", "outside")),
+        ("what is my premium?", None),
+    ],
+)
+def test_a_possessive_relation_names_whose_documents_are_asked_about(
+    question: str, expected: tuple[str, str] | None
+) -> None:
+    from core.graph.scope import relation_asked
+
+    assert relation_asked(question) == expected
+
+
+def test_my_dads_question_is_scoped_to_the_parent_and_an_unknown_relation_says_so(
+    conn: Any,
+) -> None:
+    from core.graph.scope import HouseholdScope
+
+    household.add_person(conn, "Testowner Quah", "self", is_owner=True)
+    household.add_person(conn, "Testparent Quah", "parent")
+    passages = [_passage(1, "00000000-0000-0000-0000-00000000abcd")]
+
+    dads = HouseholdScope(conn).apply("is my dad's hospital plan still active?", passages)
+    assert dads.scoped and "Testparent Quah" in (dads.person_name or "")
+    assert dads.passages == passages, "a document with no subject is the household's"
+
+    with conn.cursor() as cur:
+        cur.execute("UPDATE people SET relation = 'other' WHERE relation = 'child'")
+    sons = HouseholdScope(conn).apply("how much is my son's life insurance?", passages)
+    assert sons.unknown_relation == "son"
+    assert not sons.scoped
+
+
 def test_handing_over_to_nobody_is_an_error(conn: Any) -> None:
     household.add_person(conn, "Marcus Lim", "self", is_owner=True)
     with pytest.raises(ValueError):

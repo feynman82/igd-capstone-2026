@@ -205,6 +205,17 @@ I can't answer that from your documents: the closest document is not close enoug
 (best match 0.21, this pack answers above 0.42).
 ```
 
+Ask it the way you would say it. Before searching, one model call writes the question out whole
+and adds two or three searches in the documents' own words, so "warded for 1 night, can claim?"
+finds the inpatient clause that "hospitalised" would. Follow-ups work in the Ask screen and in
+`scripts/ask.py`'s interactive mode: "when does it expire?" after asking about the car policy is
+answered as a question about the car policy. The conversation is only used to understand the
+question; an earlier answer is never cited. See ADR 0013.
+
+"My dad's…", "my son's…" and "my wife's…" questions are answered from that household member's
+documents, once they are placed on the Household page with that relation. If nobody holds the
+relation yet, Parrot says it does not know who that is, rather than answering from yours.
+
 Ask it to *do* something and it refuses at the router, before retrieval is attempted:
 
 ```
