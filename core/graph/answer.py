@@ -402,24 +402,44 @@ def _citations(passages: Iterable[Passage]) -> list[Citation]:
 # dropped because the number check read the model's own passage numbers as unprinted figures.
 # A passage number is citation, not claim: it is removed when every number in the mention is one
 # of that sentence's supports. "thirty (30) days" survives, because 30 is not a support.
+#
+# 14 September, fix round 3: `in`/`see`/`passages?` need a leading word boundary or the prefix
+# matches the tail of a longer word ("with-IN"). The connective can also be "as per", "according
+# to", "per", "from" or "refer to", and it can sit *inside* the brackets ("(see 2)") rather than
+# before them. A bracket glued to a preceding word or digit ("4(1)") is a clause number, not a
+# passage mention, so it needs a negative lookbehind. Whatever connective is consumed goes with
+# the mention — a dangling "as per," or "According to," never reaches the person.
 _PASSAGE_MENTION = re.compile(
-    r",?\s*(?:(?:as\s+(?:stated|shown|listed)\s+)?in\s+|see\s+)?"
-    r"(?:\(\s*(?:passages?\s+)?(?P<paren>\d+(?:\s*(?:,|and|&)\s*\d+)*)\s*\)"
-    r"|\[\s*(?P<bracket>\d+(?:\s*,\s*\d+)*)\s*\]"
-    r"|passages?\s+(?P<bare>\d+(?:\s*(?:,|and|&)\s*\d+)*))",
+    r",?\s*(?:\b(?:as\s+(?:stated|shown|listed)\s+in|according\s+to|refer\s+to|as\s+per|in|see|per|from)\s+)?"
+    r"(?:(?<![\w)])\(\s*(?:(?:see|passages?)\s+)?(?P<paren>\d+(?:\s*(?:,|and|&)\s*\d+)*)\s*\)"
+    r"|(?<![\w)])\[\s*(?P<bracket>\d+(?:\s*,\s*\d+)*)\s*\]"
+    r"|\bpassages?\s+(?P<bare>\d+(?:\s*(?:,|and|&)\s*\d+)*))",
     re.IGNORECASE,
 )
 
 
 def _without_passage_numbers(text: str, numbers: Sequence[int]) -> str:
     supports = set(numbers)
+    changed = False
 
     def drop(match: re.Match[str]) -> str:
+        nonlocal changed
         found = match.group("paren") or match.group("bracket") or match.group("bare") or ""
         cited = {int(n) for n in re.findall(r"\d+", found)}
-        return "" if cited and cited <= supports else match.group(0)
+        if cited and cited <= supports:
+            changed = True
+            return ""
+        return match.group(0)
 
-    return " ".join(_PASSAGE_MENTION.sub(drop, text).split()).replace(" .", ".").replace(" ,", ",")
+    result = _PASSAGE_MENTION.sub(drop, text)
+    if not changed:
+        return text
+
+    result = " ".join(result.split()).replace(" .", ".").replace(" ,", ",")
+    without_lead = result.lstrip(", ")
+    if without_lead != result and without_lead:
+        result = without_lead[:1].upper() + without_lead[1:]
+    return result
 
 
 def _either(labels: list[str]) -> str:
