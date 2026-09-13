@@ -1,21 +1,35 @@
 """Reminder and Alert: what fires, once, and with what behind it.
 
-Both modules are pure functions over rows, so both are tested with a fake cursor rather than a
-database. That is deliberate — the behaviour worth protecting is "nothing fires twice" and
+Both modules are pure functions over rows, so most of this is tested with a fake cursor rather
+than a database. That is deliberate — the behaviour worth protecting is "nothing fires twice" and
 "nothing fires uncited", and neither of those is a property of Postgres.
+
+Whose number a metric is, and for which year, *is* a property of the SQL, and a fake cursor
+returns whatever it is given. So the scoping of the Alert metrics is tested against Postgres too,
+with the batch1 register loaded as facts inside a transaction that is rolled back.
 """
 
 from __future__ import annotations
 
+import csv
+import hashlib
+from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from core.contracts import AlertConfig
+from core.contracts import FACT_COLUMN, AlertConfig
+from core.ingest.sql import INSERT_FACT
+from core.packs import installed_packs
+from core.runtime.settings import Settings
 from modules import alert, reminder
 from modules.reminder import already_said, current_lead
+
+ROOT = Path(__file__).resolve().parents[1]
+REGISTER = ROOT / "corpus" / "register" / "batch1.csv"
 
 TODAY = date(2026, 9, 11)
 RENEWAL = date(2026, 11, 30)  # 80 days out
@@ -177,9 +191,13 @@ class FakePack:
 SRS = AlertConfig(metric="srs_contributions_ytd", ceiling=15300, warn_at=0.9)
 
 
+def srs_row(value: str) -> tuple[Any, ...]:
+    """One row of `queries.SRS_CONTRIBUTIONS_YTD`, in its column order."""
+    return ("Marcus Fernandez", Decimal(value), "srs-2026.pdf", 2)
+
+
 def test_a_threshold_crossing_fires_with_the_document_behind_it() -> None:
-    measurement = [(Decimal("14000.00"), "Marcus Fernandez", "doc", 2, "srs-2026.pdf")]
-    conn = FakeConn(measurement, [], [])
+    conn = FakeConn([srs_row("14000.00")], [], [])
     firing = alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),))  # type: ignore[arg-type]
 
     assert len(firing) == 1
@@ -189,23 +207,21 @@ def test_a_threshold_crossing_fires_with_the_document_behind_it() -> None:
 
 
 def test_below_the_warning_share_nothing_fires() -> None:
-    conn = FakeConn([(Decimal("5000.00"), "Marcus Fernandez", "doc", 2, "srs-2026.pdf")])
+    conn = FakeConn([srs_row("5000.00")])
     assert alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),)) == []  # type: ignore[arg-type]
 
 
 def test_a_recent_firing_is_debounced() -> None:
-    measurement = [(Decimal("14000.00"), "Marcus Fernandez", "doc", 2, "srs-2026.pdf")]
     just_fired = [(datetime.now(UTC) - timedelta(hours=2), {"value": "14000.00"})]
-    conn = FakeConn(measurement, just_fired)
+    conn = FakeConn([srs_row("14000.00")], just_fired)
 
     assert alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),)) == []  # type: ignore[arg-type]
     assert conn.commits == 0
 
 
 def test_a_firing_older_than_the_debounce_window_fires_again() -> None:
-    measurement = [(Decimal("14000.00"), "Marcus Fernandez", "doc", 2, "srs-2026.pdf")]
     long_ago = [(datetime.now(UTC) - timedelta(days=30), {"value": "9000.00"})]
-    conn = FakeConn(measurement, long_ago, [])
+    conn = FakeConn([srs_row("14000.00")], long_ago, [])
 
     firing = alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),))  # type: ignore[arg-type]
     assert len(firing) == 1
@@ -229,13 +245,234 @@ def test_the_debounce_key_separates_people() -> None:
     assert one.key != two.key
 
 
+def test_the_debounce_key_separates_two_policies_of_one_person() -> None:
+    """Two lapsed policies on one person are two alerts, and saying one must not silence the
+    other for a week."""
+    motor = alert.Alert(
+        "insurance_agent", "days_uncovered", Decimal(3), 0, 1.0, ["a.pdf, page 1"], "A", "MV-1"
+    )
+    home = alert.Alert(
+        "insurance_agent", "days_uncovered", Decimal(9), 0, 1.0, ["b.pdf, page 1"], "A", "HM-2"
+    )
+
+    assert motor.key != home.key
+    assert "MV-1" in motor.line()
+
+
+def test_a_sum_is_per_person_and_cites_only_that_persons_receipts() -> None:
+    rows = [
+        ("Marcus Fernandez", Decimal("500.00"), "receipt-a.pdf", 1),
+        ("Priya Nair", Decimal("250.00"), "receipt-b.pdf", 1),
+        ("Marcus Fernandez", Decimal("300.00"), "receipt-c.pdf", 2),
+    ]
+    conn = FakeConn(rows)
+    measured = {m.subject: m for m in alert.donations_ytd(conn, TODAY)}
+
+    assert measured["Marcus Fernandez"].value == Decimal("800.00")
+    assert measured["Marcus Fernandez"].citations == [
+        "receipt-a.pdf, page 1",
+        "receipt-c.pdf, page 2",
+    ]
+    assert measured["Priya Nair"].value == Decimal("250.00")
+    assert measured["Priya Nair"].citations == ["receipt-b.pdf, page 1"]
+    _query, params = conn.cursor_obj.executed[0]
+    assert params["year_start"] == date(2026, 1, 1), "a year-to-date metric is given its year"
+
+
+def test_each_policy_lapses_on_its_own() -> None:
+    """A live travel policy must not make a lapsed motor policy read as covered."""
+    rows = [
+        ("Marcus Fernandez", "TR-9", date(2026, 12, 1), "travel.pdf", 1),
+        ("Marcus Fernandez", "MV-1", date(2026, 6, 13), "motor-renewal.pdf", 2),
+        ("Marcus Fernandez", "MV-1", date(2025, 6, 13), "motor-schedule.pdf", 1),
+    ]
+    lapses = alert.days_uncovered(FakeConn(rows), TODAY)
+
+    assert [(m.subject, m.item, m.value) for m in lapses] == [
+        ("Marcus Fernandez", "MV-1", Decimal(90))
+    ]
+    assert lapses[0].citations == ["motor-renewal.pdf, page 2"], "cites the latest expiry"
+
+
 def test_the_real_packs_declare_metrics_that_exist() -> None:
     """A pack naming a metric nobody implemented is a silent no-op, so it is caught here."""
-    from core.packs import installed_packs
-
     for installed in installed_packs():
         for config in installed.manifest.registers.alert or []:
             assert config.metric in alert.METRICS, (
                 f"{installed.id} declares {config.metric}, which modules/alert/queries.py "
                 "does not define"
             )
+
+
+# ---------------------------------------------------- the alert metrics, against Postgres
+
+MARCUS = "Marcus Lim Jun Wei"
+RACHEL = "Rachel Ng Hui Shan"
+AH_KOW = "Lim Ah Kow"
+
+
+@pytest.fixture
+def db() -> Iterator[Any]:
+    psycopg = pytest.importorskip("psycopg")
+    try:
+        connection = psycopg.connect(
+            Settings.load(ROOT).database_url, autocommit=False, connect_timeout=3
+        )
+    except psycopg.OperationalError as error:
+        pytest.skip(f"no local database: {type(error).__name__}")
+    try:
+        with connection.cursor() as cur:
+            cur.execute("SELECT to_regclass('public.facts')")
+            row = cur.fetchone()
+            if row is None or row[0] is None:
+                pytest.skip("the 0001_init migration has not been applied")
+            # Empty copies of the three tables the Alert module reads, created in pg_temp. The
+            # session searches pg_temp before public, so the module's unqualified queries see
+            # only the register loaded below and never a document somebody has actually filed.
+            cur.execute("CREATE TEMP TABLE documents (LIKE public.documents INCLUDING ALL)")
+            cur.execute("CREATE TEMP TABLE facts (LIKE public.facts INCLUDING ALL)")
+            cur.execute("CREATE TEMP TABLE traces (LIKE public.traces INCLUDING ALL)")
+        yield connection
+    finally:
+        connection.rollback()  # nothing this test did survives, the temporary tables included
+        connection.close()
+
+
+def load_register(conn: Any, overrides: dict[tuple[str, str], str] | None = None) -> None:
+    """Every batch1 row as the facts extraction would write, through the statement it uses.
+
+    `overrides` replaces one field of one document, keyed by `(doc_id, field)`. Pages are 1:
+    batch1 records no `field_pages`, and every one of its documents is a single page.
+    """
+    packs = {installed.id: installed for installed in installed_packs()}
+    with REGISTER.open(encoding="utf-8") as handle:
+        rows = list(csv.DictReader(line for line in handle if not line.startswith("#")))
+
+    with conn.cursor() as cur:
+        for row in rows:
+            installed = packs[row["pack_id"]]
+            cur.execute(
+                "INSERT INTO documents (sha256, source_channel, original_name, mime, doc_type,"
+                " pack_id, status, synthetic)"
+                " VALUES (%s, 'folder', %s, 'application/pdf', %s, %s, 'indexed', true)"
+                " RETURNING id",
+                (
+                    hashlib.sha256(row["doc_id"].encode()).digest(),
+                    f"{row['doc_id']}.pdf",
+                    row["doc_type"],
+                    installed.id,
+                ),
+            )
+            (document_id,) = cur.fetchone()
+            for spec in installed.spec(row["doc_type"]).fields:
+                raw = (overrides or {}).get((row["doc_id"], spec.name), row.get(spec.name, ""))
+                if not raw:
+                    continue
+                column = FACT_COLUMN[spec.type]
+                cur.execute(
+                    INSERT_FACT,
+                    {
+                        "document_id": document_id,
+                        "page": 1,
+                        "pack_id": installed.id,
+                        "pack_version": installed.manifest.version,
+                        "key": spec.name,
+                        "subject": row["subject"],
+                        "value_text": raw if column == "value_text" else None,
+                        "value_num": Decimal(raw) if column == "value_num" else None,
+                        "value_date": date.fromisoformat(raw) if column == "value_date" else None,
+                        "confidence": 1.0,
+                    },
+                )
+
+
+def by_subject(measurements: list[alert.Measurement]) -> dict[str | None, Any]:
+    return {m.subject: (m.value, m.citations) for m in measurements}
+
+
+def test_srs_is_each_holders_own_statement_for_this_year(db: Any) -> None:
+    """One member's statement must never drive another member's 15,300 cap."""
+    load_register(db)
+
+    assert by_subject(alert.srs_contributions_ytd(db, date(2025, 12, 20))) == {
+        # Marcus's 2024 statement also reads 15,300; it is the 2025 one that is cited.
+        MARCUS: (Decimal("15300.00"), ["b1-0025.pdf, page 1"]),
+        RACHEL: (Decimal("8000.00"), ["b1-0027.pdf, page 1"]),
+    }
+    assert alert.srs_contributions_ytd(db, date(2026, 9, 13)) == [], "no 2026 statement is filed"
+
+
+def test_donations_are_this_years_deductible_receipts_per_donor(db: Any) -> None:
+    load_register(db)
+
+    assert by_subject(alert.donations_ytd(db, date(2026, 9, 13))) == {
+        MARCUS: (Decimal("500.00"), ["b1-0019.pdf, page 1"]),
+        RACHEL: (Decimal("250.00"), ["b1-0020.pdf, page 1"]),
+    }
+    assert alert.donations_ytd(db, date(2025, 12, 20)) == [], (
+        "Marcus's only 2025 receipt, b1-0021, states it is not tax deductible"
+    )
+
+
+def test_a_deductible_receipt_counts_in_its_own_year_only(db: Any) -> None:
+    # A model returning a JSON boolean is stored as "True"; the register writes "true".
+    load_register(db, overrides={("b1-0021", "tax_deductible"): "True"})
+
+    assert by_subject(alert.donations_ytd(db, date(2026, 9, 13)))[MARCUS] == (
+        Decimal("500.00"),
+        ["b1-0019.pdf, page 1"],
+    )
+    assert by_subject(alert.donations_ytd(db, date(2025, 12, 20))) == {
+        MARCUS: (Decimal("1000.00"), ["b1-0021.pdf, page 1"]),
+    }
+
+
+def test_cpf_is_this_years_payslips_per_employee(db: Any) -> None:
+    load_register(db)
+
+    assert by_subject(alert.cpf_contributions_ytd(db, date(2026, 9, 13))) == {
+        MARCUS: (Decimal("2400.00"), ["b1-0017.pdf, page 1", "b1-0016.pdf, page 1"]),
+        RACHEL: (Decimal("1200.00"), ["b1-0018.pdf, page 1"]),
+    }
+    assert alert.cpf_contributions_ytd(db, date(2025, 12, 20)) == []
+
+
+def test_a_lapsed_policy_is_not_masked_by_another_that_still_runs(db: Any) -> None:
+    """On 10 February 2027 Marcus's home contents cover has lapsed, while his motor and
+    hospital policies still run. Grouped by person alone, he would read as covered."""
+    load_register(db)
+
+    lapses = {
+        (m.subject, m.item): (m.value, m.citations)
+        for m in alert.days_uncovered(db, date(2027, 2, 10))
+    }
+
+    assert set(lapses) == {(MARCUS, "HM-2024-559013"), (AH_KOW, "HS-2023-771904")}
+    assert lapses[(MARCUS, "HM-2024-559013")] == (Decimal(10), ["b1-0002.pdf, page 1"])
+    days, citations = lapses[(AH_KOW, "HS-2023-771904")]
+    assert days == Decimal(27)
+    assert citations[0] in {"b1-0003.pdf, page 1", "b1-0005.pdf, page 1"}  # both end 14 Jan
+
+
+@pytest.mark.parametrize(
+    ("as_of", "expected"),
+    [
+        (date(2025, 12, 20), {("srs_contributions_ytd", MARCUS)}),  # Rachel is at 8,000
+        (
+            date(2027, 2, 10),
+            {("days_uncovered", MARCUS), ("days_uncovered", AH_KOW)},
+        ),
+    ],
+)
+def test_every_firing_is_scoped_and_cites_a_page(
+    db: Any, as_of: date, expected: set[tuple[str, str]]
+) -> None:
+    load_register(db)
+
+    firing = alert.sweep(db, as_of, mark=False, packs=installed_packs())
+
+    assert {(f.metric, f.subject) for f in firing} == expected
+    assert len({f.key for f in firing}) == len(firing), "two alerts share a debounce key"
+    for f in firing:
+        assert f.citations, f"{f.key} fired uncited"
+        assert all(c.startswith("b1-") and ", page " in c for c in f.citations)

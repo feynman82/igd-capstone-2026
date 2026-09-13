@@ -12,6 +12,9 @@ Three things make an alert worth showing rather than annoying:
   because a page was re-read, and an alert that repeats daily is an alert people turn off.
 - **Citations.** An alert says a number, so it names the documents that number came from. An
   uncitable alert is not shown, on the same rule as an uncitable sentence.
+
+Every metric is measured **per person**, and a year-to-date metric for the year being swept. One
+household member's statement must never move another member's limit.
 """
 
 from __future__ import annotations
@@ -30,6 +33,7 @@ from modules.alert import queries
 log = logging.getLogger(__name__)
 
 DEBOUNCE_HOURS = 168  # matches modules/alert/module.yaml
+CITED = 3  # documents named behind a total, newest first
 
 
 @dataclass(frozen=True, slots=True)
@@ -37,6 +41,7 @@ class Measurement:
     value: Decimal
     citations: list[str] = field(default_factory=list)
     subject: str | None = None
+    item: str | None = None  # which of the subject's things, when they have several: a policy
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,11 +53,13 @@ class Alert:
     warn_at: float
     citations: list[str]
     subject: str | None = None
+    item: str | None = None
 
     @property
     def key(self) -> str:
-        """What the debounce is keyed on: this metric, for this person, in this pack."""
-        return f"{self.pack_id}.{self.metric}.{self.subject or 'household'}"
+        """What the debounce is keyed on: this metric, for this person and thing, in this pack."""
+        key = f"{self.pack_id}.{self.metric}.{self.subject or 'household'}"
+        return f"{key}.{self.item}" if self.item else key
 
     @property
     def over_ceiling(self) -> bool:
@@ -67,62 +74,81 @@ class Alert:
             else f"{readable} is {self.value}, {share:.0%} of the {self.ceiling:g} limit"
         )
         who = f" for {self.subject}" if self.subject else ""
-        return f"{head}{who} — {'; '.join(self.citations)}"
+        what = f" ({self.item})" if self.item else ""
+        return f"{head}{who}{what} — {'; '.join(self.citations)}"
 
 
 # ------------------------------------------------------------------------------ the metrics
 
 
-def _citations(conn: Any, pack_id: str, key: str, limit: int = 3) -> list[str]:
+def _year(today: date) -> dict[str, Any]:
+    """The parameters every year-to-date query takes: the calendar year `today` falls in."""
+    return {
+        "year": today.year,
+        "year_text": str(today.year),
+        "year_start": date(today.year, 1, 1),
+        "next_year_start": date(today.year + 1, 1, 1),
+    }
+
+
+def _per_subject(conn: Any, query: str, today: date) -> dict[str | None, list[tuple[Decimal, str]]]:
+    """A year-to-date query's rows, as each person's `(value, citation)` pairs in query order."""
     with conn.cursor() as cur:
-        cur.execute(queries.EVIDENCE_FOR_KEY, {"pack_id": pack_id, "key": key, "limit": limit})
+        cur.execute(query, _year(today))
         rows = cur.fetchall()
-    return [f"{name}, page {page}" for name, page, _num, _dt, _subject in rows]
+    grouped: dict[str | None, list[tuple[Decimal, str]]] = {}
+    for subject, value, name, page in rows:
+        grouped.setdefault(subject, []).append((Decimal(value), f"{name}, page {page}"))
+    return grouped
+
+
+def _totals(conn: Any, query: str, today: date) -> list[Measurement]:
+    return [
+        Measurement(
+            sum((value for value, _ in facts), Decimal(0)),
+            [citation for _, citation in facts[:CITED]],
+            subject,
+        )
+        for subject, facts in _per_subject(conn, query, today).items()
+    ]
 
 
 def srs_contributions_ytd(conn: Any, today: date) -> list[Measurement]:
-    with conn.cursor() as cur:
-        cur.execute(queries.SRS_CONTRIBUTIONS_YTD)
-        row = cur.fetchone()
-    if row is None or row[0] is None:
-        return []
-    return [Measurement(Decimal(row[0]), [f"{row[4]}, page {row[3]}"], row[1])]
+    """Each holder's latest year-to-date total for this year: the largest, since it only grows."""
+    out: list[Measurement] = []
+    for subject, facts in _per_subject(conn, queries.SRS_CONTRIBUTIONS_YTD, today).items():
+        value, citation = max(facts, key=lambda fact: fact[0])
+        out.append(Measurement(value, [citation], subject))
+    return out
 
 
 def donations_ytd(conn: Any, today: date) -> list[Measurement]:
-    with conn.cursor() as cur:
-        cur.execute(queries.DONATIONS_YTD)
-        row = cur.fetchone()
-    if row is None or not row[1]:
-        return []
-    return [Measurement(Decimal(row[0]), _citations(conn, "iras_tax", "donation_amount"))]
+    return _totals(conn, queries.DONATIONS_YTD, today)
 
 
 def cpf_contributions_ytd(conn: Any, today: date) -> list[Measurement]:
-    with conn.cursor() as cur:
-        cur.execute(queries.CPF_CONTRIBUTIONS_YTD)
-        row = cur.fetchone()
-    if row is None or not row[1]:
-        return []
-    return [Measurement(Decimal(row[0]), _citations(conn, "iras_tax", "cpf_employee"))]
+    return _totals(conn, queries.CPF_CONTRIBUTIONS_YTD, today)
 
 
 def days_uncovered(conn: Any, today: date) -> list[Measurement]:
-    """Days since cover lapsed, per insured person. Zero while a policy still runs."""
+    """Days since cover lapsed, per insured person and policy. Nothing while a policy still runs.
+
+    Cites the document carrying the policy's latest expiry, which is the date the gap is counted
+    from.
+    """
     with conn.cursor() as cur:
-        cur.execute(queries.DAYS_UNCOVERED, {"today": today})
+        cur.execute(queries.DAYS_UNCOVERED)
         rows = cur.fetchall()
+    latest: dict[tuple[str | None, str | None], tuple[date, str]] = {}
+    for subject, policy_no, expiry, name, page in rows:
+        held = latest.get((subject, policy_no))
+        if held is None or expiry > held[0]:
+            latest[(subject, policy_no)] = (expiry, f"{name}, page {page}")
     out: list[Measurement] = []
-    for subject, last_expiry, still_covered in rows:
-        if still_covered is not None or last_expiry is None:
-            continue
-        gap = (today - last_expiry).days
+    for (subject, policy_no), (expiry, citation) in latest.items():
+        gap = (today - expiry).days
         if gap > 0:
-            out.append(
-                Measurement(
-                    Decimal(gap), _citations(conn, "insurance_agent", "expiry_date"), subject
-                )
-            )
+            out.append(Measurement(Decimal(gap), [citation], subject, policy_no))
     return out
 
 
@@ -198,6 +224,7 @@ def sweep(
                     warn_at=config.warn_at,
                     citations=measurement.citations,
                     subject=measurement.subject,
+                    item=measurement.item,
                 )
                 if _debounced(conn, alert, now, debounce_hours):
                     continue
