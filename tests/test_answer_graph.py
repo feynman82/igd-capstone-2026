@@ -28,6 +28,7 @@ from core.graph.answer import (
     Reading,
     Refused,
     Sentence,
+    _without_passage_numbers,
 )
 from core.graph.gate import Claim, check
 from core.graph.inventory import Holding
@@ -629,7 +630,13 @@ def insurance() -> InstalledPack:
     return pack("insurance_agent")
 
 
-def holding(name: str, printed: str, fact_id: int, document_id: UUID | None = None) -> Holding:
+def holding(
+    name: str,
+    printed: str,
+    fact_id: int,
+    document_id: UUID | None = None,
+    details: tuple[tuple[str, str], ...] | None = None,
+) -> Holding:
     categories = insurance().manifest.answering.categories
     assert categories is not None
     return Holding(
@@ -643,7 +650,7 @@ def holding(name: str, printed: str, fact_id: int, document_id: UUID | None = No
         printed_name=printed,
         fact_id=fact_id,
         page=1,
-        details=(("product_name", printed),),
+        details=details if details is not None else (("product_name", printed),),
     )
 
 
@@ -770,7 +777,15 @@ def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
     got = list(graph.stream("warded for dengue 3 days, can claim?"))
 
     assert "Third Party Property Damage" not in client.prompts[-1]
-    cited = [c.document_name for e in got if isinstance(e, Sentence) for c in e.citations]
+    # The hospital plan on file now leads with a line of its own, cited to the inventory; what is
+    # asserted here is the page read, and no page of the car policy is.
+    cited = [
+        c.document_name
+        for e in got
+        if isinstance(e, Sentence)
+        for c in e.citations
+        if c.kind == "document"
+    ]
     assert cited == ["b1-0032.pdf"]
 
 
@@ -843,3 +858,81 @@ def test_asking_whether_something_can_be_claimed_is_described_as_explain_to_the_
     router was told a question about whether a claim will be approved is advise."""
     assert "claim will be approved" not in ROUTE_SYSTEM
     assert "can be claimed is explain" in ROUTE_SYSTEM
+
+
+# ------------------------------------------------------------------- 14 September, live probe
+
+
+def test_a_policy_on_file_is_named_by_code_with_its_number_and_dates() -> None:
+    car = holding(
+        "b1-0001.pdf",
+        "Private Car Insurance Policy",
+        501,
+        details=(
+            ("insurer", "MERIDIAN ASSURANCE"),
+            ("policy_no", "MV-2026-448120"),
+            ("product_name", "Private Car Insurance Policy"),
+            ("expiry_date", "2027-04-11"),
+        ),
+    )
+    reply = {"sentences": [{"text": "Yes, you have car insurance.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([car]),
+    )
+
+    got = [
+        event for event in graph.stream("do i have car insurance?") if isinstance(event, Sentence)
+    ]
+
+    assert got[0].text == (
+        "On file for Marcus Lim Jun Wei: Meridian Assurance, Private Car Insurance Policy "
+        "(policy no MV-2026-448120; expiry date 2027-04-11)."
+    )
+    assert [c.kind for c in got[0].citations] == ["inventory"]
+
+
+def test_weak_passages_still_answer_from_the_document_on_file() -> None:
+    car = holding(
+        "b1-0001.pdf",
+        "Private Car Insurance Policy",
+        501,
+        details=(("product_name", "Private Car Insurance Policy"), ("premium_payable", "1284.00")),
+    )
+    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    reply = {"sentences": [{"text": "The premium payable is SGD 1,284.00.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(weak),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([car]),
+    )
+
+    got = list(graph.stream("how much is my car insurance premium?"))
+
+    assert [type(event) for event in got] == [Reading, Sentence, Sentence, Finished]
+    assert got[2].text == "The premium payable is SGD 1,284.00."  # type: ignore[union-attr]
+
+
+def test_passage_numbers_written_into_a_sentence_are_not_mistaken_for_figures() -> None:
+    reply = {"sentences": [{"text": "The annual premium is SGD 1,248.90 (1).", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+    )
+    got = [event for event in graph.stream("what is the premium?") if isinstance(event, Sentence)]
+    assert [event.text for event in got] == ["The annual premium is SGD 1,248.90."]
+
+
+def test_a_printed_figure_in_brackets_is_not_taken_for_a_passage_number() -> None:
+    assert _without_passage_numbers("A thirty (30) day waiting period applies (1).", [1]) == (
+        "A thirty (30) day waiting period applies."
+    )
+    assert _without_passage_numbers("As stated in passages 1 and 2, cover ends.", [1, 2]).endswith(
+        "cover ends."
+    )

@@ -39,6 +39,7 @@ a separate reviewed pull request. The swap is one line once that migration lands
 from __future__ import annotations
 
 import logging
+import re
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import date
@@ -151,6 +152,10 @@ ANSWER_SYSTEM = (
     "Never recommend, compare, or say whether something is enough. When a passage is a document "
     "on file and the question asks whether such a document exists, name it as that passage "
     "prints it and give its dates."
+    # 14 September: a verdict on one person's claim that the documents do not make.
+    " List passage numbers only in supports, never in a sentence's text."
+    " Never say whether a particular claim, stay or event will be covered, paid or rejected;"
+    " say which conditions in the passages apply to it."
 )
 
 DECLINE = (
@@ -393,6 +398,30 @@ def _citations(passages: Iterable[Passage]) -> list[Citation]:
     return out
 
 
+# 14 September: "…SGD 1,860.00, as stated in the policy document (6) and confirmed on file (7)." was
+# dropped because the number check read the model's own passage numbers as unprinted figures.
+# A passage number is citation, not claim: it is removed when every number in the mention is one
+# of that sentence's supports. "thirty (30) days" survives, because 30 is not a support.
+_PASSAGE_MENTION = re.compile(
+    r",?\s*(?:(?:as\s+(?:stated|shown|listed)\s+)?in\s+|see\s+)?"
+    r"(?:\(\s*(?:passages?\s+)?(?P<paren>\d+(?:\s*(?:,|and|&)\s*\d+)*)\s*\)"
+    r"|\[\s*(?P<bracket>\d+(?:\s*,\s*\d+)*)\s*\]"
+    r"|passages?\s+(?P<bare>\d+(?:\s*(?:,|and|&)\s*\d+)*))",
+    re.IGNORECASE,
+)
+
+
+def _without_passage_numbers(text: str, numbers: Sequence[int]) -> str:
+    supports = set(numbers)
+
+    def drop(match: re.Match[str]) -> str:
+        found = match.group("paren") or match.group("bracket") or match.group("bare") or ""
+        cited = {int(n) for n in re.findall(r"\d+", found)}
+        return "" if cited and cited <= supports else match.group(0)
+
+    return " ".join(_PASSAGE_MENTION.sub(drop, text).split()).replace(" .", ".").replace(" ,", ",")
+
+
 def _either(labels: list[str]) -> str:
     """ "a dental plan", or "a term life plan or a whole life plan"."""
     named = [
@@ -584,6 +613,7 @@ class AnswerGraph:
         """
         text = str(item.get("text", "")).strip()
         numbers = [n for n in item.get("supports") or [] if isinstance(n, int)]
+        text = _without_passage_numbers(text, numbers)
         supports = tuple(passages[n - 1].ref for n in numbers if 1 <= n <= len(passages))
         if len(supports) != len(numbers):
             # a ref no passage has: the gate sees an invented one
@@ -632,6 +662,31 @@ class AnswerGraph:
             f"{_either([label for _, label in rules])}."
         )
         return Sentence(text, (), _citations(h.passage() for h in on_file))
+
+    def _presence(
+        self, present: list[Holding], packs: Sequence[InstalledPack], person: str | None
+    ) -> list[Sentence]:
+        """ "On file for Marcus Lim: MERIDIAN ASSURANCE, Private Car Insurance Policy (policy no
+        MV-2026-448120; expiry date 2027-04-11)." Written by code, one sentence per document on file
+        in the categories the question named. On 14 September the 4B reader was handed that line and
+        still answered "Yes, you have car insurance." — which policy, and until when, is the answer.
+        Only identifier and date fields are named, as printed, so nothing here is a judgement."""
+        by_pack = {installed.id: installed for installed in packs}
+        out: list[Sentence] = []
+        for holding in present:
+            installed = by_pack.get(holding.pack_id)
+            spec = installed.manifest.document_types.get(holding.doc_type) if installed else None
+            types = {f.name: f.type for f in spec.fields} if spec else {}
+            shown = [
+                f"{name.replace('_', ' ')} {value}"
+                for name, value in holding.details
+                if types.get(name) in {"identifier", "date"}
+            ]
+            whose = person or holding.subject
+            lead = f"On file for {whose}: {holding.title}" if whose else f"On file: {holding.title}"
+            text = f"{lead} ({'; '.join(shown)})." if shown else f"{lead}."
+            out.append(Sentence(text, (), _citations([holding.passage()])))
+        return out
 
     def _declined(self, question: str, packs: Sequence[InstalledPack]) -> Declined:
         """The pack's own decline, signed with its disclaimer, and a question it can answer."""
@@ -768,18 +823,23 @@ class AnswerGraph:
         # Asked before the model runs. A question the evidence cannot support costs a retrieval,
         # not a retrieval and a generation that is then thrown away.
         refusal = precheck(passages, abstain_below=floor)
-        if refusal is not None and absence is None:
+        if refusal is not None and absence is None and not present:
             yield Abstained(refusal, "", len(passages), 0, person, disclaimer)
             return
 
-        evidence = [*passages, *(h.passage() for h in present)]
+        # Weak passages are not read; the documents on file still are — their lines are facts.
+        records = passages if refusal is None else []
+        evidence = [*records, *(h.passage() for h in present)]
         yield Reading(len(evidence), person)
         kept: list[str] = []
-        if absence is not None:
-            kept.extend(citation.text for citation in absence.citations)
-            yield absence
-        if refusal is not None:  # the documents on file said "no"; the passages cannot add to it
-            yield Finished(sorted(set(kept)), disclaimer, len(evidence), 0, person, quarantined)
+        said_by_code = ([absence] if absence is not None else []) + self._presence(
+            present, packs, person
+        )
+        for sentence in said_by_code:
+            kept.extend(citation.text for citation in sentence.citations)
+            yield sentence
+        if not evidence:  # the inventory said "no" and nothing else can add to it
+            yield Finished(sorted(set(kept)), disclaimer, 0, 0, person, quarantined)
             return
 
         by_ref = {passage.ref: passage for passage in evidence}
