@@ -76,8 +76,8 @@ def rows_for(**overrides: list[tuple[Any, ...]]) -> dict[str, list[tuple[Any, ..
         "count(*) FROM facts": [],
         # The Alert module's metrics. Empty means no threshold is crossed, which is what most
         # of these tests want; the ones that want an alert override the metric they need.
-        "max(f.value_date)": [],  # alert.DAYS_UNCOVERED
-        "f.value_num, f.value_date, f.subject": [],  # alert.EVIDENCE_FOR_KEY
+        # Before corrections.SELECT_FACT below: every metric query joins documents the same way.
+        "AS policy_no": [],  # alert.DAYS_UNCOVERED
         "FROM traces": [],  # alert.LAST_FIRED, the debounce
         # vault.RESOLVE_NAMES. Empty means no citation resolves to a document, which is the
         # honest default: most of these tests do not put documents in the fake at all.
@@ -220,12 +220,7 @@ def uncovered_since(expiry: date) -> dict[str, list[tuple[Any, ...]]]:
     The pack declares `ceiling: 0`, so any gap at all is news — and an alert with nothing to
     cite is dropped by the module, which is why the evidence row is not optional here.
     """
-    return {
-        "max(f.value_date)": [("Marcus Fernandez", expiry, None)],
-        "f.value_num, f.value_date, f.subject": [
-            ("policy.pdf", 3, None, expiry, "Marcus Fernandez")
-        ],
-    }
+    return {"AS policy_no": [("Marcus Fernandez", "MV-2026-448120", expiry, "policy.pdf", 3)]}
 
 
 def test_today_is_ordered_overdue_then_alerts_then_reminders(
