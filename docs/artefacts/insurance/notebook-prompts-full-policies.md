@@ -1,5 +1,10 @@
 # Notebook prompts — the four full policies for Marcus Lim
 
+> **Superseded for new work** by
+> [`notebook-prompt-full-length-policy.md`](notebook-prompt-full-length-policy.md), which
+> produces a full-length policy and a page one that survives parsing. Kept because the four
+> documents in `corpus/batches/batch1/` were generated from it.
+
 **One notebook per policy, one at a time.** A single prompt asking for four policies produces
 four thin documents.
 
@@ -47,9 +52,8 @@ RULES:
     insurer, bank or government agency anywhere in the document.
   - Use Singapore conventions: SGD, DD Month YYYY dates, CPF/MediSave where realistic.
   - Every figure must be consistent everywhere it appears in the document.
-  - Put this footer on every page, exactly:
-        SYNTHETIC DOCUMENT — NOT A REAL RECORD
-  - Put this reference in the footer of every page: Ref: <the doc_id below>
+  - Do NOT print a document reference, form number or "Ref:" line anywhere: the
+    extractor mistakes them for the policy number.
   - Write it as the policy itself. No commentary, no "here is your document", no notes.
 ```
 
@@ -60,7 +64,7 @@ RULES:
 ```
 [shared preamble]
 
-DOC ID (for the footer): b1-0031
+REGISTER ROW (do not print in the document): b1-0031
 INSURER (fictional):     Lionhead Life Assurance
 POLICY:                  Whole Life
 PRODUCT NAME:            Heritage Whole Life Plan
@@ -109,7 +113,7 @@ finding.
 ```
 [shared preamble]
 
-DOC ID (for the footer): b1-0001
+REGISTER ROW (do not print in the document): b1-0001
 INSURER (fictional):     Meridian Assurance
 POLICY:                  Private Car
 PRODUCT NAME:            Private Car Insurance Policy
@@ -151,7 +155,7 @@ particular, do not write an exclusion that would have barred that claim.
 ```
 [shared preamble]
 
-DOC ID (for the footer): b1-0032
+REGISTER ROW (do not print in the document): b1-0032
 INSURER (fictional):     Meridian Assurance
 POLICY:                  Private Hospital and Surgical
 PRODUCT NAME:            PrivateCare Hospital and Surgical Plan
@@ -214,7 +218,7 @@ refers to it.
 ```
 [shared preamble]
 
-DOC ID (for the footer): b1-0033
+REGISTER ROW (do not print in the document): b1-0033
 INSURER (fictional):     Lionhead Life Assurance
 POLICY:                  Critical Illness
 PRODUCT NAME:            CareShield Critical Illness Plan
@@ -260,8 +264,7 @@ uv run python -m corpus.validate corpus/register/batch1.csv
 
 Then check, per document, before committing:
 
-- [ ] `SYNTHETIC DOCUMENT — NOT A REAL RECORD` on **every** page, em-dash not hyphen
-- [ ] `Ref: b1-00XX` on every page, matching the filename
+- [ ] No `Ref:` line anywhere — it gets extracted as the policy number
 - [ ] No real institution anywhere — search the text for hospital, clinic, bank and agency names
 - [ ] Every figure matches the register row character for character
 - [ ] `b1-0031`: the surrender table's years 9, 10 and 11 match `b1-0013`/`b1-0014`/`b1-0015`
