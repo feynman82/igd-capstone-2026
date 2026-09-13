@@ -929,25 +929,45 @@ def test_passage_numbers_written_into_a_sentence_are_not_mistaken_for_figures() 
     assert [event.text for event in got] == ["The annual premium is SGD 1,248.90."]
 
 
-def test_a_printed_figure_in_brackets_is_not_taken_for_a_passage_number() -> None:
-    assert _without_passage_numbers("A thirty (30) day waiting period applies (1).", [1]) == (
-        "A thirty (30) day waiting period applies."
-    )
-    assert _without_passage_numbers("As stated in passages 1 and 2, cover ends.", [1, 2]) == (
-        "Cover ends."
-    )
-    assert _without_passage_numbers("Cover is described within (1).", [1]) == (
-        "Cover is described within."
-    )
-    assert (
-        _without_passage_numbers("You do not have dental insurance as per [3], which lists x.", [3])
-        == "You do not have dental insurance, which lists x."
-    )
-    assert _without_passage_numbers("According to (2), cover ends.", [2]) == "Cover ends."
-    assert _without_passage_numbers("The premium is SGD 1,248.90 (1).", [1]) == (
-        "The premium is SGD 1,248.90."
-    )
-    assert _without_passage_numbers("Clause 4(1) excludes dental.", [1]) == (
-        "Clause 4(1) excludes dental."
-    )
-    assert _without_passage_numbers("Dental is excluded (see 2).", [2]) == "Dental is excluded."
+@pytest.mark.parametrize(
+    ("text", "numbers", "expected"),
+    [
+        ("Cover is described within (1).", [1], "Cover is described within."),
+        (
+            "You do not have dental insurance as per [3], which lists x.",
+            [3],
+            "You do not have dental insurance, which lists x.",
+        ),
+        ("According to (2), cover ends.", [2], "Cover ends."),
+        ("As stated in passages 1 and 2, cover ends.", [1, 2], "Cover ends."),
+        (
+            "A thirty (30) day waiting period applies (1).",
+            [1],
+            "A thirty (30) day waiting period applies.",
+        ),
+        ("The premium is SGD 1,248.90 (1).", [1], "The premium is SGD 1,248.90."),
+        ("Clause 4(1) excludes dental.", [1], "Clause 4(1) excludes dental."),
+        ("Dental is excluded (see 2).", [2], "Dental is excluded."),
+        ("Payment is due per [1] the terms.", [1], "Payment is due per the terms."),
+        ("The claim was paid from [1] your salary.", [1], "The claim was paid from your salary."),
+        (
+            "According to [1] the policy, you are covered.",
+            [1],
+            "According to the policy, you are covered.",
+        ),
+        ("Refer to (1) the appendix for details.", [1], "Refer to the appendix for details."),
+        ("Seen in passage 2 of the schedule (2).", [2], "Seen in passage 2 of the schedule."),
+        (
+            "Your premium is SGD 1,860.00, as stated in the policy document (6) and confirmed "
+            "on file (7).",
+            [6, 7],
+            "Your premium is SGD 1,860.00, as stated in the policy document and confirmed on file.",
+        ),
+        ("The limit is SGD 1,000 per day (2).", [1], "The limit is SGD 1,000 per day (2)."),
+        ("No mention here at all.", [1], "No mention here at all."),
+    ],
+)
+def test_a_printed_figure_in_brackets_is_not_taken_for_a_passage_number(
+    text: str, numbers: list[int], expected: str
+) -> None:
+    assert _without_passage_numbers(text, numbers) == expected

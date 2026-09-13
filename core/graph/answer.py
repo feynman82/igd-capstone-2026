@@ -403,42 +403,48 @@ def _citations(passages: Iterable[Passage]) -> list[Citation]:
 # A passage number is citation, not claim: it is removed when every number in the mention is one
 # of that sentence's supports. "thirty (30) days" survives, because 30 is not a support.
 #
-# 14 September, fix round 3: `in`/`see`/`passages?` need a leading word boundary or the prefix
-# matches the tail of a longer word ("with-IN"). The connective can also be "as per", "according
-# to", "per", "from" or "refer to", and it can sit *inside* the brackets ("(see 2)") rather than
-# before them. A bracket glued to a preceding word or digit ("4(1)") is a clause number, not a
-# passage mention, so it needs a negative lookbehind. Whatever connective is consumed goes with
-# the mention — a dangling "as per," or "According to," never reaches the person.
-_PASSAGE_MENTION = re.compile(
-    r",?\s*(?:\b(?:as\s+(?:stated|shown|listed)\s+in|according\s+to|refer\s+to|as\s+per|in|see|per|from)\s+)?"
-    r"(?:(?<![\w)])\(\s*(?:(?:see|passages?)\s+)?(?P<paren>\d+(?:\s*(?:,|and|&)\s*\d+)*)\s*\)"
-    r"|(?<![\w)])\[\s*(?P<bracket>\d+(?:\s*,\s*\d+)*)\s*\]"
-    r"|\bpassages?\s+(?P<bare>\d+(?:\s*(?:,|and|&)\s*\d+)*))",
+#
+# The rule is structural, so removing a mention never changes what the sentence says:
+# - A citation clause, an optional connective ("according to", "as per", "in", ...) followed by
+#   a mention, goes as a whole only when the mention closes its clause, i.e. it is followed by
+#   , . ; : ) ! ? or the end. "According to (2), cover ends." -> "Cover ends."
+# - A bracketed mention that does not close its clause goes on its own and leaves its connective,
+#   which is still part of the prose: "due per [1] the terms." -> "due per the terms."
+# - A bare "passage 2" is removed only as a closing citation clause; mid-clause it is prose.
+# - A bracket glued to a word or digit ("4(1)") is a clause number, never a mention.
+_NUMBERS = r"(?>\d+(?:\s*(?:,|and|&)\s*\d+)*)"
+_BRACKETED = rf"(?<![\w)\]])(?:\(\s*(?:(?:see|passages?)\s+)?{_NUMBERS}\s*\)|\[\s*{_NUMBERS}\s*\])"
+_CLOSES_CLAUSE = r"\s*(?:[,.;:)!?]|\Z)"
+_CITATION_CLAUSE = re.compile(
+    r"\s*(?:\b(?:as\s+(?:stated|shown|listed)\s+in|as\s+per|according\s+to|refer\s+to"
+    r"|see|per|from|in)\s+)?"
+    rf"(?:{_BRACKETED}|\bpassages?\s+{_NUMBERS})(?={_CLOSES_CLAUSE})",
     re.IGNORECASE,
 )
+_STANDALONE_BRACKET = re.compile(rf"\s*{_BRACKETED}(?!{_CLOSES_CLAUSE})", re.IGNORECASE)
 
 
 def _without_passage_numbers(text: str, numbers: Sequence[int]) -> str:
     supports = set(numbers)
-    changed = False
-
-    def drop(match: re.Match[str]) -> str:
-        nonlocal changed
-        found = match.group("paren") or match.group("bracket") or match.group("bare") or ""
-        cited = {int(n) for n in re.findall(r"\d+", found)}
-        if cited and cited <= supports:
-            changed = True
-            return ""
-        return match.group(0)
-
-    result = _PASSAGE_MENTION.sub(drop, text)
-    if not changed:
+    # The two patterns cannot overlap: one needs the mention to close its clause, the other not.
+    spans = sorted(
+        match.span()
+        for pattern in (_CITATION_CLAUSE, _STANDALONE_BRACKET)
+        for match in pattern.finditer(text)
+        if {int(n) for n in re.findall(r"\d+", match.group())} <= supports
+    )
+    if not spans:
         return text
 
-    result = " ".join(result.split()).replace(" .", ".").replace(" ,", ",")
-    without_lead = result.lstrip(", ")
-    if without_lead != result and without_lead:
-        result = without_lead[:1].upper() + without_lead[1:]
+    kept: list[str] = []
+    at = 0
+    for start, end in spans:
+        kept.append(text[at:start])
+        at = end
+    kept.append(text[at:])
+    result = re.sub(r" ([,.;:!?])", r"\1", " ".join("".join(kept).split())).lstrip(",;: ")
+    if not text[: spans[0][0]].strip():
+        result = result[:1].upper() + result[1:]
     return result
 
 
