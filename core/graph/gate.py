@@ -33,8 +33,11 @@ rules; the streaming path and the batch path are two ways of asking it.
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from core.contracts import Exclusions
 from core.graph.ports import Passage
 
 log = logging.getLogger(__name__)
@@ -43,10 +46,10 @@ log = logging.getLogger(__name__)
 @dataclass(frozen=True, slots=True)
 class Claim:
     text: str
-    supports: tuple[int, ...]  # chunk ids
+    supports: tuple[str, ...]  # passage refs, "document:11"
 
-    def with_citation(self, by_id: dict[int, Passage]) -> str:
-        cited = [by_id[chunk_id].cite() for chunk_id in self.supports if chunk_id in by_id]
+    def with_citation(self, by_ref: dict[str, Passage]) -> str:
+        cited = [by_ref[ref].cite() for ref in self.supports if ref in by_ref]
         seen: list[str] = []
         for citation in cited:
             if citation not in seen:
@@ -87,7 +90,7 @@ def precheck(passages: list[Passage], *, abstain_below: float) -> str | None:
     return None
 
 
-def check_one(claim: Claim, retrieved: set[int]) -> str | None:
+def check_one(claim: Claim, retrieved: set[str]) -> str | None:
     """Why this one sentence cannot be kept, or `None` if it can.
 
     Depends on nothing but the sentence and what was retrieved, which is what lets a sentence be
@@ -97,7 +100,7 @@ def check_one(claim: Claim, retrieved: set[int]) -> str | None:
         return "empty"
     if not claim.supports:
         return "no supporting passage"
-    unknown = [chunk_id for chunk_id in claim.supports if chunk_id not in retrieved]
+    unknown = [ref for ref in claim.supports if ref not in retrieved]
     if unknown:
         return f"cites passage(s) that were not retrieved: {unknown}"
     return None
@@ -118,7 +121,7 @@ def check(
     if refusal is not None:
         return Verdict([], [], True, refusal)
 
-    retrieved = {passage.chunk_id for passage in passages}
+    retrieved = {passage.ref for passage in passages}
     grounded: list[Claim] = []
     dropped: list[tuple[str, str]] = []
     for claim in claims:
@@ -134,3 +137,49 @@ def check(
     if not grounded:
         return Verdict([], dropped, True, "nothing in the answer could be traced to a document")
     return Verdict(grounded, dropped, False)
+
+
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+
+def _normal(number: str) -> str:
+    """ "1,860.00", "1860" and "01" → "1860", "1860", "1": formatting is not a different number."""
+    plain = number.replace(",", "")
+    if "." in plain:
+        plain = plain.rstrip("0").rstrip(".")
+    return plain.lstrip("0") or "0"
+
+
+def unprinted_numbers(text: str, cited: Sequence[Passage]) -> list[str]:
+    """Every number in a sentence that no passage it cites prints. The model copies; it never
+    computes — "SGD 1,000 a day for 3 days is SGD 3,000" ignores the deductible on the next page."""
+    printed = {
+        _normal(found)
+        for passage in cited
+        for found in _NUMBER.findall(f"{passage.context_prefix}\n{passage.text}")
+    }
+    return [found for found in _NUMBER.findall(text) if _normal(found) not in printed]
+
+
+def _says(text: str, phrases: Sequence[str]) -> bool:
+    lowered = text.lower()
+    return any(re.search(rf"(?<!\w){re.escape(p.lower())}(?!\w)", lowered) for p in phrases)
+
+
+def check_content(
+    claim: Claim, by_ref: Mapping[str, Passage], *, exclusions: Exclusions | None = None
+) -> str | None:
+    """Why a cited sentence still cannot be kept, or `None`. Asked after `check_one` passes."""
+    cited = [by_ref[ref] for ref in claim.supports if ref in by_ref]
+    missing = unprinted_numbers(claim.text, cited)
+    if missing:
+        return f"states a number no cited passage prints: {missing}"
+    if (
+        exclusions is not None
+        and cited
+        and _says(claim.text, exclusions.claims)
+        and not _says(claim.text, exclusions.negations)
+        and all(_says(passage.context_prefix, exclusions.headings) for passage in cited)
+    ):
+        return "claims cover from an exclusion"
+    return None

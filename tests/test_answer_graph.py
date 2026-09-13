@@ -289,7 +289,10 @@ def test_a_question_about_a_parent_names_them_as_who_it_is_about_and_carries_tod
 
 def test_a_sentence_with_no_supporting_passage_is_dropped() -> None:
     verdict = check(
-        [Claim("The premium is SGD 1,248.90.", (11,)), Claim("It is good value.", ())],
+        [
+            Claim("The premium is SGD 1,248.90.", ("document:11",)),
+            Claim("It is good value.", ()),
+        ],
         PASSAGES,
         abstain_below=0.45,
     )
@@ -299,7 +302,9 @@ def test_a_sentence_with_no_supporting_passage_is_dropped() -> None:
 
 
 def test_a_sentence_citing_a_passage_that_was_never_retrieved_is_dropped() -> None:
-    verdict = check([Claim("The excess is SGD 500.", (99,))], PASSAGES, abstain_below=0.45)
+    verdict = check(
+        [Claim("The excess is SGD 500.", ("document:99",))], PASSAGES, abstain_below=0.45
+    )
 
     assert verdict.grounded == []
     assert verdict.abstained
@@ -308,29 +313,29 @@ def test_a_sentence_citing_a_passage_that_was_never_retrieved_is_dropped() -> No
 
 def test_weak_evidence_abstains_before_anything_is_written() -> None:
     weak = [Passage(11, DOC, 1, "unrelated text", 0.2, "note.pdf")]
-    verdict = check([Claim("Something.", (11,))], weak, abstain_below=0.45)
+    verdict = check([Claim("Something.", ("document:11",))], weak, abstain_below=0.45)
 
     assert verdict.abstained
     assert "not close enough" in (verdict.reason or "")
 
 
 def test_no_passages_at_all_abstains() -> None:
-    verdict = check([Claim("Something.", (1,))], [], abstain_below=0.45)
+    verdict = check([Claim("Something.", ("document:1",))], [], abstain_below=0.45)
 
     assert verdict.abstained
     assert not verdict.has_answer
 
 
 def test_a_grounded_claim_renders_its_document_and_page() -> None:
-    claim = Claim("The premium is SGD 1,248.90.", (11,))
-    rendered = claim.with_citation({p.chunk_id: p for p in PASSAGES})
+    claim = Claim("The premium is SGD 1,248.90.", ("document:11",))
+    rendered = claim.with_citation({p.ref: p for p in PASSAGES})
 
     assert rendered.endswith("[renewal-notice.pdf, page 1]")
 
 
 def test_a_claim_citing_the_same_document_twice_says_it_once() -> None:
-    claim = Claim("It renews on 30 November 2026.", (11, 11))
-    rendered = claim.with_citation({p.chunk_id: p for p in PASSAGES})
+    claim = Claim("It renews on 30 November 2026.", ("document:11", "document:11"))
+    rendered = claim.with_citation({p.ref: p for p in PASSAGES})
 
     assert rendered.count("renewal-notice.pdf") == 1
 

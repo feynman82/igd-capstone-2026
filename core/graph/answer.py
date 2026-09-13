@@ -444,16 +444,18 @@ class AnswerGraph:
     def _claim(self, item: dict[str, Any], passages: list[Passage]) -> Claim:
         """One streamed sentence object, turned into the thing the gate understands.
 
-        The model cites 1-based positions in the prompt it was given; the gate checks real chunk
-        ids. A position outside the range is silently not translated, which means the claim ends
-        up with fewer supports than the model named — and `check_one` then drops it for citing a
-        passage that was not retrieved, which is the correct outcome and the one rule 3 wants.
+        The model cites 1-based positions in the prompt it was given; the gate checks real
+        passage refs. A position outside the range is silently not translated, which means the
+        claim ends up with fewer supports than the model named — and `check_one` then drops it
+        for citing a passage that was not retrieved, which is the correct outcome and the one
+        rule 3 wants.
         """
         text = str(item.get("text", "")).strip()
         numbers = [n for n in item.get("supports") or [] if isinstance(n, int)]
-        supports = tuple(passages[n - 1].chunk_id for n in numbers if 1 <= n <= len(passages))
+        supports = tuple(passages[n - 1].ref for n in numbers if 1 <= n <= len(passages))
         if len(supports) != len(numbers):
-            supports = (*supports, -1)  # an id no passage has, so the gate sees it invented one
+            # a ref no passage has: the gate sees an invented one
+            supports = (*supports, "unknown:-1")
         return Claim(text, supports)
 
     # ------------------------------------------------------------------------ the graph
@@ -560,8 +562,8 @@ class AnswerGraph:
 
         yield Reading(len(passages), person)
 
-        by_id = {passage.chunk_id: passage for passage in passages}
-        retrieved = set(by_id)
+        by_ref = {passage.ref: passage for passage in passages}
+        retrieved = set(by_ref)
         # Naming the asker is not what makes the answer right — the passages were already
         # narrowed to them — it is what stops the model writing "Marcus's premium is" when the
         # question said "my". The filter does the work; this only does the wording.
@@ -596,8 +598,8 @@ class AnswerGraph:
                             log.info("gate dropped a sentence (%s): %.80s", why, claim.text)
                         continue
                     citations: list[Citation] = []
-                    for chunk_id in claim.supports:
-                        passage = by_id[chunk_id]
+                    for ref in claim.supports:
+                        passage = by_ref[ref]
                         cited = Citation(
                             document_id=passage.document_id,
                             document_name=passage.document_name,
@@ -607,7 +609,12 @@ class AnswerGraph:
                         if all(cited.text != seen.text for seen in citations):
                             citations.append(cited)
                     kept.extend(citation.text for citation in citations)
-                    yield Sentence(claim.text, tuple(claim.supports), citations)
+                    chunk_ids = tuple(
+                        by_ref[ref].chunk_id
+                        for ref in claim.supports
+                        if by_ref[ref].kind == "document"
+                    )
+                    yield Sentence(claim.text, chunk_ids, citations)
         except ModelUnavailable as error:
             # Sentences already yielded were verified and stay said. What follows is the honest
             # account of why there are no more of them.

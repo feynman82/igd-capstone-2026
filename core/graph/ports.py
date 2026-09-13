@@ -12,7 +12,9 @@ things a citation needs — and a score whose scale is retrieval's business, not
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
+
+Kind = Literal["document", "inventory", "guidance"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,10 +27,16 @@ class Passage:
     document_name: str = ""
     context_prefix: str = ""
     pack_id: str = ""  # which pack's guardrails govern an answer built on this passage
+    kind: Kind = "document"  # a page of a document, a document on file, or published guidance
 
     def cite(self) -> str:
         """How a passage names itself: the document and the page, as a person would say it."""
         return f"{self.document_name or self.document_id}, page {self.page}"
+
+    @property
+    def ref(self) -> str:
+        """Unique across kinds: chunk ids, fact ids and guidance ids are three sequences."""
+        return f"{self.kind}:{self.chunk_id}"
 
 
 class Retriever(Protocol):
