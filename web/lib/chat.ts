@@ -15,6 +15,7 @@ import type { Source } from "@/lib/api";
  *   reading → sentence* → finished        an answer
  *   abstention                            nothing in the vault supports one
  *   refusal                               a request to act, refused at the router
+ *   declined                              a request for advice, declined at the router
  *   …anything → error                     the stream broke after it began
  */
 export type ParrotMessage = UIMessage<
@@ -39,10 +40,14 @@ export type ParrotMessage = UIMessage<
       passages_read: number;
       dropped: number;
       person?: string | null;
+      disclaimer?: string;
     };
 
     /** `never_acts` is `Literal[True]` in every pack. This is that, surfaced. */
     refusal: { text: string };
+
+    /** A request for a recommendation or a judgement. `never_recommends`, surfaced. */
+    declined: { text: string; disclaimer: string; offer: string };
 
     /** The trace line under a finished answer, and the pack's disclaimer. */
     finished: {
@@ -50,6 +55,8 @@ export type ParrotMessage = UIMessage<
       passages_read: number;
       dropped: number;
       person?: string | null;
+      quarantined?: number;
+      truncated?: boolean;
     };
 
     /** The connection died mid-answer. Sentences already shown stay; they were verified. */
