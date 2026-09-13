@@ -6,11 +6,13 @@ deciding what to do next.
 
     route ──► retrieve ──► rerank ──┬──► abstain        (the evidence is not good enough)
        │                            └──► answer ──► one Sentence event per kept claim
-       └──► refuse                                      (a request to act, not to explain)
+       ├──► refuse                                      (a request to act, not to explain)
+       └──► decline                                     (a request for a recommendation)
 
-`route` exists for one reason worth stating: `never_acts` is `Literal[True]` in every pack
-manifest, and a question like "renew it for me" must be refused at the top of the graph rather
-than politely declined at the bottom by a model that might not.
+`route` exists for one reason worth stating: `never_acts` and `never_recommends` are
+`Literal[True]` in every pack manifest, and a question like "renew it for me" or "should I buy
+critical illness cover?" must be turned away at the top of the graph rather than politely
+declined at the bottom by a model that might not.
 
 **`stream` is the implementation and `ask` drains it.** There is one path through this file, so
 `scripts/ask.py` and the Ask screen cannot come to different conclusions about the same
@@ -37,12 +39,14 @@ a separate reviewed pull request. The swap is one line once that migration lands
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Literal, TypedDict
 
-from core.graph.gate import Claim, check_one, precheck
+from core.graph.gate import Claim, check_content, check_one, precheck
+from core.graph.inventory import Holding, Inventory
+from core.graph.knowledge import categories_asked, glossary, reworded
 from core.graph.ports import Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped
 from core.graph.sentences import SentenceScanner
@@ -59,14 +63,18 @@ HISTORY_CHARS = 600  # of each; an earlier answer is context, not evidence
 
 ROUTE_SYSTEM = (
     "You decide what kind of request you are looking at. 'explain' means the person wants to "
-    "know what their documents say. 'act' means they are asking you to do something in the "
-    "world: pay, renew, book, file, cancel, send or sign. Asking what something costs is "
-    "explain; asking you to pay it is act."
+    "know what their documents say: what is covered or excluded, what something costs, when it "
+    "ends, how to claim. 'act' means they are asking you to do something in the world: pay, "
+    "renew, book, file, cancel, send or sign. 'advise' means they want a recommendation or a "
+    "judgement: whether to buy, keep, cancel, switch or add something, which option is better, "
+    "whether what they have is enough, or whether a claim will be approved. Asking what "
+    "something costs or covers is explain; asking you to pay it is act; asking whether to buy "
+    "it is advise."
 )
 
 _ROUTE_SCHEMA: dict[str, Any] = {
     "type": "object",
-    "properties": {"intent": {"type": "string", "enum": ["explain", "act"]}},
+    "properties": {"intent": {"type": "string", "enum": ["explain", "act", "advise"]}},
     "required": ["intent"],
 }
 
@@ -133,7 +141,23 @@ ANSWER_SYSTEM = (
     "with a line naming the document it comes from: its title, its type and its section. That "
     "line is evidence too. Never say that a kind of cover or document exists unless a passage's "
     "document line or text names that kind of cover or document."
+    " Answer the question in your first sentence. Do not copy tables or lists the question did "
+    "not ask for. Copy every number exactly as its passage prints it and never calculate one. "
+    "Never recommend, compare, or say whether something is enough."
 )
+
+DECLINE = (
+    "I can explain what your documents say, but I do not recommend, compare, or judge whether "
+    "something is enough."
+)
+
+
+def answer_system(installed: InstalledPack | None) -> str:
+    """The pack's voice first, the core's rules last: a persona cannot loosen what follows it."""
+    limit = installed.manifest.answering.max_sentences if installed else 6
+    rules = f"{ANSWER_SYSTEM} Write at most {limit} sentences."
+    return f"{installed.manifest.persona.system.strip()}\n\n{rules}" if installed else rules
+
 
 _ANSWER_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -168,8 +192,11 @@ class State(TypedDict, total=False):
     intent: str
     standalone: str  # the question made whole, resolving a follow-up against the history
     searches: list[str]  # the question in the words a document would print
+    reworded: str  # the question in the documents' words, from the pack's vocabulary
     passages: list[Passage]
     scoped: Scoped | None  # whose question it is, decided over every candidate
+    categories: list[str]  # category ids the question named
+    held: list[str]  # document ids on file in those categories, as strings
     reranked: list[Passage]
 
 
@@ -187,6 +214,7 @@ class Citation:
     document_name: str
     page: int
     text: str  # "policy.pdf, page 1"
+    kind: str = "document"  # a page of a document, or a document on file
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,6 +270,7 @@ class Abstained:
     passages_read: int
     dropped: int
     person: str | None = None
+    disclaimer: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -250,17 +279,38 @@ class Refused:
 
 
 @dataclass(frozen=True, slots=True)
+class Declined:
+    """A request for a recommendation or a judgement, declined before anything is searched.
+
+    `never_recommends` is `Literal[True]` in every pack. `offer` is a neutral question Parrot can
+    answer instead, shown as a suggestion and never answered on its own: a policy summary placed
+    under "should I buy critical illness cover?" reads as an answer to it.
+    """
+
+    text: str
+    disclaimer: str = ""
+    offer: str = ""
+
+
+@dataclass(frozen=True, slots=True)
 class Finished:
-    """Everything that is only knowable once the last sentence is in."""
+    """Everything that is only knowable once the last sentence is in.
+
+    `quarantined` counts documents held back from the vault, reported when an answer said "none
+    on file" — the one answer a quarantined document could make untrue. `truncated` is set when
+    the answer stopped at the pack's sentence limit.
+    """
 
     citations: list[str]
     disclaimer: str
     passages_read: int
     dropped: int
     person: str | None = None
+    quarantined: int = 0
+    truncated: bool = False
 
 
-Event = Reading | Sentence | Abstained | Refused | Finished
+Event = Reading | Sentence | Abstained | Refused | Declined | Finished
 
 
 @dataclass(frozen=True, slots=True)
@@ -276,10 +326,12 @@ class Answer:
     reason: str = ""  # why it abstained, when it did
     missing: str = ""  # what document would have answered it
     person: str = ""  # whose documents this was narrowed to, when it was
+    declined: bool = False
+    offer: str = ""  # a question that can be answered instead, when it declined
 
     @property
     def grounded(self) -> bool:
-        return not self.abstained and not self.refused
+        return not (self.abstained or self.refused or self.declined)
 
 
 def _conversation(history: list[tuple[str, str]]) -> str:
@@ -323,7 +375,27 @@ def _numbered(passages: list[Passage]) -> str:
     )
 
 
-def _pack_for(passages: list[Passage], packs: tuple[InstalledPack, ...]) -> InstalledPack | None:
+def _citations(passages: Iterable[Passage]) -> list[Citation]:
+    out: list[Citation] = []
+    for passage in passages:
+        cited = Citation(
+            passage.document_id, passage.document_name, passage.page, passage.cite(), passage.kind
+        )
+        if all(cited.text != seen.text for seen in out):
+            out.append(cited)
+    return out
+
+
+def _either(labels: list[str]) -> str:
+    """ "a dental plan", or "a term life plan or a whole life plan"."""
+    named = [
+        f"{'an' if label[:1].lower() in 'aeiou' else 'a'} {label}"
+        for label in dict.fromkeys(labels)
+    ]
+    return named[0] if len(named) == 1 else ", ".join(named[:-1]) + f" or {named[-1]}"
+
+
+def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> InstalledPack | None:
     """The pack owning the best-scoring passage. Its guardrails govern the answer.
 
     Packs declare different abstain floors — insurance is stricter than tax — and a different
@@ -372,6 +444,8 @@ class AnswerGraph:
         keep: int = KEEP,
         household: HouseholdScope | None = None,
         today: date | None = None,
+        inventory: Inventory | None = None,
+        packs: Sequence[InstalledPack] | None = None,
     ) -> None:
         self._today = today  # fixed for tests and the demonstration; otherwise the real date
         self._client = client
@@ -383,7 +457,16 @@ class AnswerGraph:
         # needs one. `None` is the honest state of a fresh install: nobody has said who they
         # are yet, so no question is first-person and every answer is about the household.
         self._household = household
+        # The enabled packs, handed in by whoever read the registry. `None` means every installed
+        # pack, which is what a test or a fresh install without a registry row expects.
+        self._pack_list = tuple(packs) if packs is not None else None
+        # The documents on file, read from facts. `None` is a caller with no connection: nothing
+        # is known to be on file, so "none on file" is never said and no passage is set aside.
+        self._inventory = inventory
         self._graph = self._build()
+
+    def _packs(self) -> tuple[InstalledPack, ...]:
+        return self._pack_list if self._pack_list is not None else installed_packs()
 
     # ------------------------------------------------------------------------ the nodes
 
@@ -393,15 +476,31 @@ class AnswerGraph:
             intent = str(reply.get("intent", "explain"))
         except ModelUnavailable:
             intent = "explain"  # a router that cannot run must not block an explanation
-        return {"intent": intent if intent in {"explain", "act"} else "explain"}
+        return {"intent": intent if intent in {"explain", "act", "advise"} else "explain"}
 
     def understand(self, state: State) -> State:
-        """The question made whole, and said in the documents' words. See `UNDERSTAND_SYSTEM`."""
+        """The question made whole, and said in the documents' words. See `UNDERSTAND_SYSTEM`.
+
+        The pack's vocabulary is applied twice, both without trusting a model with it: the words
+        the question used are listed in the prompt, and the question with them replaced is
+        searched as a phrasing of its own.
+        """
         question = state["question"]
+        packs = self._packs()
         conversation = _conversation(state.get("history") or [])
+        words = glossary(question, packs)
         prompt = (
-            f"Conversation so far:\n{conversation}\n\n" if conversation else ""
-        ) + f"Latest message: {question}"
+            (f"Conversation so far:\n{conversation}\n\n" if conversation else "")
+            + (
+                "Words this household uses, and what its documents print instead:\n"
+                + "\n".join(words)
+                + "\n\n"
+                if words
+                else ""
+            )
+            + f"Latest message: {question}"
+        )
+        said = reworded(question, packs) or ""
         try:
             reply = self._client.constrained(UNDERSTAND_SYSTEM, prompt, _UNDERSTAND_SCHEMA).json()
             standalone = " ".join(str(reply.get("question") or "").split()) or question
@@ -415,22 +514,33 @@ class AnswerGraph:
             # A step that cannot run must not block an answer: the question as asked is still
             # searched, exactly as it was before anything rewrote it.
             standalone, searches = question, []
-        return {"standalone": standalone, "searches": searches}
+        return {"standalone": standalone, "searches": searches, "reworded": said}
 
     def retrieve(self, state: State) -> State:
         """Every phrasing of the question, searched and fused. The person's own words always
         among them, so a rewrite can add a passage but never take one away."""
-        phrasings = [state["question"], state.get("standalone", ""), *(state.get("searches") or [])]
+        phrasings = [
+            state["question"],
+            state.get("reworded", ""),
+            state.get("standalone", ""),
+            *(state.get("searches") or []),
+        ]
         queries = list(dict.fromkeys(q for q in phrasings if q and q.strip()))
         results = [self._retriever.search(q, candidates=self._candidates) for q in queries]
         return {"passages": fuse(results, self._candidates)}
 
     def rerank(self, state: State) -> State:
-        """Whose question is it, over every candidate, and then the few that are read.
+        """Whose question, which kind of document, then the few that are read.
 
         Scoping comes first, as `core/graph/scope.py` has always said it should. After the cut it
         could only narrow six passages, and "is my dad's hospital cover still active?" lost his
         own policy to six passages about the owner's before it was ever asked whose they were.
+
+        The category filter sits with scoping and before the cut for the same reason scoping
+        does: on 13 September the car policy's benefit table was the sixth passage read for
+        "warded for dengue 3 days, can claim?". A passage from a document on file in a category
+        the question did not ask about is set aside; a passage from a document with no category
+        — a letter, a notice, anything the pack could not name — is always kept.
         """
         passages = state.get("passages") or []
         question = state["question"]
@@ -438,8 +548,23 @@ class AnswerGraph:
         scoped = self._household.apply(asked, passages) if self._household else None
         if scoped is not None and scoped.scoped:
             passages = scoped.passages
+        packs = self._packs()
+        wanted = sorted({a.category.id for a in categories_asked(asked, packs)})
+        held: list[str] = []
+        if wanted and self._inventory is not None:
+            on_file = self._inventory.holdings(packs)
+            held = sorted(
+                str(h.document_id) for h in on_file if h.category and h.category.id in wanted
+            )
+            named = {str(h.document_id) for h in on_file if h.category is not None}
+            if held:
+                passages = [
+                    p
+                    for p in passages
+                    if str(p.document_id) in held or str(p.document_id) not in named
+                ]
         kept = self._reranker.rerank(asked or question, passages, keep=self._keep)
-        return {"reranked": kept, "scoped": scoped}
+        return {"reranked": kept, "scoped": scoped, "categories": wanted, "held": held}
 
     def _claim(self, item: dict[str, Any], passages: list[Passage]) -> Claim:
         """One streamed sentence object, turned into the thing the gate understands.
@@ -458,6 +583,71 @@ class AnswerGraph:
             supports = (*supports, "unknown:-1")
         return Claim(text, supports)
 
+    def _on_file(
+        self, asked: str, packs: Sequence[InstalledPack], scoped: Scoped | None
+    ) -> list[Holding]:
+        """The documents on file, narrowed to the same people the passages were."""
+        if self._inventory is None:
+            return []
+        on_file = self._inventory.holdings(packs)
+        if scoped is None or not scoped.scoped or self._household is None:
+            return on_file
+        kept = {
+            str(p.document_id)
+            for p in self._household.apply(asked, [h.passage() for h in on_file]).passages
+        }
+        return [h for h in on_file if str(h.document_id) in kept]
+
+    def _absence(
+        self,
+        on_file: list[Holding],
+        wanted: set[str],
+        packs: Sequence[InstalledPack],
+        person: str | None,
+    ) -> Sentence | None:
+        """ "None of the 5 policies on file is a dental plan." Written by code, never by the model:
+        a 4B reader asked "do i have travel insurance?" once wrote "You have travel insurance."
+        The sentence cites every document it counted, so it is a claim about the vault only."""
+        if not on_file or not wanted:
+            return None
+        rules = [
+            (declared.noun, rule.label)
+            for installed in packs
+            if (declared := installed.manifest.answering.categories) is not None
+            for rule in declared.rules
+            if rule.id in wanted
+        ]
+        if not rules:
+            return None
+        whose = f" for {person}" if person else ""
+        text = (
+            f"None of the {len(on_file)} {rules[0][0]} on file{whose} is "
+            f"{_either([label for _, label in rules])}."
+        )
+        return Sentence(text, (), _citations(h.passage() for h in on_file))
+
+    def _declined(self, question: str, packs: Sequence[InstalledPack]) -> Declined:
+        """The pack's own decline, signed with its disclaimer, and a question it can answer."""
+        asked = categories_asked(question, packs)
+        owner = next((p for p in packs if asked and p.id == asked[0].pack_id), None)
+        if owner is None and len(packs) == 1:
+            owner = packs[0]
+        text = owner.manifest.guardrails.advice_decline.strip() if owner else DECLINE
+        disclaimer = owner.manifest.guardrails.disclaimer.strip() if owner else ""
+        offer = ""
+        wanted = {a.category.id for a in asked}
+        if wanted and self._inventory is not None:
+            match = next(
+                (
+                    h
+                    for h in self._inventory.holdings(packs)
+                    if h.category and h.category.id in wanted
+                ),
+                None,
+            )
+            offer = f"What does my {match.printed_name} say?" if match else ""
+        return Declined(text, disclaimer, offer)
+
     # ------------------------------------------------------------------------ the graph
 
     def _build(self) -> Any:
@@ -474,8 +664,8 @@ class AnswerGraph:
         builder.add_edge(START, "route")
         builder.add_conditional_edges(
             "route",
-            lambda state: "refuse" if state.get("intent") == "act" else "explain",
-            {"refuse": END, "explain": "understand"},
+            lambda state: "stop" if state.get("intent") in {"act", "advise"} else "explain",
+            {"stop": END, "explain": "understand"},
         )
         builder.add_edge("understand", "retrieve")
         builder.add_edge("retrieve", "rerank")
@@ -494,8 +684,9 @@ class AnswerGraph:
         """The implementation. Yields each sentence once it has passed the gate, never before.
 
         The order is worth reading as a sequence of promises. Nothing is claimed until `Reading`;
-        after that every `Sentence` is final; and exactly one of `Abstained`, `Refused` or
-        `Finished` ends the stream.
+        after that every `Sentence` is final; and exactly one of `Abstained`, `Refused`,
+        `Declined` or `Finished` ends the stream. A `Sentence` with no chunk ids, written by
+        code, may come first: "none of the policies on file is …", cited to the documents on file.
 
         `history` is the conversation before this question, as `(role, text)`. It is read by the
         router alone, to make a follow-up whole; it is never evidence, and nothing an earlier
@@ -505,8 +696,12 @@ class AnswerGraph:
             {"question": question, "history": list(history)},
             {"configurable": {"thread_id": thread_id}},
         )
+        packs = self._packs()
         if final.get("intent") == "act":
             yield Refused(REFUSAL)
+            return
+        if final.get("intent") == "advise":
+            yield self._declined(question, packs)
             return
 
         passages = final.get("reranked") or []
@@ -549,20 +744,38 @@ class AnswerGraph:
             )
             return
 
-        installed = _pack_for(passages, installed_packs())
+        # Which kinds of document the question named, and which of them are on file. When none
+        # is, "no" is a fact about the vault, and code says it — see `_absence`.
+        wanted = set(final.get("categories") or [])
+        on_file = self._on_file(asked, packs, scoped) if wanted else []
+        present = [h for h in on_file if h.category and h.category.id in wanted]
+        absence = self._absence(on_file, wanted, packs, person) if not present else None
+
+        installed = _pack_for(passages or [h.passage() for h in on_file], packs)
         floor = installed.manifest.guardrails.abstain_below if installed else 0.42
         disclaimer = installed.manifest.guardrails.disclaimer.strip() if installed else ""
+        limit = installed.manifest.answering.max_sentences if installed else 6
+        exclusions = installed.manifest.answering.exclusions if installed else None
+        quarantined = self._inventory.quarantined() if absence and self._inventory else 0
 
         # Asked before the model runs. A question the evidence cannot support costs a retrieval,
         # not a retrieval and a generation that is then thrown away.
         refusal = precheck(passages, abstain_below=floor)
-        if refusal is not None:
-            yield Abstained(refusal, "", len(passages), 0, person)
+        if refusal is not None and absence is None:
+            yield Abstained(refusal, "", len(passages), 0, person, disclaimer)
             return
 
-        yield Reading(len(passages), person)
+        evidence = [*passages, *(h.passage() for h in present)]
+        yield Reading(len(evidence), person)
+        kept: list[str] = []
+        if absence is not None:
+            kept.extend(citation.text for citation in absence.citations)
+            yield absence
+        if refusal is not None:  # the documents on file said "no"; the passages cannot add to it
+            yield Finished(sorted(set(kept)), disclaimer, len(evidence), 0, person, quarantined)
+            return
 
-        by_ref = {passage.ref: passage for passage in passages}
+        by_ref = {passage.ref: passage for passage in evidence}
         retrieved = set(by_ref)
         # Naming the asker is not what makes the answer right — the passages were already
         # narrowed to them — it is what stops the model writing "Marcus's premium is" when the
@@ -582,32 +795,24 @@ class AnswerGraph:
         # "Still active", "due soon", "expired": a document's dates mean nothing without today's.
         today = f"Today is {(self._today or date.today()):%d %B %Y}.\n"
         words = f"\n(The person's own words: {question})" if asked != question else ""
-        prompt = f"{today}{whose}Question: {asked}{words}\n\nPassages:\n{_numbered(passages)}"
+        prompt = f"{today}{whose}Question: {asked}{words}\n\nPassages:\n{_numbered(evidence)}"
         scanner = SentenceScanner()
-        kept: list[str] = []
-        dropped = 0
-
+        dropped = said = 0
+        truncated = False
+        deltas = self._client.constrained_stream(answer_system(installed), prompt, _ANSWER_SCHEMA)
         try:
-            for delta in self._client.constrained_stream(ANSWER_SYSTEM, prompt, _ANSWER_SCHEMA):
+            for delta in deltas:
                 for item in scanner.feed(delta):
-                    claim = self._claim(item, passages)
-                    why = check_one(claim, retrieved)
+                    claim = self._claim(item, evidence)
+                    why = check_one(claim, retrieved) or check_content(
+                        claim, by_ref, exclusions=exclusions
+                    )
                     if why is not None:
                         if why != "empty":
                             dropped += 1
                             log.info("gate dropped a sentence (%s): %.80s", why, claim.text)
                         continue
-                    citations: list[Citation] = []
-                    for ref in claim.supports:
-                        passage = by_ref[ref]
-                        cited = Citation(
-                            document_id=passage.document_id,
-                            document_name=passage.document_name,
-                            page=passage.page,
-                            text=passage.cite(),
-                        )
-                        if all(cited.text != seen.text for seen in citations):
-                            citations.append(cited)
+                    citations = _citations(by_ref[ref] for ref in claim.supports)
                     kept.extend(citation.text for citation in citations)
                     chunk_ids = tuple(
                         by_ref[ref].chunk_id
@@ -615,14 +820,26 @@ class AnswerGraph:
                         if by_ref[ref].kind == "document"
                     )
                     yield Sentence(claim.text, chunk_ids, citations)
+                    said += 1
+                    if said >= limit:
+                        truncated = True
+                        break
+                if truncated:
+                    break
         except ModelUnavailable as error:
             # Sentences already yielded were verified and stay said. What follows is the honest
             # account of why there are no more of them.
             if kept:
-                yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped, person)
+                yield Finished(
+                    sorted(set(kept)), disclaimer, len(evidence), dropped, person, quarantined
+                )
             else:
-                yield Abstained(str(error), "", len(passages), dropped, person)
+                yield Abstained(str(error), "", len(evidence), dropped, person, disclaimer)
             return
+        finally:
+            close = getattr(deltas, "close", None)
+            if callable(close):
+                close()  # a capped answer stops the generator, and the GPU with it
 
         if not kept:
             # The model wrote nothing, or nothing it wrote could be traced to a document. Its own
@@ -630,13 +847,15 @@ class AnswerGraph:
             yield Abstained(
                 "nothing in the answer could be traced to a document",
                 scanner.missing(),
-                len(passages),
+                len(evidence),
                 dropped,
                 person,
+                disclaimer,
             )
             return
-
-        yield Finished(sorted(set(kept)), disclaimer, len(passages), dropped, person)
+        yield Finished(
+            sorted(set(kept)), disclaimer, len(evidence), dropped, person, quarantined, truncated
+        )
 
     def ask(
         self,
@@ -653,6 +872,10 @@ class AnswerGraph:
         for event in self.stream(question, thread_id=thread_id, history=history):
             if isinstance(event, Refused):
                 return Answer(event.text, refused=True)
+            if isinstance(event, Declined):
+                return Answer(
+                    event.text, declined=True, disclaimer=event.disclaimer, offer=event.offer
+                )
             if isinstance(event, Reading):
                 passages_read = event.passages_read
             elif isinstance(event, Sentence):
@@ -666,6 +889,7 @@ class AnswerGraph:
                     abstained=True,
                     passages_read=event.passages_read,
                     dropped=event.dropped,
+                    disclaimer=event.disclaimer,
                     reason=event.reason,
                     missing=event.missing,
                     person=event.person or "",
@@ -697,4 +921,4 @@ class AnswerGraph:
         )
 
 
-Intent = Literal["explain", "act"]
+Intent = Literal["explain", "act", "advise"]
