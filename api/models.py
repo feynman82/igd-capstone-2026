@@ -143,6 +143,7 @@ class FinishedEvent(BaseModel):
     person: str | None = None
     quarantined: int = 0  # documents not checked, when the answer said "none on file"
     truncated: bool = False  # the pack's sentence limit ended the answer
+    unanswered: bool = False  # only a line about the documents on file was said, not the answer
 
 
 class ErrorEvent(BaseModel):
@@ -164,6 +165,9 @@ class AskResponse(BaseModel):
     passages_read: int = 0
     dropped: int = 0
     offer: str = ""  # a question that can be answered instead, when it declined
+    quarantined: int = 0  # documents not checked, when the answer said "none on file"
+    truncated: bool = False  # the pack's sentence limit ended the answer
+    unanswered: bool = False  # only a line about the documents on file was said, not the answer
 
 
 # ------------------------------------------------------------------------------------ vault

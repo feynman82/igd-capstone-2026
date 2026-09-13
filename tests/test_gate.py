@@ -83,6 +83,12 @@ def test_a_policy_number_is_kept_only_when_it_is_printed_whole() -> None:
     assert unprinted_numbers("Your policy number is MV-2026-448120.", [printed]) == []
 
 
+def test_a_sentence_left_with_no_word_or_figure_is_empty() -> None:
+    """ "See passages 1, 2." is "." once its passage numbers are removed: a citation, no claim."""
+    assert check_one(Claim(".", ("document:11",)), {"document:11"}) == "empty"
+    assert check_one(Claim("(  ).", ("document:11",)), {"document:11"}) == "empty"
+
+
 def test_a_date_on_file_may_be_written_the_way_a_person_says_it() -> None:
     on_file = Passage(
         4, DOC, 1, "Private Car Insurance Policy. expiry date: 2027-04-11.", 1.0, kind="inventory"

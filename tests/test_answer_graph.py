@@ -18,6 +18,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from core.contracts import DEFAULT_DECLINE
 from core.graph.answer import (
     ANSWER_SYSTEM,
     ROUTE_SYSTEM,
@@ -28,6 +29,7 @@ from core.graph.answer import (
     Reading,
     Refused,
     Sentence,
+    _either,
     _without_passage_numbers,
 )
 from core.graph.gate import Claim, check
@@ -677,6 +679,23 @@ def test_a_request_for_a_recommendation_is_declined_before_anything_is_searched(
     assert "recommend" in got[0].text
     assert got[0].disclaimer
     assert retriever.queries == []
+    assert len(client.systems) == 1, "only the router ran"
+
+
+def test_a_decline_no_single_pack_owns_is_still_signed_with_a_disclaimer() -> None:
+    both = [insurance(), pack("iras_tax")]
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "advise"}),
+        PhrasingRetriever({}),
+        PassThroughReranker(),
+        packs=both,
+    )
+
+    (declined,) = list(graph.stream("is my cover enough?"))
+
+    assert isinstance(declined, Declined)
+    assert declined.text == DEFAULT_DECLINE
+    assert declined.disclaimer == insurance().manifest.guardrails.disclaimer.strip()
 
 
 def test_a_decline_offers_the_question_it_can_answer_without_answering_it() -> None:
@@ -731,7 +750,10 @@ def test_no_is_still_said_when_the_passages_are_too_weak_to_answer_from() -> Non
     got = list(graph.stream("how much is my pet insurance premium?"))
 
     assert [type(event) for event in got] == [Reading, Sentence, Finished]
-    assert got[1].text == "None of the 1 policies on file is a pet policy."  # type: ignore[union-attr]
+    assert got[1].text == "The only document on file is not a pet policy."  # type: ignore[union-attr]
+    assert isinstance(got[-1], Finished) and got[-1].unanswered is False, (
+        "the absence sentence is the answer; nothing else was asked of the model"
+    )
 
 
 def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
@@ -916,6 +938,44 @@ def test_weak_passages_still_answer_from_the_document_on_file() -> None:
 
     assert [type(event) for event in got] == [Reading, Sentence, Sentence, Finished]
     assert got[2].text == "The premium payable is SGD 1,284.00."  # type: ignore[union-attr]
+    assert isinstance(got[-1], Finished) and got[-1].unanswered is False
+
+
+def test_a_document_on_file_alone_does_not_carry_a_sentence_it_does_not_print() -> None:
+    """The inventory line names a policy, its number and its dates. It does not say what the
+    policy covers, so a sentence about flood damage cited to it alone says more than it does."""
+    car = holding(
+        "b1-0001.pdf",
+        "Private Car Insurance Policy",
+        501,
+        details=(("product_name", "Private Car Insurance Policy"), ("premium_payable", "1284.00")),
+    )
+    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    reply = {"sentences": [{"text": "Your car policy covers flood damage.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(weak),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([car]),
+    )
+
+    got = list(graph.stream("does my car insurance cover flood damage?"))
+
+    assert [type(event) for event in got] == [Reading, Sentence, Finished]
+    assert got[1].text.startswith("On file")  # type: ignore[union-attr]
+    finished = got[-1]
+    assert isinstance(finished, Finished)
+    assert finished.dropped == 1
+    assert finished.unanswered is True
+
+
+def test_a_sentence_that_is_only_a_citation_is_not_an_answer() -> None:
+    reply = {"sentences": [{"text": "See passage 1.", "supports": [1]}]}
+    got = events(ScriptedOllama({"intent": "explain"}, reply), "what is the premium?")
+
+    assert not any(isinstance(event, Sentence) for event in got)
+    assert isinstance(got[-1], Abstained)
 
 
 def test_passage_numbers_written_into_a_sentence_are_not_mistaken_for_figures() -> None:
@@ -965,9 +1025,15 @@ def test_passage_numbers_written_into_a_sentence_are_not_mistaken_for_figures() 
         ),
         ("The limit is SGD 1,000 per day (2).", [1], "The limit is SGD 1,000 per day (2)."),
         ("No mention here at all.", [1], "No mention here at all."),
+        ("It ends in 2027 [1][2].", [1, 2], "It ends in 2027."),
     ],
 )
 def test_a_printed_figure_in_brackets_is_not_taken_for_a_passage_number(
     text: str, numbers: list[int], expected: str
 ) -> None:
     assert _without_passage_numbers(text, numbers) == expected
+
+
+def test_an_is_written_only_before_a_e_i_or_o() -> None:
+    assert _either(["unit-linked plan"]) == "a unit-linked plan"
+    assert _either(["investment-linked plan"]) == "an investment-linked plan"

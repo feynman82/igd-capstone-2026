@@ -44,6 +44,7 @@ type ParrotEvent =
       person?: string | null;
       quarantined?: number;
       truncated?: boolean;
+      unanswered?: boolean;
     }
   | { kind: "error"; detail: string };
 
@@ -136,6 +137,7 @@ export async function POST(request: Request) {
                 person: event.person,
                 quarantined: event.quarantined,
                 truncated: event.truncated,
+                unanswered: event.unanswered,
               },
             });
             break;

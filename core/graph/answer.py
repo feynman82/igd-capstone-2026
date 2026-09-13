@@ -45,7 +45,8 @@ from dataclasses import dataclass, field
 from datetime import date
 from typing import Any, Literal, TypedDict
 
-from core.graph.gate import Claim, check_content, check_one, precheck
+from core.contracts import DEFAULT_DECLINE
+from core.graph.gate import Claim, check_content, check_one, precheck, states_a_printed_value
 from core.graph.inventory import Holding, Inventory
 from core.graph.knowledge import categories_asked, glossary, reworded
 from core.graph.ports import Kind, Passage, Reranker, Retriever
@@ -156,11 +157,6 @@ ANSWER_SYSTEM = (
     " List passage numbers only in supports, never in a sentence's text."
     " Never say whether a particular claim, stay or event will be covered, paid or rejected;"
     " say which conditions in the passages apply to it."
-)
-
-DECLINE = (
-    "I can explain what your documents say, but I do not recommend, compare, or judge whether "
-    "something is enough."
 )
 
 
@@ -310,7 +306,9 @@ class Finished:
 
     `quarantined` counts documents held back from the vault, reported when an answer said "none
     on file" — the one answer a quarantined document could make untrue. `truncated` is set when
-    the answer stopped at the pack's sentence limit.
+    the answer stopped at the pack's sentence limit. `unanswered` is set when code said something
+    about the documents on file and nothing the model wrote survived the gate: "On file: …" names
+    a policy, and it is not the answer to "does it cover floods?".
     """
 
     citations: list[str]
@@ -320,6 +318,7 @@ class Finished:
     person: str | None = None
     quarantined: int = 0
     truncated: bool = False
+    unanswered: bool = False
 
 
 Event = Reading | Sentence | Abstained | Refused | Declined | Finished
@@ -340,6 +339,9 @@ class Answer:
     person: str = ""  # whose documents this was narrowed to, when it was
     declined: bool = False
     offer: str = ""  # a question that can be answered instead, when it declined
+    quarantined: int = 0  # documents not checked, when the answer said "none on file"
+    truncated: bool = False  # the pack's sentence limit ended the answer
+    unanswered: bool = False  # only a line about the documents on file was said
 
     @property
     def grounded(self) -> bool:
@@ -425,7 +427,17 @@ _STANDALONE_BRACKET = re.compile(rf"\s*{_BRACKETED}(?!{_CLOSES_CLAUSE})", re.IGN
 
 
 def _without_passage_numbers(text: str, numbers: Sequence[int]) -> str:
+    """Every removable passage mention, removed. One removal can expose the next — in "2027
+    [1][2]." the second bracket is glued to the first — so it repeats until nothing changes."""
     supports = set(numbers)
+    while True:
+        removed = _without_one_round_of_passage_numbers(text, supports)
+        if removed == text:
+            return text
+        text = removed
+
+
+def _without_one_round_of_passage_numbers(text: str, supports: set[int]) -> str:
     # The two patterns cannot overlap: one needs the mention to close its clause, the other not.
     spans = sorted(
         match.span()
@@ -442,16 +454,19 @@ def _without_passage_numbers(text: str, numbers: Sequence[int]) -> str:
         kept.append(text[at:start])
         at = end
     kept.append(text[at:])
-    result = re.sub(r" ([,.;:!?])", r"\1", " ".join("".join(kept).split())).lstrip(",;: ")
+    # Joined with a space, so a bracket that followed a removed one is not glued to the word
+    # before it, where it would read as a clause number ("2027[2]").
+    result = re.sub(r" ([,.;:!?])", r"\1", " ".join(" ".join(kept).split())).lstrip(",;: ")
     if not text[: spans[0][0]].strip():
         result = result[:1].upper() + result[1:]
     return result
 
 
 def _either(labels: list[str]) -> str:
-    """ "a dental plan", or "a term life plan or a whole life plan"."""
+    """ "a dental plan", or "a term life plan or a whole life plan". "An" only before a, e, i or
+    o: "a unit-linked plan" is said with a consonant."""
     named = [
-        f"{'an' if label[:1].lower() in 'aeiou' else 'a'} {label}"
+        f"{'an' if label[:1].lower() in ('a', 'e', 'i', 'o') else 'a'} {label}"
         for label in dict.fromkeys(labels)
     ]
     return named[0] if len(named) == 1 else ", ".join(named[:-1]) + f" or {named[-1]}"
@@ -683,9 +698,11 @@ class AnswerGraph:
         if not rules:
             return None
         whose = f" for {person}" if person else ""
+        labels = _either([label for _, label in rules])
         text = (
-            f"None of the {len(on_file)} {rules[0][0]} on file{whose} is "
-            f"{_either([label for _, label in rules])}."
+            f"The only document on file{whose} is not {labels}."
+            if len(on_file) == 1
+            else f"None of the {len(on_file)} {rules[0][0]} on file{whose} is {labels}."
         )
         return Sentence(text, (), _citations(h.passage() for h in on_file))
 
@@ -720,8 +737,14 @@ class AnswerGraph:
         owner = next((p for p in packs if asked and p.id == asked[0].pack_id), None)
         if owner is None and len(packs) == 1:
             owner = packs[0]
-        text = owner.manifest.guardrails.advice_decline.strip() if owner else DECLINE
-        disclaimer = owner.manifest.guardrails.disclaimer.strip() if owner else ""
+        text = owner.manifest.guardrails.advice_decline.strip() if owner else DEFAULT_DECLINE
+        # Every ending is signed. With no single owner, the pack that answers questions about kinds
+        # of document signs it; failing that, the strictest. Unsigned only with no pack enabled.
+        signer = owner or next(
+            (p for p in packs if p.manifest.answering.categories is not None),
+            max(packs, key=lambda p: p.manifest.guardrails.abstain_below) if packs else None,
+        )
+        disclaimer = signer.manifest.guardrails.disclaimer.strip() if signer else ""
         offer = ""
         wanted = {a.category.id for a in asked}
         if wanted and self._inventory is not None:
@@ -900,6 +923,17 @@ class AnswerGraph:
                     why = check_one(claim, retrieved) or check_content(
                         claim, by_ref, exclusions=exclusions
                     )
+                    # The passages failed the floor, so only documents on file were read. Their
+                    # lines print numbers, identifiers and dates; a sentence that states none of
+                    # those is saying something the line does not.
+                    if (
+                        why is None
+                        and refusal is not None
+                        and not states_a_printed_value(
+                            claim.text, [by_ref[ref] for ref in claim.supports]
+                        )
+                    ):
+                        why = "says more than the documents on file"
                     if why is not None:
                         if why != "empty":
                             dropped += 1
@@ -924,7 +958,13 @@ class AnswerGraph:
             # account of why there are no more of them.
             if kept:
                 yield Finished(
-                    sorted(set(kept)), disclaimer, len(evidence), dropped, person, quarantined
+                    sorted(set(kept)),
+                    disclaimer,
+                    len(evidence),
+                    dropped,
+                    person,
+                    quarantined,
+                    unanswered=bool(said_by_code) and said == 0,
                 )
             else:
                 yield Abstained(str(error), "", len(evidence), dropped, person, disclaimer)
@@ -947,7 +987,16 @@ class AnswerGraph:
             )
             return
         yield Finished(
-            sorted(set(kept)), disclaimer, len(evidence), dropped, person, quarantined, truncated
+            sorted(set(kept)),
+            disclaimer,
+            len(evidence),
+            dropped,
+            person,
+            quarantined,
+            truncated,
+            # Code said what is on file and the model added nothing that survived: that line is
+            # not the answer, and the trace says so.
+            unanswered=bool(said_by_code) and said == 0,
         )
 
     def ask(
@@ -1002,6 +1051,9 @@ class AnswerGraph:
                     disclaimer=event.disclaimer,
                     claims=claims,
                     person=event.person or "",
+                    quarantined=event.quarantined,
+                    truncated=event.truncated,
+                    unanswered=event.unanswered,
                 )
 
         # Unreachable: `stream` always ends on a terminal event. Kept because a silent `None`

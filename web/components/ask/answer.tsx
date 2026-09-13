@@ -230,6 +230,7 @@ function Trace({ part }: { part: Part }) {
         dropped: number;
         quarantined?: number;
         truncated?: boolean;
+        unanswered?: boolean;
       };
     }
   ).data;
@@ -246,6 +247,7 @@ function Trace({ part }: { part: Part }) {
           </>
         ) : null}
         {data.truncated ? " · shortened to the pack's limit" : null}
+        {data.unanswered ? " · the pages read do not answer the rest of this question" : null}
         {data.quarantined ? (
           <>
             {" · "}

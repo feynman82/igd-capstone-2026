@@ -243,8 +243,22 @@ answering:
         asked: [long-term care, long term care, severe disability, careshield life, eldershield]
       - id: hospital_expense
         label: hospital and surgical plan
-        printed: [integrated shield, hospital and surgical, hospital & surgical, healthshield, medishield]
-        asked: [warded, hospitalised, hospitalized, hospitalisation, hospitalization, hospital, surgery, operation, inpatient]
+        printed:
+          - integrated shield
+          - hospital and surgical
+          - hospital & surgical
+          - healthshield
+          - medishield
+        asked:
+          - warded
+          - hospitalised
+          - hospitalized
+          - hospitalisation
+          - hospitalization
+          - hospital
+          - surgery
+          - operation
+          - inpatient
       - id: personal_accident
         label: personal accident plan
         printed: [personal accident]

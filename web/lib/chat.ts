@@ -57,6 +57,8 @@ export type ParrotMessage = UIMessage<
       person?: string | null;
       quarantined?: number;
       truncated?: boolean;
+      /** Only a line about the documents on file was said; the pages read did not answer. */
+      unanswered?: boolean;
     };
 
     /** The connection died mid-answer. Sentences already shown stay; they were verified. */

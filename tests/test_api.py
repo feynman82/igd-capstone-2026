@@ -376,6 +376,34 @@ def test_ask_returns_an_abstention_with_its_reason(
     assert body["dropped"] == 2
 
 
+def test_ask_signs_an_abstention_with_the_packs_disclaimer(
+    client: TestClient, graph: type[FakeGraph]
+) -> None:
+    """The JSON endpoint ends the way the stream does: an abstention is signed too."""
+    graph.answer = Answer(
+        "I can't answer that from your documents: the closest document is not close enough.",
+        abstained=True,
+        reason="the closest document is not close enough",
+        disclaimer="Not financial advice.",
+    )
+    body = client.post("/api/ask", json={"question": "eh?"}).json()
+
+    assert body["kind"] == "abstention"
+    assert body["disclaimer"] == "Not financial advice."
+
+
+def test_ask_says_how_an_answer_ended_the_way_the_stream_does(
+    client: TestClient, graph: type[FakeGraph]
+) -> None:
+    graph.answer = Answer(
+        "On file: Private Car Insurance Policy.", quarantined=2, truncated=True, unanswered=True
+    )
+    body = client.post("/api/ask", json={"question": "does it cover floods?"}).json()
+
+    assert body["kind"] == "answer"
+    assert (body["quarantined"], body["truncated"], body["unanswered"]) == (2, True, True)
+
+
 def test_ask_refuses_a_request_to_act(client: TestClient, graph: type[FakeGraph]) -> None:
     graph.answer = Answer("I can explain what your documents say, but I do not act", refused=True)
     body = client.post("/api/ask", json={"question": "renew the policy for me"}).json()
@@ -1319,3 +1347,24 @@ def test_an_abstention_carries_the_packs_disclaimer_on_the_wire(
     conn = FakeConn(rows_for())
     body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "eh?"}).text)
     assert body[0]["disclaimer"] == "Not financial advice."
+
+
+def test_a_finished_answer_says_on_the_wire_when_the_pages_did_not_answer_the_rest(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """A line about a document on file is not the answer to "does it cover floods?"."""
+    from core.graph.answer import Citation, Finished, Reading, Sentence
+
+    on_file = Citation(DOC, "b1-0001.pdf", 1, "b1-0001.pdf, page 1", "inventory")
+    streaming.events = [
+        Reading(passages_read=1),
+        Sentence("On file: Meridian Assurance, Private Car Insurance Policy.", (), [on_file]),
+        Finished([], "Not financial advice.", 1, 1, unanswered=True),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(
+        client_for(settings, conn).post("/api/ask/stream", json={"question": "floods?"}).text
+    )
+
+    assert body[-1]["kind"] == "finished"
+    assert body[-1]["unanswered"] is True

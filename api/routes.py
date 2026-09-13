@@ -777,6 +777,7 @@ def _as_event(event: graph.Event) -> Any:
         person=event.person,
         quarantined=event.quarantined,
         truncated=event.truncated,
+        unanswered=event.unanswered,
     )
 
 
@@ -792,6 +793,7 @@ def _as_response(answer: Answer) -> AskResponse:
         return AskResponse(
             kind="abstention",
             text=answer.text,
+            disclaimer=answer.disclaimer,
             reason=answer.reason,
             missing=answer.missing,
             person=answer.person,
@@ -821,6 +823,9 @@ def _as_response(answer: Answer) -> AskResponse:
         person=answer.person,
         passages_read=answer.passages_read,
         dropped=answer.dropped,
+        quarantined=answer.quarantined,
+        truncated=answer.truncated,
+        unanswered=answer.unanswered,
     )
 
 

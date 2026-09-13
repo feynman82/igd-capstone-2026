@@ -96,7 +96,8 @@ def check_one(claim: Claim, retrieved: set[str]) -> str | None:
     Depends on nothing but the sentence and what was retrieved, which is what lets a sentence be
     released the moment the model finishes writing it.
     """
-    if not claim.text.strip():
+    # "See passages 1, 2." is "." once its passage numbers are removed: a citation, not a claim.
+    if not re.search(r"[^\W_]", claim.text):
         return "empty"
     if not claim.supports:
         return "no supporting passage"
@@ -187,6 +188,18 @@ def unprinted_numbers(text: str, cited: Sequence[Passage]) -> list[str]:
         if _normal(found.group()) not in printed:
             missing.append(found.group())
     return missing
+
+
+def states_a_printed_value(text: str, cited: Sequence[Passage]) -> bool:
+    """Does this sentence state a number or identifier, and is every one printed by what it cites?
+
+    Asked of a sentence read from documents on file alone. That line names a document, its
+    numbers and its dates; a sentence cited to it that states none of them — "your car policy
+    covers flood damage" — says more than the line does, however well it is cited.
+    """
+    if not (_NUMBER.search(text) or _IDENTIFIER.search(text)):
+        return False
+    return not unprinted_numbers(text, cited)
 
 
 def _says(text: str, phrases: Sequence[str]) -> bool:
