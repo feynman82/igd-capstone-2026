@@ -573,6 +573,9 @@ class AnswerGraph:
                 f"The question is about {person}, the asker's {scoped.about}. "
                 f"'My {scoped.about}' means {person}.\n\n"
             )
+        elif scoped is not None and scoped.someone_else:
+            # Named rather than related: "when does Rachel's policy renew?". Same reason as above.
+            whose = f"The question is about {person}, not the person asking.\n\n"
         elif person:
             whose = f"The person asking is {person}. 'My', 'I' and 'mine' mean them.\n\n"
         else:
