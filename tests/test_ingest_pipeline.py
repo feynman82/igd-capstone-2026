@@ -16,7 +16,7 @@ from typing import Any
 import pytest
 
 from core.ingest.chunk import TARGET_CHARS, chunk_pages
-from core.ingest.classify import classify
+from core.ingest.classify import CLASSIFY_SAMPLE_CHARS, classification_sample, classify
 from core.ingest.extract import extract, find_page
 from core.ingest.parse import ParsedPage, parse
 from core.packs import installed_packs, pack
@@ -130,7 +130,56 @@ def test_a_value_on_no_page_has_no_page() -> None:
     assert find_page("Marcus Fernandes", PAGES) is None
 
 
+# A real policy schedule prints "12 April 2026", and `extract` instructs the model to report
+# dates as YYYY-MM-DD. Page attribution has to bridge those two, or every date field is dropped
+# as "on no page" and every document whose pack requires a date quarantines. The payslip fixture
+# above hides this because it prints its period as "2026-01" already.
+POLICY_PAGE = """MERIDIAN ASSURANCE
+POLICY SCHEDULE
+Policy Number             MV-2026-448120
+Name of Insured           Marcus Lim Jun Wei
+Product                   Private Car Insurance Policy
+Period of Insurance From  12 April 2026
+Period of Insurance To    11 April 2027
+Sum Insured               SGD 62,000.00
+Total Premium Payable     SGD 1,284.00"""
+
+POLICY_PAGES = [ParsedPage(1, POLICY_PAGE)]
+
+
+def test_an_iso_date_is_found_on_a_page_that_prints_it_in_words() -> None:
+    assert find_page("2026-04-12", POLICY_PAGES) == 1, "the page prints 12 April 2026"
+    assert find_page("2027-04-11", POLICY_PAGES) == 1, "the page prints 11 April 2027"
+
+
+def test_a_date_printed_in_other_common_notations_is_also_found() -> None:
+    pages = [ParsedPage(1, "Cover from 01/09/2019 to 31 Aug 2049, renewed 2019-09-01.")]
+    assert find_page("2019-09-01", pages) == 1, "01/09/2019 is the same day"
+    assert find_page("2049-08-31", pages) == 1, "31 Aug 2049 is the same day"
+
+
+def test_a_date_on_no_page_still_has_no_page() -> None:
+    assert find_page("2030-01-01", POLICY_PAGES) is None, "no rendering of it is printed"
+
+
 # ------------------------------------------------------------------------ classification
+
+
+# A full policy document opens with a letterhead and a contents page, and the schedule that
+# actually says what kind of document it is can be several pages in. Classifying on page 1 alone
+# declines those, and a declined document contributes no chunks either — so the sample the
+# classifier reads has to span more than the first page.
+def test_the_classifier_reads_beyond_a_thin_first_page() -> None:
+    thin = ParsedPage(1, "MERIDIAN ASSURANCE\nRef: b1-0002")
+    schedule = ParsedPage(2, "POLICY SCHEDULE\nPolicy Number MV-2026-448120\nSum Insured SGD 1.00")
+    sample = classification_sample([thin, schedule])
+    assert "POLICY SCHEDULE" in sample, "the page that identifies the document must be included"
+    assert "MERIDIAN ASSURANCE" in sample
+
+
+def test_the_classification_sample_is_bounded() -> None:
+    many = [ParsedPage(n, "x" * 5000) for n in range(1, 20)]
+    assert len(classification_sample(many)) <= CLASSIFY_SAMPLE_CHARS
 
 
 def test_the_classifier_may_only_choose_an_installed_document_type() -> None:
@@ -231,6 +280,62 @@ def test_a_reply_that_does_not_satisfy_the_pack_is_a_failure(iras: Any) -> None:
 
     assert not result.ok
     assert result.reason is not None
+
+
+# The system prompt tells the model to "leave it null" for a field that is not printed. A model
+# under a JSON-schema decode constraint on a string-typed slot obliges literally, with the four
+# characters n-u-l-l. Without this, an absent optional field fails Decimal validation and takes
+# the whole document to quarantine — chunks included.
+@pytest.fixture
+def insurance() -> Any:
+    return pack("insurance_agent")
+
+
+SCHEDULE_REPLY = {
+    "insurer": "Meridian Assurance",
+    "policy_no": "MV-2026-448120",
+    "insured": "Marcus Lim Jun Wei",
+    "product_name": "Private Car Insurance Policy",
+    "cover_from": "2026-04-12",
+    "expiry_date": "2027-04-11",
+    "premium_payable": "1284.00",
+    "sum_insured": "62000.00",
+}
+
+
+def test_a_schedule_printing_dates_in_words_extracts(insurance: Any) -> None:
+    client = FakeOllama([SCHEDULE_REPLY])
+    result = extract(  # type: ignore[arg-type]
+        client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9
+    )
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert by_key["cover_from"].value_date is not None
+    assert by_key["expiry_date"].page == 1
+
+
+@pytest.mark.parametrize("absent", ["null", "NULL", "none", "N/A", "-", "not applicable"])
+def test_a_null_shaped_string_is_an_absent_field_not_a_bad_number(
+    insurance: Any, absent: str
+) -> None:
+    reply = {**SCHEDULE_REPLY, "excess": absent}
+    client = FakeOllama([reply])
+    result = extract(  # type: ignore[arg-type]
+        client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9
+    )
+    assert result.ok, result.reason
+    assert "excess" not in {fact.key for fact in result.facts}
+
+
+def test_a_null_shaped_string_in_a_required_field_is_still_a_failure(insurance: Any) -> None:
+    reply = {**SCHEDULE_REPLY, "premium_payable": "null"}
+    client = FakeOllama([reply])
+    result = extract(  # type: ignore[arg-type]
+        client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9
+    )
+    assert not result.ok, "a required field really is missing"
+    assert "premium_payable" in (result.reason or "")
+    assert "decimal" not in (result.reason or "").casefold(), "say it is missing, not malformed"
 
 
 # --------------------------------------------------------------------------------- packs

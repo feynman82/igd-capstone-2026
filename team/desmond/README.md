@@ -68,8 +68,12 @@ evaluation result.
    letterhead of a real insurer, bank or agency. A realistic fake notice from a real
    institution is a fabricated official record whatever the intent, and it would make
    the corpus unpublishable alongside the report. Invent the issuers — Meridian
-   Assurance, Harborline Logistics — and put a visible `SYNTHETIC DOCUMENT` footer on
-   every page.
+   Assurance, Harborline Logistics.
+
+   **No footer is required.** A visible `SYNTHETIC DOCUMENT` stamp on every page used to be
+   part of this rule and was dropped: the invented issuer is the protection that matters, and
+   the stamp reliably landed on the last page only and overlapped the body text where it did
+   land. Keep it where a template already prints it; do not chase it.
 2. **Say what synthetic data does not prove.** Generated documents are cleaner and more
    consistent than real ones, so a score measured only on them overstates the system.
    That is what the 40-document redacted holdout is for. Report both numbers and the
@@ -252,8 +256,7 @@ would produce something that reads like a script wrote it.
 
 - [ ] Register filled before any document was generated
 - [ ] `python -m corpus.validate` passes with no errors
-- [ ] Every document carries a `SYNTHETIC DOCUMENT — NOT A REAL RECORD` footer and an
-      invented issuer, on **every page**
+- [ ] Every organisation named in it is invented — no footer stamp is required
 - [ ] Every name in it is a canon name, and **only the Lim household appears**
 - [ ] `doc_id` is the filename: `b1-0031` in the register is `b1-0031.pdf` in the batch folder
 - [ ] `field_pages` filled as a second pass, after the merge, for anything not on page 1

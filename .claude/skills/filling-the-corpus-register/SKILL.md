@@ -64,8 +64,9 @@ problem with the field definitions upstream.
 1. **Invented organisations only.** Never render a document bearing the name, logo or
    letterhead of a real insurer, bank or agency. A realistic fake notice from a real
    institution is a fabricated official record whatever the intent, and it would make the
-   corpus unpublishable alongside the report. Invent the issuers. Every page carries a
-   visible `SYNTHETIC DOCUMENT` footer.
+   corpus unpublishable alongside the report. Invent the issuers. **No footer stamp is
+   required** — the `SYNTHETIC DOCUMENT` requirement was dropped, because the invented issuer
+   is the protection that matters.
 2. **Never write code that generates corpus documents.** `AGENTS.md` rule: `corpus/`
    holds the register and its validator only. Documents are authored with an AI tool and
    mail merge, outside this repository's code.
@@ -102,6 +103,6 @@ Write each attempt up as: what was tried, what happened, what it means.
 
 - [ ] Register filled before any document was generated
 - [ ] `python -m corpus.validate` passes
-- [ ] Every document has a `SYNTHETIC DOCUMENT` footer and an invented issuer
+- [ ] Every organisation named in every document is invented
 - [ ] Batch committed under `corpus/batches/` with a one-line note
 - [ ] Evaluation lane told the batch is ready

@@ -83,8 +83,14 @@ fields the row actually fills. A batch that fails validation is not handed over.
 1. **Invented organisations only.** Never produce a document bearing the name, logo or
    letterhead of a real insurer, bank or government agency. A realistic fake notice from a
    real institution is a fabricated official record whatever the intent, and it would make
-   the corpus unpublishable alongside the report. Every page carries a visible
-   `SYNTHETIC DOCUMENT — NOT A REAL RECORD` footer.
+   the corpus unpublishable alongside the report.
+
+   **There is no footer requirement.** Every page used to have to carry a visible
+   `SYNTHETIC DOCUMENT — NOT A REAL RECORD` stamp. That was dropped deliberately: the
+   protection that matters is the invented issuer above — a document naming an insurer that
+   does not exist is not a forgeable record of anything — and the stamp was costing more than
+   it bought, landing on the last page only and overlapping the body text where it did land.
+   Keep it where a template already prints it; nothing fails for its absence.
 2. **State what synthetic data does not prove.** Generated documents are cleaner and more
    consistent than real ones. That is what the 40-document redacted holdout is for. Report
    both numbers and the gap.

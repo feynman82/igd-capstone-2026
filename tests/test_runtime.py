@@ -40,6 +40,29 @@ def test_remote_or_ambiguous_endpoints_fail_without_leaking_values(
     assert "secret" not in str(error.value)
 
 
+# `infra/docker-compose.yml` publishes Redis on ${PARROT_REDIS_PORT:-6379} and Postgres on
+# ${PARROT_DB_PORT:-5432}. Those are the only two variables a person editing .env sees, so the
+# client defaults have to follow them: setting PARROT_REDIS_PORT alone used to move the container
+# and leave the engine dialling 6379, which reads as "the queue broker did not answer" and
+# silently drops ingestion back to inline.
+def test_the_broker_port_follows_the_port_compose_publishes(tmp_path: Path) -> None:
+    settings = Settings.load(tmp_path, {"PARROT_REDIS_PORT": "6380"})
+    assert settings.redis_url == "redis://127.0.0.1:6380/0"
+
+
+def test_the_database_port_follows_the_port_compose_publishes(tmp_path: Path) -> None:
+    settings = Settings.load(tmp_path, {"PARROT_DB_PORT": "5433"})
+    assert "5433" in settings.database_url
+
+
+def test_an_explicit_url_still_wins_over_the_port_variable(tmp_path: Path) -> None:
+    settings = Settings.load(
+        tmp_path,
+        {"PARROT_REDIS_PORT": "6380", "REDIS_URL": "redis://127.0.0.1:6399/2"},
+    )
+    assert settings.redis_url == "redis://127.0.0.1:6399/2"
+
+
 def test_env_file_is_literal_and_process_environment_wins(tmp_path: Path) -> None:
     (tmp_path / ".env").write_text(
         "PARROT_GEN_MODEL='$(do-not-execute)'\nPARROT_EMBED_MODEL=from-file\n",

@@ -126,12 +126,18 @@ class Settings:
             raise ConfigurationError("Configured model names must not be empty.")
         return cls(
             database_url=local_url(
-                values.get("DATABASE_URL", "postgresql://parrot:parrot@127.0.0.1:5432/parrot"),
+                values.get("DATABASE_URL")
+                or "postgresql://parrot:parrot@127.0.0.1:"
+                f"{_port(values.get('PARROT_DB_PORT', '5432'), 'PARROT_DB_PORT', '5432')}/parrot",
                 "DATABASE_URL",
                 ("postgresql",),
             ),
             redis_url=local_url(
-                values.get("REDIS_URL", "redis://127.0.0.1:6379/0"), "REDIS_URL", ("redis",)
+                values.get("REDIS_URL")
+                or "redis://127.0.0.1:"
+                f"{_port(values.get('PARROT_REDIS_PORT', '6379'), 'PARROT_REDIS_PORT', '6379')}/0",
+                "REDIS_URL",
+                ("redis",),
             ),
             generation_url=local_url(gen_url, "OLLAMA_GEN_URL", ("http",)),
             auxiliary_url=local_url(

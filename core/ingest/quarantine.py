@@ -32,7 +32,7 @@ from typing import Any
 
 from core.ingest import sql
 from core.ingest.chunk import chunk_pages
-from core.ingest.classify import classify
+from core.ingest.classify import classification_sample, classify
 from core.ingest.extract import extract
 from core.ingest.parse import ParsedDocument, ParsedPage
 from core.ingest.pipeline import commit_both_lanes
@@ -195,7 +195,7 @@ def retry(
     if not read.ok:
         return _still_quarantined(conn, document_id, read.reason or "the image pass failed")
 
-    classification = classify(client, read.pages[0].text)
+    classification = classify(client, classification_sample(read.pages))
     if not classification.recognised:
         return _still_quarantined(
             conn, document_id, classification.reason or "still not recognised by any pack"

@@ -17,6 +17,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from core.contracts import DocumentTypeSpec
+from core.ingest.parse import ParsedPage
 from core.packs import document_types
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -24,6 +25,16 @@ log = logging.getLogger(__name__)
 
 UNKNOWN = "unknown"
 MIN_CONFIDENCE = 0.45
+
+# How much of the document the classifier reads, and how many pages it may span.
+#
+# Page 1 alone is not enough. A full policy document opens with a letterhead, and on some of them
+# the parser recovers only that — b1-0002 in batch 1 parsed to its letterhead, its signature
+# block and its footer, with the whole schedule table missing, and the classifier declined it
+# correctly on the evidence it was given. Reading a few pages costs one prompt and rescues the
+# document whose identifying page is not the first one.
+CLASSIFY_SAMPLE_CHARS = 6000
+CLASSIFY_SAMPLE_PAGES = 4
 
 SYSTEM = (
     "You identify what kind of household document you are looking at. You only ever choose "
@@ -44,6 +55,19 @@ class Classification:
         return self.pack_id is not None and self.doc_type is not None
 
 
+def classification_sample(pages: list[ParsedPage]) -> str:
+    """The text the classifier reads: the opening pages, labelled, within a fixed budget."""
+    parts: list[str] = []
+    budget = CLASSIFY_SAMPLE_CHARS
+    for page in pages[:CLASSIFY_SAMPLE_PAGES]:
+        if budget <= 0:
+            break
+        body = page.text[:budget]
+        parts.append(f"[page {page.page}]\n{body}")
+        budget -= len(body)
+    return "\n\n".join(parts)[:CLASSIFY_SAMPLE_CHARS]
+
+
 def _schema(candidates: list[str]) -> dict[str, object]:
     return {
         "type": "object",
@@ -61,9 +85,9 @@ def _prompt(candidates: Mapping[str, tuple[str, DocumentTypeSpec]], text: str) -
         lines.append(f"- {qualified}: {spec.description}")
     lines += [
         "",
-        "The first page of the document is between the markers.",
+        "The opening pages of the document are between the markers.",
         "<<<",
-        text[:4000],
+        text[:CLASSIFY_SAMPLE_CHARS],
         ">>>",
         "",
         "Answer with one candidate name exactly as written above, or unknown.",

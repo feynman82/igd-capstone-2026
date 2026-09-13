@@ -2,8 +2,8 @@
 
 Every document in the corpus must agree with this page. It was written before any document
 existed, and nothing may contradict it. **Every organisation named here is invented** —
-`corpus/README.md` rule 1 — and every rendered page carries a visible
-`SYNTHETIC DOCUMENT — NOT A REAL RECORD` footer.
+`corpus/README.md` rule 1. There is no footer requirement: the `SYNTHETIC DOCUMENT` stamp was
+dropped, and the invented issuer is what keeps the corpus publishable.
 
 The household is the **Lim household, Tampines**: a sandwich-generation family supporting a
 young child and two resident grandparents. That is what makes the paperwork interesting —

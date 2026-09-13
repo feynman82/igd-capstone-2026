@@ -17,7 +17,7 @@ from typing import Any
 
 from core.ingest import sql
 from core.ingest.chunk import Chunk, chunk_pages
-from core.ingest.classify import classify
+from core.ingest.classify import classification_sample, classify
 from core.ingest.extract import Extraction, extract
 from core.ingest.obligations import fixed, from_facts
 from core.ingest.parse import ParsedDocument, parse
@@ -68,7 +68,7 @@ def process(
     if not parsed.ok:
         return _quarantine(conn, document_id, parsed, parsed.reason or "the parser failed")
 
-    classification = classify(client, parsed.pages[0].text)
+    classification = classify(client, classification_sample(parsed.pages))
     if not classification.recognised:
         return _quarantine(
             conn, document_id, parsed, classification.reason or "not recognised by any pack"

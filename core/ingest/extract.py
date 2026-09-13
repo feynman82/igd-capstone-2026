@@ -31,8 +31,8 @@ log = logging.getLogger(__name__)
 SYSTEM = (
     "You read one household document and report only what is printed on it. You copy values "
     "exactly as they appear: policy numbers, receipt numbers and amounts are transcribed, never "
-    "reformatted or corrected. If a field is not printed on the document, you leave it null "
-    "rather than inferring it."
+    "reformatted or corrected. If a field is not printed on the document, omit it rather than "
+    "inferring it, and never write the word null as if it were the value."
 )
 
 # A value the model reports must be findable on a page. Numbers are compared with punctuation
@@ -73,19 +73,91 @@ def _normalise(value: str) -> str:
     return _PUNCTUATION.sub("", value.casefold())
 
 
+_MONTHS = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
+
+
+def _date_renderings(value: str) -> list[str]:
+    """Every common way a household document prints this date, given it as YYYY-MM-DD.
+
+    `extract` instructs the model to report dates as YYYY-MM-DD, and almost no document prints
+    them that way — a Singapore policy schedule says "12 April 2026". Looking the ISO string up
+    on the page therefore finds nothing, the field is dropped as "on no page", and a pack that
+    requires the date sends the whole document to quarantine with its chunks. So the page lookup
+    compares against the renderings rather than against the one notation the model was asked for.
+
+    An empty list means the value is not a date, and the caller falls back to a literal match.
+    """
+    try:
+        printed = date.fromisoformat(value.strip()[:10])
+    except ValueError:
+        return []
+    month = _MONTHS[printed.month - 1]
+    day, year = printed.day, printed.year
+    return [
+        value,
+        f"{day:02d} {month} {year}",
+        f"{day} {month} {year}",
+        f"{day:02d} {month[:3]} {year}",
+        f"{day} {month[:3]} {year}",
+        f"{month} {day}, {year}",
+        f"{day:02d}/{printed.month:02d}/{year}",
+        f"{year}/{printed.month:02d}/{day:02d}",
+    ]
+
+
 def find_page(value: str, pages: list[ParsedPage]) -> int | None:
-    """The first page whose text contains this value. None means no page supports it."""
-    needle = _normalise(value)
-    if len(needle) < 2:
+    """The first page whose text contains this value. None means no page supports it.
+
+    A date matches any notation it might be printed in; everything else matches literally, with
+    punctuation ignored so that a page printing 8,900.00 supports a reported 8900.00.
+    """
+    needles = [
+        needle
+        for needle in (_normalise(rendering) for rendering in _date_renderings(value) or [value])
+        if len(needle) >= 2
+    ]
+    if not needles:
         return None
     for page in pages:
-        if needle in _normalise(page.text):
+        haystack = _normalise(page.text)
+        if any(needle in haystack for needle in needles):
             return page.page
     return None
 
 
 NUMERIC_TYPES = frozenset({"money", "integer", "percent"})
 _CURRENCY = re.compile(r"(?i)\b(sgd|usd|myr|rm)\b|[$,\s]")
+
+
+# What a model writes when it means "this field is not printed on the document".
+_ABSENT = frozenset(
+    {
+        "",
+        "-",
+        "--",
+        "n/a",
+        "na",
+        "nil",
+        "none",
+        "not applicable",
+        "not printed",
+        "not stated",
+        "null",
+    }
+)
 
 
 def _prepare(index: dict[str, FieldSpec], reported: dict[str, Any]) -> dict[str, Any]:
@@ -95,8 +167,19 @@ def _prepare(index: dict[str, FieldSpec], reported: dict[str, Any]) -> dict[str,
     string. The pack declares the field as money, so the presentation is removed and the value
     kept. Only fields the pack itself declares numeric are touched, and the raw reply is kept
     for page attribution: a page must contain what was printed, not what was normalised.
+
+    A field the model says is absent is *removed* rather than passed through. Under a JSON-schema
+    decode constraint a model asked to leave a field null will write the four characters `null`
+    into a string slot, and `Decimal("null")` is a validation error that quarantines the whole
+    document — chunks included — over a field that was legitimately not printed. An absent key
+    says "not printed" in the one way the generated model understands: optional fields stay
+    optional, and a required one fails as missing rather than as malformed.
     """
-    prepared = dict(reported)
+    prepared = {
+        name: value
+        for name, value in reported.items()
+        if not (isinstance(value, str) and value.strip().casefold() in _ABSENT)
+    }
     for name, spec in index.items():
         value = prepared.get(name)
         if spec.type in NUMERIC_TYPES and isinstance(value, str):
@@ -136,11 +219,29 @@ def extract(
     model_cls = installed.models[doc_type]
     schema = model_cls.model_json_schema()
 
+    # The rules below are not generic prompt padding: each one names a mistake the 4B generator
+    # actually made on batch 1's full policy documents. On b1-0033 it reported the insurer as the
+    # insured, took "Ref: b1-0033" from the page footer as the policy number, and invented
+    # cover_from 0120-01-20 and expiry_date 0120-12-31 — dates in the year 120 that appear
+    # nowhere. Page attribution caught the invented dates, but a document only has to lose one
+    # required field to quarantine with its chunks, so it is cheaper to say what not to do.
     prompt = "\n".join(
         [
             f"This document is a {doc_type.replace('_', ' ')}: {spec.description}.",
             "Report the fields defined by the schema, copying each value exactly as printed.",
             "Write amounts as plain numbers: 8900.00, not SGD 8,900.00. Write dates as YYYY-MM-DD.",
+            "",
+            "The document may run to many pages. The schedule table near the front is where these",
+            "fields are printed; the wording, benefit tables and clauses after it are not.",
+            "",
+            "Rules, each of which has been got wrong before:",
+            "- The company on the letterhead is the insurer. The person the policy covers is the",
+            "  insured. They are never the same value.",
+            "- A reference like 'Ref: b1-0007' is a filing reference, not a policy number.",
+            "- Every date you report must be printed on the document. Convert 12 April 2026 to",
+            "  2026-04-12; never construct a date, and never report a year before 1900.",
+            "- Read an amount digit by digit. 2,040.00 is 2040.00, not 2000.00.",
+            "- If a field is not printed anywhere, omit it. Do not write null as the value.",
             "",
             "<<<",
             "\n\n".join(f"[page {p.page}]\n{p.text}" for p in pages)[:24000],

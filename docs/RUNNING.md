@@ -425,8 +425,16 @@ Database and broker integration were verified on 2026-09-11: the compose stack s
 `db/migrations/0001_init.sql` applies, and all seven base tables are present. A file
 dropped into `inbox/` produced a `documents` row, and a copy of it was recognised as
 already filed. Redis needed a host-port change on this machine because another project's
-Redis already owned 6379: set `PARROT_REDIS_PORT=6380` and `REDIS_URL=redis://127.0.0.1:6380/0`
-in `.env`. The earlier failure below is kept for the record.
+Redis already owned 6379: set **`PARROT_REDIS_PORT=6380`** in `.env` and nothing else.
+
+`PARROT_REDIS_PORT` is the one variable for the broker port and `PARROT_DB_PORT` the one for
+the database: `infra/docker-compose.yml` publishes the container on it and
+`core/runtime/settings.py` derives the client URL from it, so the two cannot drift. Setting
+only `PARROT_REDIS_PORT` used to move the container while leaving the engine dialling 6379,
+which surfaces as "the queue broker did not answer" and silently drops ingestion to inline —
+several seconds per document instead of a worker. `REDIS_URL` and `DATABASE_URL` still
+override outright if you need a different host or database. The earlier failure below is kept
+for the record.
 
 Previously, Docker Desktop
 failed to start because its transient `sailor-ingest.sock` file could not be accessed.
