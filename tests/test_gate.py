@@ -14,6 +14,7 @@ from core.contracts import Exclusions
 from core.graph.advice import Calculation, Figure, Input, passages_for
 from core.graph.gate import Claim, check_advice, check_content, check_one, unprinted_numbers
 from core.graph.ports import Passage
+from modules.advice import GAP_WORDS, HELD_WORDS, TARGET_WORDS, money
 
 DOC = uuid4()
 SCHEDULE = Passage(
@@ -198,6 +199,69 @@ MEETS_FIGURES = _meets_calculation().figures
 BY_REF_MEETS = {p.ref: p for p in passages_for(_meets_calculation())}
 
 
+def _gap_shared_value_calculation() -> Calculation:
+    """`_gap`'s real figure construction order — target, held, gap — with `held` at zero, so
+    `target` and `gap` print the identical SGD 500,000.00. Built from `modules.advice`'s own
+    word lists and `money` formatting rather than made-up ones, since this fixture exists to
+    reproduce the review's example (Fix 1) exactly: the real calculator, not a stand-in for it."""
+    target = Decimal("500000.00")
+    held = Decimal("0.00")
+    gap = target - held
+    return Calculation(
+        pack_id="sample_pack",
+        shape_id="need",
+        label="Sample need",
+        subject="Alex Tan",
+        person_ids=(1,),
+        inputs=(),
+        figures=(
+            Figure("target", target, money(target), TARGET_WORDS),
+            Figure("held", held, money(held), HELD_WORDS),
+            Figure("gap", gap, money(gap), GAP_WORDS),
+        ),
+        verdict="short",
+        verdict_text=(
+            f"Alex Tan's guideline works out to {money(target)}, and {money(held)} is held, "
+            f"so the gap is {money(gap)}."
+        ),
+    )
+
+
+GAP_SHARED_FIGURES = _gap_shared_value_calculation().figures
+BY_REF_GAP_SHARED = {p.ref: p for p in passages_for(_gap_shared_value_calculation())}
+
+
+def _dual_cited_calculation() -> Calculation:
+    """An input, `fact:12`, that independently prints the same value as the `target` figure. Used
+    for a claim that cites *both* `fact:12` and `calculation:0` on one sentence, to pin down the
+    controller ruling: check 4 runs whenever `calculation:0` is among the supports, whatever else
+    is cited alongside it — a fact ref cited too does not exempt the claim from the role check."""
+    return Calculation(
+        pack_id="sample_pack",
+        shape_id="need",
+        label="Sample need",
+        subject="Alex Tan",
+        person_ids=(1,),
+        inputs=(
+            Input(
+                ref="fact:12",
+                role="held",
+                label="amount on file",
+                value_text="SGD 451,200.00",
+                citation="statement.pdf, page 3",
+                document_id="doc-3",
+                page=3,
+            ),
+        ),
+        figures=ADVICE_FIGURES,
+        verdict="no_room",
+        verdict_text="Alex Tan has a gap of SGD 251,200.00.",
+    )
+
+
+BY_REF_DUAL_CITED = {p.ref: p for p in passages_for(_dual_cited_calculation())}
+
+
 def test_check_advice_drops_a_verdict_word() -> None:
     claim = Claim("You should buy more cover.", ("calculation:0",))
     assert (
@@ -260,4 +324,49 @@ def test_check_advice_drops_a_negative_figures_value_stated_without_its_words() 
     assert (
         check_advice(claim, BY_REF_MEETS, MEETS_FIGURES)
         == "states SGD 48,800.00 above the guideline without saying it is the gap"
+    )
+
+
+# --------------------------------------------- check_advice: figures that share a value (Fix 1)
+
+
+def test_check_advice_keeps_the_first_figure_when_two_figures_share_a_value() -> None:
+    """`target` and `gap` both print SGD 500,000.00 (`_gap` with `held` at zero). Naming `target`
+    — the figure `figures` lists first — was already kept before the fix, since the old code
+    also returned `None` the moment it found a figure whose words the sentence uses. Kept here
+    as the control case for the next test, which the old code got wrong."""
+    claim = Claim("The target is SGD 500,000.00.", ("calculation:0",))
+    assert check_advice(claim, BY_REF_GAP_SHARED, GAP_SHARED_FIGURES) is None
+
+
+def test_check_advice_keeps_the_second_figure_when_two_figures_share_a_value() -> None:
+    """The defect this fixes: naming `gap`, the *second* figure in `figures` order to print
+    SGD 500,000.00. The old code checked only the first figure whose value matched the token
+    (`target`), saw the sentence uses none of `target`'s words, and dropped a sentence that
+    correctly names `gap` — "without saying it is the gap" was on the module's own record. The
+    fix checks every figure the token matches, so a sentence naming any one of them is kept."""
+    claim = Claim("The gap is SGD 500,000.00.", ("calculation:0",))
+    assert check_advice(claim, BY_REF_GAP_SHARED, GAP_SHARED_FIGURES) is None
+
+
+def test_check_advice_drops_a_shared_value_stated_with_neither_figures_words() -> None:
+    """Same shared SGD 500,000.00, naming neither `target` nor `gap`: this is still a role
+    violation, and the message names the first matching figure (`target`, `figures`' order)."""
+    claim = Claim("The number that matters is SGD 500,000.00.", ("calculation:0",))
+    assert (
+        check_advice(claim, BY_REF_GAP_SHARED, GAP_SHARED_FIGURES)
+        == "states SGD 500,000.00 without saying it is the target"
+    )
+
+
+def test_check_advice_role_checks_a_number_cited_to_both_an_input_and_the_calculation() -> None:
+    """SGD 451,200.00 is printed both by `fact:12` (an input on file) and by the `target` figure.
+    Cited to *both* `fact:12` and `calculation:0` on one claim, the controller ruling is that
+    check 4 still runs, because `calculation:0` is among the supports regardless of what else is
+    cited alongside it — a fact ref cited too does not exempt the claim from the role check. The
+    sentence uses neither of `target`'s words, so it is dropped for the role violation."""
+    claim = Claim("The amount held is SGD 451,200.00.", ("fact:12", "calculation:0"))
+    assert (
+        check_advice(claim, BY_REF_DUAL_CITED, ADVICE_FIGURES)
+        == "states SGD 451,200.00 without saying it is the target"
     )
