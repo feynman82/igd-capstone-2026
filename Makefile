@@ -1,4 +1,4 @@
-.PHONY: check dev packs tasks graph graph-setup corpus-check corpus-load eval eval-quick fmt
+.PHONY: check dev packs tasks graph graph-setup corpus-check corpus-load eval eval-quick fmt grounding
 
 check:
 	uv run python -m packs.build --check
@@ -46,3 +46,7 @@ eval:
 
 eval-quick:
 	uv run python -m eval.run --corpus a --subset 25 --out /tmp/parrot-eval
+
+# Index every enabled pack's grounding corpus into pending values for Siew to review.
+grounding:
+	uv run python scripts/index_grounding.py
