@@ -27,9 +27,12 @@ from core.runtime.ollama import Generated, ModelUnavailable
 
 
 class ScriptedClient:
-    """Returns the replies the test wrote, in order, then an empty list of values."""
+    """Returns the replies the test wrote, in order, then an empty list of values.
 
-    def __init__(self, *replies: dict[str, Any] | Exception) -> None:
+    A dict is sent as JSON, a string is sent as the raw reply text, and an exception is raised.
+    """
+
+    def __init__(self, *replies: dict[str, Any] | str | Exception) -> None:
         self._replies = list(replies)
         self.systems: list[str] = []
         self.prompts: list[str] = []
@@ -47,11 +50,13 @@ class ScriptedClient:
         self.systems.append(system)
         self.prompts.append(prompt)
         self.schemas.append(schema)
-        reply: dict[str, Any] | Exception = (
+        reply: dict[str, Any] | str | Exception = (
             self._replies.pop(0) if self._replies else {"values": []}
         )
         if isinstance(reply, Exception):
             raise reply
+        if isinstance(reply, str):
+            return Generated(reply, "fake", 1)
         return Generated(json.dumps(reply), "fake", 1)
 
 
@@ -120,6 +125,17 @@ def _reply(*values: dict[str, Any]) -> dict[str, Any]:
 
 def _run(*values: dict[str, Any], text: str = TEXT) -> list[ExtractedValue]:
     return extract_values(ScriptedClient(_reply(*values)), _source(text), KEYS)
+
+
+@pytest.fixture(autouse=True)
+def _log_values(caplog: pytest.LogCaptureFixture) -> None:
+    caplog.set_level(logging.INFO, logger="core.grounding.values")
+
+
+def _dropped(caplog: pytest.LogCaptureFixture, reason: str) -> None:
+    """Assert a value was dropped, and logged with this reason."""
+    messages = [record.getMessage() for record in caplog.records]
+    assert any(m.startswith("dropping") and reason in m for m in messages), messages
 
 
 # ------------------------------------------------------------------------------------ kept
@@ -193,44 +209,78 @@ def test_a_passage_is_matched_across_line_breaks_and_repeated_spaces() -> None:
     assert kept.value_num == Decimal("10")
 
 
+PRICES = """Premiums
+
+The cap is $15,300 a year.
+The cap is S$15,300 a year.
+The cap is SGD 15,300 a year.
+"""
+
+
+@pytest.mark.parametrize("printed", ["$15,300", "S$15,300", "SGD 15,300"])
+def test_a_money_value_with_a_currency_marker_is_kept(printed: str) -> None:
+    passage = f"The cap is {printed} a year."
+    [kept] = _run({"key": "contribution_cap", "value": printed, "passage": passage}, text=PRICES)
+    assert kept.value_num == Decimal("15300")
+    assert kept.value_text == printed
+
+
+def test_a_percentage_followed_by_its_sign_is_kept() -> None:
+    passage = "Co-payment is 15% of the bill."
+    [kept] = _run({"key": "rate_pct", "value": "15%", "passage": passage}, text=passage)
+    assert kept.value_num == Decimal("15")
+
+
+def test_a_percentage_written_as_words_is_kept() -> None:
+    passage = "Co-payment is 15 per cent of the bill."
+    [kept] = _run({"key": "rate_pct", "value": "15", "passage": passage}, text=passage)
+    assert kept.value_num == Decimal("15")
+
+
 # ------------------------------------------------------------------------------------ dropped
 
 
 def test_a_passage_not_in_the_text_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
-    with caplog.at_level(logging.INFO, logger="core.grounding.values"):
-        kept = _run(
-            {"key": "contribution_cap", "value": "15,300", "passage": "The cap is 15,300 a month."}
-        )
+    kept = _run(
+        {"key": "contribution_cap", "value": "15,300", "passage": "The cap is 15,300 a month."}
+    )
     assert kept == []
+    _dropped(caplog, "the passage is not printed in the text")
     assert "contribution_cap" in caplog.text
     assert "The cap is 15,300 a month." in caplog.text
 
 
-def test_a_passage_differing_only_in_case_is_dropped() -> None:
+def test_a_passage_differing_only_in_case_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
     assert (
         _run({"key": "contribution_cap", "value": "15,300", "passage": "the cap is 15,300"}) == []
     )
+    _dropped(caplog, "the passage is not printed in the text")
 
 
-def test_a_number_not_in_its_passage_is_dropped() -> None:
+def test_a_number_not_in_its_passage_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
     kept = _run(
         {"key": "contribution_cap", "value": "35,700", "passage": "The cap is 15,300 a year"}
     )
     assert kept == []
+    _dropped(caplog, "the passage does not print '35,700'")
 
 
-def test_a_number_printed_inside_a_larger_number_is_dropped() -> None:
+def test_a_number_printed_inside_a_larger_number_is_dropped(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     kept = _run(
         {"key": "contribution_cap", "value": "4,000", "passage": "The limit of 40,000 applies"}
     )
     assert kept == []
+    _dropped(caplog, "the passage does not print '4,000'")
 
 
-def test_a_passage_cut_off_inside_a_number_is_dropped() -> None:
+def test_a_passage_cut_off_inside_a_number_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
     assert _run({"key": "contribution_cap", "value": "40", "passage": "The limit of 40"}) == []
+    _dropped(caplog, "the passage is not printed in the text")
 
 
-def test_an_undeclared_qualifier_is_dropped() -> None:
+def test_an_undeclared_qualifier_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
     kept = _run(
         {
             "key": "contribution_cap",
@@ -240,11 +290,43 @@ def test_an_undeclared_qualifier_is_dropped() -> None:
         }
     )
     assert kept == []
+    _dropped(caplog, "qualifiers ['age_band'] are not declared for this key")
 
 
-def test_an_unknown_key_is_dropped() -> None:
+@pytest.mark.parametrize("qualifiers", [[], "resident", None, 3])
+def test_qualifiers_that_are_not_an_object_are_dropped(
+    caplog: pytest.LogCaptureFixture, qualifiers: Any
+) -> None:
+    kept = _run(
+        {
+            "key": "contribution_cap",
+            "value": "15,300",
+            "passage": "The cap is 15,300 a year for residents.",
+            "qualifiers": qualifiers,
+        }
+    )
+    assert kept == []
+    _dropped(caplog, "qualifiers not an object")
+
+
+@pytest.mark.parametrize("empty", ["", "   "])
+def test_an_empty_qualifier_value_is_dropped(caplog: pytest.LogCaptureFixture, empty: str) -> None:
+    kept = _run(
+        {
+            "key": "contribution_cap",
+            "value": "15,300",
+            "passage": "The cap is 15,300 a year for residents.",
+            "qualifiers": {"residency": empty},
+        }
+    )
+    assert kept == []
+    _dropped(caplog, "qualifier 'residency' is empty")
+
+
+def test_an_unknown_key_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
     kept = _run({"key": "made_up_key", "value": "15,300", "passage": "The cap is 15,300 a year"})
     assert kept == []
+    _dropped(caplog, "the key is not one this pack declares")
 
 
 @pytest.mark.parametrize(
@@ -257,26 +339,84 @@ def test_an_unknown_key_is_dropped() -> None:
         ("cover_multiple", "9 times annual income"),
     ],
 )
-def test_a_value_that_does_not_parse_for_its_unit_is_dropped(key: str, value: str) -> None:
+def test_a_value_that_does_not_parse_for_its_unit_is_dropped(
+    caplog: pytest.LogCaptureFixture, key: str, value: str
+) -> None:
     passage = "The cap is 15,300 a year for residents. The limit of 40,000 applies to everyone."
     assert _run({"key": key, "value": value, "passage": passage}) == []
+    _dropped(caplog, f"the value {value!r} is not a")
 
 
-def test_an_empty_passage_is_dropped() -> None:
+def test_an_empty_passage_is_dropped(caplog: pytest.LogCaptureFixture) -> None:
     assert _run({"key": "contribution_cap", "value": "15,300", "passage": "  "}) == []
+    _dropped(caplog, "the passage is not printed in the text")
 
 
-def test_one_bad_value_does_not_drop_its_neighbours() -> None:
+@pytest.mark.parametrize(
+    ("key", "value", "passage"),
+    [
+        # money read off a percentage
+        ("contribution_cap", "15", "Co-payment is 15% of the bill."),
+        # money read off a scaled amount
+        ("contribution_cap", "1.2", "The limit is S$1.2 million."),
+        ("contribution_cap", "1.2", "The limit is S$1.2m."),
+        ("contribution_cap", "3", "The fund holds 3 bn in assets."),
+        # a percentage read off an amount
+        ("rate_pct", "15,300", "the cap is $15,300 a year."),
+        # a count of years read off a percentage
+        ("term_years", "10", "Returns were 10 % last year."),
+    ],
+)
+def test_a_number_printed_as_another_unit_or_scale_is_dropped(
+    caplog: pytest.LogCaptureFixture, key: str, value: str, passage: str
+) -> None:
+    assert _run({"key": key, "value": value, "passage": passage}, text=passage) == []
+    _dropped(caplog, f"the passage does not print {value!r}")
+
+
+def test_a_number_is_kept_when_one_of_its_occurrences_fits_the_unit() -> None:
+    passage = "Co-payment is 15% of the first 15 visits."
+    [kept] = _run({"key": "term_years", "value": "15", "passage": passage}, text=passage)
+    assert kept.value_num == Decimal("15")
+
+
+def test_one_bad_value_does_not_drop_its_neighbours(caplog: pytest.LogCaptureFixture) -> None:
     kept = _run(
         {"key": "contribution_cap", "value": "4,000", "passage": "The limit of 40,000 applies"},
         {"key": "contribution_cap", "value": "40,000", "passage": "The limit of 40,000 applies"},
     )
     assert [value.value_num for value in kept] == [Decimal("40000")]
+    _dropped(caplog, "the passage does not print '4,000'")
 
 
-def test_a_model_that_is_down_returns_nothing() -> None:
+def test_a_model_that_is_down_raises() -> None:
     client = ScriptedClient(ModelUnavailable("the model did not answer"))
-    assert extract_values(client, _source(), KEYS) == []
+    with pytest.raises(ModelUnavailable):
+        extract_values(client, _source(), KEYS)
+
+
+def test_an_outage_in_a_later_section_raises() -> None:
+    kept_first = _reply(
+        {"key": "contribution_cap", "value": "1,000", "passage": "| Row 1 | 1,000 |"}
+    )
+    client = ScriptedClient(kept_first, ModelUnavailable("the model did not answer"))
+    with pytest.raises(ModelUnavailable):
+        extract_values(client, _source(_long_text()), KEYS)
+    assert len(client.prompts) == 2
+
+
+@pytest.mark.parametrize("reply", ["this is not JSON", "[]", '{"items": []}', '{"values": 3}'])
+def test_a_malformed_reply_is_no_values_for_that_section_only(
+    caplog: pytest.LogCaptureFixture, reply: str
+) -> None:
+    second = _reply(
+        {"key": "contribution_cap", "value": "15,300", "passage": "The cap is 15,300 a year."}
+    )
+    client = ScriptedClient(reply, second)
+    kept = extract_values(client, _source(_long_text()), KEYS)
+    assert len(client.prompts) == 2
+    assert [value.value_num for value in kept] == [Decimal("15300")]
+    assert "no values from a section of guide.md" in caplog.text
 
 
 def test_no_keys_means_no_model_call() -> None:
@@ -305,6 +445,7 @@ def test_the_model_is_held_to_the_keys_and_told_what_each_one_is() -> None:
         assert key.description in prompt
         assert key.unit in prompt
     assert "residency" in prompt
+    assert "value: the number only, without currency signs or words" in prompt
     assert "| Residents | 15,300.00 |" in prompt
 
 
@@ -394,7 +535,16 @@ def test_number_tokens_are_whole_numbers() -> None:
     [
         ("money", "15,300", Decimal("15300")),
         ("money", " 15300.50 ", Decimal("15300.50")),
-        ("money", "$15,300", None),
+        ("money", "$15,300", Decimal("15300")),
+        ("money", "S$15,300", Decimal("15300")),
+        ("money", "SGD 15,300", Decimal("15300")),
+        ("money", "S$ 15,300.50", Decimal("15300.50")),
+        ("money", "sgd 15,300", None),
+        ("money", "SGDX 15,300", None),
+        ("money", "NaN", None),
+        ("money", "1e4", None),
+        ("percent", "$15", None),
+        ("count", "S$3", None),
         ("percent", "3.5 %", Decimal("3.5")),
         ("rate", "4", Decimal("4")),
         ("multiple", "9 times", Decimal("9")),

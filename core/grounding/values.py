@@ -7,8 +7,8 @@ report a figure the text does not print, or copy a passage that is not quite the
 
 The model is therefore only a proposer. Code keeps a value when the passage it quotes really is
 in the text, the value parses for the key's unit, and that number is a whole number printed in
-the passage. Everything else is dropped and logged, and what survives still waits for a person
-to approve it before any calculator reads it.
+the passage in a form that fits the unit. Everything else is dropped and logged, and what
+survives still waits for a person to approve it before any calculator reads it.
 """
 
 from __future__ import annotations
@@ -47,7 +47,9 @@ _TIMES = "\N{MULTIPLICATION SIGN}"
 # so that 4,000 is never found inside 40,000.
 _TOKEN = re.compile(rf"(?<![\d.,]){_NUMBER}(?![\d])", re.ASCII)
 _UNIT_PATTERNS: dict[str, re.Pattern[str]] = {
-    "money": re.compile(rf"({_NUMBER})", re.ASCII),
+    # An optional currency marker before the amount: a code of up to three capitals, a dollar
+    # sign, or both, as in $15,300, S$15,300 and SGD 15,300.
+    "money": re.compile(rf"(?:[A-Z]{{1,3}}\s?)?\$?\s*({_NUMBER})", re.ASCII),
     "percent": re.compile(rf"({_NUMBER})\s*%?", re.ASCII),
     "rate": re.compile(rf"({_NUMBER})\s*%?", re.ASCII),
     # A letter x, the multiplication sign, or the word: 9x, 9 times.
@@ -55,6 +57,11 @@ _UNIT_PATTERNS: dict[str, re.Pattern[str]] = {
     "years": re.compile(r"(\d[\d,]*)", re.ASCII),
     "count": re.compile(r"(\d[\d,]*)", re.ASCII),
 }
+# What may follow a number where it is printed, which says what kind of number it is.
+_SCALE_AFTER = re.compile(r"\s*(?:k|m|mn|million|bn|billion)\b", re.ASCII | re.IGNORECASE)
+_PERCENT_SIGN_AFTER = re.compile(r"\s*%")
+_PERCENT_AFTER = re.compile(r"\s*(?:%|per\s?cent\b)", re.ASCII | re.IGNORECASE)
+_PERCENT_UNITS = frozenset({"percent", "rate"})
 _PIPE = re.compile(r"\s*\|\s*")
 _WHITESPACE = re.compile(r"\s+")
 _DIGITS = frozenset("0123456789")
@@ -174,6 +181,30 @@ def number_tokens(passage: str) -> list[Decimal]:
     return [Decimal(token.replace(",", "")) for token in _TOKEN.findall(passage)]
 
 
+def printed_as(unit: str, number: Decimal, passage: str) -> bool:
+    """Whether the passage prints this number, at least once, in a form that fits the unit.
+
+    What follows each occurrence decides it. A number followed by a scale word (k, m, mn,
+    million, bn, billion) is a different amount for every unit. A percent or rate must be followed
+    by `%`, "per cent" or "percent"; money, a count, years or a multiple must not be followed by
+    `%`. Years and page numbers can still match a count or money token, and approval is the check
+    for those.
+    """
+    for match in _TOKEN.finditer(passage):
+        if Decimal(match.group().replace(",", "")) != number:
+            continue
+        after = passage[match.end() :]
+        if _SCALE_AFTER.match(after):
+            continue
+        if unit in _PERCENT_UNITS:
+            if not _PERCENT_AFTER.match(after):
+                continue
+        elif _PERCENT_SIGN_AFTER.match(after):
+            continue
+        return True
+    return False
+
+
 def parse_value(unit: str, value: str) -> Decimal | None:
     """The number a reported value states for its unit, or `None` when it states something else.
 
@@ -196,8 +227,11 @@ def extract_values(
 ) -> list[ExtractedValue]:
     """Every value the source prints for these keys, kept only when its passage prints it.
 
-    One model call per section. A model that is down returns nothing rather than the sections it
-    managed: a partial extraction would read as a source that prints fewer values than it does.
+    One model call per section. A model that is down raises `ModelUnavailable`, whichever section
+    it failed on, and never returns what the earlier sections gave: an empty or partial list would
+    read as a source that prints fewer values than it does, and the index would act on that.
+    A model that answers but whose reply is not a JSON object with a `values` list has read that
+    section badly, which is logged and counts as no values for that section only.
     """
     if not keys:
         return []
@@ -205,11 +239,13 @@ def extract_values(
     schema = _schema(keys)
     kept: list[ExtractedValue] = []
     for section in split_sections(source.text):
+        # An outage raises from here and is not caught.
+        generated = client.constrained(SYSTEM, _prompt(source, keys, section), schema)
         try:
-            reported = client.constrained(SYSTEM, _prompt(source, keys, section), schema).json()
+            reported = generated.json()
         except ModelUnavailable as error:
-            log.info("no values from %s: %s", source.document.file, error)
-            return []
+            log.info("no values from a section of %s: %s", source.document.file, error)
+            continue
         values = reported.get("values")
         if not isinstance(values, list):
             log.info("no values from a section of %s: the reply had no list", source.document.file)
@@ -258,10 +294,11 @@ def _prompt(source: SourceText, keys: Sequence[ValueKey], section: str) -> str:
             "Report each of these values the text prints:",
             *described,
             "",
-            "For each value, copy the number as printed, and copy into passage the one sentence or",
-            "table row that prints it. Give a qualifier only when the key lists it and the text",
-            "states it. Units: money is an amount, percent and rate are a number with an optional",
-            "%, multiple is a number such as 4 times, years and count are whole numbers.",
+            "For each value, copy into passage the one sentence or table row that prints it.",
+            "value: the number only, without currency signs or words.",
+            "Give a qualifier only when the key lists it and the text states it. Units: money is",
+            "an amount, percent and rate are a number with an optional %, multiple is a number",
+            "such as 4 times, years and count are whole numbers.",
             "",
             "<<<",
             section,
@@ -276,7 +313,7 @@ def _check(index: dict[str, ValueKey], item: Any, section: str) -> ExtractedValu
         log.info("dropping a reported value: it was not an object")
         return None
     name, raw, passage = item.get("key"), item.get("value"), item.get("passage")
-    qualifiers = item.get("qualifiers") or {}
+    qualifiers = item.get("qualifiers", {})
     passage_text = passage if isinstance(passage, str) else ""
 
     def drop(reason: str) -> None:
@@ -289,14 +326,19 @@ def _check(index: dict[str, ValueKey], item: Any, section: str) -> ExtractedValu
     if not isinstance(raw, str):
         drop("the value is not text")
         return None
-    if not isinstance(qualifiers, dict) or not all(
-        isinstance(k, str) and isinstance(v, str) for k, v in qualifiers.items()
-    ):
+    if not isinstance(qualifiers, dict):
+        drop("qualifiers not an object")
+        return None
+    if not all(isinstance(k, str) and isinstance(v, str) for k, v in qualifiers.items()):
         drop("the qualifiers are not names and text")
         return None
     undeclared = set(qualifiers) - set(key.qualifiers)
     if undeclared:
         drop(f"qualifiers {sorted(undeclared)} are not declared for this key")
+        return None
+    empty = sorted(k for k, v in qualifiers.items() if not v.strip())
+    if empty:
+        drop(f"qualifier {empty[0]!r} is empty")
         return None
     if not printed_in(passage_text, section):
         drop("the passage is not printed in the text")
@@ -305,8 +347,8 @@ def _check(index: dict[str, ValueKey], item: Any, section: str) -> ExtractedValu
     if number is None:
         drop(f"the value {raw!r} is not a {key.unit}")
         return None
-    if number not in number_tokens(passage_text):
-        drop(f"the passage does not print {raw!r}")
+    if not printed_as(key.unit, number, passage_text):
+        drop(f"the passage does not print {raw!r} as a {key.unit}")
         return None
     return ExtractedValue(
         key=key.key,

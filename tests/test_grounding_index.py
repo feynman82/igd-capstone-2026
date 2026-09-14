@@ -24,7 +24,8 @@ from core.grounding.corpus import SourceText
 from core.grounding.review import PendingValue
 from core.grounding.values import ExtractedValue
 from core.packs import InstalledPack
-from scripts import review_grounding_values
+from core.runtime.ollama import ModelUnavailable
+from scripts import index_grounding, review_grounding_values
 
 IRAS_MANIFEST = "packs/iras_tax/pack.yaml"
 TODAY = date(2026, 9, 14)
@@ -121,6 +122,7 @@ class FakeConn:
     def __init__(self) -> None:
         self.calls: list[tuple[str, Any]] = []
         self.commits = 0
+        self.rollbacks = 0
         self.scripted: dict[str, tuple[list[tuple[Any, ...]], int]] = {}
 
     def script(
@@ -134,6 +136,9 @@ class FakeConn:
 
     def commit(self) -> None:
         self.commits += 1
+
+    def rollback(self) -> None:
+        self.rollbacks += 1
 
     def params_for(self, needle: str) -> Any:
         for query, params in self.calls:
@@ -226,6 +231,72 @@ def test_a_changed_sha256_deletes_pending_supersedes_approved_then_inserts(
     assert conn.commits == 1
 
 
+def test_a_changed_source_is_extracted_before_anything_is_written(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    source = _source(sha256=b"\x22" * 32)
+    monkeypatch.setattr(index_module, "load_corpus", lambda installed, root: [source])
+    conn = FakeConn()
+    conn.script("FROM grounding_sources", rows=[(9, b"\x11" * 32)])
+    conn.script("INSERT INTO grounding_sources", rows=[(9,)])
+    statements_at_extraction: list[int] = []
+
+    def extract(client: Any, src: SourceText, keys: Any) -> list[ExtractedValue]:
+        statements_at_extraction.append(len(conn.calls))
+        return [_extracted()]
+
+    monkeypatch.setattr(index_module, "extract_values", extract)
+
+    index_module.index_pack(conn, object(), _installed(), today=TODAY)
+
+    assert statements_at_extraction == [1]  # only the SELECT had run
+    kinds = (
+        "SELECT id, sha256",
+        "DELETE FROM grounding_values",
+        "UPDATE grounding_values",
+        "INSERT INTO grounding_sources",
+        "INSERT INTO grounding_values",
+    )
+    order = [next(kind for kind in kinds if kind in query) for query, _ in conn.calls]
+    assert order == list(kinds)
+
+
+@pytest.mark.parametrize("stored", [None, b"\x11" * 32], ids=["new", "changed"])
+def test_an_outage_writes_nothing_and_rolls_back(
+    monkeypatch: pytest.MonkeyPatch, stored: bytes | None
+) -> None:
+    unchanged = _source(sha256=b"\x33" * 32)
+    changed = _source(sha256=b"\x22" * 32)
+    monkeypatch.setattr(index_module, "load_corpus", lambda installed, root: [unchanged, changed])
+
+    def extract(client: Any, src: SourceText, keys: Any) -> list[ExtractedValue]:
+        raise ModelUnavailable("the model did not answer")
+
+    monkeypatch.setattr(index_module, "extract_values", extract)
+    conn = FakeConn()
+    # the first source is stored with the same hash; the second is new or changed
+    selects = iter([[(3, b"\x33" * 32)], [(9, stored)] if stored is not None else []])
+    real_execute = FakeCursor.execute
+
+    def execute(self: FakeCursor, query: str, params: Any = None) -> None:
+        real_execute(self, query, params)
+        if "FROM grounding_sources" in query and "INSERT" not in query:
+            self._rows = next(selects)
+
+    monkeypatch.setattr(FakeCursor, "execute", execute)
+    conn.script("INSERT INTO grounding_sources", rows=[(3,)])
+
+    with pytest.raises(ModelUnavailable):
+        index_module.index_pack(conn, object(), _installed(), today=TODAY)
+
+    assert conn.commits == 0
+    assert conn.rollbacks == 1
+    touched = [q for q, _ in conn.calls if "grounding_values" in q]
+    assert touched == []  # no DELETE, UPDATE or INSERT of values
+    upserted = conn.all_params_for("INSERT INTO grounding_sources")
+    assert [params["sha256"] for params in upserted] == [unchanged.sha256]  # rolled back
+
+
 def test_a_pack_with_no_corpus_returns_all_zeros(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(index_module, "load_corpus", lambda installed, root: [])
     conn = FakeConn()
@@ -302,6 +373,70 @@ def test_pending_reads_every_column_of_a_value_and_its_source() -> None:
         url="https://www.iras.gov.sg/reliefs",
     )
     assert conn.params_for("JOIN grounding_sources")["pack_id"] == "iras_tax"
+
+
+# -------------------------------------------------------------------------------- index CLI
+
+
+class _Connected:
+    def __init__(self, conn: FakeConn) -> None:
+        self._conn = conn
+
+    def __enter__(self) -> FakeConn:
+        return self._conn
+
+    def __exit__(self, *exc: object) -> None:
+        return None
+
+
+def _script_env(monkeypatch: pytest.MonkeyPatch, *, enabled: tuple[InstalledPack, ...]) -> None:
+    """Patch the settings, database and pack lookups `scripts/index_grounding.py` imports."""
+    from core import packs, registry
+    from core.runtime import db, settings
+
+    conn = FakeConn()
+    monkeypatch.setattr(settings.Settings, "load", staticmethod(lambda root: object()))
+    monkeypatch.setattr(db, "connect", lambda loaded: _Connected(conn))
+    monkeypatch.setattr(packs, "pack", lambda pack_id: _installed(pack_id))
+    monkeypatch.setattr(registry, "enabled_packs", lambda c: enabled)
+
+
+def test_index_cli_stops_with_2_when_the_model_is_down(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _script_env(monkeypatch, enabled=(_installed("iras_tax"),))
+
+    def down(*args: Any, **kwargs: Any) -> index_module.IndexReport:
+        raise ModelUnavailable("gemma did not answer")
+
+    monkeypatch.setattr(index_module, "index_pack", down)
+
+    code = index_grounding.main(["--pack", "iras_tax"])
+
+    assert code == 2
+    lines = [line for line in capsys.readouterr().out.splitlines() if line.strip()]
+    assert len(lines) == 1
+    assert "iras_tax" in lines[0] and "gemma did not answer" in lines[0]
+
+
+def test_index_cli_warns_about_a_pack_that_is_not_enabled_and_indexes_it(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    _script_env(monkeypatch, enabled=())
+    indexed: list[str] = []
+
+    def index(conn: Any, client: Any, installed: InstalledPack, **kwargs: Any) -> Any:
+        indexed.append(installed.id)
+        return index_module.IndexReport(sources=0, unchanged=0, pending=0, superseded=0)
+
+    monkeypatch.setattr(index_module, "index_pack", index)
+
+    code = index_grounding.main(["--pack", "iras_tax"])
+
+    assert code == 0
+    assert indexed == ["iras_tax"]
+    out = capsys.readouterr().out
+    assert "iras_tax is not enabled" in out
 
 
 # ------------------------------------------------------------------------------- review CLI

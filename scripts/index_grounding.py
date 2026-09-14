@@ -35,7 +35,7 @@ def main(argv: list[str] | None = None) -> int:
     from core.packs import pack as pack_by_id
     from core.registry import enabled_packs
     from core.runtime.db import DatabaseUnavailable, connect
-    from core.runtime.ollama import Ollama
+    from core.runtime.ollama import ModelUnavailable, Ollama
     from core.runtime.settings import ConfigurationError, Settings
 
     try:
@@ -56,6 +56,8 @@ def main(argv: list[str] | None = None) -> int:
                 except PackUnavailable as error:
                     print(str(error))
                     return 1
+                if args.pack not in {installed.id for installed in enabled_packs(conn)}:
+                    print(f"  warning: {args.pack} is not enabled; indexing it anyway")
             else:
                 targets = [
                     installed
@@ -74,6 +76,10 @@ def main(argv: list[str] | None = None) -> int:
                     failures += 1
                     print(f"  {installed.id}: {error}")
                     continue
+                except ModelUnavailable as error:
+                    # index_pack rolled this pack back; the stored sources are as they were.
+                    print(f"  {installed.id}: nothing indexed, the model is unavailable ({error})")
+                    return 2
                 print(
                     f"  {installed.id}: {report.sources} source(s), {report.unchanged} "
                     f"unchanged, {report.pending} pending value(s), {report.superseded} "

@@ -7,6 +7,10 @@ happens: unchanged, extraction is skipped entirely; changed, whatever a person h
 the old text can no longer be trusted, so it is superseded, and the model reads the new text
 again. Nothing this module writes is `approved` — that column is `core.grounding.review`'s alone
 (ADR 0016).
+
+The model reads a changed source before anything about it is written. If the model is down,
+the pack's transaction is rolled back and the error raised, so the stored hash, the approved
+values and the review fields stay exactly as they were, and the next run tries again.
 """
 
 from __future__ import annotations
@@ -17,7 +21,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from core.grounding.corpus import load_corpus
+from core.grounding.corpus import SourceText, load_corpus
 from core.grounding.values import extract_values
 from core.packs import PACKS_DIR, InstalledPack
 from core.runtime.ollama import Ollama
@@ -98,6 +102,11 @@ def index_pack(
     A pack with no corpus (`load_corpus` returns `[]`) returns all zeros: there is nothing to
     upsert and nothing to extract. Every source is upserted whether or not its text changed,
     because `sources.yaml` may have been re-reviewed without the text itself moving.
+
+    A new or changed source is extracted first, and only then are its pending values deleted,
+    its approved values superseded, its row upserted with the new hash and the new values
+    inserted. Any error, `ModelUnavailable` above all, rolls the whole pack back and is re-raised:
+    nothing for this pack is committed.
     """
     sources = 0
     unchanged = 0
@@ -105,67 +114,80 @@ def index_pack(
     superseded = 0
     keys = installed.manifest.grounding.values
 
-    with conn.cursor() as cur:
-        for source in load_corpus(installed, root=root):
-            sources += 1
-            corpus_id = source.corpus.corpus_id
-            file = source.document.file
-
-            cur.execute(
-                SELECT_SOURCE,
-                {"pack_id": source.pack_id, "corpus_id": corpus_id, "file": file},
-            )
-            existing = cur.fetchone()
-            previous_sha256 = existing[1] if existing is not None else None
-
-            cur.execute(
-                UPSERT_SOURCE,
-                {
-                    "pack_id": source.pack_id,
-                    "corpus_id": corpus_id,
-                    "file": file,
-                    "title": source.document.title,
-                    "publisher": source.document.publisher,
-                    "publisher_kind": source.document.publisher_kind,
-                    "url": source.document.url,
-                    "published_on": source.document.published,
-                    "retrieved_on": source.document.retrieved,
-                    "applies_to": source.document.applies_to,
-                    "review_by": source.document.review_by,
-                    "reviewed_by": source.reviewed_by,
-                    "reviewed_on": source.reviewed_on,
-                    "sha256": source.sha256,
-                },
-            )
-            row = cur.fetchone()
-            assert row is not None  # RETURNING id always gives back exactly one row
-            source_id = row[0]
-
-            if previous_sha256 is not None and previous_sha256 == source.sha256:
-                unchanged += 1
-                continue
-
-            if previous_sha256 is not None:
-                cur.execute(DELETE_PENDING, {"s": source_id})
-                cur.execute(SUPERSEDE_APPROVED, {"s": source_id, "today": today})
-                superseded += cur.rowcount
-
-            for value in extract_values(client, source, keys):
+    try:
+        with conn.cursor() as cur:
+            for source in load_corpus(installed, root=root):
+                sources += 1
                 cur.execute(
-                    INSERT_VALUE,
+                    SELECT_SOURCE,
                     {
-                        "source_id": source_id,
                         "pack_id": source.pack_id,
-                        "key": value.key,
-                        "unit": value.unit,
-                        "value_num": value.value_num,
-                        "value_text": value.value_text,
-                        "qualifiers": json.dumps(value.qualifiers),
-                        "passage": value.passage,
-                        "confidence": value.confidence,
+                        "corpus_id": source.corpus.corpus_id,
+                        "file": source.document.file,
                     },
                 )
-                pending += 1
+                existing = cur.fetchone()
+
+                if existing is not None and existing[1] == source.sha256:
+                    _upsert_source(cur, source)
+                    unchanged += 1
+                    continue
+
+                # The model reads the new text before anything is written. An outage raises
+                # here, while the stored hash and approved values are still untouched.
+                values = extract_values(client, source, keys)
+
+                if existing is not None:
+                    cur.execute(DELETE_PENDING, {"s": existing[0]})
+                    cur.execute(SUPERSEDE_APPROVED, {"s": existing[0], "today": today})
+                    superseded += cur.rowcount
+
+                source_id = _upsert_source(cur, source)
+                for value in values:
+                    cur.execute(
+                        INSERT_VALUE,
+                        {
+                            "source_id": source_id,
+                            "pack_id": source.pack_id,
+                            "key": value.key,
+                            "unit": value.unit,
+                            "value_num": value.value_num,
+                            "value_text": value.value_text,
+                            "qualifiers": json.dumps(value.qualifiers),
+                            "passage": value.passage,
+                            "confidence": value.confidence,
+                        },
+                    )
+                    pending += 1
+    except Exception:
+        conn.rollback()
+        raise
 
     conn.commit()
     return IndexReport(sources=sources, unchanged=unchanged, pending=pending, superseded=superseded)
+
+
+def _upsert_source(cur: Any, source: SourceText) -> Any:
+    """Insert or refresh the source's row, and return its id."""
+    cur.execute(
+        UPSERT_SOURCE,
+        {
+            "pack_id": source.pack_id,
+            "corpus_id": source.corpus.corpus_id,
+            "file": source.document.file,
+            "title": source.document.title,
+            "publisher": source.document.publisher,
+            "publisher_kind": source.document.publisher_kind,
+            "url": source.document.url,
+            "published_on": source.document.published,
+            "retrieved_on": source.document.retrieved,
+            "applies_to": source.document.applies_to,
+            "review_by": source.document.review_by,
+            "reviewed_by": source.reviewed_by,
+            "reviewed_on": source.reviewed_on,
+            "sha256": source.sha256,
+        },
+    )
+    row = cur.fetchone()
+    assert row is not None  # RETURNING id always gives back exactly one row
+    return row[0]
