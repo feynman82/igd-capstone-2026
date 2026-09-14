@@ -470,6 +470,7 @@ the value appears. Every example realistically Singaporean.
 
 ---
 
+**The nine packs we specify and do not build:** [`packs/CATALOGUE.md`](CATALOGUE.md).
 **Full technical detail, if you want it:** `docs/PACK_AUTHORING.md`.
 **Who owns what:** `docs/TEAM.md`.
 **Questions:** ask Christian. A question costs five minutes; a wrong field name costs
