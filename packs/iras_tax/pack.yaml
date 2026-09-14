@@ -143,8 +143,10 @@ document_types:
         description: Date the notice requires payment by, as printed
         example: "2026-06-30"
 
+# The corpus has no documents yet (grounding/iras_reliefs_ya2026/sources.yaml), so nothing is
+# cited from it until one is recorded and reviewed.
 grounding:
-  corpus: grounding/iras_reliefs_ya2026/
+  corpus: iras_reliefs_ya2026
   top_k: 8
 
 registers:

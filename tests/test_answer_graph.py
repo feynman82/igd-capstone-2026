@@ -284,6 +284,29 @@ def test_a_question_about_a_parent_names_them_as_who_it_is_about_and_carries_tod
     assert "The person asking is Lim Ah Kow" not in answer_prompt
 
 
+def test_a_question_naming_another_member_does_not_call_them_the_asker() -> None:
+    """ "When does Rachel's policy renew?" is scoped to Rachel by name, with no relation word."""
+    from core.graph.scope import Scoped
+
+    class Rachel:
+        def apply(self, question: str, passages: list[Passage]) -> Scoped:
+            return Scoped(passages, "Rachel Ng Hui Shan", someone_else=True)
+
+    client = ScriptedOllama({"intent": "explain"}, ANSWERED)
+    graph = AnswerGraph(
+        client,
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        household=Rachel(),  # type: ignore[arg-type]
+    )
+
+    list(graph.stream("when does Rachel's policy renew?"))
+
+    answer_prompt = client.prompts[-1]
+    assert "The question is about Rachel Ng Hui Shan, not the person asking." in answer_prompt
+    assert "The person asking is Rachel" not in answer_prompt
+
+
 # ------------------------------------------------------------------------------- the gate
 
 

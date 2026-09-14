@@ -14,6 +14,13 @@ premium". A question that names somebody else, or that uses a relationship word,
 unscoped — an over-eager filter that silently drops the only document that would have answered
 is worse than no filter, because the failure looks like an empty vault rather than like a bug.
 
+**It scopes a question that names exactly one person**, whether or not it says "my". "What is
+Marcus's premium?" from Marcus is his; "when does Rachel's policy renew?" is Rachel's. A name is a
+whole display name or confirmed alias, or a possessive word — "Rachel's" — that belongs to one
+person only, so "Lim's", shared by a son and his father, names nobody. A question naming two
+people, or somebody else alongside "my", is about more than one person and is left unscoped. See
+ADR 0015.
+
 **It partitions retrieved passages into mine, theirs and the household's.** A passage is the
 household's when the documents behind it carry no subject at all — the home contents policy, the
 utility bill. Those always survive the filter. Only passages that resolve to a *different*
@@ -32,10 +39,14 @@ from __future__ import annotations
 
 import logging
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from core.graph.ports import Passage
+
+if TYPE_CHECKING:
+    from core.household import Person
 
 log = logging.getLogger(__name__)
 
@@ -50,8 +61,10 @@ _FIRST_PERSON = re.compile(r"(?i)\b(?:my|mine|myself|me)\b|\bI\b")
 # and answered from the whole vault, which is what Parrot did before any of this existed.
 _SOMEONE_ELSE = re.compile(
     r"(?i)\b(?:wife|husband|spouse|partner|son|daughter|child|children|kid|kids|"
-    r"father|mother|dad|mum|mom|papa|parent|parents|grandfather|grandmother|"
-    r"grandpa|grandma|brother|sister|sibling|in-law|our|we|us|everyone|household|family)\b"
+    r"father|mother|dad|daddy|mum|mummy|mom|mommy|mama|papa|parent|parents|grandfather|"
+    r"grandmother|grandpa|grandma|grandparent|grandparents|granddad|grandad|granny|grandmum|"
+    r"ah\s+gong|ah\s+kong|ah\s+ma|ah\s+mah|popo|"
+    r"brother|sister|sibling|in-law|our|we|us|everyone|household|family)\b"
 )
 
 
@@ -84,6 +97,32 @@ _RELATION_WORDS: dict[str, str] = {
         ),
         "parent",
     ),
+    # A relation `people.relation` cannot record — the roster stops at parent, and "anything
+    # finer is `other` plus a display name" (0002_household.sql). Nobody holds it, so the question
+    # is an abstention unless somebody is recorded under the word itself: a person whose display
+    # name or confirmed alias is "Grandpa" is who "my grandpa" means. Mapping it to `parent`
+    # would answer from the father's policy, which is what it did on 13 September; mapping it to
+    # `other` would answer from whoever was once the owner.
+    **dict.fromkeys(
+        (
+            "grandfather",
+            "grandmother",
+            "grandpa",
+            "grandma",
+            "grandparent",
+            "grandparents",
+            "granddad",
+            "grandad",
+            "granny",
+            "grandmum",
+            "ah gong",
+            "ah kong",
+            "ah ma",
+            "ah mah",
+            "popo",
+        ),
+        "grandparent",
+    ),
     # People who work for a household rather than belong to it. No relation matches them, so a
     # question about "my maid's hospital bills" says Parrot does not know who that is rather than
     # answering from the owner's own hospital plan — which it did, on 13 September.
@@ -91,7 +130,10 @@ _RELATION_WORDS: dict[str, str] = {
 }
 _RELATION = re.compile(
     r"(?i)\bmy\s+("
-    + "|".join(sorted(_RELATION_WORDS, key=len, reverse=True))
+    + "|".join(
+        re.escape(word).replace(r"\ ", r"\s+")
+        for word in sorted(_RELATION_WORDS, key=len, reverse=True)
+    )
     + r")(?:'s|\u2019s|s'|'|\u2019)"  # a straight or a typographic apostrophe
 )
 
@@ -101,7 +143,7 @@ def relation_asked(question: str) -> tuple[str, str] | None:
     match = _RELATION.search(question)
     if match is None:
         return None
-    word = match.group(1).lower()
+    word = " ".join(match.group(1).lower().split())
     return word, _RELATION_WORDS[word]
 
 
@@ -128,6 +170,11 @@ class Scoped:
     """The relationship word asked about when nobody in the household holds that relation — "son"
     in "my son's life insurance" when no child is recorded. The graph abstains on it rather than
     answering from the owner's documents."""
+
+    someone_else: bool = False
+    """Scoped to a household member the question named — "when does Rachel's policy renew?" —
+    who is not the person asking. There is no relationship word to put in the prompt, and the
+    answer must still not be told that they are the one asking."""
 
     @property
     def scoped(self) -> bool:
@@ -157,6 +204,54 @@ def is_first_person(question: str, other_names: tuple[str, ...] = ()) -> bool:
         return False
     lowered = question.lower()
     return not any(name.strip() and name.strip().lower() in lowered for name in other_names)
+
+
+# A word of a name, for the possessive match. Three letters or more: "Ng" and "Ah" are names, and
+# also far too often something else in a typed question.
+_NAME_WORD = re.compile(r"[^\W\d_]{3,}")
+_POSSESSIVE = r"(?:['\N{RIGHT SINGLE QUOTATION MARK}]s?)(?!\w)"
+
+
+def _names(person: Person) -> set[str]:
+    return {" ".join(n.split()) for n in (person.display_name, *person.aliases) if n.strip()}
+
+
+def named_in(question: str, people: Sequence[Person]) -> list[Person]:
+    """Everybody in `people` the question names.
+
+    A person is named by a whole display name or confirmed alias anywhere in the question, or by
+    one word of those names written possessively — "Rachel's" — when that word is nobody else's.
+    Only people with a confirmed name can be named: a model proposal is a question on Today, not
+    a member yet.
+    """
+    whose_word: dict[str, set[int]] = {}
+    for person in people:
+        for name in _names(person):
+            for word in _NAME_WORD.findall(name.lower()):
+                whose_word.setdefault(word, set()).add(person.id)
+
+    named: list[Person] = []
+    for person in people:
+        if not person.aliases:
+            continue
+        names = _names(person)
+        whole = any(
+            re.search(r"(?i)(?<!\w)" + re.escape(name).replace(r"\ ", r"\s+") + r"(?!\w)", question)
+            for name in names
+        )
+        own_words = {
+            word
+            for name in names
+            for word in _NAME_WORD.findall(name.lower())
+            if whose_word[word] == {person.id}
+        }
+        possessive = any(
+            re.search(r"(?i)(?<!\w)" + re.escape(word) + _POSSESSIVE, question)
+            for word in own_words
+        )
+        if whole or possessive:
+            named.append(person)
+    return named
 
 
 # One statement, parameterised, per rule 1. Which people the documents behind a set of passages
@@ -193,10 +288,11 @@ def scope_to(
     person_ids: frozenset[int],
     name: str,
     about: str | None = None,
+    someone_else: bool = False,
 ) -> Scoped:
     """Keep the passages of these people and of the household; set aside everybody else's."""
     if not passages:
-        return Scoped([], name, about=about)
+        return Scoped([], name, about=about, someone_else=someone_else)
 
     ids = list({p.document_id for p in passages})
     with conn.cursor() as cur:
@@ -221,7 +317,7 @@ def scope_to(
 
     if dropped:
         log.info("scope: kept %d of %d passages for %s", len(kept), len(passages), name)
-    return Scoped(kept, name, tuple(sorted(dropped)), about=about)
+    return Scoped(kept, name, tuple(sorted(dropped)), about=about, someone_else=someone_else)
 
 
 @dataclass(frozen=True, slots=True)
@@ -257,6 +353,16 @@ class HouseholdScope:
                 and person.aliases
             ]
             if not members:
+                # Nobody holds it — always so for a grandparent. The household may still have
+                # recorded somebody under the word itself: "Grandpa", placed as `other`.
+                members = [
+                    person
+                    for person in roster
+                    if not person.is_owner
+                    and person.aliases
+                    and word in {name.lower() for name in _names(person)}
+                ]
+            if not members:
                 return Scoped(passages, None, unknown_relation=word)
             return scope_to(
                 self.conn,
@@ -265,6 +371,25 @@ class HouseholdScope:
                 name=" and ".join(person.display_name for person in members),
                 about=word,
             )
+
+        # A question that names one person is theirs, "my" or not. The owner naming themselves —
+        # "what is Marcus's premium?" — is the owner's; anybody else is scoped only when the
+        # question does not also say "my", which would make it about two people.
+        named = named_in(question, roster)
+        if len(named) == 1 and named[0].id == owner.id:
+            return scope_passages(
+                self.conn, passages, owner_id=owner.id, owner_name=owner.display_name
+            )
+        if len(named) == 1 and not _FIRST_PERSON.search(question):
+            return scope_to(
+                self.conn,
+                passages,
+                person_ids=frozenset({named[0].id}),
+                name=named[0].display_name,
+                someone_else=True,
+            )
+        if any(person.id != owner.id for person in named):
+            return Scoped(passages, None)
 
         others = tuple(
             name
