@@ -17,6 +17,7 @@ import pytest
 
 from core import advice_consent, advice_records
 from core.graph import advice
+from core.graph.gate import Claim, check_content
 
 # --------------------------------------------------------------------------------- fake db
 
@@ -98,7 +99,17 @@ def test_current_returns_the_id_of_the_latest_granted_row_at_the_same_version() 
     _owned(conn)
     conn.script("FROM advice_consents", rows=[(42, "granted", "1.0.0")])
 
-    assert advice_consent.current(conn, "iras_tax", "1.0.0") == 42
+    assert advice_consent.current(conn, "sample_pack", "1.0.0") == 42
+
+
+def test_current_queries_the_latest_row_by_person_and_pack() -> None:
+    conn = FakeConn()
+    _owned(conn, person_id=7)
+    conn.script("FROM advice_consents", rows=[(42, "granted", "1.0.0")])
+
+    advice_consent.current(conn, "sample_pack", "1.0.0")
+
+    assert conn.params_for("FROM advice_consents") == {"p": 7, "k": "sample_pack"}
 
 
 def test_current_is_none_when_the_latest_grant_is_a_different_version() -> None:
@@ -106,7 +117,7 @@ def test_current_is_none_when_the_latest_grant_is_a_different_version() -> None:
     _owned(conn)
     conn.script("FROM advice_consents", rows=[(42, "granted", "0.9.0")])
 
-    assert advice_consent.current(conn, "iras_tax", "1.0.0") is None
+    assert advice_consent.current(conn, "sample_pack", "1.0.0") is None
 
 
 def test_a_withdrawal_after_a_grant_gives_none() -> None:
@@ -115,8 +126,8 @@ def test_a_withdrawal_after_a_grant_gives_none() -> None:
     # The latest row is the withdrawal; an earlier grant at the same version does not count.
     conn.script("FROM advice_consents", rows=[(43, "withdrawn", "1.0.0")])
 
-    assert advice_consent.current(conn, "iras_tax", "1.0.0") is None
-    assert advice_consent.status(conn, "iras_tax", "1.0.0") == "withdrawn"
+    assert advice_consent.current(conn, "sample_pack", "1.0.0") is None
+    assert advice_consent.status(conn, "sample_pack", "1.0.0") == "withdrawn"
 
 
 def test_an_older_version_gives_status_outdated() -> None:
@@ -124,17 +135,23 @@ def test_an_older_version_gives_status_outdated() -> None:
     _owned(conn)
     conn.script("FROM advice_consents", rows=[(42, "granted", "0.9.0")])
 
-    assert advice_consent.status(conn, "iras_tax", "1.0.0") == "outdated"
+    assert advice_consent.status(conn, "sample_pack", "1.0.0") == "outdated"
 
 
 def test_no_owner_gives_none_from_current_and_grant_raises() -> None:
     conn = FakeConn()
     _no_owner(conn)
+    # A granted row at the same version is scripted so this test proves the owner check runs:
+    # without it, `current` would read straight through to `advice_consents` and return 42
+    # instead of `None`. (Confirmed locally by removing the check; see the task report.)
+    conn.script("FROM advice_consents", rows=[(42, "granted", "1.0.0")])
 
-    assert advice_consent.current(conn, "iras_tax", "1.0.0") is None
-    assert advice_consent.status(conn, "iras_tax", "1.0.0") == "none"
+    assert advice_consent.current(conn, "sample_pack", "1.0.0") is None
+    assert advice_consent.status(conn, "sample_pack", "1.0.0") == "none"
     with pytest.raises(advice_consent.NoOwner):
-        advice_consent.grant(conn, "iras_tax", "1.0.0", "I consent to advice on this basis.", "web")
+        advice_consent.grant(
+            conn, "sample_pack", "1.0.0", "I consent to advice on this basis.", "web"
+        )
 
 
 def test_grant_inserts_the_owner_and_the_wording_hash() -> None:
@@ -143,12 +160,12 @@ def test_grant_inserts_the_owner_and_the_wording_hash() -> None:
     conn.script("INSERT INTO advice_consents", rows=[(101,)])
     wording = "I consent to advice on this basis."
 
-    row_id = advice_consent.grant(conn, "iras_tax", "1.0.0", wording, "telegram")
+    row_id = advice_consent.grant(conn, "sample_pack", "1.0.0", wording, "telegram")
 
     assert row_id == 101
     params = conn.params_for("INSERT INTO advice_consents")
     assert params["person_id"] == 9
-    assert params["pack_id"] == "iras_tax"
+    assert params["pack_id"] == "sample_pack"
     assert params["version"] == "1.0.0"
     assert params["action"] == "granted"
     assert params["channel"] == "telegram"
@@ -161,7 +178,7 @@ def test_withdraw_inserts_a_withdrawn_row() -> None:
     _owned(conn)
     conn.script("INSERT INTO advice_consents", rows=[(102,)])
 
-    advice_consent.withdraw(conn, "iras_tax", "1.0.0", "I withdraw my consent.", "cli")
+    advice_consent.withdraw(conn, "sample_pack", "1.0.0", "I withdraw my consent.", "cli")
 
     params = conn.params_for("INSERT INTO advice_consents")
     assert params["action"] == "withdrawn"
@@ -173,7 +190,7 @@ def test_household_consents_implements_the_consent_book_port() -> None:
     conn.script("FROM advice_consents", rows=[(42, "granted", "1.0.0")])
     book: advice.ConsentBook = advice_consent.HouseholdConsents(conn)
 
-    assert book.current("iras_tax", "1.0.0") == 42
+    assert book.current("sample_pack", "1.0.0") == 42
 
 
 # ------------------------------------------------------------------------------------ advice
@@ -181,9 +198,9 @@ def test_household_consents_implements_the_consent_book_port() -> None:
 
 def _calculation() -> advice.Calculation:
     return advice.Calculation(
-        pack_id="iras_tax",
+        pack_id="sample_pack",
         shape_id="gap",
-        label="Protection gap",
+        label="Sample gap",
         subject="Marcus Lim",
         person_ids=(1,),
         inputs=(
@@ -239,6 +256,34 @@ def test_passages_for_prints_every_figure_on_the_calculation_passage() -> None:
     assert "gap: SGD 28,200.00" in calculation_passage.text
 
 
+def test_check_content_keeps_a_sentence_stating_a_facts_value() -> None:
+    by_ref = {p.ref: p for p in advice.passages_for(_calculation())}
+    claim = Claim("Your annual income is SGD 9,400.00.", ("fact:12",))
+
+    assert check_content(claim, by_ref) is None
+
+
+def test_check_content_keeps_a_sentence_stating_a_rules_value() -> None:
+    by_ref = {p.ref: p for p in advice.passages_for(_calculation())}
+    claim = Claim("The protection multiple used is 4 times.", ("rule:7",))
+
+    assert check_content(claim, by_ref) is None
+
+
+def test_check_content_keeps_a_sentence_stating_a_figure() -> None:
+    by_ref = {p.ref: p for p in advice.passages_for(_calculation())}
+    claim = Claim("The gap is SGD 28,200.00.", ("calculation:0",))
+
+    assert check_content(claim, by_ref) is None
+
+
+def test_check_content_still_drops_a_sentence_stating_an_unprinted_number() -> None:
+    by_ref = {p.ref: p for p in advice.passages_for(_calculation())}
+    claim = Claim("Your annual income is SGD 99,999.00.", ("fact:12",))
+
+    assert check_content(claim, by_ref) is not None
+
+
 # ---------------------------------------------------------------------------- advice_records
 
 
@@ -247,7 +292,7 @@ def test_record_insert_includes_the_sha256_of_the_disclaimer() -> None:
     disclaimer = "This is not financial advice. A licensed professional can help you decide."
     entry = advice.AdviceRecord(
         thread_id="thread-1",
-        pack_id="iras_tax",
+        pack_id="sample_pack",
         pack_version="1.0.0",
         shape="gap",
         subject="Marcus Lim",

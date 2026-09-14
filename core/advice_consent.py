@@ -117,13 +117,22 @@ def _record(
 
 
 def grant(conn: Any, pack_id: str, version: str, wording: str, channel: Channel) -> int:
-    """Record the owner saying yes to `wording`, this pack's consent text at `version`."""
+    """Record the owner saying yes to `wording`, this pack's consent text at `version`.
+
+    Commits on its own. Consent is a separate user action with its own transaction — a person
+    granting it is not answering a question — and this is never called from inside an advice
+    answer, which reads `current` and commits its own transaction when it is done.
+    """
     return _record(conn, pack_id, version, wording, channel, "granted")
 
 
 def withdraw(conn: Any, pack_id: str, version: str, wording: str, channel: Channel) -> int:
     """Record the owner taking it back. Append-only: the grant stays in the table, superseded
-    by this row rather than deleted, so the history of who said what and when is never lost."""
+    by this row rather than deleted, so the history of who said what and when is never lost.
+
+    Commits on its own, for the same reason `grant` does: withdrawing consent is its own user
+    action, never something an advice answer does on a person's behalf mid-transaction.
+    """
     return _record(conn, pack_id, version, wording, channel, "withdrawn")
 
 

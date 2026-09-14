@@ -36,7 +36,7 @@ class Input:
     role: str
     label: str  # "annual income", from the fact's field or the value's key, readable
     value_text: str  # as printed: "SGD 9,400.00", "4 times"
-    citation: str  # "payslip.pdf, page 1" or "MoneySense, Basic Financial Planning Guide, ..."
+    citation: str  # "statement.pdf, page 1" or "Publisher, Guide title, 26 September 2023"
     document_id: Any = None
     page: int | None = None
     publisher: str = ""
@@ -158,16 +158,26 @@ def passages_for(calc: Calculation) -> list[Passage]:
 
     This lets a `Calculation` be explained by the same gate an explained answer is: each input
     is a passage the model may cite, and the figures passage is what lets it state the ones the
-    calculator itself produced, cited the same way as anything else it is allowed to say.
+    calculator itself produced, cited the same way as anything else it is allowed to say. A fact
+    or rule passage's `text` prints its own value ("annual income: SGD 9,400.00") so the gate's
+    number check (`core.graph.gate.unprinted_numbers`) finds it there; `context_prefix` carries
+    the `Input`'s citation string alongside it, for the same check to search but not to print.
+
+    These passages are evidence for the model and the gate only — never for a citation chip.
+    `Passage.cite()` on one of them gives the wrong string (`"doc-1, page 1"` for a fact with no
+    document name, `"None, page 0"` for a rule with no page at all); a chip's citation must be
+    built from the `Input` itself (`citation`, `publisher`, `title`, `dated`, `url`), which is
+    the graph task's to do, not this one's. No change to `answer.py` follows from this.
     """
     passages = [
         Passage(
             chunk_id=int(item.ref.partition(":")[2]),
             document_id=item.document_id,
             page=item.page if item.page is not None else 0,
-            text=item.citation,
+            text=f"{item.label}: {item.value_text}",
             score=1.0,
             document_name=item.title,
+            context_prefix=item.citation,
             pack_id=calc.pack_id,
             kind=_kind_of(item.ref),
         )
