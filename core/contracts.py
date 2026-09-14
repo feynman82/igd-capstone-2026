@@ -412,7 +412,39 @@ class PackManifest(Strict):
                 raise ValueError(
                     f"{where}: order_by {shape.order_by!r} is not one of compare_fields"
                 )
+            self._compares_what_its_documents_declare(shape, value_keys)
         return self
+
+    def _compares_what_its_documents_declare(
+        self, shape: AdviceShape, value_keys: set[str]
+    ) -> None:
+        """A compared field no document type of the shape declares can never be printed.
+
+        The calculator compares only fields both sides print, so a misspelt field would not fail:
+        it would silently drop out of every table. A field needs declaring on at least one of the
+        compared fact's document types, because a shape comparing a schedule with a renewal
+        notice legitimately compares the fields only some of them print. A market comparison may
+        also compare a field its sources publish as a value key and no document of this pack
+        prints. Facts read from another pack are left to `core.packs.check_advice_links`.
+        """
+        role = {"compare_own": "items", "compare_market": "held"}.get(shape.calculator)
+        compared = next((f for f in shape.facts if f.role == role), None)
+        if compared is None or compared.pack is not None:
+            return
+        declared = {
+            f.name for doc_type in compared.doc_types for f in self.document_types[doc_type].fields
+        }
+        for field in shape.compare_fields:
+            if field in declared:
+                continue
+            if shape.calculator == "compare_market" and field in value_keys:
+                continue
+            published = " or grounding.values" if shape.calculator == "compare_market" else ""
+            where = ", ".join(f"{self.id}.{doc_type}" for doc_type in compared.doc_types)
+            raise ValueError(
+                f"advice shape {shape.id!r} compares {field!r}, which is not declared on "
+                f"{where}{published}"
+            )
 
 
 ModuleManifest.model_rebuild()

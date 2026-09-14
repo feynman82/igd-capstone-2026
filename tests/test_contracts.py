@@ -222,6 +222,52 @@ def _duplicate_shape(raw: dict[str, Any]) -> None:
     raw["advice"]["shapes"].append(copy.deepcopy(_shape(raw, "ci_gap")))
 
 
+def _compares_an_undeclared_field(raw: dict[str, Any]) -> None:
+    _shape(raw, "hospital_plans")["compare_fields"] = ["premium_payable", "deductible"]
+
+
+def _market(raw: dict[str, Any], compare_fields: list[str]) -> None:
+    """A market comparison of the held hospital plan, on `compare_fields`, ordered by premium."""
+    raw["grounding"]["values"].append(
+        {
+            "key": "annual_premium",
+            "unit": "money",
+            "description": "A published annual premium for a named plan and age band",
+            "qualifiers": ["product", "insurer", "age_band"],
+        }
+    )
+    raw["advice"]["shapes"].append(
+        {
+            "id": "hospital_market",
+            "calculator": "compare_market",
+            "label": "hospital plan against the market",
+            "asked": ["better than an integrated shield"],
+            "facts": [
+                {
+                    "role": "held",
+                    "doc_types": ["policy_schedule"],
+                    "field": "premium_payable",
+                    "category": "hospital_expense",
+                    "missing": "The schedule of the hospital plan you hold.",
+                }
+            ],
+            "rules": [
+                {
+                    "role": "market",
+                    "key": "annual_premium",
+                    "missing": "Reviewed published premiums to compare against.",
+                }
+            ],
+            "compare_fields": compare_fields,
+            "order_by": compare_fields[0],
+        }
+    )
+
+
+def _market_compares_an_undeclared_field(raw: dict[str, Any]) -> None:
+    _market(raw, ["premium_payable", "ward_class"])
+
+
 @pytest.mark.parametrize(
     ("mutate", "names"),
     [
@@ -234,6 +280,8 @@ def _duplicate_shape(raw: dict[str, Any]) -> None:
         (_order_by_not_compared, "hospital_plans.*sum_insured"),
         (_compare_without_an_ordering, "hospital_plans"),
         (_duplicate_shape, "duplicate.*ci_gap"),
+        (_compares_an_undeclared_field, "hospital_plans' compares 'deductible', which"),
+        (_market_compares_an_undeclared_field, "hospital_market' compares 'ward_class', which"),
     ],
     ids=lambda value: value.__name__.lstrip("_") if callable(value) else None,
 )
@@ -243,6 +291,24 @@ def test_an_inconsistent_advice_block_is_rejected_by_name(
     raw = _advised()
     mutate(raw)
     with pytest.raises(ValidationError, match=names):
+        PackManifest.model_validate(raw)
+
+
+def test_a_market_comparison_may_compare_a_field_only_its_sources_publish() -> None:
+    """`annual_premium` is printed on no policy schedule; the market's sources publish it."""
+    raw = _advised()
+    _market(raw, ["premium_payable", "annual_premium"])
+    manifest = PackManifest.model_validate(raw)
+    assert manifest.advice is not None
+    assert manifest.advice.shapes[-1].compare_fields == ["premium_payable", "annual_premium"]
+
+
+def test_an_own_comparison_may_not_compare_a_field_only_sources_publish() -> None:
+    """Two household documents can only be compared on what a household document prints."""
+    raw = _advised()
+    _market(raw, ["premium_payable"])
+    _shape(raw, "hospital_plans")["compare_fields"] = ["premium_payable", "annual_premium"]
+    with pytest.raises(ValidationError, match="compares 'annual_premium', which"):
         PackManifest.model_validate(raw)
 
 
