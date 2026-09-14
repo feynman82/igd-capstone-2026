@@ -10,6 +10,12 @@ tested on, and what a failure looks like. A criterion that cannot be run is not 
 criterion, so where the system cannot yet satisfy a story, that is written down in
 [§7 Open questions](#7-open-questions-for-review) instead of being quietly softened.
 
+**Every fixture claim below was verified against `corpus/register/batch1.csv` on 14 September
+2026**, at 33 rows — doc ids, tiers, subjects, dates and amounts read out of the register rather
+than remembered. Three claims in the first draft of this file had already gone stale, because
+the batch grew from 30 rows to 33 the night after it was written. The register is Lane E's and
+moves; when it does, re-read it before trusting a number here.
+
 ## 1. How to read a criterion
 
 Three rules, because the obvious reading is wrong more often than it is right.
@@ -26,8 +32,8 @@ file is one of those five.
 was written before the corpus existed and casts five outsiders — Sarah, Priya, Jason and a
 couple called Daniel and Rachel. Those names cannot appear here without breaking the rule
 above, so each story below is recast onto the Lim who actually holds the documents it
-needs. Marcus carries three of the five because he holds nineteen of the thirty documents
-in batch1; that is what being the household's document-holder means, and it is more honest
+needs. Marcus carries three of the five because he holds twenty-two of the thirty-three
+documents in batch1; that is what being the household's document-holder means, and it is more honest
 than inventing people to spread the stories evenly.
 
 **Every criterion binds to a document in `corpus/register/batch1.csv`, and dates are
@@ -61,8 +67,15 @@ demonstration shows a lead window opening without anybody editing a database.
 5. Past the due date the item's `kind` is `overdue` and it stays at the top.
 6. With no items in window the screen renders `EmptyState`, with a sentence saying nothing
    needs attention — not a blank column and not a spinner that never resolves.
+7. `/today?as_of=2026-09-15` shows a reminder for Marcus's Notice of Assessment, `b1-0028`,
+   reading 30 days left against a payment due date of 2026-10-15. It comes from
+   `registers.reminder.tax_payment_due` in `packs/iras_tax/pack.yaml`, whose `from_field` is
+   `payment_due_date` and whose `lead_days` are `[30, 7, 1]`. This is the obligation
+   `corpus/canon.md` calls the nearest live one, and until the registration was added no
+   reminder fired for it at all. The two packs' reminders appear on one screen, sorted
+   together, which is the platform argument in a single view.
 
-**Fixtures** `b1-0003` (policy schedule, Lim Ah Kow, expiry 2027-01-14, scanned tier) and
+**Fixtures** `b1-0003` (policy schedule, Lim Ah Kow, expiry 2027-01-14, clean tier) and
 `b1-0005` (its renewal notice). **Not done if** the screen sorts, computes a due date, or
 writes anything on a page load.
 
@@ -116,8 +129,8 @@ opens the wrong page, or the abstention state is styled as an error.
 5. Both photo-tier documents in batch1 survive the round trip, because a phone photograph
    of a scanned page is the realistic worst case rather than the exception.
 
-**Fixtures** `b1-0009` and `b1-0027`, the two `photo` tier rows; the seven `scanned` rows
-are `b1-0003`, `b1-0008`, `b1-0010`, `b1-0015`, `b1-0021`, `b1-0024` and `b1-0030`.
+**Fixtures** `b1-0009` and `b1-0027`, the two `photo` tier rows; the six `scanned` rows
+are `b1-0008`, `b1-0010`, `b1-0015`, `b1-0021`, `b1-0024` and `b1-0030`.
 **Depends on** the Telegram adapter, which is Lane A's and in progress — criterion 1 is
 blocked on it, criteria 2 to 5 are testable today through the watched folder. **Not done
 if** a quarantined document is reachable only from a log.
@@ -175,15 +188,14 @@ catalogue as a named capability, which is the W3 task.
 Four things surfaced while binding these stories to what is actually in the repository.
 Three of the four sit outside Lane D, so none is fixed here.
 
-**Two directories still contain other families.** The one-household rule in §1 is not yet
-true of the repository. `corpus/batches/batch0-personas/` holds NRIC records, birth
-certificates and medical histories for a Tan family (David Tan Wei Ming, Sarah Tan Li Ling,
-Emma Tan Jia Xin, Ethan Tan Jia Le) and for Priya Singh, alongside the Lims. Its README
-already says it is a mood board with no register and must never be loaded — but a mood
-board that introduces four more households is the thing the rule exists to prevent, and
-somebody will eventually load it for the demo. The design pack has the same problem in
-prose: its five personas are outsiders. → **`corpus/` is Desmond's; the design pack is
-Christian's. Both need a decision at the weekly session.**
+**The design pack still describes outsiders.** Half of this is now resolved:
+`corpus/batches/batch0-personas/` — which held NRIC records, birth certificates and medical
+histories for a Tan family and for Priya Singh alongside the Lims — has been deleted in full,
+and `corpus/canon.md` records that those people are not in the canon and must not be
+reintroduced. `corpus/batches/` now holds `batch1` and nothing else. What remains is the design
+pack, `docs/artefacts/interface-design-pack.html`, whose five personas are still outsiders in
+prose; §1 above is the recast, and the two read differently. → **the design pack is
+Christian's, and it needs a decision at the weekly session.**
 
 **Snooze and dismiss are in the design pack and not in the contract.** The original story
 accepts when an item "can be dismissed or snoozed without leaving the screen". `TodayItem`
@@ -192,13 +204,13 @@ reading the screen never writes. Making it real is a `core/contracts.py` change 
 therefore its own reviewed pull request. Criterion 2.1 above is written without it. →
 **Christian.**
 
-**The tax due date never fires a reminder.** `corpus/canon.md` calls the 2026-10-15 payment
-due date on `b1-0028` "the Reminder module's story and the nearest live obligation", but
-`packs/iras_tax/pack.yaml` registers only `filing_deadline` (fixed at 2027-04-18) and
-`srs_contribution_cutoff` (2026-12-31). Neither is keyed on `payment_due_date`, so the
-notice of assessment produces no reminder at all. A `from_field: payment_due_date`
-registration would fix it and it is a one-line change in a file I own — but it changes what
-Today shows, so it should be agreed first. → **mine, pending agreement.**
+**The tax due date now fires a reminder — resolved.** `corpus/canon.md` calls the 2026-10-15
+payment due date on `b1-0028` "the Reminder module's story and the nearest live obligation",
+and `packs/iras_tax/pack.yaml` registered only `filing_deadline` (fixed at 2027-04-18) and
+`srs_contribution_cutoff` (2026-12-31), so the notice of assessment produced no reminder at
+all. The pack now registers `tax_payment_due`, `from_field: payment_due_date`, with windows
+`[30, 7, 1]`. The insurance pack gained the same treatment for the renewal notice's pay-by
+date (`renewal_payment_due`, `[14, 3]`). → **done, in `pack.yaml`, which is mine.**
 
 **The premium jump is not an alert.** Canon calls `b1-0003` → `b1-0005` — 2,140.00 rising
 to 2,996.00, up 40 per cent — "the Alert module's story". `packs/insurance_agent/pack.yaml`
@@ -212,6 +224,7 @@ spanning two documents, and it should either be described that way or get a metr
 | # | Who | Surface | Testable today | Fixture |
 |---|---|---|---|---|
 | 2.1–2.6 | Rachel | Today | yes, at `?as_of=2026-12-15` | `b1-0003`, `b1-0005` |
+| 2.7 | Marcus | Today | yes, at `?as_of=2026-09-15` | `b1-0028` |
 | 3.1–3.6 | Marcus | Ask | yes | `b1-0008`, `b1-0013`–`b1-0015` |
 | 4.1 | Marcus and Rachel | capture | blocked on the Telegram adapter | `b1-0009`, `b1-0027` |
 | 4.2–4.5 | Marcus and Rachel | Vault | yes, via the watched folder | `b1-0009`, `b1-0027` |
