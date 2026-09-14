@@ -41,7 +41,7 @@ import logging
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from core.graph.ports import Passage
 
@@ -324,10 +324,21 @@ def scope_to(
 class Subject:
     """Whose situation a piece of advice is about — `whose`'s answer, with no passages in it.
 
-    Advice is written about exactly one person, so unlike `Scoped` there is no "unscoped" state:
-    every question resolves to somebody, even when that somebody is a guess of last resort (the
-    owner) or a name the household does not recognise (`unknown_relation`). `no_owner` is the one
-    case with nobody to guess: an install nobody has claimed yet.
+    Advice is written about exactly one person, so unlike `Scoped` there is no "unscoped" state
+    the way `apply` has one: every question resolves to somebody, a name the household does not
+    recognise (`unknown_relation`), or the honest refusal to guess (`ambiguous`). `no_owner` is
+    the one case with nobody to guess: an install nobody has claimed yet.
+
+    `ambiguous` is set instead of a person whenever the question could reasonably be about more
+    than one person: somebody other than the owner named, two or more people named, a
+    someone-else or household word, or a relation word more than one confirmed member holds
+    ("my dad's" with a father and a mother both recorded as `parent`). `apply` answers those same
+    questions from everything rather than narrowing — a wrong inclusion in retrieval is a passage
+    that should have been dropped, still correctly cited, so it costs nothing to fall back. Advice
+    has no "everything" to fall back to: a wrong single person is a wrong sum silently handed to a
+    calculator, so `whose` reports the uncertainty instead of guessing through it. `person_ids`
+    and `name` are empty whenever `ambiguous` is set — there is deliberately no fallback person to
+    read them as.
     """
 
     person_ids: frozenset[int]
@@ -335,18 +346,43 @@ class Subject:
     about: str | None = None
     unknown_relation: str | None = None
     no_owner: bool = False
+    someone_else: bool = False
+    """Scoped to a household member the question named who is not the person asking — "is
+    Rachel's cover enough?" gives Rachel with `someone_else=True`. Carried through from the same
+    decision `apply` makes, so advice never addresses somebody as if they had asked it themselves.
+    """
+    ambiguous: bool = False
 
 
 @dataclass(frozen=True, slots=True)
 class _Decision:
     """Who a question is about, decided once and read differently by `apply` and `whose`.
 
-    `whose` always needs a subject and reads `person_ids`/`name` straight off — they already hold
-    the owner wherever the question fell through to "assume the owner" (see `ambiguous`).  `apply`
-    turns the same fields into a passage filter, except when `ambiguous` is set: a question that
-    named nobody in particular, or named two people at once, is answered from everything rather
-    than narrowed to a guess — a wrong exclusion is worse than a wrong inclusion. `whose` has no
-    "everything" to fall back to, so it does not read `ambiguous` at all.
+    `fallthrough` is why `apply` would leave the question unscoped, or `"none"` when it would not:
+
+    - `"named_other"` — somebody other than the owner was named, or two or more people were.
+    - `"someone_else"` — a someone-else or household word (`_SOMEONE_ELSE`), or another person's
+      name found in the text some other way, made the question not first-person.
+    - `"impersonal"` — no first-person word, no someone-else word, nobody named: there is nothing
+      here to be unsure about, only nothing said.
+
+    `apply` treats all three exactly alike — any value other than `"none"` means "answer from
+    everything" — because widening only risks a wrong inclusion, still correctly cited, so it
+    never needs to tell them apart. `person_ids`/`name` are pre-filled with the owner for all
+    three, which is what lets `apply`'s pre-refactor behaviour and `whose`'s guess-the-owner case
+    share one code path.
+
+    `whose` cannot fall back to "everything" — advice is about one person — so it tells
+    `"impersonal"` apart from the other two: a question with nothing said about anybody is the
+    same guess of last resort `whose` makes for an unambiguous first-person question, so it reads
+    the pre-filled owner off `person_ids`/`name`. `"named_other"` and `"someone_else"` are real
+    ambiguity — more than one person could be meant — and `whose` refuses to guess between them.
+
+    `relation_ambiguous` is a second, independent axis: a relation word matched more than one
+    confirmed member (a father and a mother both recorded as `parent`). `apply` keeps scoping to
+    all of them, which is still only a wrong-inclusion risk, so it never reads this field —
+    `person_ids` holds every match either way. `whose` does read it, because advice about "my dad"
+    cannot honestly pick one of two fathers.
     """
 
     owner: Person | None
@@ -355,7 +391,8 @@ class _Decision:
     about: str | None = None
     unknown_relation: str | None = None
     someone_else: bool = False
-    ambiguous: bool = False
+    fallthrough: Literal["none", "named_other", "someone_else", "impersonal"] = "none"
+    relation_ambiguous: bool = False
 
 
 def _decide(conn: Any, question: str) -> _Decision:
@@ -401,6 +438,10 @@ def _decide(conn: Any, question: str) -> _Decision:
             person_ids=frozenset(person.id for person in members),
             name=" and ".join(person.display_name for person in members),
             about=word,
+            # More than one confirmed member holds this relation: `apply` still scopes to all of
+            # them (see the class docstring), but `whose` has to write advice about one person and
+            # cannot honestly pick between, say, a father and a mother.
+            relation_ambiguous=len(members) > 1,
         )
 
     # A question that names one person is theirs, "my" or not. The owner naming themselves —
@@ -417,8 +458,14 @@ def _decide(conn: Any, question: str) -> _Decision:
             someone_else=True,
         )
     if any(person.id != owner.id for person in named):
+        # Somebody other than the owner was named, or two or more people were — either way, more
+        # than one person could be meant. `person_ids`/`name` are pre-filled with the owner so
+        # `apply`'s call site does not have to know that; `whose` ignores them (see `fallthrough`).
         return _Decision(
-            owner=owner, person_ids=frozenset({owner.id}), name=owner.display_name, ambiguous=True
+            owner=owner,
+            person_ids=frozenset({owner.id}),
+            name=owner.display_name,
+            fallthrough="named_other",
         )
 
     others = tuple(
@@ -428,8 +475,22 @@ def _decide(conn: Any, question: str) -> _Decision:
         for name in (person.display_name, *person.aliases)
     )
     if not is_first_person(question, others):
+        # `is_first_person` folds three different reasons into one `False`: no first-person word
+        # at all, a someone-else/household word, or another person's name found some other way.
+        # `apply` does not need to tell them apart — any of the three leaves it unscoped — but
+        # `whose` does: only the first of the three has nothing to be unsure about (see
+        # `_Decision.fallthrough`), so it is named apart from the other two here rather than
+        # re-deriving `is_first_person`'s internals a second time.
+        fallthrough: Literal["someone_else", "impersonal"] = (
+            "impersonal"
+            if _FIRST_PERSON.search(question) is None and not _SOMEONE_ELSE.search(question)
+            else "someone_else"
+        )
         return _Decision(
-            owner=owner, person_ids=frozenset({owner.id}), name=owner.display_name, ambiguous=True
+            owner=owner,
+            person_ids=frozenset({owner.id}),
+            name=owner.display_name,
+            fallthrough=fallthrough,
         )
 
     return _Decision(owner=owner, person_ids=frozenset({owner.id}), name=owner.display_name)
@@ -453,7 +514,7 @@ class HouseholdScope:
             return Scoped(passages, None)
         if decision.unknown_relation is not None:
             return Scoped(passages, None, unknown_relation=decision.unknown_relation)
-        if decision.ambiguous:
+        if decision.fallthrough != "none":
             return Scoped(passages, None)
         return scope_to(
             self.conn,
@@ -469,10 +530,17 @@ class HouseholdScope:
         passages to filter.
 
         A piece of advice is written about exactly one person, unlike retrieval, which can fall
-        back to "everything" when a question is ambiguous. So where `apply` would leave a
-        question unscoped — nobody named, or two people at once — `whose` resolves to the owner
-        instead of to nothing: `_decide` already put the owner in `person_ids` for that case, so
-        this reads no differently than the case where the owner was the obvious answer all along.
+        back to "everything" when a question does not narrow cleanly. Where `apply` leaves a
+        question unscoped because there is nothing to lose by widening — a wrong inclusion is
+        still correctly cited — `whose` has no "everything" to hand a calculator, so it refuses to
+        guess: `ambiguous=True` and an empty `Subject`, whenever the question named somebody other
+        than the owner, named two or more people, used a someone-else or household word, or asked
+        about a relation more than one confirmed member holds (`_Decision.fallthrough` and
+        `relation_ambiguous`). The one fall-through `apply` also makes that is *not* ambiguity —
+        a question that names nobody and uses no relation word or someone-else word, so there is
+        nothing here to be unsure about — resolves to the owner, the same guess `whose` makes for
+        an unambiguous first-person question: `_decide` already put the owner in
+        `person_ids`/`name` for that case, so this reads no differently.
         """
         decision = _decide(self.conn, question)
         if decision.owner is None:
@@ -481,4 +549,11 @@ class HouseholdScope:
             return Subject(
                 person_ids=frozenset(), name="", unknown_relation=decision.unknown_relation
             )
-        return Subject(person_ids=decision.person_ids, name=decision.name, about=decision.about)
+        if decision.relation_ambiguous or decision.fallthrough in ("named_other", "someone_else"):
+            return Subject(person_ids=frozenset(), name="", ambiguous=True)
+        return Subject(
+            person_ids=decision.person_ids,
+            name=decision.name,
+            about=decision.about,
+            someone_else=decision.someone_else,
+        )
