@@ -34,6 +34,12 @@ CHANNEL = "telegram"
 API = "https://api.telegram.org"
 MAX_BYTES = 20 * 1024 * 1024  # what the bot API will hand back through getFile
 
+# Things a person can send that are not a household document. Listed so that sending one gets an
+# answer rather than silence; `photo` and `document` are the two this adapter actually takes.
+UNSUPPORTED_MEDIA = frozenset(
+    {"video", "video_note", "animation", "audio", "voice", "sticker", "contact", "location"}
+)
+
 
 class TelegramUnavailable(RuntimeError):
     """Safe to show: never contains the token."""
@@ -61,6 +67,7 @@ class TelegramAdapter:
         registrar: Registrar,
         settings: TelegramSettings,
         attribute: Callable[[Any, int], None] | None = None,
+        transport: httpx.BaseTransport | None = None,
     ) -> None:
         if not settings.configured:
             raise TelegramUnavailable(
@@ -68,6 +75,10 @@ class TelegramAdapter:
             )
         self._register = registrar
         self._settings = settings
+        # The one seam a test needs. Everything else about this class is already injected, and a
+        # capture adapter that can only be exercised against the live Bot API is one that is
+        # never exercised -- which is how the launcher shipped without starting this at all.
+        self._transport = transport
         # Whose chat this was, recorded against the document. Injected rather than imported
         # because attribution needs a connection and this class holds none -- the same reason
         # `registrar` is injected. `None` means nobody has linked any chats to any people,
@@ -116,6 +127,7 @@ class TelegramAdapter:
             base_url=f"{API}/bot{self._settings.token}",
             timeout=45.0,
             follow_redirects=False,
+            transport=self._transport,
         )
 
     def whoami(self) -> str:
@@ -143,7 +155,18 @@ class TelegramAdapter:
                 ):
                     log.info("ignoring a message from chat %s: not in the allow list", chat_id)
                     continue
-                job = self._capture(client, message, chat_id, inbox)
+                # One bad update must not take the rest of the batch with it. The offset has
+                # already moved past this message, so a failure here is a document that will not
+                # be seen again -- which is why it is said out loud in the chat rather than only
+                # logged. Advancing regardless is deliberate: a message the bot cannot handle
+                # would otherwise be retried on every poll forever and nothing behind it would
+                # ever be filed.
+                try:
+                    job = self._capture(client, message, chat_id, inbox)
+                except Exception:
+                    log.exception("could not file a message from chat %s", chat_id)
+                    self._say(client, chat_id, "Something went wrong filing that. Send it again.")
+                    continue
                 if job is not None:
                     jobs.append(job)
         return jobs
@@ -153,6 +176,17 @@ class TelegramAdapter:
     ) -> IngestJob | None:
         file_id, name = _attachment(message)
         if file_id is None:
+            # Media this adapter does not take used to return here in silence, which is
+            # indistinguishable from the bot being switched off. A video note or an animation is
+            # a person trying to file something, so they are told; plain chat is left alone.
+            carried = UNSUPPORTED_MEDIA.intersection(message)
+            if carried:
+                log.info("not a document: a message carrying %s", ", ".join(sorted(carried)))
+                self._say(
+                    client,
+                    chat_id,
+                    "I can only file photographs and documents. Send it as a photo or a file.",
+                )
             return None
 
         try:
@@ -171,6 +205,14 @@ class TelegramAdapter:
             return None
 
         stamp = datetime.fromtimestamp(int(message.get("date", 0)) or 0, tz=UTC)
+
+        # Before registration, not after. `core/ingest/source.py` finds a document's bytes again
+        # by hashing the inbox, so a queued worker can start reading the moment the message is on
+        # Redis -- and if the file is not on disk yet, it reports the document missing and leaves
+        # it pending forever. The old order worked only because this adapter always ran inline.
+        if inbox is not None:
+            _write_local_copy(inbox, name, payload)
+
         job = self.receive(
             payload,
             sniff_mime(payload, name),
@@ -185,8 +227,6 @@ class TelegramAdapter:
             except Exception as error:  # attribution is a nicety; capture is not
                 log.info("could not attribute %s to chat %s: %s", name, chat_id, error)
 
-        if inbox is not None:
-            _write_local_copy(inbox, name, payload)
         if self._settings.delete_after_fetch:
             self._delete(client, chat_id, int(message.get("message_id", 0)))
 
@@ -200,6 +240,8 @@ class TelegramAdapter:
         try:
             response.raise_for_status()
             body = response.json()
+        except httpx.HTTPStatusError as error:
+            raise TelegramUnavailable(_status_reason(response.status_code)) from error
         except (httpx.HTTPError, ValueError) as error:
             raise TelegramUnavailable("Telegram did not answer as expected.") from error
         if not body.get("ok"):
@@ -225,6 +267,38 @@ class TelegramAdapter:
             log.info("could not delete message %s at source", message_id)
 
 
+def _status_reason(status: int) -> str:
+    """What an HTTP status from the Bot API means, in a sentence a person can act on.
+
+    Never contains the token. 409 earns its own line because it is the one failure that looks
+    exactly like a network blip and never clears by itself: `getUpdates` refuses while a webhook
+    is registered or while a second poller holds the same bot.
+    """
+    if status == 409:
+        return (
+            "Telegram will not hand this bot its messages: either a webhook is set on it or "
+            "something else is already polling it. Close the other Parrot window, or clear the "
+            "webhook with the Bot API's deleteWebhook."
+        )
+    if status == 401:
+        return "Telegram rejected the bot token. Check TELEGRAM_BOT_TOKEN in .env."
+    if status == 429:
+        return "Telegram is rate-limiting this bot. It will keep trying."
+    return f"Telegram answered with HTTP {status}."
+
+
+def _pixels(item: dict[str, Any]) -> tuple[int, int]:
+    """How big a `PhotoSize` is: area first, declared bytes as the tie-break.
+
+    Sorting on `file_size` alone picked the 90-pixel thumbnail whenever Telegram omitted it --
+    every candidate scored nought and `max` returned the first, which is the smallest. OCR on a
+    thumbnail recovers nothing, so the document quarantined as unreadable and the real
+    photograph was never looked at. Width and height are always present on a `PhotoSize`.
+    """
+    area = int(item.get("width", 0) or 0) * int(item.get("height", 0) or 0)
+    return area, int(item.get("file_size", 0) or 0)
+
+
 def _attachment(message: dict[str, Any]) -> tuple[str | None, str]:
     """The largest photo, or the document. Telegram sends photos in several sizes."""
     document = message.get("document")
@@ -233,7 +307,7 @@ def _attachment(message: dict[str, Any]) -> tuple[str | None, str]:
 
     photos = message.get("photo")
     if isinstance(photos, list) and photos:
-        largest = max(photos, key=lambda item: int(item.get("file_size", 0) or 0))
+        largest = max((item for item in photos if isinstance(item, dict)), key=_pixels)
         stamp = int(message.get("date", 0) or 0)
         return str(largest.get("file_id")), f"telegram-photo-{stamp}.jpg"
     return None, ""

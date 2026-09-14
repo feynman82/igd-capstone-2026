@@ -1,7 +1,13 @@
-"""Run the Telegram capture adapter.
+"""Run the Telegram capture adapter on its own, and check that the token works.
 
     uv run python scripts/telegram_bot.py --check   # does the token work?
     uv run python scripts/telegram_bot.py           # capture photographs until Ctrl+C
+
+**`START.cmd` already does this.** Since the launcher starts Telegram capture beside the folder
+watcher, this script is the diagnostic rather than the way in: `--check` names the bot and exits,
+which is the one thing the startup page deliberately does not do because it would call out to
+Telegram on every poll. Running this *while* Parrot is up gives both of them the same bot and
+Telegram answers one of them with a 409 — so stop Parrot first, or just use `--check`.
 
 Set `TELEGRAM_BOT_TOKEN` in `.env` first. Getting one takes about ten minutes: message
 @BotFather on Telegram, send `/newbot`, give it a name, and it replies with the token. Nothing
@@ -44,13 +50,13 @@ def main(argv: list[str] | None = None) -> int:
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.WARNING)
 
-    from core import household
     from core.adapters.telegram import TelegramAdapter, TelegramSettings, TelegramUnavailable
     from core.ingest.dispatch import Inline
     from core.ingest.intake import Intake
+    from core.runtime.capture import attribution
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
-    from core.runtime.settings import ConfigurationError, Settings, read_env
+    from core.runtime.settings import ConfigurationError, Settings
 
     try:
         settings = Settings.load(ROOT)
@@ -58,8 +64,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Configuration needs attention: {error}")
         return 2
 
-    token = read_env(ROOT / ".env").get("TELEGRAM_BOT_TOKEN", "").strip()
-    if not token:
+    if not settings.telegram_configured:
         print(
             "No TELEGRAM_BOT_TOKEN in .env.\n"
             "  1. Message @BotFather on Telegram and send /newbot\n"
@@ -69,28 +74,19 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 2
 
+    # A flag on this script still wins, so a person can restrict or keep-at-source for one run
+    # without editing .env. With no flag the configured value is used, which is what the
+    # launcher uses too — one household, one allow list.
     telegram = TelegramSettings(
-        token=token,
-        allowed_chat_ids=frozenset(args.chat_id or ()),
-        delete_after_fetch=not args.keep_at_source,
+        token=settings.telegram_token,
+        allowed_chat_ids=frozenset(args.chat_id) if args.chat_id else settings.telegram_chat_ids,
+        delete_after_fetch=(False if args.keep_at_source else settings.telegram_delete_at_source),
     )
 
     try:
         with connect(settings) as conn:
-
-            def attribute(document_id: object, chat_id: int) -> None:
-                """Whose phone this arrived on, recorded before anything is read off it.
-
-                Silent when the chat is not linked to anybody: most installs never link one,
-                and a bot that refused documents from unmapped chats would be a worse bot.
-                """
-                person_id = household.person_for_chat(conn, chat_id)
-                if person_id is not None:
-                    household.attribute(conn, document_id, person_id, source="telegram")
-                    conn.commit()  # autocommit is off; the caller commits
-
             adapter = TelegramAdapter(
-                Intake(conn, Inline(conn, Ollama(settings))), telegram, attribute
+                Intake(conn, Inline(conn, Ollama(settings))), telegram, attribution(conn)
             )
             try:
                 name = adapter.whoami()
@@ -110,14 +106,21 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _loop(adapter: object, inbox: Path) -> int:
+    from core.adapters.telegram import TelegramUnavailable
+
+    log = logging.getLogger(__name__)
     try:
         while True:
             try:
                 adapter.poll_once(inbox)  # type: ignore[attr-defined]
+            except TelegramUnavailable as error:
+                # The adapter already turned the status into a sentence, and the one that
+                # matters here is 409: it is what a person sees when Parrot is running and
+                # polling the same bot. Printing the exception class instead said nothing.
+                log.warning("Telegram poll failed: %s", error)
+                time.sleep(5)
             except Exception as error:  # a transport hiccup must not end the capture
-                logging.getLogger(__name__).warning(
-                    "Telegram poll failed (%s); retrying", type(error).__name__
-                )
+                log.warning("Telegram poll failed (%s); retrying", type(error).__name__)
                 time.sleep(5)
     except KeyboardInterrupt:
         print("Stopped.")
