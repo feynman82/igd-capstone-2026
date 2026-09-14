@@ -281,3 +281,10 @@ You are the first people to use this, so what you notice is worth more than anot
 This page is for trying PARROT. To build on it, see [`FIRST-RUN.md`](FIRST-RUN.md) for the
 developer setup, then open Claude Code in the repository and run **`/orient`** — it will read
 the working agreement, find your lane, and tell you your next task.
+
+
+---
+
+## macOS worker note
+
+The ingestion worker uses Celery `solo` on macOS as well as Windows. This avoids fork-related crashes when RapidOCR/PyTorch initialises the Apple Silicon Metal backend. If you previously used the manual `--pool=solo` workaround, pull the latest repository and restart PARROT; the workaround is now built into the worker.
