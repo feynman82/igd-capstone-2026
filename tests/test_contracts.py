@@ -347,6 +347,22 @@ def test_a_module_may_read_grounding_values() -> None:
     assert "grounding_values" in manifest.reads
 
 
+def test_advice_is_a_module() -> None:
+    """ADR 0016: calculators are a module, so `modules/advice/module.yaml` must load."""
+    manifest = ModuleManifest.model_validate(
+        {
+            "id": "advice",
+            "version": "1.0.0",
+            "reads": ["facts", "grounding_values"],
+            "writes": [],
+            "runs": {"on": "fact_write"},
+            "surfaces": ["chat_thread"],
+            "config_schema": "core.contracts:AdviceShape",
+        }
+    )
+    assert manifest.id == "advice"
+
+
 def test_categories_must_read_a_field_the_pack_declares() -> None:
     raw = _insurance()
     raw["answering"] = {

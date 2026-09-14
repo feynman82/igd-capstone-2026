@@ -14,7 +14,8 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 Slug = Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{2,31}$")]
 SemVer = Annotated[str, Field(pattern=r"^\d+\.\d+\.\d+$")]
 
-PrimitiveId = Literal["reminder", "alert", "tracker"]
+# `advice` is ADR 0016's calculator module: it reads facts and approved grounding values.
+PrimitiveId = Literal["reminder", "alert", "tracker", "advice"]
 
 
 class Strict(BaseModel):
