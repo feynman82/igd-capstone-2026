@@ -95,6 +95,40 @@ def _folder(value: str, root: Path) -> str:
     return str(folder if folder.is_absolute() else (root / folder).resolve())
 
 
+def _chat_ids(value: str) -> frozenset[int]:
+    """Which Telegram chats the bot accepts documents from. Empty means any chat.
+
+    It is configuration rather than a command-line flag for the same reason the ports are: the
+    launcher starts the capture now, and an allow list that lives only in a command line is one
+    that a double-click cannot honour. ADR 0011 describes the allow list; this is where a
+    household writes it down.
+    """
+    ids: set[int] = set()
+    for part in value.replace(";", ",").split(","):
+        text = part.strip()
+        if not text:
+            continue
+        try:
+            ids.add(int(text))
+        except ValueError as error:
+            raise ConfigurationError(
+                "TELEGRAM_CHAT_IDS must be whole numbers separated by commas."
+            ) from error
+    return frozenset(ids)
+
+
+def _flag(value: str, name: str, fallback: bool) -> bool:
+    """A yes/no setting. A value that is neither is a configuration error, not a silent false."""
+    text = value.strip().lower()
+    if not text:
+        return fallback
+    if text in {"1", "true", "yes", "on"}:
+        return True
+    if text in {"0", "false", "no", "off"}:
+        return False
+    raise ConfigurationError(f"{name} must be true or false.")
+
+
 @dataclass(frozen=True, repr=False)
 class Settings:
     database_url: str
@@ -108,6 +142,16 @@ class Settings:
     watch_folder: str
     api_port: int
     web_port: int
+    # A household secret. `repr=False` on this dataclass is what keeps it out of a traceback or
+    # a log line that prints the settings, and it is the reason this field can live here at all.
+    telegram_token: str
+    telegram_chat_ids: frozenset[int]
+    telegram_delete_at_source: bool
+
+    @property
+    def telegram_configured(self) -> bool:
+        """Whether Telegram capture should start. An unset token means "not this household"."""
+        return bool(self.telegram_token.strip())
 
     @classmethod
     def load(cls, root: Path, environment: Mapping[str, str] | None = None) -> Settings:
@@ -150,4 +194,9 @@ class Settings:
             watch_folder=_folder(values.get("WATCH_FOLDER", ""), root),
             api_port=_port(values.get("PARROT_PORT", "8000"), "PARROT_PORT", "8000"),
             web_port=_port(values.get("PARROT_WEB_PORT", "3000"), "PARROT_WEB_PORT", "3000"),
+            telegram_token=values.get("TELEGRAM_BOT_TOKEN", "").strip(),
+            telegram_chat_ids=_chat_ids(values.get("TELEGRAM_CHAT_IDS", "")),
+            telegram_delete_at_source=_flag(
+                values.get("TELEGRAM_DELETE_AT_SOURCE", ""), "TELEGRAM_DELETE_AT_SOURCE", True
+            ),
         )

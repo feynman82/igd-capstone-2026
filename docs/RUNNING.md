@@ -242,23 +242,51 @@ debounce window and cites the documents behind the figure.
 
 ## Telegram
 
-Capture from a phone, through the same interface as the folder:
-
-```powershell
-uv run python scripts/telegram_bot.py --check   # does the token work?
-uv run python scripts/telegram_bot.py           # capture until Ctrl+C
-```
+Capture from a phone, through the same interface as the folder. **`START.cmd` starts it**, beside
+the folder watcher, whenever a bot token is configured — there is no second window to remember.
 
 It needs a bot token, which takes about ten minutes and no business verification: message
 **@BotFather** on Telegram, send `/newbot`, give it a name, and it replies with a token. Put
-`TELEGRAM_BOT_TOKEN=<that token>` in `.env` at the repository root. `.env` is git-ignored and
-must stay that way — the token is a household secret.
+`TELEGRAM_BOT_TOKEN=<that token>` in `.env` at the repository root and restart Parrot. `.env` is
+git-ignored and must stay that way — the token is a household secret.
+
+Three settings, all in `.env`, all optional except the first:
+
+| Key | Default | What it does |
+|---|---|---|
+| `TELEGRAM_BOT_TOKEN` | unset | Unset means Telegram capture stays off and only the folder is watched |
+| `TELEGRAM_CHAT_IDS` | empty | Comma-separated chat ids the bot accepts from. Empty means any chat. ADR 0011 |
+| `TELEGRAM_DELETE_AT_SOURCE` | `true` | `false` keeps the message in the chat after it is filed, which is useful while you are watching what arrives |
+
+The allow list is configuration rather than a command-line flag because the launcher starts the
+capture: an allow list that lives only in a command line is one a double-click cannot honour.
+
+The Parrot window says which of the two it is on startup — `Telegram capture: on.` or
+`Telegram capture: off.` — and the startup page carries the same row, with a count of how many
+documents have actually arrived on this channel. That count is the honest test: a bot that
+connects and files nothing looks exactly like a bot that was never started.
 
 Long polling, not a webhook: the laptop makes a request *out*, nothing listens on a public port,
-and no tunnel or hosted endpoint is involved. A photograph is fetched, written into the inbox,
-registered, read, and then **deleted at source**, so Telegram does not keep a copy on the
-household's behalf. `--chat-id` restricts which chat is accepted; `--keep-at-source` turns the
-deletion off if you want to see what arrived.
+and no tunnel or hosted endpoint is involved. A photograph is written into the inbox, registered,
+read, and then **deleted at source**, so Telegram does not keep a copy on the household's behalf.
+
+### The script is now the diagnostic
+
+```powershell
+uv run python scripts/telegram_bot.py --check   # names the bot and exits
+uv run python scripts/telegram_bot.py           # capture until Ctrl+C, without the launcher
+```
+
+`--check` is the one thing the startup page deliberately does not do: it calls `getMe`, and a
+diagnostic that reaches out to Telegram on every poll of a page is not the privacy claim
+`docs/governance/` makes.
+
+**Do not run the script while Parrot is running.** Telegram gives a bot's messages to one poller,
+and the second one gets HTTP 409 — which is also what you get if a webhook was ever set on the
+bot. Both now say so in as many words rather than repeating "poll failed"; clear a webhook with
+the Bot API's `deleteWebhook`.
+
+`--chat-id` and `--keep-at-source` still override `.env` for a single run of the script.
 
 ## Startup integration contract
 
@@ -400,7 +428,10 @@ It does not travel on the same terms as a synthetic batch, and it is never used 
 
 Confirmed with Christian on 2026-09-10: same-computer access first, then an explicitly
 enabled household-network mode. Initial target: local inference and loopback access.
-The launcher does not enable LAN access, remote access, cloud inference or Telegram.
+The launcher does not enable LAN access, remote access or cloud inference. It does start
+Telegram capture when `TELEGRAM_BOT_TOKEN` is set, and only then: registering a bot is an
+explicit act by the household, the poll is a request *out* from the laptop, and media is
+deleted at source once filed. With no token configured nothing leaves the machine.
 Model/software installation can need internet access, which is separate from processing
 documents locally after setup.
 
