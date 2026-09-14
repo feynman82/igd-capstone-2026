@@ -1,0 +1,8 @@
+id: advice
+version: 1.0.0
+reads: [facts, grounding_values]
+writes: []
+runs:
+  "on": fact_write
+surfaces: [chat_thread]
+config_schema: core.contracts:AdviceShape
