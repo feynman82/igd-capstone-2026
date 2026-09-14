@@ -13,11 +13,19 @@ so the decision is made from the same words a calculator would eventually trust.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from datetime import date
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from core.grounding.review import PendingValue
+if TYPE_CHECKING:
+    # Only used as a type annotation, deferred by `from __future__ import annotations`: importing
+    # `core` here at module level, before `sys.path` is set up below, would break
+    # `--help` with `ModuleNotFoundError: No module named 'core'` when this script is run
+    # directly rather than as `python -m`. See `scripts/reindex.py` for the pattern every other
+    # script in this package follows.
+    from core.grounding.review import PendingValue
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,29 +34,32 @@ def _block(value: PendingValue) -> str:
     """One printed value, with everything a reviewer needs to sign off on it."""
     amount = value.value_text if value.value_text is not None else str(value.value_num)
     qualifiers = ", ".join(f"{k}={v}" for k, v in sorted(value.qualifiers.items())) or "none"
+    passage = re.sub(r"\s+", " ", value.passage).strip()
     return "\n".join(
         [
             f"[{value.id}] {value.pack_id} / {value.key}",
             f"  {amount} {value.unit}  qualifiers: {qualifiers}",
             f"  {value.publisher} — {value.source_title}",
+            f"  applies to {value.applies_to}, review by {value.review_by.isoformat()}",
             f"  {value.url}",
-            f'    "{value.passage}"',
+            f'    "{passage}"',
         ]
     )
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--list", action="store_true", help="show every value still pending")
+    action = parser.add_mutually_exclusive_group(required=True)
+    action.add_argument("--list", action="store_true", help="show every value still pending")
+    action.add_argument("--approve", nargs="+", type=int, metavar="ID", help="approve these ids")
+    action.add_argument("--reject", nargs="+", type=int, metavar="ID", help="reject these ids")
     parser.add_argument("--pack", help="restrict --list to one pack")
-    parser.add_argument("--approve", nargs="+", type=int, metavar="ID", help="approve these ids")
-    parser.add_argument("--reject", nargs="+", type=int, metavar="ID", help="reject these ids")
     parser.add_argument("--by", help="the reviewer's name; required with --approve or --reject")
     parser.add_argument("--note", help="why; required with --reject")
     args = parser.parse_args(argv)
 
-    if not (args.list or args.approve or args.reject):
-        parser.error("choose one of --list, --approve, --reject")
+    if args.pack and not args.list:
+        parser.error("--pack is only valid with --list")
     if (args.approve or args.reject) and not args.by:
         parser.error("--approve and --reject need --by NAME")
     if args.reject and not args.note:

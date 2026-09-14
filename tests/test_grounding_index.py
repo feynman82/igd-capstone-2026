@@ -10,8 +10,11 @@ the old text — not the reading of a corpus or the model's proposals.
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -29,6 +32,7 @@ from scripts import index_grounding, review_grounding_values
 
 IRAS_MANIFEST = "packs/iras_tax/pack.yaml"
 TODAY = date(2026, 9, 14)
+ROOT = Path(__file__).resolve().parents[1]
 
 
 # --------------------------------------------------------------------------------- fixtures
@@ -353,6 +357,8 @@ def test_pending_reads_every_column_of_a_value_and_its_source() -> None:
                 "Individual Income Tax Reliefs, Rebates and Deductions",
                 "Inland Revenue Authority of Singapore",
                 "https://www.iras.gov.sg/reliefs",
+                "Year of Assessment 2026",
+                date(2027, 4, 1),
             )
         ],
     )
@@ -371,6 +377,8 @@ def test_pending_reads_every_column_of_a_value_and_its_source() -> None:
         source_title="Individual Income Tax Reliefs, Rebates and Deductions",
         publisher="Inland Revenue Authority of Singapore",
         url="https://www.iras.gov.sg/reliefs",
+        applies_to="Year of Assessment 2026",
+        review_by=date(2027, 4, 1),
     )
     assert conn.params_for("JOIN grounding_sources")["pack_id"] == "iras_tax"
 
@@ -451,10 +459,12 @@ def test_list_block_shows_id_pack_key_value_source_and_an_indented_passage() -> 
         value_num=Decimal("4000"),
         value_text="4,000",
         qualifiers={"assessment_year": "2026"},
-        passage="Qualifying child relief is $4,000 per child.",
+        passage="Qualifying child relief\nis $4,000  per child.",
         source_title="Individual Income Tax Reliefs, Rebates and Deductions",
         publisher="Inland Revenue Authority of Singapore",
         url="https://www.iras.gov.sg/reliefs",
+        applies_to="Year of Assessment 2026",
+        review_by=date(2027, 4, 1),
     )
 
     lines = review_grounding_values._block(value).splitlines()
@@ -463,8 +473,9 @@ def test_list_block_shows_id_pack_key_value_source_and_an_indented_passage() -> 
     assert "4,000" in lines[1] and "money" in lines[1] and "assessment_year=2026" in lines[1]
     assert "Inland Revenue Authority of Singapore" in lines[2]
     assert "Individual Income Tax Reliefs, Rebates and Deductions" in lines[2]
-    assert lines[3] == "  https://www.iras.gov.sg/reliefs"
-    assert lines[4] == '    "Qualifying child relief is $4,000 per child."'
+    assert lines[3] == "  applies to Year of Assessment 2026, review by 2027-04-01"
+    assert lines[4] == "  https://www.iras.gov.sg/reliefs"
+    assert lines[5] == '    "Qualifying child relief is $4,000 per child."'  # newlines collapsed
 
 
 def test_review_cli_needs_by_to_approve() -> None:
@@ -477,3 +488,55 @@ def test_review_cli_needs_a_note_to_reject() -> None:
     with pytest.raises(SystemExit) as error:
         review_grounding_values.main(["--reject", "1", "--by", "Siew"])
     assert error.value.code == 2
+
+
+def test_review_cli_approve_and_reject_together_is_a_parser_error() -> None:
+    with pytest.raises(SystemExit) as error:
+        review_grounding_values.main(["--approve", "1", "--reject", "2", "--by", "Siew"])
+    assert error.value.code == 2
+
+
+def test_review_cli_pack_is_only_valid_with_list() -> None:
+    with pytest.raises(SystemExit) as error:
+        review_grounding_values.main(["--approve", "1", "--by", "Siew", "--pack", "iras_tax"])
+    assert error.value.code == 2
+
+
+def _review_env(monkeypatch: pytest.MonkeyPatch) -> FakeConn:
+    """Patch the settings and database `scripts/review_grounding_values.py` imports."""
+    from core.runtime import db, settings
+
+    conn = FakeConn()
+    monkeypatch.setattr(settings.Settings, "load", staticmethod(lambda root: object()))
+    monkeypatch.setattr(db, "connect", lambda loaded: _Connected(conn))
+    return conn
+
+
+def test_review_cli_approving_an_already_decided_id_exits_1(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    conn = _review_env(monkeypatch)
+    conn.script("status = 'approved'", rowcount=0)  # nothing was still pending
+
+    code = review_grounding_values.main(["--approve", "9", "--by", "Siew"])
+
+    assert code == 1
+    assert "0 value(s) approved." in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    ("script", "needle"),
+    [
+        ("scripts/review_grounding_values.py", "--approve"),
+        ("scripts/index_grounding.py", "--pack"),
+    ],
+)
+def test_help_runs_without_importing_core_before_sys_path_is_set(script: str, needle: str) -> None:
+    """`--help` must work even though `core` is not on `sys.path` until the script inserts it
+    itself: a module-level `from core... import ...` above that insertion breaks this with
+    `ModuleNotFoundError: No module named 'core'` (see `scripts/reindex.py` for the pattern)."""
+    result = subprocess.run(
+        [sys.executable, script, "--help"], cwd=ROOT, capture_output=True, text=True
+    )
+    assert result.returncode == 0, result.stderr
+    assert needle in result.stdout

@@ -405,10 +405,22 @@ def test_an_outage_in_a_later_section_raises() -> None:
     assert len(client.prompts) == 2
 
 
-@pytest.mark.parametrize("reply", ["this is not JSON", "[]", '{"items": []}', '{"values": 3}'])
-def test_a_malformed_reply_is_no_values_for_that_section_only(
+@pytest.mark.parametrize("reply", ["this is not JSON", "[]"])
+def test_a_reply_that_is_not_a_json_object_raises_as_an_outage(reply: str) -> None:
+    """A truncated or non-JSON reply is an outage: the section was never actually read, so it
+    must not be committed as one that printed nothing (ruling: a garbled reply is retried, not
+    trusted as an empty section)."""
+    client = ScriptedClient(reply)
+    with pytest.raises(ModelUnavailable):
+        extract_values(client, _source(), KEYS)
+
+
+@pytest.mark.parametrize("reply", ['{"items": []}', '{"values": 3}'])
+def test_a_json_reply_with_no_usable_values_is_no_values_for_that_section_only(
     caplog: pytest.LogCaptureFixture, reply: str
 ) -> None:
+    """Unlike a garbled reply, valid JSON with the wrong shape means the model answered and
+    simply proposed nothing usable — that is logged and skipped, not an outage."""
     second = _reply(
         {"key": "contribution_cap", "value": "15,300", "passage": "The cap is 15,300 a year."}
     )

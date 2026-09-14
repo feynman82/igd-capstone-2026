@@ -22,7 +22,7 @@ from typing import Any
 
 from core.contracts import ValueKey
 from core.grounding.corpus import SourceText
-from core.runtime.ollama import ModelUnavailable, Ollama
+from core.runtime.ollama import Ollama
 
 log = logging.getLogger(__name__)
 
@@ -227,11 +227,15 @@ def extract_values(
 ) -> list[ExtractedValue]:
     """Every value the source prints for these keys, kept only when its passage prints it.
 
-    One model call per section. A model that is down raises `ModelUnavailable`, whichever section
-    it failed on, and never returns what the earlier sections gave: an empty or partial list would
-    read as a source that prints fewer values than it does, and the index would act on that.
-    A model that answers but whose reply is not a JSON object with a `values` list has read that
-    section badly, which is logged and counts as no values for that section only.
+    One model call per section. Anything that keeps a section from being read — the request
+    itself failing, or its reply coming back truncated or not JSON at all — raises
+    `ModelUnavailable` and is not caught here, whichever section it happened on: the index rolls
+    the whole pack back on it and the next run retries, rather than committing a hash for a
+    section that was never actually read. An empty or partial list from a section that failed
+    would look, to a calculator later, like a source that simply prints fewer values than it does.
+    A reply that *is* valid JSON but has no `values` list, or an item in that list that is not an
+    object, means the model answered and just proposed nothing usable there; that is logged and
+    counts as no values for that section only.
     """
     if not keys:
         return []
@@ -239,13 +243,10 @@ def extract_values(
     schema = _schema(keys)
     kept: list[ExtractedValue] = []
     for section in split_sections(source.text):
-        # An outage raises from here and is not caught.
+        # An outage raises from here — including from `.json()` below, on a truncated or
+        # non-JSON reply — and is not caught.
         generated = client.constrained(SYSTEM, _prompt(source, keys, section), schema)
-        try:
-            reported = generated.json()
-        except ModelUnavailable as error:
-            log.info("no values from a section of %s: %s", source.document.file, error)
-            continue
+        reported = generated.json()
         values = reported.get("values")
         if not isinstance(values, list):
             log.info("no values from a section of %s: the reply had no list", source.document.file)

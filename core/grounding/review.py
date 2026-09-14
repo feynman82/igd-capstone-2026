@@ -22,7 +22,7 @@ from typing import Any
 
 SELECT_PENDING = """
 SELECT v.id, v.pack_id, v.key, v.unit, v.value_num, v.value_text, v.qualifiers, v.passage,
-       s.title, s.publisher, s.url
+       s.title, s.publisher, s.url, s.applies_to, s.review_by
   FROM grounding_values v
   JOIN grounding_sources s ON s.id = v.source_id
  WHERE v.status = 'pending'
@@ -61,6 +61,8 @@ class PendingValue:
     source_title: str
     publisher: str
     url: str
+    applies_to: str
+    review_by: date
 
 
 def pending(conn: Any, pack_id: str | None = None) -> list[PendingValue]:
@@ -81,6 +83,8 @@ def pending(conn: Any, pack_id: str | None = None) -> list[PendingValue]:
             source_title=row[8],
             publisher=row[9],
             url=row[10],
+            applies_to=row[11],
+            review_by=row[12],
         )
         for row in rows
     ]
