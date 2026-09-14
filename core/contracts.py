@@ -390,6 +390,13 @@ class PackManifest(Strict):
                     )
 
             for fact in shape.facts:
+                # A year's figure is made from a month's only for income, the one role every
+                # published multiple and rate band reads annually. A total or a value read once
+                # multiplied by 12 would be a number no document prints and no rule asked for.
+                if fact.per != "once" and fact.role != "income":
+                    raise ValueError(
+                        f"{where} reads {fact.role!r} per {fact.per}, which only income may be"
+                    )
                 if fact.pack is None and (reason := self.undeclared(fact.doc_types, fact.field)):
                     raise ValueError(f"{where}, fact {fact.role!r}: {reason}")
                 if fact.category is not None and fact.category not in category_ids:
@@ -423,10 +430,10 @@ class PackManifest(Strict):
 
         The calculator compares only fields both sides print, so a misspelt field would not fail:
         it would silently drop out of every table. A field needs declaring on at least one of the
-        compared fact's document types, because a shape comparing a schedule with a renewal
-        notice legitimately compares the fields only some of them print. A market comparison may
-        also compare a field its sources publish as a value key and no document of this pack
-        prints. Facts read from another pack are left to `core.packs.check_advice_links`.
+        compared fact's document types, because a shape comparing two document types that print
+        different fields legitimately compares the fields only some of them print. A market
+        comparison may also compare a field its sources publish as a value key and no document of
+        this pack prints. Facts read from another pack are left to `core.packs.check_advice_links`.
         """
         role = {"compare_own": "items", "compare_market": "held"}.get(shape.calculator)
         compared = next((f for f in shape.facts if f.role == role), None)

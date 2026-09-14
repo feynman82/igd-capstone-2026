@@ -208,6 +208,14 @@ def _undeclared_rule_key(raw: dict[str, Any]) -> None:
     _shape(raw, "ci_gap")["rules"][0]["key"] = "not_a_key"
 
 
+def _held_per_month(raw: dict[str, Any]) -> None:
+    _fact(raw, "ci_gap", "held")["per"] = "month"
+
+
+def _held_per_year(raw: dict[str, Any]) -> None:
+    _fact(raw, "ci_gap", "held")["per"] = "year"
+
+
 def _order_by_not_compared(raw: dict[str, Any]) -> None:
     _shape(raw, "hospital_plans")["order_by"] = "sum_insured"
 
@@ -277,6 +285,8 @@ def _market_compares_an_undeclared_field(raw: dict[str, Any]) -> None:
         (_field_not_on_every_doc_type, "ci_gap.*sum_insured.*renewal_notice"),
         (_undeclared_category, "ci_gap.*not_a_category"),
         (_undeclared_rule_key, "ci_gap.*not_a_key"),
+        (_held_per_month, "advice shape 'ci_gap' reads 'held' per month, which only income may be"),
+        (_held_per_year, "advice shape 'ci_gap' reads 'held' per year, which only income may be"),
         (_order_by_not_compared, "hospital_plans.*sum_insured"),
         (_compare_without_an_ordering, "hospital_plans"),
         (_duplicate_shape, "duplicate.*ci_gap"),
@@ -292,6 +302,16 @@ def test_an_inconsistent_advice_block_is_rejected_by_name(
     mutate(raw)
     with pytest.raises(ValidationError, match=names):
         PackManifest.model_validate(raw)
+
+
+@pytest.mark.parametrize("per", ["once", "month", "year"])
+def test_income_may_be_read_per_month_or_per_year(per: str) -> None:
+    """Only income is made annual, so only income may say how often its printed figure recurs."""
+    raw = _advised()
+    _fact(raw, "ci_gap", "income")["per"] = per
+    manifest = PackManifest.model_validate(raw)
+    assert manifest.advice is not None
+    assert manifest.advice.shapes[0].facts[0].per == per
 
 
 def test_a_market_comparison_may_compare_a_field_only_its_sources_publish() -> None:
