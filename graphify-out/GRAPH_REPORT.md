@@ -5,12 +5,12 @@
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2195 nodes · 3898 edges · 156 communities (139 shown, 17 thin omitted)
-- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 248 edges (avg confidence: 0.92)
+- 2119 nodes · 3737 edges · 152 communities (134 shown, 18 thin omitted)
+- Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 239 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0807a41e`
+- Built from commit: `d0e1dadf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -118,6 +118,7 @@
 - 9. `next-themes` and `lucide-react` are the only two web dependencies beyond the named stack
 - vault/page.tsx
 - Siew — task list
+- WhoIsThis
 - Settings
 - vault.py
 - dependencies
@@ -139,23 +140,18 @@
 - document-detail.tsx
 - today/page.tsx
 - 4. Local setup can run before the household assistant is ready
-- ingest/reindex.py
 - scope_passages
 - (app)/layout.tsx
 - devDependencies
 - Working agreement for coding agents
-- igd-capstone-2026
 - FakeCursor
 - app/page.tsx
 - Desmond — Lane E · Corpus and adversarial testing
 - build
 - ingest/quarantine.py
-- Ollama
 - 2. One PostgreSQL instance for everything
 - 12. Chunks follow the document's headings, and embeddings use the model's task prompts
-- 6. pypdfium2 renders the page images the quarantine second pass reads
 - package.json
-- Yew Mun — Lane B · Retrieval and evaluation
 - postcss.config.mjs
 - 13. A question is understood before it is searched, and scoped before it is cut
 - github.md
@@ -164,24 +160,21 @@
 - Notebook prompts — the four full policies for Marcus Lim
 - Christian — Lane A · Integration and product owner
 - Siew — Lane C · Governance and assurance
-- 7. The answer graph ships before hybrid retrieval and before a checkpoint table
 - 8. Ingestion runs on a Celery worker, and the queue carries a digest rather than the document
 
 ## God Nodes (most connected - your core abstractions)
 1. `Settings` - 76 edges
 2. `Ollama` - 49 edges
-3. `ingest/quarantine.py` - 40 edges
+3. `ingest/quarantine.py` - 37 edges
 4. `FakeOllama` - 30 edges
 5. `FolderAdapter` - 30 edges
-6. `extract()` - 30 edges
+6. `extract()` - 29 edges
 7. `ConfigurationError` - 26 edges
 8. `create_app()` - 26 edges
 9. `ModelUnavailable` - 25 edges
 10. `connect()` - 25 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `FakeOllama` --uses--> `Generated`  [INFERRED]
-  tests/test_ingest_pipeline.py → core/runtime/ollama.py
 - `warm_models()` --uses--> `ModelUnavailable`  [INFERRED]
   api/startup.py → core/runtime/ollama.py
 - `create_app()` --uses--> `Settings`  [INFERRED]
@@ -190,19 +183,21 @@
   scripts/bench_runtime.py → core/runtime/settings.py
 - `main()` --uses--> `Settings`  [INFERRED]
   scripts/load_corpus.py → core/runtime/settings.py
+- `main()` --uses--> `Settings`  [INFERRED]
+  scripts/quarantine.py → core/runtime/settings.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (156 total, 17 thin omitted)
+## Communities (152 total, 18 thin omitted)
 
 ### Community 0 - "run_parrot.py"
-Cohesion: 0.13
-Nodes (21): _kill_tree(), main(), open_browser(), parse_args(), port_answers(), Run the engine, the folder watcher, the ingestion worker and the screens…, Stop a child and everything under it, then make sure it has gone., Whether something is listening on loopback. Not whether it is ours. (+13 more)
+Cohesion: 0.14
+Nodes (18): broker_available(), Whether Redis answers. Not whether a worker is listening —…, main(), open_browser(), parse_args(), port_answers(), Run the engine, the folder watcher, the ingestion worker and the screens…, Whether something is listening on loopback. Not whether it is ours. (+10 more)
 
 ### Community 1 - "packs/page.tsx"
-Cohesion: 0.09
-Nodes (18): next, packs/page.tsx, dynamic, metadata, runtime, [id]/page.tsx, dynamic, metadata (+10 more)
+Cohesion: 0.11
+Nodes (12): packs/page.tsx, dynamic, metadata, runtime, [id]/page.tsx, dynamic, metadata, runtime (+4 more)
 
 ### Community 2 - "Christian — task list"
 Cohesion: 0.18
@@ -213,20 +208,20 @@ Cohesion: 0.09
 Nodes (38): _as_date(), _fields(), _known_doc_types(), _known_fields(), main(), _pages(), Validate a document register before it is handed over. python -m…, Parse `field_pages`: semicolon-separated `name=page`, 1-based. Empty means page… (+30 more)
 
 ### Community 4 - "4. Writing `pack.yaml`"
-Cohesion: 0.12
-Nodes (15): 1. What a pack is, 2. The one thing to understand before you start, 3. The workflow, 4. Writing `pack.yaml`, 5. The grounding corpus, 6. Definition of done, 7. Where to ask, Authoring a domain pack (+7 more)
+Cohesion: 0.16
+Nodes (16): system/route.ts, ACTIONS, dynamic, GET(), POST(), runtime, sameOrigin(), unlocked() (+8 more)
 
 ### Community 5 - "Project PARROT — team split"
-Cohesion: 0.14
-Nodes (13): A · Integration and product owner — **Christian** *(builder)*, B · Retrieval and evaluation — **Yew Mun**, the data scientist *(builder)*, C · Governance and assurance — **Siew**, the data governance officer, D · Domain packs and interface — **Zee**, the commercial member *(builder)*, E · Corpus and adversarial testing — **Desmond**, the police officer, Everyone, regardless of lane, How the code gets written, Presentation split (+5 more)
+Cohesion: 0.29
+Nodes (7): Everyone, regardless of lane, How the code gets written, Presentation split, Project PARROT — team split, Swap rules, The one process change that matters, Two rules for the corpus
 
 ### Community 6 - "Project PARROT — team split"
-Cohesion: 0.15
-Nodes (13): A · Integration and product owner — **Christian** *(builder)*, B · Retrieval and evaluation — **Yew Mun**, the data scientist *(builder)*, C · Governance and assurance — **Siew**, the data governance officer, D · Domain packs and interface — **Zee**, the commercial member *(builder)*, E · Corpus and adversarial testing — **Desmond**, the police officer, Everyone, regardless of lane, How the code gets written, Presentation split (+5 more)
+Cohesion: 0.29
+Nodes (7): Everyone, regardless of lane, How the code gets written, Presentation split, Project PARROT — team split, Swap rules, The one process change that matters, The rule for the corpus
 
 ### Community 7 - "sha256"
-Cohesion: 0.22
-Nodes (10): What every capture channel hands a document to. An adapter's job ends at "these…, Register a document, idempotently, on a SHA-256 of the source bytes. This is…, Insert or update the `documents` row for these bytes and say which happened.…, register_document(), The idempotent upsert, against the real unique index. `documents.sha256 UNIQUE`…, test_a_document_must_arrive_with_a_name(), test_a_new_document_is_inserted(), test_an_empty_payload_is_refused() (+2 more)
+Cohesion: 0.13
+Nodes (17): CaptureAdapter, The one interface every capture channel satisfies. receive(payload, mime,…, The idempotency key for the whole platform. Bytes, not hex: `documents.sha256`…, Folder, Telegram, and post-MVP WhatsApp and Drive, all reduced to one call., sha256(), adapters/__init__.py, Capture adapters. Every channel a document can arrive through satisfies one…, What every capture channel hands a document to. An adapter's job ends at "these… (+9 more)
 
 ### Community 8 - "Running the evaluation harness"
 Cohesion: 0.18
@@ -245,12 +240,12 @@ Cohesion: 0.20
 Nodes (10): zee/tasks.md, W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W5 — due 2026-10-06, W6 — due 2026-10-13, W7 — due 2026-10-20 (+2 more)
 
 ### Community 12 - "Yew Mun — task list"
-Cohesion: 0.18
-Nodes (11): W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13, W7 — due 2026-10-20 (+3 more)
+Cohesion: 0.10
+Nodes (20): yew-mun/README.md, Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation (+12 more)
 
 ### Community 13 - "Try PARROT"
-Cohesion: 0.13
-Nodes (15): 1 · Install five things, 2 · Download the AI models, 3 · Get the code and set it up, 4 · Put some documents in, 5 · Run it, 6 · Use it, Ask — a question about your own documents, If something goes wrong (+7 more)
+Cohesion: 0.22
+Nodes (9): 1 · Install five things, 2 · Download the AI models, 3 · Get the code and set it up, 4 · Put some documents in, 5 · Run it, If something goes wrong, Try PARROT, Want to work on it, not just try it? (+1 more)
 
 ### Community 14 - "Filling the corpus register"
 Cohesion: 0.20
@@ -265,24 +260,24 @@ Cohesion: 0.33
 Nodes (5): Before you say you are done, Claude Code — read this first, Finding your way around, Skills and commands, The three things agents get wrong here
 
 ### Community 17 - "test_worker_queue.py"
-Cohesion: 0.13
-Nodes (22): The idempotency key for the whole platform. Bytes, not hex: `documents.sha256`…, sha256(), FakeConnection, The queue, tested with no broker anywhere. What is worth asserting here is not…, The whole point. If `process` is reachable from the capture thread, nothing was…, The cheapest queue message is the one never sent, and the SHA-256 says these…, Eight seconds per document is what this change exists to remove. Five documents…, Enough of psycopg to register a document and to count the commits. (+14 more)
+Cohesion: 0.12
+Nodes (23): Queued, Hand the document to the worker and go back to watching the folder., A `Queued` bound to this configuration's broker. Celery is imported here rather…, FakeConnection, The queue, tested with no broker anywhere. What is worth asserting here is not…, The whole point. If `process` is reachable from the capture thread, nothing was…, The cheapest queue message is the one never sent, and the SHA-256 says these…, Eight seconds per document is what this change exists to remove. Five documents… (+15 more)
 
 ### Community 18 - "Zee — Lane D · Domain packs and interface"
-Cohesion: 0.22
-Nodes (9): Half one — domain packs (weeks 1 to 7), Half two — the interface (weeks 4 to 8), Read this first, Rules that apply to you specifically, The two halves of this lane, What "done" looks like, What you present, Your Claude Code skills (+1 more)
+Cohesion: 0.24
+Nodes (18): FolderAdapter, Satisfies `CaptureAdapter`. Holds no database handle — it is given a…, FakeRegistrar, The watched folder: debounce, mime sniffing, and what happens the second time.…, Poll until the stability window has passed and something comes out., The `documents` table, reduced to the one thing it guarantees: sha256 is unique., _settle(), test_a_file_removed_before_it_settles_is_forgotten() (+10 more)
 
 ### Community 19 - "Authoring a domain pack"
-Cohesion: 0.25
-Nodes (8): authoring-a-domain-pack/SKILL.md, Authoring a domain pack, Before anything else, Done, Grounding, when the pack needs it, Never, The rule that governs everything, Work in this order, stopping for the author at each step
+Cohesion: 0.10
+Nodes (26): ingest/extract.py, _coerce(), _date_renderings(), decode_schema(), _drop_format(), find_page(), _normalise(), _prepare() (+18 more)
 
 ### Community 20 - "Household canon"
 Cohesion: 0.25
 Nodes (7): Address, Employment, Household canon, Life events that documents must reflect, People, Policies, Vehicles
 
 ### Community 21 - "Registration"
-Cohesion: 0.15
-Nodes (8): Inline, What happens to a document between "these bytes are registered" and "this…, Put one ingestion message on the queue and return its task id., Run the pipeline here and now, and report what it decided., Send, An already-indexed document is not read again. Re-reading it would burn a…, The row as it now stands, plus whether this call is the one that created it., Registration
+Cohesion: 0.14
+Nodes (13): FolderSettings, Dispatcher, Given a registered document, arrange for it to be read. Says what it arranged., Intake, An already-indexed document is not read again. Re-reading it would burn a…, FolderCapture, A daemon thread that polls the watched folder until `stop()` or process exit., Begin watching. Returns False, with a logged reason, when it cannot. (+5 more)
 
 ### Community 22 - "build_team_tasks.py"
 Cohesion: 0.48
@@ -349,12 +344,12 @@ Cohesion: 0.40
 Nodes (4): Checks, Evaluation, Lane, What this changes
 
 ### Community 39 - "Grounding corpora"
-Cohesion: 0.40
-Nodes (5): grounding/README.md, Grounding corpora, Owner, Rules, Structure
+Cohesion: 0.14
+Nodes (11): IngestJob, Magic bytes first, filename suffix second, `application/octet-stream` last. A…, What a capture returns: a registered document, and whether we had seen it…, sniff_mime(), _Pending, The watched-folder capture adapter. A person drops a scan into a folder and it…, Every file in the watched folder that is worth looking at at all., Advance the debounce by `elapsed` seconds and return the files now ready. Time… (+3 more)
 
 ### Community 40 - "Notice"
-Cohesion: 0.40
-Nodes (4): Notice, Third-party components, This repository contains no personal data, Use
+Cohesion: 0.15
+Nodes (18): parse(), The one call the pipeline makes. An unhandled mime type quarantines rather than…, document_title(), The document as a person would name it: its `string` fields as read, in the…, pgvector accepts its own text form; this avoids registering an adapter for one…, _vector_literal(), ingest/reindex.py, IndexedDocument (+10 more)
 
 ### Community 41 - "Changelog"
 Cohesion: 0.50
@@ -377,20 +372,20 @@ Cohesion: 0.10
 Nodes (20): 11. The household is people and aliases, and the owner is one of them, Consequences, Context, Decision, 1 · The failure this fixes, 2 · What already existed, 3 · Why a roster is not a setup form, 4 · The data model (+12 more)
 
 ### Community 53 - "IngestJob"
-Cohesion: 0.24
-Nodes (8): create_app(), checks(), lifespan(), ready(), setup(), system_status(), install_best_effort(), Install at startup without being able to stop startup. Both processes that own…
+Cohesion: 0.27
+Nodes (7): create_app(), checks(), ready(), setup(), system_status(), test_liveness_is_independent_of_dependency_checks(), test_untrusted_host_is_rejected()
 
 ### Community 54 - "alert/__init__.py"
 Cohesion: 0.26
 Nodes (13): alert/__init__.py, _citations(), cpf_contributions_ytd(), days_uncovered(), donations_ytd(), Measurement, The Alert module: a pack-declared threshold, crossed once, citing the documents…, Days since cover lapsed, per insured person. Zero while a policy still runs. (+5 more)
 
 ### Community 55 - "find_page"
-Cohesion: 0.22
-Nodes (7): ModelWarmth, The page a person sees while Parrot starts, served by the engine itself. **Why…, Whether the generator has been loaded yet, and where it landed. Written by one…, Load the generator and the embedder before the first question, and record the…, The whole page. `screens_url` is escaped into a data attribute, never into…, render(), warm_models()
+Cohesion: 0.40
+Nodes (3): The page a person sees while Parrot starts, served by the engine itself. **Why…, The whole page. `screens_url` is escaped into a data attribute, never into…, render()
 
 ### Community 56 - "TelegramAdapter"
-Cohesion: 0.06
-Nodes (47): CaptureAdapter, IngestJob, The one interface every capture channel satisfies. receive(payload, mime,…, Magic bytes first, filename suffix second, `application/octet-stream` last. A…, What a capture returns: a registered document, and whether we had seen it…, Folder, Telegram, and post-MVP WhatsApp and Drive, all reduced to one call., sniff_mime(), FolderAdapter (+39 more)
+Cohesion: 0.13
+Nodes (12): _attachment(), The Telegram capture adapter. Same interface as the folder: `receive(payload,…, Confirm the token works before anything else is attempted., One `getUpdates` round. Returns what was captured; replies with what was…, Delete at source. A failure is logged, never raised: the document is already…, The largest photo, or the document. Telegram sends photos in several sizes., Keep the bytes where the quarantine retry can find them again., Satisfies `CaptureAdapter`. Holds no database handle — it is given a… (+4 more)
 
 ### Community 57 - "export-design-preview.cjs"
 Cohesion: 0.11
@@ -405,8 +400,8 @@ Cohesion: 0.20
 Nodes (11): owner(), owner_aliases(), The person asking. `None` before setup has run, which every caller must handle:…, Every confirmed string that means the owner. This is what scopes a first-person…, Hand the household over. The owner is a row, not a value baked in at install.…, set_owner(), A daughter takes over her father's paperwork. The install follows., A fresh install is not broken. It answers about the household, as it always… (+3 more)
 
 ### Community 60 - "tasks.py"
-Cohesion: 0.09
-Nodes (50): ingest/quarantine.py, blocked_reasons(), forget(), QuarantinedDocument, queue(), The second stage of quarantine: the page image, read by the vision-language…, Per document: `None` when the image pass can run, or the sentence saying why it…, Safe to show. Forgetting a document whose file is still there would not last. (+42 more)
+Cohesion: 0.11
+Nodes (43): ingest/quarantine.py, blocked_reasons(), forget(), QuarantinedDocument, queue(), The second stage of quarantine: the page image, read by the vision-language…, Per document: `None` when the image pass can run, or the sentence saying why it…, Safe to show. Forgetting a document whose file is still there would not last. (+35 more)
 
 ### Community 61 - "test_pages.py"
 Cohesion: 0.11
@@ -414,7 +409,7 @@ Nodes (32): page_images(), Base64 page images, in page order. Empty when this do
 
 ### Community 62 - "test_ingest_pipeline.py"
 Cohesion: 0.08
-Nodes (48): ingest/extract.py, _date_renderings(), decode_schema(), _drop_format(), extract(), find_page(), _normalise(), _prepare() (+40 more)
+Nodes (41): Classification, classify(), _prompt(), Decide which pack's document type a captured document is, or decline to. The…, Never raises. An unavailable model is a classification failure, so it…, _schema(), extract(), Never raises. A failure is a reason, and a reason routes the document to… (+33 more)
 
 ### Community 63 - "bench_runtime.py"
 Cohesion: 0.09
@@ -426,27 +421,27 @@ Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModu
 
 ### Community 65 - "parse.py"
 Cohesion: 0.10
-Nodes (19): Block, DoclingParser, _kind(), _pages_from(), Parser, PlainTextParser, Turn captured bytes into pages of text, or say why it could not be done. Every…, Docling, held at arm's length: imported on first use, and never at module… (+11 more)
+Nodes (17): Block, DoclingParser, _pages_from(), Parser, PlainTextParser, Turn captured bytes into pages of text, or say why it could not be done. Every…, Docling, held at arm's length: imported on first use, and never at module…, Group Docling's items by the page they were found on. Docling's markdown export… (+9 more)
 
 ### Community 66 - "test_startup.py"
-Cohesion: 0.11
-Nodes (24): Start `npm run dev` in `web/`, or say plainly why it could not. Three reasons…, start_web(), main(), Local-only startup preflight, using the standard library so setup can be…, Inspect startup files without importing the application or reading user data., Report categories only, without hostname, username, serial numbers or file…, report_hardware(), startup_gaps() (+16 more)
+Cohesion: 0.08
+Nodes (32): _kill_tree(), Stop a child and everything under it, then make sure it has gone., Start `npm run dev` in `web/`, or say plainly why it could not. Three reasons…, Stop the whole npm tree, not just the wrapper that was launched. This is the…, Stop the worker and the schedule it started, not just the launcher in front of…, start_web(), stop_web(), stop_worker() (+24 more)
 
 ### Community 67 - "pipeline.py"
-Cohesion: 0.09
-Nodes (29): _coerce(), ExtractedFact, Extraction, Put the value in the one `facts` column its declared type maps to, or reject it., One extraction attempt against one window of the document's text. Page…, _read(), ingest/__init__.py, The ingestion worker. Capture registers a document; this package turns it into… (+21 more)
+Cohesion: 0.06
+Nodes (35): DenseRetriever, NoReranker, A dense-only retriever, so the graph can be run and tested before Lane B's…, Keeps the top `keep` in the order retrieval gave them. Lane B replaces this…, Chunk, What is actually embedded: the prefix plus the text, matching the tsvector…, Inline, What happens to a document between "these bytes are registered" and "this… (+27 more)
 
 ### Community 68 - "registry.py"
 Cohesion: 0.09
 Nodes (30): installed_modules(), InstalledModule, manifest(), ModuleUnavailable, Load the installed capability modules at runtime. The mirror of…, A module's YAML is missing, or does not validate against `ModuleManifest`., One module's manifest, validated. Raises rather than returning a partial object., Every module directory holding a `module.yaml`, in a stable order. Directories… (+22 more)
 
 ### Community 69 - "baseline.py"
-Cohesion: 0.29
-Nodes (4): DenseRetriever, NoReranker, A dense-only retriever, so the graph can be run and tested before Lane B's…, Keeps the top `keep` in the order retrieval gave them. Lane B replaces this…
+Cohesion: 0.14
+Nodes (8): A question, embedded the way the model was trained to embed a search query., Passages as `(title, text)`, embedded the way the model was trained to embed a…, Load the generator and the embedder now, and say where the generator landed. An…, Generate against a JSON schema. This is how extraction is held to a pack's…, The same constrained generation, yielded as it is written. Identical body to…, Whether this embedding model expects `QUERY_PROMPT` and `DOCUMENT_PROMPT`., One request for the whole batch. Returns vectors in the order given., uses_task_prompts()
 
 ### Community 70 - "team/README.md"
-Cohesion: 0.22
-Nodes (10): christian/README.md, christian/tasks.md, desmond/README.md, desmond/tasks.md, team/README.md, siew/README.md, siew/tasks.md, yew-mun/README.md (+2 more)
+Cohesion: 0.29
+Nodes (4): christian/README.md, christian/tasks.md, desmond/README.md, desmond/tasks.md
 
 ### Community 71 - "FakeConn"
 Cohesion: 0.33
@@ -457,16 +452,12 @@ Cohesion: 0.11
 Nodes (17): design-preview/page.tsx, metadata, answers, DesignPreview(), Direction, directions, Item, items (+9 more)
 
 ### Community 73 - "react"
-Cohesion: 0.13
-Nodes (14): react, household/page.tsx, dynamic, metadata, runtime, OwnerForm(), RELATION_CHOICES, Roster() (+6 more)
+Cohesion: 0.15
+Nodes (10): react, household/page.tsx, dynamic, metadata, runtime, OwnerForm(), RELATION_CHOICES, Roster() (+2 more)
 
 ### Community 74 - "Starting Parrot"
-Cohesion: 0.12
-Nodes (16): Access and privacy, Asking a question, Dropping a document in, First test machine: Christian's Legion, Hardware qualification, Local validation notes, 2026-09-11, Moving a corpus between machines, Quarantine, and the second pass (+8 more)
-
-### Community 76 - "FolderAdapter"
-Cohesion: 0.33
-Nodes (5): Queued, Hand the document to the worker and go back to watching the folder., A `Queued` bound to this configuration's broker. Celery is imported here rather…, Return something that puts one ingestion message on the queue and yields its…, sender()
+Cohesion: 0.06
+Nodes (28): 5. The watched folder is polled for stability, not subscribed to for events, Consequences, Context, Decision, 6. pypdfium2 renders the page images the quarantine second pass reads, Consequences, Context, Decision (+20 more)
 
 ### Community 77 - "Notion"
 Cohesion: 0.25
@@ -489,16 +480,16 @@ Cohesion: 0.29
 Nodes (7): Before your first commit, Contributing, Decisions, Generated files, If it touches retrieval, extraction or the grounding gate, The loop, When you are unsure
 
 ### Community 82 - "unlock/page.tsx"
-Cohesion: 0.43
-Nodes (6): enabled_pack_ids(), enabled_packs(), The packs left switched on, or `None` when nothing has been installed yet.…, The installed packs a person has left switched on, as loaded pack objects. This…, main(), Today: what the two capability modules have to say, ordered by urgency. uv run…
+Cohesion: 0.29
+Nodes (10): [...path]/route.ts, ALLOWED, Context, DELETE(), dynamic, forward(), GET(), PATCH() (+2 more)
 
 ### Community 83 - "components.json"
 Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
 ### Community 85 - "ConfigurationError"
-Cohesion: 0.12
-Nodes (20): Safe to show: never contains the token., TelegramUnavailable, ConfigurationError, _folder(), local_url(), _port(), _positive(), Small, literal .env reader with environment overrides and loopback-only… (+12 more)
+Cohesion: 0.11
+Nodes (21): Safe to show: never contains the token., TelegramSettings, TelegramUnavailable, ConfigurationError, _folder(), local_url(), _port(), _positive() (+13 more)
 
 ### Community 86 - "Architecture"
 Cohesion: 0.29
@@ -517,24 +508,24 @@ Cohesion: 0.14
 Nodes (11): Action, CONFIRM, ITEMS, PowerMenu(), Stage, DependencyCheck, Phase, RestartingScreen() (+3 more)
 
 ### Community 90 - "lock.ts"
-Cohesion: 0.08
-Nodes (48): auth/route.ts, dynamic, GET(), grant(), POST(), runtime, [...path]/route.ts, ALLOWED (+40 more)
+Cohesion: 0.16
+Nodes (23): auth/route.ts, dynamic, GET(), grant(), POST(), runtime, Accepted, clearFailures() (+15 more)
 
 ### Community 91 - "checks.py"
-Cohesion: 0.15
-Nodes (19): The local API. Liveness is intentionally separate from assistant readiness.…, capture_check(), Check, collect_checks(), database_check(), interface_check(), model_check(), Read-only dependency diagnostics; installation is never treated as inference… (+11 more)
+Cohesion: 0.16
+Nodes (21): The local API. Liveness is intentionally separate from assistant readiness.…, capture_check(), Check, collect_checks(), database_check(), interface_check(), model_check(), Read-only dependency diagnostics; installation is never treated as inference… (+13 more)
 
 ### Community 92 - "build.py"
 Cohesion: 0.20
 Nodes (15): _class_name(), _docstring(), _field_line(), load(), main(), Generate everything downstream of a pack.yaml. python -m packs.build #…, The header row Desmond fills in, one file per pack. Long format: one row per…, The header a batch register starts from: every field of every installed pack. A… (+7 more)
 
 ### Community 93 - "5. The watched folder is polled for stability, not subscribed to for events"
-Cohesion: 0.40
-Nodes (4): 5. The watched folder is polled for stability, not subscribed to for events, Consequences, Context, Decision
+Cohesion: 0.33
+Nodes (6): A · Integration and product owner — **Christian** *(builder)*, B · Retrieval and evaluation — **Yew Mun**, the data scientist *(builder)*, C · Governance and assurance — **Siew**, the data governance officer, D · Domain packs and interface — **Zee**, the commercial member *(builder)*, E · Corpus and adversarial testing — **Desmond**, the police officer, The five lanes
 
 ### Community 94 - "The team"
 Cohesion: 0.33
-Nodes (6): Everyone, regardless of lane, The dependency that sets the order, The presentation split, The task lists are generated, The team, Why work does not live here
+Nodes (6): A · Integration and product owner — **Christian** *(builder)*, B · Retrieval and evaluation — **Yew Mun**, the data scientist *(builder)*, C · Governance and assurance — **Siew**, the data governance officer, D · Domain packs and interface — **Zee**, the commercial member *(builder)*, E · Corpus and adversarial testing — **Desmond**, the police officer, The five lanes
 
 ### Community 102 - "3. PaperBrain informs core/retrieve/'s pattern; it is not the core module"
 Cohesion: 0.29
@@ -545,28 +536,32 @@ Cohesion: 0.20
 Nodes (10): 1 · Collaborators, 2 · Branch protection — deliberately not configured, 3 · Actions permissions, 4 · Project board, 5 · The Notion hub, First run, Send these on day one, Setting up a second machine (+2 more)
 
 ### Community 104 - "ModelUnavailable"
-Cohesion: 0.24
-Nodes (9): Classification, classify(), _prompt(), Decide which pack's document type a captured document is, or decline to. The…, Never raises. An unavailable model is a classification failure, so it…, _schema(), test_a_document_no_pack_recognises_is_not_forced_into_one(), test_a_low_confidence_classification_is_refused() (+1 more)
+Cohesion: 0.33
+Nodes (6): 6 · Use it, Ask — a question about your own documents, Packs — what this assistant knows about, Today — where it opens, Vault — everything it has filed, Without the screens
 
 ### Community 105 - "9. `next-themes` and `lucide-react` are the only two web dependencies beyond the named stack"
 Cohesion: 0.29
 Nodes (6): 9. `next-themes` and `lucide-react` are the only two web dependencies beyond the named stack, Alternatives considered, Consequences, Context, Decision, Revisit when
 
 ### Community 106 - "vault/page.tsx"
-Cohesion: 0.33
-Nodes (3): GoneRow(), QuarantineQueue(), QuarantineRow()
+Cohesion: 0.18
+Nodes (7): vault/page.tsx, dynamic, metadata, runtime, GoneRow(), QuarantineQueue(), QuarantineRow()
 
 ### Community 107 - "Siew — task list"
 Cohesion: 0.18
 Nodes (11): Siew — task list, W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W4 — due 2026-09-29, W5 — due 2026-10-06, W6 — due 2026-10-13 (+3 more)
 
+### Community 108 - "WhoIsThis"
+Cohesion: 0.83
+Nodes (4): WhoIsThis(), answer(), notOneOfUs(), somebodyNew()
+
 ### Community 109 - "Settings"
-Cohesion: 0.13
-Nodes (28): Settings, conn(), database_url(), _ollama_answering(), Setup diagnostics use controlled service responses, never live household…, The browser opens on this within a second of a double-click, so it must not…, 13 September: size_vram was 0 on every model and nothing on screen said so., test_a_database_that_does_not_answer_fails_in_seconds() (+20 more)
+Cohesion: 0.11
+Nodes (25): ModelWarmth, Whether the generator has been loaded yet, and where it landed. Written by one…, Load the generator and the embedder before the first question, and record the…, warm_models(), conn(), database_url(), _ollama_answering(), Setup diagnostics use controlled service responses, never live household… (+17 more)
 
 ### Community 110 - "vault.py"
-Cohesion: 0.08
-Nodes (32): _columns(), correct(), Corrected, CorrectionRejected, A person fixing a field the extractor got wrong. This is the one place in the…, `(value_text, value_num, value_date)` — exactly one of them set. The declared…, Store what a person says this field actually says, and keep what it used to…, Safe to show: there is no fact with that id. (+24 more)
+Cohesion: 0.07
+Nodes (34): _columns(), correct(), Corrected, CorrectionRejected, A person fixing a field the extractor got wrong. This is the one place in the…, `(value_text, value_num, value_date)` — exactly one of them set. The declared…, Store what a person says this field actually says, and keep what it used to…, Safe to show: there is no fact with that id. (+26 more)
 
 ### Community 111 - "dependencies"
 Cohesion: 0.18
@@ -605,8 +600,8 @@ Cohesion: 0.08
 Nodes (24): Address, Employment, Household canon, Issuers for the documents that have no `insurer` field, Life events that documents must reflect, People, Policies, The family tree, and why three of them are not called Lim (+16 more)
 
 ### Community 126 - "next"
-Cohesion: 0.25
-Nodes (5): @ai-sdk/react, ask/page.tsx, metadata, Conversation(), SUGGESTIONS
+Cohesion: 0.18
+Nodes (7): @ai-sdk/react, next, ask/page.tsx, metadata, Conversation(), SUGGESTIONS, nextConfig
 
 ### Community 127 - "tokens/page.tsx"
 Cohesion: 0.11
@@ -636,17 +631,13 @@ Nodes (7): today/page.tsx, dynamic, isUrgent(), metadata, runtime, summary(), To
 Cohesion: 0.40
 Nodes (4): 4. Local setup can run before the household assistant is ready, Consequences, Context, Decision
 
-### Community 140 - "ingest/reindex.py"
-Cohesion: 0.11
-Nodes (25): document_title(), The document as a person would name it: its `string` fields as read, in the…, pgvector accepts its own text form; this avoids registering an adapter for one…, _vector_literal(), ingest/reindex.py, IndexedDocument, Rebuild a document's chunks and vectors without reading it again for facts.…, Parse, chunk and embed one document again, and replace its chunks. Returns how… (+17 more)
-
 ### Community 141 - "scope_passages"
 Cohesion: 0.15
 Nodes (15): HouseholdScope, Whose question is this, and whose documents may answer it. "What is my term…, `(word, relation)` when the question asks about a relation's own documents,…, The result of asking "whose is this?" of a question and its passages., A first-person question that nothing of the owner's can answer. The interesting…, Keep the owner's passages and the household's; set aside everybody else's. A…, Keep the passages of these people and of the household; set aside everybody…, What `AnswerGraph` is handed so it can scope without holding a connection.… (+7 more)
 
 ### Community 143 - "(app)/layout.tsx"
-Cohesion: 0.15
-Nodes (14): lucide-react, (app)/layout.tsx, AppLayout(), dynamic, runtime, LockButton(), SURFACES, TabBar() (+6 more)
+Cohesion: 0.17
+Nodes (13): lucide-react, (app)/layout.tsx, AppLayout(), dynamic, runtime, LockButton(), SURFACES, TabBar() (+5 more)
 
 ### Community 144 - "devDependencies"
 Cohesion: 0.25
@@ -656,25 +647,17 @@ Nodes (8): devDependencies, postcss, tailwindcss, @tailwindcss/postcss, @types/n
 Cohesion: 0.29
 Nodes (7): Before you read files at random, Definition of done, Hard rules, Stack — do not substitute, Style, What to do when you are unsure, Working agreement for coding agents
 
-### Community 146 - "igd-capstone-2026"
-Cohesion: 0.20
-Nodes (10): Authoring a pack, igd-capstone-2026, `main` is not protected, Quick start, The stack, in one table, The three rules that matter, What it is, Where things live (+2 more)
-
 ### Community 149 - "Desmond — Lane E · Corpus and adversarial testing"
 Cohesion: 0.18
 Nodes (11): Desmond — Lane E · Corpus and adversarial testing, Done, per batch, Generating more documents: template, then notebook, Starter prompt for your coding agent, The one rule that changes everything: register first, The rule you cannot bend, The second half: adversarial testing, Volumes (+3 more)
 
 ### Community 150 - "build"
-Cohesion: 0.22
-Nodes (12): beat_schedule(), cron_expressions(), crontab_from(), manifest(), When the nightly sweeps run, read from the modules' own manifests. A module…, A five-field cron expression as Celery understands it., The cron line for each swept module, by module id. Testable without Celery…, Rule 6's habit: a schedule is written down in one place, and that place is the… (+4 more)
+Cohesion: 0.24
+Nodes (11): beat_schedule(), cron_expressions(), crontab_from(), manifest(), When the nightly sweeps run, read from the modules' own manifests. A module…, A five-field cron expression as Celery understands it., The cron line for each swept module, by module id. Testable without Celery…, Rule 6's habit: a schedule is written down in one place, and that place is the… (+3 more)
 
 ### Community 151 - "ingest/quarantine.py"
-Cohesion: 0.12
-Nodes (24): ingest/chunk.py, Chunk, chunk_pages(), _clean(), _lines(), _page_chunks(), _pieces(), Split parsed pages into retrieval-sized chunks that follow the document's own… (+16 more)
-
-### Community 152 - "Ollama"
-Cohesion: 0.10
-Nodes (16): runtime/ollama.py, Generated, ModelUnavailable, The one client that talks to Ollama. Everything the platform infers goes…, A question, embedded the way the model was trained to embed a search query., Passages as `(title, text)`, embedded the way the model was trained to embed a…, Load the generator and the embedder now, and say where the generator landed. An…, Generate against a JSON schema. This is how extraction is held to a pack's… (+8 more)
+Cohesion: 0.14
+Nodes (22): ingest/chunk.py, chunk_pages(), _clean(), _lines(), _page_chunks(), _pieces(), Split parsed pages into retrieval-sized chunks that follow the document's own…, One flat list of chunks, ordinal running across the whole document. (+14 more)
 
 ### Community 153 - "2. One PostgreSQL instance for everything"
 Cohesion: 0.33
@@ -684,17 +667,9 @@ Nodes (5): 2. One PostgreSQL instance for everything, Consequences, Context, Dec
 Cohesion: 0.33
 Nodes (5): 12. Chunks follow the document's headings, and embeddings use the model's task prompts, Consequences, Context, Decision, Evidence
 
-### Community 155 - "6. pypdfium2 renders the page images the quarantine second pass reads"
-Cohesion: 0.40
-Nodes (4): 6. pypdfium2 renders the page images the quarantine second pass reads, Consequences, Context, Decision
-
 ### Community 156 - "package.json"
 Cohesion: 0.12
 Nodes (15): ai, class-variance-authority, clsx, postcss, react-dom, tailwind-merge, tailwindcss, @tailwindcss/postcss (+7 more)
-
-### Community 157 - "Yew Mun — Lane B · Retrieval and evaluation"
-Cohesion: 0.29
-Nodes (7): Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation
 
 ### Community 160 - "13. A question is understood before it is searched, and scoped before it is cut"
 Cohesion: 0.33
@@ -710,7 +685,7 @@ Nodes (6): scripts, build, dev, lint, start, typecheck
 
 ### Community 165 - "capture.py"
 Cohesion: 0.11
-Nodes (27): FolderSettings, Dispatcher, Given a registered document, arrange for it to be read. Says what it arranged., Intake, indexed(), Safe to show: names what went wrong, never what the document says., ReindexFailed, broker_available() (+19 more)
+Nodes (28): lifespan(), indexed(), enabled_pack_ids(), enabled_packs(), install_best_effort(), Install at startup without being able to stop startup. Both processes that own…, The packs left switched on, or `None` when nothing has been installed yet.…, The installed packs a person has left switched on, as loaded pack objects. This… (+20 more)
 
 ### Community 166 - "Notebook prompts — the four full policies for Marcus Lim"
 Cohesion: 0.13
@@ -721,31 +696,27 @@ Cohesion: 0.29
 Nodes (7): Also yours, Christian — Lane A · Integration and product owner, Starter prompt for your coding agent, Starter prompt: what can I actually pick up?, The five things you ship, Week 1, in order, What integration actually means here
 
 ### Community 177 - "Siew — Lane C · Governance and assurance"
-Cohesion: 0.29
-Nodes (7): Adversarial Set C, Done, per artefact, Siew — Lane C · Governance and assurance, Starter prompt for your coding agent, The autonomy statement, The six artefacts, Where governance touches the code
-
-### Community 178 - "7. The answer graph ships before hybrid retrieval and before a checkpoint table"
-Cohesion: 0.50
-Nodes (4): 7. The answer graph ships before hybrid retrieval and before a checkpoint table, Consequences, Context, Decision
+Cohesion: 0.22
+Nodes (9): siew/README.md, Adversarial Set C, Done, per artefact, Siew — Lane C · Governance and assurance, Starter prompt for your coding agent, The autonomy statement, The six artefacts, Where governance touches the code (+1 more)
 
 ### Community 179 - "8. Ingestion runs on a Celery worker, and the queue carries a digest rather than the document"
 Cohesion: 0.40
 Nodes (4): 8. Ingestion runs on a Celery worker, and the queue carries a digest rather than the document, Consequences, Context, Decision
 
 ## Knowledge Gaps
-- **607 isolated node(s):** `Context`, `Direction`, `Item`, `Outcome`, `Screen` (+602 more)
+- **560 isolated node(s):** `Context`, `Direction`, `Item`, `Outcome`, `Screen` (+555 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **17 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **18 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Settings` connect `Settings` to `run_parrot.py`, `test_startup.py`, `registry.py`, `capture.py`, `sha256`, `FolderAdapter`, `unlock/page.tsx`, `test_household.py`, `IngestJob`, `ConfigurationError`, `test_lifecycle.py`, `Ollama`, `checks.py`, `tasks.py`, `bench_runtime.py`?**
-  _High betweenness centrality (0.070) - this node is a cross-community bridge._
-- **Why does `Ollama` connect `tasks.py` to `run_parrot.py`, `pipeline.py`, `baseline.py`, `capture.py`, `ModelUnavailable`, `Settings`, `Registration`, `ConfigurationError`, `find_page`, `Ollama`, `test_ingest_pipeline.py`?**
-  _High betweenness centrality (0.035) - this node is a cross-community bridge._
+- **Why does `Settings` connect `checks.py` to `run_parrot.py`, `test_startup.py`, `pipeline.py`, `registry.py`, `capture.py`, `sha256`, `FolderAdapter`, `Settings`, `test_household.py`, `Registration`, `IngestJob`, `ConfigurationError`, `test_lifecycle.py`, `tasks.py`, `bench_runtime.py`?**
+  _High betweenness centrality (0.078) - this node is a cross-community bridge._
 - **Why does `Connection` connect `cli.py` to `Cursor`, `sha256`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
+  _High betweenness centrality (0.040) - this node is a cross-community bridge._
+- **Why does `Ollama` connect `tasks.py` to `run_parrot.py`, `pipeline.py`, `capture.py`, `baseline.py`, `Settings`, `Authoring a domain pack`, `Registration`, `ConfigurationError`, `find_page`, `checks.py`, `test_ingest_pipeline.py`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 52 inferred relationships involving `Settings` (e.g. with `create_app()` and `install_best_effort()`) actually correct?**
   _`Settings` has 52 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 14 inferred relationships involving `Ollama` (e.g. with `warm_models()` and `DenseRetriever`) actually correct?**
@@ -753,4 +724,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **Are the 14 inferred relationships involving `FolderAdapter` (e.g. with `IngestJob` and `Registrar`) actually correct?**
   _`FolderAdapter` has 14 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Context`, `Direction`, `Item` to the rest of the system?**
-  _607 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _560 weakly-connected nodes found - possible documentation gaps or missing edges._

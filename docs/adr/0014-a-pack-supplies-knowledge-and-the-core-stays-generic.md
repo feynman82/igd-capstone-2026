@@ -1,6 +1,7 @@
 # 14 · A pack supplies what the core knows about a domain, and the core stays generic
 
 - **Status:** Proposed
+- **Superseded in part by:** [0016](0016-a-pack-advises-code-calculates-under-recorded-consent.md) (decision 4, advice declines; and where a grounding corpus lives)
 - **Date:** 2026-09-13
 - **Decider:** Christian (Lane A), after a seven-seat design council; reviewed by Zee (packs, grounding), Siew (advice line, provenance), Yew Mun (ports)
 

@@ -1,6 +1,6 @@
 # Zee — Lane D · Domain packs and interface
 
-**Owner: Zee.** Directories: `packs/`, `grounding/`, `web/`.
+**Owner: Zee.** Directories: `packs/` (including each pack's `grounding/`), `web/`.
 
 > **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
 > **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
@@ -86,7 +86,7 @@ The full starter prompt, if you would rather paste one in, is in
 4. **Grounding sources must be official issuers.** IRAS, CPF Board, MAS, MOH, a named
    regulator. Not a blog, not a comparison site. Record the retrieval date; Siew reviews
    provenance with you.
-5. **Stay inside `packs/`, `grounding/` and `web/`.** `CODEOWNERS` puts your name on a PR
+5. **Stay inside `packs/` (including each pack's `grounding/`) and `web/`.** `CODEOWNERS` puts your name on a PR
    that touches them, so a PR that respects the boundary merges without a fight. It does
    not *stop* anyone crossing it — `main` is unprotected, see
    [ADR 0010](../../docs/adr/0010-main-is-unprotected-by-convention.md) — so if a change

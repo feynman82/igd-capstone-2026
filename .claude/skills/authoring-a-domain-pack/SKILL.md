@@ -98,7 +98,7 @@ well-chosen pages beat two hundred scraped ones.
 
 - Hand-edit `packs/*/schemas.py`, `corpus/register/*_columns.csv` or
   `docs/field-dictionary.md`. They are generated.
-- Touch anything outside `packs/` and `grounding/`.
+- Touch anything outside `packs/`, noting that each pack's grounding corpora live in `packs/<pack>/grounding/`.
 - Add a dependency.
 - Invent a field name the author did not agree to.
 
