@@ -45,7 +45,8 @@ export function OwnerForm({ onDone }: { onDone?: () => void }) {
       setBusy(false);
       return;
     }
-    onDone ? onDone() : window.location.reload();
+    if (onDone) onDone();
+    else window.location.reload();
   }
 
   return (
