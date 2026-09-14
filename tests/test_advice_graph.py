@@ -1,0 +1,558 @@
+"""The advise branch: code calculates under consent, the model explains, and the answer is recorded.
+
+ADR 0016. The adviser, the consent book and the log are fakes, and so is the model: what is under
+test is the graph's order of refusals and its two model calls, not the arithmetic
+(`tests/test_advice_module.py`) or the gate's rules (`tests/test_gate.py`).
+
+The pack is the insurance manifest with an advice block injected here. The real advice wording is
+Zee's, reviewed by Siew, so it is never written into `pack.yaml` by a test.
+"""
+
+from __future__ import annotations
+
+from datetime import date
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
+from uuid import uuid4
+
+import yaml
+
+from core.contracts import AdviceShape, PackManifest
+from core.graph.advice import AdviceRecord, Calculation, Figure, Input, Missing
+from core.graph.answer import (
+    CALCULATION_CITATION,
+    NO_OWNER,
+    Abstained,
+    AdviceCard,
+    AdviceWithheld,
+    AnswerGraph,
+    ConsentRequired,
+    Declined,
+    Finished,
+    Sentence,
+    answer_system,
+)
+from core.graph.scope import Subject
+from core.packs import InstalledPack, pack
+from core.runtime.ollama import ModelUnavailable
+from modules.advice import GAP_WORDS, HELD_WORDS, INCOME_WORDS, TARGET_WORDS
+from tests.test_answer_graph import PassThroughReranker, PhrasingRetriever, ScriptedOllama
+
+ROOT = Path(__file__).resolve().parents[1]
+TODAY = date(2026, 9, 15)
+MARCUS = "Marcus Lim Jun Wei"
+PAYSLIP, SCHEDULE = uuid4(), uuid4()
+
+ASKED = "is my critical illness cover enough?"
+DISCLAIMER = (
+    "A calculation from your own documents and published guidance, not a recommendation from a "
+    "licensed adviser."
+)
+CONSENT = (
+    "I agree that Parrot may calculate advice from my household's documents and the published "
+    "guidance it holds."
+)
+DISCLOSURE = "Where a product is named, only what both sides print is compared."
+
+GAP_SHAPE: dict[str, Any] = {
+    "id": "ci_gap",
+    "calculator": "gap",
+    "label": "critical illness cover gap",
+    "asked": ["critical illness", "critical illness cover enough"],
+    "facts": [
+        {
+            "role": "income",
+            "pack": "iras_tax",
+            "doc_types": ["payslip"],
+            "field": "gross_salary",
+            "per": "month",
+            "missing": "A recent payslip, to know your income.",
+        },
+        {
+            "role": "held",
+            "doc_types": ["policy_schedule"],
+            "field": "sum_insured",
+            "category": "critical_illness",
+            "take": "sum",
+            "missing": "The schedule of each critical illness plan you hold.",
+        },
+    ],
+    "rules": [
+        {
+            "role": "multiple",
+            "key": "ci_multiple",
+            "missing": "Reviewed guidance on how much cover to hold.",
+        }
+    ],
+    "disadvantages": ["A larger sum insured is paid for with a higher premium."],
+    "never_say": ["guaranteed payout"],
+}
+
+
+def advised_pack() -> InstalledPack:
+    raw = yaml.safe_load((ROOT / "packs/insurance_agent/pack.yaml").read_text(encoding="utf-8"))
+    raw["answering"] = {
+        "categories": {
+            "match_field": "product_name",
+            "noun": "policies",
+            "rules": [
+                {
+                    "id": "critical_illness",
+                    "label": "critical illness plan",
+                    "printed": ["critical illness"],
+                }
+            ],
+        }
+    }
+    raw["grounding"] = {
+        "corpus": None,
+        "top_k": 0,
+        "values": [
+            {
+                "key": "ci_multiple",
+                "unit": "multiple",
+                "description": "Multiple of annual income a household is guided to hold as cover",
+                "qualifiers": ["age_band"],
+            }
+        ],
+    }
+    raw["advice"] = {
+        "consent_version": "1.0.0",
+        "consent_text": CONSENT,
+        "disclaimer": DISCLAIMER,
+        "product_disclosure": DISCLOSURE,
+        "shapes": [GAP_SHAPE],
+    }
+    return InstalledPack(PackManifest.model_validate(raw), {}, {})
+
+
+INCOME = Input(
+    "fact:12",
+    "income",
+    "gross salary",
+    "SGD 9,400.00",
+    "payslip-august.pdf, page 1",
+    document_id=PAYSLIP,
+    page=1,
+)
+HELD = Input(
+    "fact:31",
+    "held",
+    "sum insured",
+    "SGD 200,000.00",
+    "careshield-schedule.pdf, page 2",
+    document_id=SCHEDULE,
+    page=2,
+)
+MULTIPLE = Input(
+    "rule:7",
+    "multiple",
+    "ci multiple",
+    "4 times",
+    "Publisher, Guide title, 26 September 2023",
+    publisher="Publisher",
+    title="Guide title",
+    dated="26 September 2023",
+    url="https://example.gov.sg/guide",
+)
+VERDICT = (
+    f"Critical illness cover gap for {MARCUS}: the published guideline works out to "
+    "SGD 451,200.00, and SGD 200,000.00 is held, so the gap is SGD 251,200.00."
+)
+CALCULATION = Calculation(
+    pack_id="insurance_agent",
+    shape_id="ci_gap",
+    label="critical illness cover gap",
+    subject=MARCUS,
+    person_ids=(1,),
+    inputs=(INCOME, HELD, MULTIPLE),
+    figures=(
+        Figure("annual income", Decimal("112800.00"), "SGD 112,800.00", INCOME_WORDS),
+        Figure("target", Decimal("451200.00"), "SGD 451,200.00", TARGET_WORDS),
+        Figure("held", Decimal("200000.00"), "SGD 200,000.00", HELD_WORDS),
+        Figure("gap", Decimal("251200.00"), "SGD 251,200.00", GAP_WORDS),
+    ),
+    verdict="short",
+    verdict_text=VERDICT,
+)
+MISSING = Missing(
+    pack_id="insurance_agent",
+    shape_id="ci_gap",
+    label="critical illness cover gap",
+    subject=MARCUS,
+    items=("A recent payslip, to know your income.", "which age band applies"),
+)
+
+# Evidence order in the explain prompt: [1] fact:12, [2] fact:31, [3] rule:7, [4] calculation:0.
+THE_GAP = {"text": "The gap is SGD 251,200.00.", "supports": [4]}
+THE_GUIDELINE = {
+    "text": "The guideline is 4 times the annual income of SGD 112,800.00.",
+    "supports": [3, 4],
+}
+
+
+# ---------------------------------------------------------------------------------- fakes
+
+
+class Household:
+    def __init__(self, subject: Subject) -> None:
+        self.subject = subject
+
+    def whose(self, question: str) -> Subject:
+        return self.subject
+
+    def apply(self, question: str, passages: Any) -> Any:
+        raise AssertionError("advice never scopes retrieved passages: nothing is retrieved")
+
+
+class Adviser:
+    def __init__(self, result: Calculation | Missing) -> None:
+        self.result = result
+        self.calls: list[dict[str, Any]] = []
+
+    def calculate(
+        self,
+        installed: InstalledPack,
+        shape: AdviceShape,
+        *,
+        person_ids: frozenset[int],
+        subject: str,
+        today: date,
+    ) -> Calculation | Missing:
+        self.calls.append(
+            {"shape": shape.id, "person_ids": person_ids, "subject": subject, "today": today}
+        )
+        return self.result
+
+
+class Consents:
+    def __init__(self, consent_id: int | None) -> None:
+        self.consent_id = consent_id
+        self.asked: list[tuple[str, str]] = []
+
+    def current(self, pack_id: str, version: str) -> int | None:
+        self.asked.append((pack_id, version))
+        return self.consent_id
+
+
+class Log:
+    def __init__(self) -> None:
+        self.records: list[AdviceRecord] = []
+
+    def record(self, entry: AdviceRecord) -> None:
+        self.records.append(entry)
+
+
+OWNER = Subject(frozenset({1}), MARCUS)
+
+
+def build(
+    client: ScriptedOllama,
+    *,
+    result: Calculation | Missing = CALCULATION,
+    consent_id: int | None = 41,
+    subject: Subject | None = OWNER,
+    packs: list[InstalledPack] | None = None,
+) -> tuple[AnswerGraph, Adviser, Consents, Log, PhrasingRetriever]:
+    adviser, consents, log = Adviser(result), Consents(consent_id), Log()
+    retriever = PhrasingRetriever({})
+    graph = AnswerGraph(
+        client,
+        retriever,
+        PassThroughReranker(),
+        household=Household(subject) if subject is not None else None,  # type: ignore[arg-type]
+        today=TODAY,
+        packs=packs if packs is not None else [advised_pack()],
+        adviser=adviser,
+        consents=consents,
+        advice_log=log,
+    )
+    return graph, adviser, consents, log, retriever
+
+
+# ------------------------------------------------------------------------------ the tests
+
+
+def test_advice_without_consent_asks_for_it_and_does_nothing_else() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, adviser, consents, log, retriever = build(client, consent_id=None)
+
+    got = list(graph.stream(ASKED))
+
+    assert [type(event) for event in got] == [ConsentRequired]
+    required = got[0]
+    assert isinstance(required, ConsentRequired)
+    assert required.consent_text == CONSENT
+    assert required.version == "1.0.0"
+    assert required.disclaimer == DISCLAIMER
+    assert required.label == "critical illness cover gap"
+    assert consents.asked == [("insurance_agent", "1.0.0")]
+    assert len(client.systems) == 1, "only the router ran"
+    assert adviser.calls == [], "nothing is calculated before consent"
+    assert log.records == [], "a refusal for want of consent has no consent id to record"
+    assert retriever.queries == []
+
+
+def test_a_missing_input_is_named_recorded_and_never_explained() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, _, _, log, _ = build(client, result=MISSING)
+
+    got = list(graph.stream(ASKED))
+
+    assert [type(event) for event in got] == [AdviceWithheld]
+    withheld = got[0]
+    assert isinstance(withheld, AdviceWithheld)
+    assert withheld.missing == list(MISSING.items)
+    assert withheld.person == MARCUS
+    assert withheld.disclaimer == DISCLAIMER
+    assert len(client.systems) == 1, "the answer model is never called"
+    [record] = log.records
+    assert record.outcome == "withheld" and record.verdict is None
+    assert record.consent_id == 41
+    assert record.basis == {"missing": list(MISSING.items)}
+
+
+def test_a_calculation_gives_the_card_then_gated_sentences_then_finished() -> None:
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    graph, adviser, _, log, retriever = build(client)
+    installed = advised_pack()
+
+    got = list(graph.stream(ASKED, thread_id="t-1"))
+
+    assert [type(event) for event in got] == [AdviceCard, Sentence, Sentence, Finished]
+    card = got[0]
+    assert isinstance(card, AdviceCard)
+    assert card.verdict_text == VERDICT
+    assert card.verdict == "short"
+    assert ("gap", "SGD 251,200.00") in card.figures
+    assert card.product_disclosure == "", "no product is named"
+    assert card.consent_version == "1.0.0"
+    assert card.person == MARCUS
+
+    assert len(client.systems) == 2, "route and explain, nothing else"
+    assert client.systems[1] == answer_system(installed)
+    assert retriever.queries == [], "advice retrieves nothing"
+    assert adviser.calls == [
+        {"shape": "ci_gap", "person_ids": frozenset({1}), "subject": MARCUS, "today": TODAY}
+    ]
+
+    prompt = client.prompts[1]
+    assert prompt.startswith("Today is 15 September 2026.")
+    assert "Explain this worked result to Marcus Lim Jun Wei in at most three sentences." in prompt
+    assert f"Verdict: {VERDICT}" in prompt
+    assert "Points to mention if relevant:\n- A larger sum insured" in prompt
+    assert "None, page 0" not in prompt and "doc-" not in prompt
+
+    finished = got[-1]
+    assert isinstance(finished, Finished)
+    assert finished.disclaimer == DISCLAIMER
+    assert finished.dropped == 0 and not finished.unanswered
+
+    [record] = log.records
+    assert record.outcome == "advised" and record.verdict == "short"
+    assert record.thread_id == "t-1" and record.consent_id == 41
+    assert record.shape == "ci_gap" and record.person_ids == (1,)
+    assert [item["ref"] for item in record.basis["inputs"]] == ["fact:12", "fact:31", "rule:7"]
+    assert record.basis["inputs"][2]["citation"] == MULTIPLE.citation
+    assert [figure["name"] for figure in record.basis["figures"]] == [
+        "annual income",
+        "target",
+        "held",
+        "gap",
+    ]
+    assert record.basis["kept"] == [THE_GAP["text"], THE_GUIDELINE["text"]]
+    assert record.answer_text == f"{VERDICT} {THE_GAP['text']} {THE_GUIDELINE['text']}"
+
+
+def test_a_verdict_in_the_explanation_is_dropped_and_the_figure_kept() -> None:
+    client = ScriptedOllama(
+        {"intent": "advise"},
+        {"sentences": [{"text": "You should buy more.", "supports": [4]}, THE_GAP]},
+    )
+    graph, _, _, log, _ = build(client)
+
+    got = list(graph.stream(ASKED))
+
+    assert [e.text for e in got if isinstance(e, Sentence)] == ["The gap is SGD 251,200.00."]
+    finished = got[-1]
+    assert isinstance(finished, Finished) and finished.dropped == 1
+    assert log.records[0].basis["dropped"][0]["text"] == "You should buy more."
+
+
+def test_the_explanation_stops_at_three_sentences() -> None:
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP] * 5})
+    graph, *_ = build(client)
+
+    got = list(graph.stream(ASKED))
+
+    assert sum(isinstance(event, Sentence) for event in got) == 3
+    assert isinstance(got[-1], Finished) and got[-1].truncated
+
+
+def test_a_pack_without_advice_still_declines_with_every_port_wired() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, adviser, consents, log, _ = build(client, packs=[pack("insurance_agent")])
+
+    got = list(graph.stream(ASKED))
+
+    assert [type(event) for event in got] == [Declined]
+    assert adviser.calls == [] and consents.asked == [] and log.records == []
+
+
+def test_a_question_no_shape_asks_for_is_declined() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, adviser, consents, _, _ = build(client)
+
+    got = list(graph.stream("should i switch my car insurance?"))
+
+    assert [type(event) for event in got] == [Declined]
+    assert adviser.calls == [] and consents.asked == []
+    assert len(client.systems) == 1
+
+
+def test_advice_is_declined_when_the_graph_was_given_no_adviser() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph = AnswerGraph(
+        client, PhrasingRetriever({}), PassThroughReranker(), packs=[advised_pack()]
+    )
+
+    assert [type(event) for event in graph.stream(ASKED)] == [Declined]
+
+
+def test_ask_leads_with_the_verdict_on_the_calculation_path() -> None:
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
+    graph, *_ = build(client)
+
+    answer = graph.ask(ASKED)
+
+    assert answer.advice and answer.grounded
+    assert answer.text.startswith(VERDICT)
+    assert answer.verdict_text == VERDICT
+    assert "The gap is SGD 251,200.00." in answer.text
+    assert MULTIPLE.citation in answer.citations
+    assert answer.disclaimer == DISCLAIMER
+
+
+def test_ask_maps_consent_and_withheld_to_their_own_flags() -> None:
+    graph, *_ = build(ScriptedOllama({"intent": "advise"}), consent_id=None)
+    consent = graph.ask(ASKED)
+    assert consent.consent_required and not consent.grounded
+    assert consent.text == CONSENT
+
+    graph, *_ = build(ScriptedOllama({"intent": "advise"}), result=MISSING)
+    withheld = graph.ask(ASKED)
+    assert withheld.withheld and not withheld.grounded
+    assert withheld.text == (
+        "Critical illness cover gap cannot be worked out yet. "
+        "A recent payslip, to know your income. Which age band applies."
+    )
+
+
+# ------------------------------------------------------------------------ whose situation
+
+
+def test_an_ambiguous_subject_asks_whose_and_is_never_calculated() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, adviser, consents, log, _ = build(
+        client, subject=Subject(frozenset(), "", ambiguous=True)
+    )
+
+    got = list(graph.stream("is our critical illness cover enough?"))
+
+    assert [type(event) for event in got] == [Abstained]
+    abstained = got[0]
+    assert isinstance(abstained, Abstained)
+    assert abstained.missing == "Say whose situation this is about, one person at a time."
+    assert (abstained.passages_read, abstained.dropped, abstained.person) == (0, 0, None)
+    assert abstained.disclaimer == DISCLAIMER
+    assert adviser.calls == [] and consents.asked == [] and log.records == []
+    assert len(client.systems) == 1
+
+
+def test_nobody_having_said_who_they_are_withholds_advice() -> None:
+    graph, adviser, consents, log, _ = build(ScriptedOllama({"intent": "advise"}), subject=None)
+
+    got = list(graph.stream(ASKED))
+
+    assert [type(event) for event in got] == [AdviceWithheld]
+    withheld = got[0]
+    assert isinstance(withheld, AdviceWithheld)
+    assert withheld.missing == [NO_OWNER] and withheld.person is None
+    assert adviser.calls == [] and consents.asked == [] and log.records == []
+
+
+def test_a_relation_nobody_holds_abstains_as_an_explanation_would() -> None:
+    graph, adviser, *_ = build(
+        ScriptedOllama({"intent": "advise"}),
+        subject=Subject(frozenset(), "", unknown_relation="son"),
+    )
+
+    got = list(graph.stream("is my son's critical illness cover enough?"))
+
+    assert [type(event) for event in got] == [Abstained]
+    assert "who your son is" in got[0].reason  # type: ignore[union-attr]
+    assert adviser.calls == []
+
+
+def test_advice_about_someone_else_is_explained_to_the_asker_about_them() -> None:
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
+    rachel = Subject(frozenset({2}), "Rachel Ng Hui Shan", someone_else=True)
+    graph, adviser, *_ = build(client, subject=rachel)
+
+    list(graph.stream("is Rachel's critical illness cover enough?"))
+
+    prompt = client.prompts[1]
+    assert "The result is about Rachel Ng Hui Shan, not the person asking" in prompt
+    assert "to the person asking, about Rachel Ng Hui Shan" in prompt
+    assert "The person asking is Rachel" not in prompt
+    assert adviser.calls[0]["person_ids"] == frozenset({2})
+
+
+# ---------------------------------------------------------------------------------- chips
+
+
+def test_card_chips_are_built_from_each_input_not_from_a_passage() -> None:
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GUIDELINE]})
+    graph, *_ = build(client)
+
+    got = list(graph.stream(ASKED))
+
+    card = got[0]
+    assert isinstance(card, AdviceCard)
+    fact, _, rule = card.inputs
+    assert (fact.kind, fact.text, fact.document_id, fact.page) == (
+        "fact",
+        "payslip-august.pdf, page 1",
+        PAYSLIP,
+        1,
+    )
+    assert rule.kind == "rule"
+    assert rule.text == "Publisher, Guide title, 26 September 2023"
+    assert (rule.publisher, rule.title, rule.dated, rule.url) == (
+        "Publisher",
+        "Guide title",
+        "26 September 2023",
+        "https://example.gov.sg/guide",
+    )
+    texts = [c.text for c in card.inputs]
+    assert not any("doc-" in text or "page 0" in text for text in texts)
+
+    sentence = next(event for event in got if isinstance(event, Sentence))
+    assert [c.text for c in sentence.citations] == [MULTIPLE.citation, CALCULATION_CITATION]
+    assert sentence.citations[1].kind == "calculation"
+
+
+def test_a_model_that_is_down_still_leaves_the_card_and_finishes() -> None:
+    client = ScriptedOllama({"intent": "advise"}, ModelUnavailable("Ollama is not running"))
+    graph, _, _, log, _ = build(client)
+
+    got = list(graph.stream(ASKED))
+
+    assert [type(event) for event in got] == [AdviceCard, Finished]
+    finished = got[-1]
+    assert isinstance(finished, Finished)
+    assert finished.unanswered is False and finished.dropped == 0
+    [record] = log.records
+    assert record.outcome == "advised" and record.basis["kept"] == []
+    assert record.answer_text == VERDICT

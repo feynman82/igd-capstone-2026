@@ -37,6 +37,8 @@ def main(argv: list[str] | None = None) -> int:
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.ERROR)
 
+    from core.advice_consent import HouseholdConsents
+    from core.advice_records import HouseholdAdviceLog
     from core.graph.answer import AnswerGraph
     from core.graph.baseline import DenseRetriever, NoReranker
     from core.graph.inventory import HouseholdInventory
@@ -45,6 +47,7 @@ def main(argv: list[str] | None = None) -> int:
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
     from core.runtime.settings import ConfigurationError, Settings
+    from modules.advice import ModuleAdviser
 
     try:
         settings = Settings.load(ROOT)
@@ -67,9 +70,18 @@ def main(argv: list[str] | None = None) -> int:
                 household=HouseholdScope(conn),
                 inventory=HouseholdInventory(conn),
                 packs=enabled_packs(conn),
+                # ADR 0016. Calculators are modules, so they are injected here rather than
+                # imported by `core/`; consent is read and every advice answer recorded through
+                # the same connection.
+                adviser=ModuleAdviser(conn),
+                consents=HouseholdConsents(conn),
+                advice_log=HouseholdAdviceLog(conn),
             )
             if args.question:
                 _ask(graph, " ".join(args.question), args.show_evidence)
+                # The advice record is written but never committed by its writer: the answer that
+                # produced it is the transaction, and it is over.
+                conn.commit()
                 return 0
             print("Ask about your documents. Ctrl+C or an empty line to stop.\n")
             # The conversation so far, so a follow-up ("when does it expire?") is understood.
@@ -83,6 +95,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not question:
                     return 0
                 said = _ask(graph, question, args.show_evidence, history)
+                conn.commit()  # each question's advice record is its own transaction
                 history += [("user", question), ("assistant", said)]
     except DatabaseUnavailable as error:
         print(str(error))

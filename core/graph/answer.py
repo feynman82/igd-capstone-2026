@@ -7,7 +7,8 @@ deciding what to do next.
     route ──► retrieve ──► rerank ──┬──► abstain        (the evidence is not good enough)
        │                            └──► answer ──► one Sentence event per kept claim
        ├──► refuse                                      (a request to act, not to explain)
-       └──► decline                                     (a request for a recommendation)
+       └──► advise ──► whose ──► consent ──► calculate ──► card ──► explain   (ADR 0016)
+                 └──► decline      (no adviser, no advice in the pack, or no shape phrase asked)
 
 `route` exists for one reason worth stating: `never_acts` and `verdict_by_code` are
 `Literal[True]` in every pack manifest, and a pack without advice declines, so a question like
@@ -41,16 +42,32 @@ from __future__ import annotations
 import logging
 import re
 from collections.abc import Iterable, Iterator, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Any, Literal, TypedDict
 
-from core.contracts import DEFAULT_DECLINE
-from core.graph.gate import Claim, check_content, check_one, precheck, states_a_printed_value
+from core.contracts import DEFAULT_DECLINE, AdviceShape
+from core.graph.advice import (
+    AdviceLog,
+    AdviceRecord,
+    Adviser,
+    Calculation,
+    ConsentBook,
+    Input,
+    passages_for,
+)
+from core.graph.gate import (
+    Claim,
+    check_advice,
+    check_content,
+    check_one,
+    precheck,
+    states_a_printed_value,
+)
 from core.graph.inventory import Holding, Inventory
-from core.graph.knowledge import categories_asked, glossary, reworded
+from core.graph.knowledge import categories_asked, glossary, mentions, reworded
 from core.graph.ports import Kind, Passage, Reranker, Retriever
-from core.graph.scope import HouseholdScope, Scoped
+from core.graph.scope import HouseholdScope, Scoped, Subject
 from core.graph.sentences import SentenceScanner
 from core.packs import InstalledPack, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
@@ -191,6 +208,25 @@ REFUSAL = (
     "renews, books or files anything — that is enforced in the code, not left to my judgement."
 )
 
+# ------------------------------------------------------------------------------- advice
+#
+# ADR 0016. Every word here is pack-neutral: what advice is about, what it needs and how it is
+# signed all come from the pack's `advice` block, and the arithmetic from `modules/advice/`.
+
+# An explanation of a worked result is short on purpose: the verdict and the figures are already
+# on the card, and every further sentence is one more chance for a 4B model to restate a figure
+# in the wrong role.
+ADVICE_SENTENCES = 3
+
+# The calculation passage has no document, page or publisher to cite. It is named for what it is,
+# so a chip on a sentence stating a figure says the figure was worked out, not printed.
+CALCULATION_CITATION = "Worked out by Parrot from the inputs above"
+
+NO_OWNER = "Say who you are on the Household page first."
+
+WHOSE_REASON = "Parrot cannot tell whose situation this is about"
+WHOSE_MISSING = "Say whose situation this is about, one person at a time."
+
 
 class State(TypedDict, total=False):
     """What the graph carries. It ends at the evidence; the answer is streamed, not stated."""
@@ -329,7 +365,74 @@ class Finished:
     unanswered: bool = False
 
 
-Event = Reading | Sentence | Abstained | Refused | Declined | Finished
+@dataclass(frozen=True, slots=True)
+class ConsentRequired:
+    """Advice was asked for and the owner has not agreed to this pack's current consent wording.
+
+    Terminal, and nothing happens before it: no calculation, no explanation, no record. Consent is
+    a separate action a person takes (`core/advice_consent.py`), never something an answer does on
+    their behalf, so this only carries the words a screen needs to ask for it.
+    """
+
+    pack_id: str
+    pack_name: str
+    version: str
+    consent_text: str
+    disclaimer: str
+    label: str
+
+
+@dataclass(frozen=True, slots=True)
+class AdviceWithheld:
+    """Advice could not be worked out, and `missing` says what it needs, in the pack's words.
+
+    ADR 0016: the honest answer to a missing fact is to name it, not to estimate around it. Also
+    the ending when nobody has said who they are yet, since advice is always about somebody.
+    """
+
+    pack_id: str
+    label: str
+    person: str | None
+    missing: list[str]
+    disclaimer: str
+
+
+@dataclass(frozen=True, slots=True)
+class AdviceCard:
+    """A worked result, every word of it written by code, given before the model says anything.
+
+    Not terminal: at most three gated sentences of explanation follow, then `Finished`. The card
+    comes first so a model that is down or writes nothing usable still leaves a whole answer.
+    `inputs` are built from each `Input` directly, so a published value's chip carries its
+    publisher, title, date and URL rather than a page it does not have. `product_disclosure` is
+    empty unless the calculation names a product.
+    """
+
+    pack_id: str
+    label: str
+    person: str | None
+    verdict: str
+    verdict_text: str
+    figures: list[tuple[str, str]]  # (name, text)
+    inputs: list[Citation]
+    rows: list[list[str]]
+    estimate: bool
+    disclaimer: str
+    product_disclosure: str
+    consent_version: str
+
+
+Event = (
+    Reading
+    | Sentence
+    | Abstained
+    | Refused
+    | Declined
+    | Finished
+    | ConsentRequired
+    | AdviceWithheld
+    | AdviceCard
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -350,10 +453,21 @@ class Answer:
     quarantined: int = 0  # documents not checked, when the answer said "none on file"
     truncated: bool = False  # the pack's sentence limit ended the answer
     unanswered: bool = False  # only a line about the documents on file was said
+    advice: bool = False  # a worked result was given
+    consent_required: bool = False  # advice was asked for before consent was given
+    withheld: bool = False  # advice could not be worked out; `missing` says why
+    verdict_text: str = ""  # the code-written verdict, when advice was given
 
     @property
     def grounded(self) -> bool:
-        return not (self.abstained or self.refused or self.declined)
+        """Answered. Asking for consent and naming what is missing are endings, not answers."""
+        return not (
+            self.abstained
+            or self.refused
+            or self.declined
+            or self.consent_required
+            or self.withheld
+        )
 
 
 def _conversation(history: list[tuple[str, str]]) -> str:
@@ -516,6 +630,134 @@ def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> Instal
     return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
 
 
+def _unknown_relation(word: str, disclaimer: str = "") -> Abstained:
+    """One wording for "who is your son?", shared by explaining and advising so they cannot drift.
+    Advice signs it with the pack's advice disclaimer; an explanation leaves it unsigned, as it
+    always has."""
+    return Abstained(
+        f"Parrot does not know who your {word} is yet",
+        (
+            "When a document names them, say who they are on the Household page, and "
+            f"questions about your {word} will be answered from their documents."
+        ),
+        0,
+        0,
+        None,
+        disclaimer,
+    )
+
+
+def _input_citation(item: Input) -> Citation:
+    """A chip built from the `Input` itself, never from `Passage.cite()`.
+
+    `passages_for` makes passages the gate can check, and their `cite()` prints "doc-1, page 1"
+    for a fact with no name and "None, page 0" for a published value. The input already carries
+    its citation as a person reads it, and a published value's publisher, title, date and URL.
+    """
+    prefix = item.ref.partition(":")[0]
+    if prefix not in ("fact", "rule"):
+        raise ValueError(f"not a fact or rule ref: {item.ref!r}")
+    kind: Kind = "fact" if prefix == "fact" else "rule"
+    return Citation(
+        document_id=item.document_id,
+        document_name=item.title if kind == "rule" else "",
+        page=item.page or 0,
+        text=item.citation,
+        kind=kind,
+        publisher=item.publisher,
+        title=item.title,
+        dated=item.dated,
+        url=item.url,
+    )
+
+
+def _distinct(citations: Iterable[Citation]) -> list[Citation]:
+    """Each chip once, first use first: a sentence citing one input twice shows it once."""
+    out: list[Citation] = []
+    for citation in citations:
+        if all(citation.text != seen.text for seen in out):
+            out.append(citation)
+    return out
+
+
+def _advice_prompt(
+    calc: Calculation, shape: AdviceShape, subject: Subject, today: date, evidence: list[Passage]
+) -> str:
+    """What the model is shown to explain a worked result: the verdict it must not restate as its
+    own, the cited inputs and figures as numbered passages, and the pack's own points to mention.
+
+    Each passage is labelled with the input's own citation rather than `Passage.cite()`, for the
+    reason `_input_citation` gives. Somebody other than the asker is named as such, for the reason
+    the explain path gives: told nothing, a model writes "your" about Rachel's documents.
+    """
+    name = subject.name
+    if name and subject.about:
+        whose = (
+            f"The result is about {name}, the asker's {subject.about}: say {name}'s, not your.\n"
+        )
+        addressee = f"the person asking, about {name}"
+    elif name and subject.someone_else:
+        whose = f"The result is about {name}, not the person asking: say {name}'s, not your.\n"
+        addressee = f"the person asking, about {name}"
+    else:
+        whose = f"The person asking is {name}. 'You' and 'your' mean them.\n" if name else ""
+        addressee = name or "the person asking"
+    numbered = "\n\n".join(
+        f"[{index}] ({passage.context_prefix or CALCULATION_CITATION})\n{passage.text}"
+        for index, passage in enumerate(evidence, start=1)
+    )
+    points = "\n".join(f"- {point}" for point in shape.disadvantages)
+    return (
+        f"Today is {today:%d %B %Y}.\n{whose}\n"
+        f"Explain this worked result to {addressee} in at most three sentences. Do not add a "
+        "verdict or advice; the verdict is already given.\n\n"
+        f"Verdict: {calc.verdict_text}\n\n"
+        f"Passages:\n{numbered}"
+        + (f"\n\nPoints to mention if relevant:\n{points}" if points else "")
+    )
+
+
+def _advice_basis(
+    calc: Calculation, kept: Sequence[str], dropped: Sequence[tuple[str, str]]
+) -> dict[str, Any]:
+    """Everything an advised answer rested on, so it can be reconstructed from its record alone
+    (ADR 0016) — including what the gate refused to say, which is what a reviewer checks first."""
+    return {
+        "inputs": [
+            {
+                "ref": item.ref,
+                "role": item.role,
+                "label": item.label,
+                "value_text": item.value_text,
+                "citation": item.citation,
+                "document_id": None if item.document_id is None else str(item.document_id),
+                "page": item.page,
+                "publisher": item.publisher,
+                "title": item.title,
+                "dated": item.dated,
+                "url": item.url,
+            }
+            for item in calc.inputs
+        ],
+        "figures": [
+            {"name": figure.name, "value": str(figure.value), "text": figure.text}
+            for figure in calc.figures
+        ],
+        "rows": [list(row) for row in calc.rows],
+        "estimate": calc.estimate,
+        "names_product": calc.names_product,
+        "kept": list(kept),
+        "dropped": [{"text": text, "why": why} for text, why in dropped],
+    }
+
+
+def _as_sentence(text: str) -> str:
+    """ "which age band applies" -> "Which age band applies.": a pack's wording and a calculator's
+    fragment read alike when a terminal joins them."""
+    text = text.strip()
+    return text[:1].upper() + text[1:] + ("" if text.endswith((".", "?", "!")) else ".")
+
+
 class AnswerGraph:
     """Built once, asked many times. Holds no connection: retrieval does."""
 
@@ -531,8 +773,18 @@ class AnswerGraph:
         today: date | None = None,
         inventory: Inventory | None = None,
         packs: Sequence[InstalledPack] | None = None,
+        adviser: Adviser | None = None,
+        consents: ConsentBook | None = None,
+        advice_log: AdviceLog | None = None,
     ) -> None:
         self._today = today  # fixed for tests and the demonstration; otherwise the real date
+        # The three advice ports (ADR 0016), injected because `core/` never imports the modules
+        # that calculate and holds no connection to read consent or write a record. Any of them
+        # `None` and a request for advice is declined, as it was before advice existed: advice
+        # that could not be recorded could not be reconstructed, so it is not given.
+        self._adviser = adviser
+        self._consents = consents
+        self._advice_log = advice_log
         self._client = client
         self._retriever = retriever
         self._reranker = reranker
@@ -767,6 +1019,197 @@ class AnswerGraph:
             offer = f"What does my {match.printed_name} say?" if match else ""
         return Declined(text, disclaimer, offer)
 
+    def _advice_shape(
+        self, question: str, packs: Sequence[InstalledPack]
+    ) -> tuple[InstalledPack, AdviceShape] | None:
+        """The shape a question asks for, matched from the pack's own phrases without a model.
+
+        The first pack in `packs` order that advises and has a phrase in the question wins, and
+        within it the longest phrase, which is the more specific question. ADR 0016 rejected a
+        model call here: a wrong shape is correct arithmetic on the wrong question.
+        """
+        for installed in packs:
+            advice = installed.manifest.advice
+            if advice is None:
+                continue
+            best: AdviceShape | None = None
+            longest = 0
+            for shape in advice.shapes:
+                for phrase in shape.asked:
+                    if len(phrase) > longest and mentions(question, phrase):
+                        best, longest = shape, len(phrase)
+            if best is not None:
+                return installed, best
+        return None
+
+    def _advise(
+        self, question: str, packs: Sequence[InstalledPack], thread_id: str
+    ) -> Iterator[Event]:
+        """ADR 0016's advise branch. Two model calls in all: the router's, and this explanation.
+
+        Nothing is retrieved and the question is not rewritten, because the evidence is the
+        calculation, every input of it already cited. The order is the order of what may stop it:
+        whose situation, then consent, then whether the inputs are there, and only then a model.
+
+        A record is written *before* the ending it records is yielded. A consumer may stop at the
+        first terminal event — `ask` does — and a record written after that yield never would be.
+        """
+        adviser, consents, advice_log = self._adviser, self._consents, self._advice_log
+        match = self._advice_shape(question, packs)
+        if match is None or adviser is None or consents is None or advice_log is None:
+            yield self._declined(question, packs)
+            return
+        installed, shape = match
+        advice = installed.manifest.advice
+        assert advice is not None  # `_advice_shape` only matches a pack that advises
+        disclaimer = advice.disclaimer.strip()
+
+        subject = (
+            self._household.whose(question)
+            if self._household is not None
+            else Subject(frozenset(), "", no_owner=True)
+        )
+        if subject.no_owner:
+            yield AdviceWithheld(installed.id, shape.label, None, [NO_OWNER], disclaimer)
+            return
+        if subject.unknown_relation:
+            yield _unknown_relation(subject.unknown_relation, disclaimer)
+            return
+        if subject.ambiguous or len(subject.person_ids) != 1:
+            # A calculator adds up one person's documents. Two people's documents against one
+            # person's guideline is a sum nobody could check, so the question is asked back. The
+            # length check is the same refusal for a `Subject` that forgot to say it was ambiguous.
+            yield Abstained(WHOSE_REASON, WHOSE_MISSING, 0, 0, None, disclaimer)
+            return
+        person = subject.name or None
+
+        consent_id = consents.current(installed.id, advice.consent_version)
+        if consent_id is None:
+            yield ConsentRequired(
+                installed.id,
+                installed.manifest.display_name,
+                advice.consent_version,
+                advice.consent_text.strip(),
+                disclaimer,
+                shape.label,
+            )
+            return
+
+        today = self._today or date.today()
+        result = adviser.calculate(
+            installed,
+            shape,
+            person_ids=subject.person_ids,
+            subject=subject.name,
+            today=today,
+        )
+        entry = AdviceRecord(
+            thread_id=thread_id,
+            pack_id=installed.id,
+            pack_version=installed.version,
+            shape=shape.id,
+            subject=subject.name,
+            person_ids=tuple(sorted(subject.person_ids)),
+            consent_id=consent_id,
+            outcome="withheld",
+            verdict=None,
+            basis={},
+            disclaimer=disclaimer,
+            answer_text="",
+        )
+        if not isinstance(result, Calculation):
+            items = list(result.items)
+            advice_log.record(replace(entry, basis={"missing": items}, answer_text=" ".join(items)))
+            yield AdviceWithheld(installed.id, result.label, person, items, disclaimer)
+            return
+        calc = result
+
+        evidence = passages_for(calc)
+        chips = {
+            passage.ref: _input_citation(item)
+            for passage, item in zip(evidence[:-1], calc.inputs, strict=True)
+        }
+        cards = list(chips.values())
+        chips[evidence[-1].ref] = Citation(None, "", 0, CALCULATION_CITATION, "calculation")
+        yield AdviceCard(
+            pack_id=installed.id,
+            label=calc.label,
+            person=person,
+            verdict=calc.verdict,
+            verdict_text=calc.verdict_text,
+            figures=[(figure.name, figure.text) for figure in calc.figures],
+            inputs=cards,
+            rows=[list(row) for row in calc.rows],
+            estimate=calc.estimate,
+            disclaimer=disclaimer,
+            product_disclosure=advice.product_disclosure.strip() if calc.names_product else "",
+            consent_version=advice.consent_version,
+        )
+
+        by_ref = {passage.ref: passage for passage in evidence}
+        retrieved = set(by_ref)
+        exclusions = installed.manifest.answering.exclusions
+        prompt = _advice_prompt(calc, shape, subject, today, evidence)
+        scanner = SentenceScanner()
+        cited = [chip.text for chip in cards]  # the verdict on the card rests on every input
+        kept: list[str] = []
+        dropped: list[tuple[str, str]] = []
+        truncated = False
+        deltas: Iterator[str] = iter(())
+        try:
+            deltas = self._client.constrained_stream(
+                answer_system(installed), prompt, _ANSWER_SCHEMA
+            )
+            for delta in deltas:
+                for item in scanner.feed(delta):
+                    claim = self._claim(item, evidence)
+                    why = (
+                        check_one(claim, retrieved)
+                        or check_content(claim, by_ref, exclusions=exclusions)
+                        or check_advice(claim, by_ref, calc.figures, never_say=shape.never_say)
+                    )
+                    if why is not None:
+                        if why != "empty":
+                            dropped.append((claim.text, why))
+                            log.info("gate dropped an explanation (%s): %.80s", why, claim.text)
+                        continue
+                    citations = _distinct(chips[ref] for ref in claim.supports)
+                    cited.extend(citation.text for citation in citations)
+                    kept.append(claim.text)
+                    yield Sentence(claim.text, (), citations)
+                    if len(kept) >= ADVICE_SENTENCES:
+                        truncated = True
+                        break
+                if truncated:
+                    break
+        except ModelUnavailable as error:
+            # The card is the answer and it has been given. An explanation that could not be
+            # written is an explanation missing, not advice withdrawn.
+            log.info("advice explanation stopped: %s", error)
+        finally:
+            close = getattr(deltas, "close", None)
+            if callable(close):
+                close()
+
+        advice_log.record(
+            replace(
+                entry,
+                outcome="advised",
+                verdict=calc.verdict,
+                basis=_advice_basis(calc, kept, dropped),
+                answer_text=" ".join([calc.verdict_text, *kept]),
+            )
+        )
+        yield Finished(
+            sorted(set(cited)),
+            disclaimer,
+            len(evidence),
+            len(dropped),
+            person,
+            truncated=truncated,
+            unanswered=False,
+        )
+
     # ------------------------------------------------------------------------ the graph
 
     def _build(self) -> Any:
@@ -820,7 +1263,7 @@ class AnswerGraph:
             yield Refused(REFUSAL)
             return
         if final.get("intent") == "advise":
-            yield self._declined(question, packs)
+            yield from self._advise(question, packs, thread_id)
             return
 
         passages = final.get("reranked") or []
@@ -831,17 +1274,7 @@ class AnswerGraph:
         # evidence. See `core/graph/scope.py`.
         scoped = final.get("scoped")
         if scoped is not None and scoped.unknown_relation:
-            word = scoped.unknown_relation
-            yield Abstained(
-                f"Parrot does not know who your {word} is yet",
-                (
-                    "When a document names them, say who they are on the Household page, and "
-                    f"questions about your {word} will be answered from their documents."
-                ),
-                0,
-                0,
-                None,
-            )
+            yield _unknown_relation(scoped.unknown_relation)
             return
         person = scoped.person_name if scoped is not None and scoped.scoped else None
 
@@ -1021,6 +1454,7 @@ class AnswerGraph:
         same code, so they cannot disagree about the answer."""
         claims: list[Cited] = []
         passages_read = 0
+        card: AdviceCard | None = None
 
         for event in self.stream(question, thread_id=thread_id, history=history):
             if isinstance(event, Refused):
@@ -1029,7 +1463,23 @@ class AnswerGraph:
                 return Answer(
                     event.text, declined=True, disclaimer=event.disclaimer, offer=event.offer
                 )
-            if isinstance(event, Reading):
+            if isinstance(event, ConsentRequired):
+                return Answer(
+                    event.consent_text, consent_required=True, disclaimer=event.disclaimer
+                )
+            if isinstance(event, AdviceWithheld):
+                missing = " ".join(_as_sentence(item) for item in event.missing)
+                return Answer(
+                    f"{event.label[:1].upper()}{event.label[1:]} cannot be worked out yet. "
+                    f"{missing}",
+                    withheld=True,
+                    missing=missing,
+                    disclaimer=event.disclaimer,
+                    person=event.person or "",
+                )
+            if isinstance(event, AdviceCard):
+                card = event
+            elif isinstance(event, Reading):
                 passages_read = event.passages_read
             elif isinstance(event, Sentence):
                 claims.append(Cited(event.text, event.chunk_ids, event.citations))
@@ -1054,6 +1504,21 @@ class AnswerGraph:
                     else claim.text
                     for claim in claims
                 ]
+                if card is not None:
+                    # The verdict leads, because it is the answer; the explanation follows it.
+                    signed = [event.disclaimer, card.product_disclosure]
+                    return Answer(
+                        " ".join([card.verdict_text, *lines]),
+                        citations=event.citations,
+                        passages_read=event.passages_read,
+                        dropped=event.dropped,
+                        disclaimer=" ".join(part for part in signed if part),
+                        claims=claims,
+                        person=event.person or "",
+                        truncated=event.truncated,
+                        advice=True,
+                        verdict_text=card.verdict_text,
+                    )
                 return Answer(
                     " ".join(lines),
                     citations=event.citations,
