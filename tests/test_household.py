@@ -435,3 +435,69 @@ def test_a_household_with_no_owner_scopes_nothing(conn: Any) -> None:
     scoped = HouseholdScope(conn).apply("what is my premium", [_passage(1, "doc")])
     assert not scoped.scoped
     assert len(scoped.passages) == 1
+
+
+# --------------------------------------------------------------- whose a piece of advice is about
+
+
+def test_whose_gives_the_owner_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Nothing named, nothing ruled out: the question is the owner's, same as `apply` would
+    have scoped it."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is my critical illness cover enough?")
+
+    assert subject.person_ids == frozenset({MARCUS.id})
+    assert subject.name == "Marcus Lim Jun Wei"
+    assert subject.about is None
+    assert subject.unknown_relation is None
+    assert not subject.no_owner
+
+
+def test_whose_gives_the_relation_it_resolves_to(monkeypatch: pytest.MonkeyPatch) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is my dad's hospital cover enough?")
+
+    assert subject.person_ids == frozenset({FATHER.id})
+    assert subject.name == "Lim Ah Kow"
+    assert subject.about == "dad"
+
+
+def test_whose_gives_a_person_named_outright(monkeypatch: pytest.MonkeyPatch) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is Rachel's cover enough?")
+
+    assert subject.person_ids == frozenset({RACHEL.id})
+    assert subject.name == "Rachel Ng Hui Shan"
+    assert subject.about is None
+
+
+def test_whose_reports_an_unknown_relation_rather_than_guessing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No child is recorded, so "son" cannot resolve to anybody -- reported, not defaulted to
+    the owner, the same abstention `apply` makes."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("my son's critical illness plan, is it enough?")
+
+    assert subject.unknown_relation == "son"
+    assert subject.person_ids == frozenset()
+    assert not subject.no_owner
+
+
+def test_whose_says_no_owner_when_nobody_has_claimed_the_household(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from core.graph.scope import HouseholdScope
+
+    monkeypatch.setattr(household, "owner", lambda conn: None)
+    scope = HouseholdScope(MagicMock())
+
+    subject = scope.whose("is my critical illness cover enough?")
+
+    assert subject.no_owner
+    assert subject.person_ids == frozenset()
+    assert subject.name == ""
