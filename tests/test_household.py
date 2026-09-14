@@ -264,6 +264,14 @@ def test_a_member_can_be_placed_but_the_owner_cannot(conn: Any) -> None:
         # Somebody who works for the household: no relation matches, so Parrot says so.
         ("does my policy pay for my maid's hospital bills?", ("maid", "outside")),
         ("what is my premium?", None),
+        # A relation the roster cannot hold. 13 September: left unscoped, answered from the
+        # father's policy.
+        ("is my grandpa's hospital plan active?", ("grandpa", "grandparent")),
+        (
+            "when does my grandmother\N{RIGHT SINGLE QUOTATION MARK}s policy renew",
+            ("grandmother", "grandparent"),
+        ),
+        ("is my ah ma's hospital plan active?", ("ah ma", "grandparent")),
     ],
 )
 def test_a_possessive_relation_names_whose_documents_are_asked_about(
@@ -292,6 +300,117 @@ def test_my_dads_question_is_scoped_to_the_parent_and_an_unknown_relation_says_s
     sons = HouseholdScope(conn).apply("how much is my son's life insurance?", passages)
     assert sons.unknown_relation == "son"
     assert not sons.scoped
+
+
+# ------------------------------------------------- who the question names, against a fake roster
+
+OWNER_DOC, RACHEL_DOC, FATHER_DOC = "doc-marcus", "doc-rachel", "doc-father"
+
+MARCUS = household.Person(1, "Marcus Lim Jun Wei", "self", True, False, ("MARCUS LIM JUN WEI",))
+RACHEL = household.Person(2, "Rachel Ng Hui Shan", "partner", False, False, ("Rachel Ng Hui Shan",))
+FATHER = household.Person(3, "Lim Ah Kow", "parent", False, False, ("LIM AH KOW",))
+
+
+def _household_scope(monkeypatch: pytest.MonkeyPatch, *people: household.Person) -> Any:
+    """`HouseholdScope` over a roster held in memory, with every document resolved by name."""
+    from core.graph.scope import HouseholdScope
+
+    monkeypatch.setattr(household, "roster", lambda conn: list(people))
+    monkeypatch.setattr(
+        household, "owner", lambda conn: next((p for p in people if p.is_owner), None)
+    )
+    ids = {1: OWNER_DOC, 2: RACHEL_DOC, 3: FATHER_DOC}
+    conn = _conn_returning([(ids[p.id], p.id, p.display_name) for p in people if p.id in ids])
+    return HouseholdScope(conn)
+
+
+EVERYONES = [_passage(1, OWNER_DOC), _passage(2, RACHEL_DOC), _passage(3, FATHER_DOC)]
+
+
+def test_a_grandparent_nobody_holds_is_an_unknown_relation_not_the_fathers_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    scoped = scope.apply("is my grandpa's hospital plan active?", EVERYONES)
+
+    assert scoped.unknown_relation == "grandpa"
+    assert not scoped.scoped
+
+
+def test_a_grandparent_recorded_under_that_name_is_who_the_question_means(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The roster has no grandparent relation, so the household says it the only way it can: a
+    person recorded as `other` whose display name or confirmed alias is the word itself."""
+    grandpa = household.Person(3, "Grandpa", "other", False, False, ("TAN AH BENG", "Grandpa"))
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, grandpa)
+
+    scoped = scope.apply("is my grandpa's hospital plan active?", EVERYONES)
+
+    assert scoped.person_name == "Grandpa"
+    assert scoped.about == "grandpa"
+    assert [p.document_id for p in scoped.passages] == [FATHER_DOC]
+
+
+def test_the_owner_asking_about_themselves_by_name_is_scoped_to_the_owner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """13 September: "what is Marcus's premium?" has no "my", so nothing was scoped and Rachel's
+    and Lim Ah Kow's policies mixed in."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    scoped = scope.apply("what is Marcus's premium?", EVERYONES)
+
+    assert scoped.person_name == "Marcus Lim Jun Wei"
+    assert not scoped.someone_else
+    assert [p.document_id for p in scoped.passages] == [OWNER_DOC]
+    assert scoped.dropped_people == ("Lim Ah Kow", "Rachel Ng Hui Shan")
+
+
+def test_a_question_naming_one_other_member_is_scoped_to_them(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    for question in ("when does Rachel's policy renew?", "does rachel ng hui shan have cover"):
+        scoped = scope.apply(question, EVERYONES)
+        assert scoped.person_name == "Rachel Ng Hui Shan", question
+        assert scoped.someone_else, "the answer must not be told Rachel is the one asking"
+        assert [p.document_id for p in scoped.passages] == [RACHEL_DOC]
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        # About two people: a filter would drop one of the documents that answers it.
+        "is my premium higher than Rachel's?",
+        "compare Marcus's and Rachel's premiums",
+        # "Lim" is Marcus's and his father's. A shared word names nobody.
+        "what is Lim's premium?",
+        # A given name that is not possessive is not enough to be sure it is a name at all.
+        "what is the premium for rachel",
+    ],
+)
+def test_a_name_that_is_not_exactly_one_person_scopes_nothing(
+    monkeypatch: pytest.MonkeyPatch, question: str
+) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    scoped = scope.apply(question, EVERYONES)
+
+    assert not scoped.scoped
+    assert scoped.passages == EVERYONES
+
+
+def test_a_person_nobody_has_confirmed_is_not_named(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A model proposal is a question on Today, not a member yet — the same rule relations obey."""
+    unconfirmed = household.Person(2, "Rachel Ng Hui Shan", "partner", False, False, ())
+    scope = _household_scope(monkeypatch, MARCUS, unconfirmed, FATHER)
+
+    scoped = scope.apply("when does Rachel's policy renew?", EVERYONES)
+
+    assert not scoped.scoped
 
 
 def test_handing_over_to_nobody_is_an_error(conn: Any) -> None:

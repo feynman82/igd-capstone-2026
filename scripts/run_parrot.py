@@ -300,7 +300,7 @@ def main(argv: list[str] | None = None) -> int:
         import uvicorn
 
         from api.main import create_app
-        from core.runtime.capture import FolderCapture
+        from core.runtime.capture import FolderCapture, TelegramCapture
         from core.runtime.lifecycle import Lifecycle
         from core.runtime.settings import ConfigurationError, Settings
     except ImportError:
@@ -399,14 +399,31 @@ def main(argv: list[str] | None = None) -> int:
             screens.set()
         # --no-worker means "I am running the worker myself", so let capture look for the
         # broker rather than assuming there is nothing listening.
-        capture = FolderCapture(settings, use_queue=None if args.no_worker else worker is not None)
+        queueing = None if args.no_worker else worker is not None
+        capture = FolderCapture(settings, use_queue=queueing)
         capture.start()
+        # The second capture channel, on the same terms as the first. It starts only when a bot
+        # token is configured, and says which in one line either way: a household that has
+        # registered a bot and sees nothing arrive has no other way to tell whether the
+        # launcher is polling it. See `core/runtime/capture.py`.
+        telegram = TelegramCapture(settings, use_queue=queueing)
+        if telegram.start():
+            print("Telegram capture: on. Send a photograph to your bot.", flush=True)
+        elif settings.telegram_configured:  # pragma: no cover - start() only refuses on no token
+            print("Telegram capture: not started.", flush=True)
+        else:
+            print(
+                "Telegram capture: off. Put TELEGRAM_BOT_TOKEN in .env to file documents from "
+                "your phone; see docs/RUNNING.md.",
+                flush=True,
+            )
         try:
             server.run(sockets=[listener])
         except KeyboardInterrupt:
             pass
         finally:
             capture.stop()
+            telegram.stop()
             stop_worker(worker)
             stop_web(web)
             finished.set()

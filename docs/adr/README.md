@@ -24,6 +24,7 @@ the difference matters when a supervisor asks.
 | [0012](0012-chunks-follow-the-document-and-embeddings-use-task-prompts.md) | Chunks follow the document's headings, and embeddings use the model's task prompts | Accepted |
 | [0013](0013-a-question-is-understood-before-it-is-searched.md) | A question is understood before it is searched, and scoped before it is cut | Accepted |
 | [0014](0014-a-pack-supplies-knowledge-and-the-core-stays-generic.md) | A pack supplies what the core knows about a domain, and the core stays generic | Proposed |
+| [0015](0015-a-name-scopes-and-a-grandparent-is-not-a-parent.md) | A name scopes a question, and a grandparent is not a parent | Accepted |
 
 Add a row when you add a record.
 

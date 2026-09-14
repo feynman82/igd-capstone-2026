@@ -127,8 +127,9 @@ function SourcePanel({ source, onClose }: { source: Source; onClose: () => void 
         {state === "loading" ? <div className="skeleton aspect-[1/1.414] w-full" /> : null}
 
         {state === "shown" ? (
-          // eslint-disable-next-line @next/next/no-img-element -- a document page is not a
-          // static asset; it is drawn on demand from a file this app is not allowed to index.
+          // A document page is not a static asset; it is drawn on demand from a file this app
+          // is not allowed to index.
+          // eslint-disable-next-line @next/next/no-img-element
           <img
             src={pageImage(source.document_id!, source.page!)}
             alt={`Page ${source.page} of ${source.document_name}`}
