@@ -92,6 +92,10 @@ uv sync --python 3.12 --extra dev
 # The database in Docker runs the migration, so no local psql is needed.
 docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
   < db/migrations/0001_init.sql
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
+  < db/migrations/0002_household.sql
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
+  < db/migrations/0003_advice.sql
 
 # All three models are required: generation and the image pass, embedding, reranking.
 ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
@@ -130,6 +134,8 @@ Then open Claude Code in the repository and run **`/orient`**.
 | `.claude/commands/` | `/orient` `/check` `/handover` `/weekly`. |
 | `core/contracts.py` | The pack and module manifests. `never_acts` cannot be set false — the guardrail is enforced by the type, not by review. |
 | `db/migrations/0001_init.sql` | The schema. `facts.document_id` and `facts.page` are `NOT NULL`, so no fact can exist without provenance. |
+| `db/migrations/0002_household.sql` | Who lives here, what they are called on paper, and which one is you. |
+| `db/migrations/0003_advice.sql` | The values a pack calculates with, the owner's consent, and the record of every advice answer. |
 | `packs/README.md` | The domain-pack guide written for a non-technical author. This is the file to send Zee. |
 | `corpus/` | Desmond's lane: the canon template, the register template, and the validator that gates a handover. No document generation. |
 | `docs/GRAPHIFY.md` | The knowledge graph: setup, the merge driver, and what leaves the machine. |
@@ -144,8 +150,9 @@ Then open Claude Code in the repository and run **`/orient`**.
 
 1. **Confirm `core/contracts.py` and merge it.** Nothing else starts until the contracts
    are on `main`.
-2. **Apply the migration and confirm it.**
-   `psql "$DATABASE_URL" -f db/migrations/0001_init.sql`
+2. **Apply the migrations and confirm them.**
+   `psql "$DATABASE_URL" -f db/migrations/0001_init.sql`, then `0002_household.sql`, then
+   `0003_advice.sql`
 3. **Benchmark the workstation** and paste the table into `eval/results/w1-hardware.md`.
    Every VRAM figure in the proposal is currently a planning estimate.
 
