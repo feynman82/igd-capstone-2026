@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, CircleSlash, FileQuestion } from "lucide-react";
+import { Ban, CircleSlash, FileQuestion, Scale } from "lucide-react";
 import { SourceChip } from "@/components/source-chip";
 import type { ParrotMessage } from "@/lib/chat";
 
@@ -29,6 +29,7 @@ export function Turn({ message }: { message: ParrotMessage }) {
   const sentences = parts.filter((part) => part.type === "data-sentence");
   const abstention = parts.find((part) => part.type === "data-abstention");
   const refusal = parts.find((part) => part.type === "data-refusal");
+  const declined = parts.find((part) => part.type === "data-declined");
   const finished = parts.find((part) => part.type === "data-finished");
   const failure = parts.find((part) => part.type === "data-error");
   const reading = parts.find((part) => part.type === "data-reading");
@@ -57,7 +58,7 @@ export function Turn({ message }: { message: ParrotMessage }) {
       {/* Between the question and the first sentence. Not a spinner — a sentence about what is
           happening, because on a 4B model this is several seconds and "reading 6 passages" is
           more reassuring than a shape going round. */}
-      {reading && sentences.length === 0 && !abstention && !failure ? (
+      {reading && sentences.length === 0 && !abstention && !failure && !declined ? (
         <p className="flex items-center gap-[var(--s-2)] text-meta text-ink-3">
           <span aria-hidden className="inline-block size-1.5 animate-pulse rounded-full bg-accent" />
           Reading {(reading as { data: { passages_read: number } }).data.passages_read} passages
@@ -95,6 +96,7 @@ export function Turn({ message }: { message: ParrotMessage }) {
 
       {abstention ? <Abstention part={abstention} /> : null}
       {refusal ? <Refusal part={refusal} /> : null}
+      {declined ? <Declined part={declined} /> : null}
       {failure ? <Broken part={failure} /> : null}
 
       {finished && sentences.length > 0 ? <Trace part={finished} /> : null}
@@ -112,7 +114,13 @@ export function Turn({ message }: { message: ParrotMessage }) {
 function Abstention({ part }: { part: Part }) {
   const data = (
     part as {
-      data: { reason: string; missing: string; passages_read: number; dropped: number };
+      data: {
+        reason: string;
+        missing: string;
+        passages_read: number;
+        dropped: number;
+        disclaimer?: string;
+      };
     }
   ).data;
 
@@ -142,6 +150,9 @@ function Abstention({ part }: { part: Part }) {
         ) : null}
         {" · nothing was invented to fill the gap"}
       </p>
+      {data.disclaimer ? (
+        <p className="mt-[var(--s-2)] text-meta text-ink-2">{data.disclaimer}</p>
+      ) : null}
     </div>
   );
 }
@@ -158,6 +169,34 @@ function Refusal({ part }: { part: Part }) {
         </h3>
       </div>
       <p className="mt-[var(--s-2)] text-lead text-ink">{text}</p>
+    </div>
+  );
+}
+
+/**
+ * `never_recommends` is `Literal[True]` in every pack. This is that reaching a person — and it
+ * offers the question it *can* answer rather than answering it, because a summary of a policy
+ * placed under "should I buy?" reads as a yes or a no.
+ */
+function Declined({ part }: { part: Part }) {
+  const { text, disclaimer, offer } = (
+    part as { data: { text: string; disclaimer: string; offer: string } }
+  ).data;
+  return (
+    <div className="rounded-[var(--r)] border border-hairline bg-surface-2 p-[var(--s-4)]">
+      <div className="flex items-center gap-[var(--s-2)]">
+        <Scale aria-hidden size={16} strokeWidth={2} className="text-ink-2" />
+        <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-ink-2 uppercase">
+          Parrot explains, it does not recommend
+        </h3>
+      </div>
+      <p className="mt-[var(--s-2)] text-lead text-ink">{text}</p>
+      {offer ? (
+        <p className="mt-[var(--s-2)] text-body text-ink-2">
+          You could ask: <span className="text-ink">{offer}</span>
+        </p>
+      ) : null}
+      {disclaimer ? <p className="mt-[var(--s-3)] text-meta text-ink-2">{disclaimer}</p> : null}
     </div>
   );
 }
@@ -184,7 +223,16 @@ function Broken({ part }: { part: Part }) {
  */
 function Trace({ part }: { part: Part }) {
   const data = (
-    part as { data: { disclaimer: string; passages_read: number; dropped: number } }
+    part as {
+      data: {
+        disclaimer: string;
+        passages_read: number;
+        dropped: number;
+        quarantined?: number;
+        truncated?: boolean;
+        unanswered?: boolean;
+      };
+    }
   ).data;
   return (
     <div className="mt-[var(--s-4)] border-t border-hairline pt-[var(--s-3)]">
@@ -196,6 +244,15 @@ function Trace({ part }: { part: Part }) {
             {" · "}
             <span className="num">{data.dropped}</span> unsourced sentence
             {data.dropped === 1 ? "" : "s"} dropped
+          </>
+        ) : null}
+        {data.truncated ? " · shortened to the pack's limit" : null}
+        {data.unanswered ? " · the pages read do not answer the rest of this question" : null}
+        {data.quarantined ? (
+          <>
+            {" · "}
+            <span className="num">{data.quarantined}</span> document
+            {data.quarantined === 1 ? "" : "s"} in quarantine not checked
           </>
         ) : null}
         {" · local model, nothing left this computer"}

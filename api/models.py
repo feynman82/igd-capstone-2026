@@ -27,6 +27,8 @@ class Source(BaseModel):
     document_name: str | None = None
     page: int | None = None
     text: str  # "policy.pdf, page 1" — already formatted, so a list renders without work
+    # What the citation is evidence of: a page, a document on file, or (PR 3) published guidance.
+    kind: Literal["document", "inventory", "guidance"] = "document"
 
 
 # ------------------------------------------------------------------------------------ today
@@ -115,11 +117,21 @@ class AbstentionEvent(BaseModel):
     passages_read: int = 0
     dropped: int = 0
     person: str | None = None
+    disclaimer: str = ""
 
 
 class RefusalEvent(BaseModel):
     kind: Literal["refusal"] = "refusal"
     text: str
+
+
+class DeclinedEvent(BaseModel):
+    """A request for a recommendation or a judgement. `never_recommends` reaching a person."""
+
+    kind: Literal["declined"] = "declined"
+    text: str
+    disclaimer: str = ""
+    offer: str = ""  # a question Parrot can answer instead; shown, never answered on its own
 
 
 class FinishedEvent(BaseModel):
@@ -129,6 +141,9 @@ class FinishedEvent(BaseModel):
     passages_read: int = 0
     dropped: int = 0
     person: str | None = None
+    quarantined: int = 0  # documents not checked, when the answer said "none on file"
+    truncated: bool = False  # the pack's sentence limit ended the answer
+    unanswered: bool = False  # only a line about the documents on file was said, not the answer
 
 
 class ErrorEvent(BaseModel):
@@ -139,7 +154,7 @@ class ErrorEvent(BaseModel):
 
 
 class AskResponse(BaseModel):
-    kind: Literal["answer", "abstention", "refusal"]
+    kind: Literal["answer", "abstention", "refusal", "declined"]
     text: str
     claims: list[Claim] = Field(default_factory=list)
     citations: list[Source] = Field(default_factory=list)
@@ -149,6 +164,10 @@ class AskResponse(BaseModel):
     person: str = ""  # whose documents this was narrowed to, when it was
     passages_read: int = 0
     dropped: int = 0
+    offer: str = ""  # a question that can be answered instead, when it declined
+    quarantined: int = 0  # documents not checked, when the answer said "none on file"
+    truncated: bool = False  # the pack's sentence limit ended the answer
+    unanswered: bool = False  # only a line about the documents on file was said, not the answer
 
 
 # ------------------------------------------------------------------------------------ vault

@@ -376,6 +376,34 @@ def test_ask_returns_an_abstention_with_its_reason(
     assert body["dropped"] == 2
 
 
+def test_ask_signs_an_abstention_with_the_packs_disclaimer(
+    client: TestClient, graph: type[FakeGraph]
+) -> None:
+    """The JSON endpoint ends the way the stream does: an abstention is signed too."""
+    graph.answer = Answer(
+        "I can't answer that from your documents: the closest document is not close enough.",
+        abstained=True,
+        reason="the closest document is not close enough",
+        disclaimer="Not financial advice.",
+    )
+    body = client.post("/api/ask", json={"question": "eh?"}).json()
+
+    assert body["kind"] == "abstention"
+    assert body["disclaimer"] == "Not financial advice."
+
+
+def test_ask_says_how_an_answer_ended_the_way_the_stream_does(
+    client: TestClient, graph: type[FakeGraph]
+) -> None:
+    graph.answer = Answer(
+        "On file: Private Car Insurance Policy.", quarantined=2, truncated=True, unanswered=True
+    )
+    body = client.post("/api/ask", json={"question": "does it cover floods?"}).json()
+
+    assert body["kind"] == "answer"
+    assert (body["quarantined"], body["truncated"], body["unanswered"]) == (2, True, True)
+
+
 def test_ask_refuses_a_request_to_act(client: TestClient, graph: type[FakeGraph]) -> None:
     graph.answer = Answer("I can explain what your documents say, but I do not act", refused=True)
     body = client.post("/api/ask", json={"question": "renew the policy for me"}).json()
@@ -1265,3 +1293,78 @@ def test_a_failure_after_the_stream_started_arrives_as_an_event(
 
     assert [event["kind"] for event in body] == ["reading", "error"]
     assert "stopped answering" in body[-1]["detail"]
+
+
+def test_a_declined_request_for_advice_is_the_whole_stream(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Declined
+
+    streaming.events = [
+        Declined(
+            "I cannot recommend whether to buy cover.",
+            "Not financial advice.",
+            "What does my CareShield Critical Illness Plan say?",
+        )
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(
+        client_for(settings, conn)
+        .post("/api/ask/stream", json={"question": "should i buy CI cover?"})
+        .text
+    )
+
+    assert [event["kind"] for event in body] == ["declined"]
+    assert body[0]["disclaimer"] == "Not financial advice."
+    assert body[0]["offer"] == "What does my CareShield Critical Illness Plan say?"
+
+
+def test_a_citation_says_whether_it_is_a_page_or_a_document_on_file(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Citation, Finished, Reading, Sentence
+
+    on_file = Citation(DOC, "b1-0001.pdf", 1, "b1-0001.pdf, page 1", "inventory")
+    streaming.events = [
+        Reading(passages_read=1),
+        Sentence("None of the 1 policies on file is a pet policy.", (), [on_file]),
+        Finished([], "Not financial advice.", 1, 0, None, 2, False),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "pet?"}).text)
+
+    sentence = next(event for event in body if event["kind"] == "sentence")
+    assert sentence["citations"][0]["kind"] == "inventory"
+    assert body[-1]["quarantined"] == 2 and body[-1]["truncated"] is False
+
+
+def test_an_abstention_carries_the_packs_disclaimer_on_the_wire(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import Abstained
+
+    streaming.events = [Abstained("not close enough", "", 4, 0, None, "Not financial advice.")]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "eh?"}).text)
+    assert body[0]["disclaimer"] == "Not financial advice."
+
+
+def test_a_finished_answer_says_on_the_wire_when_the_pages_did_not_answer_the_rest(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """A line about a document on file is not the answer to "does it cover floods?"."""
+    from core.graph.answer import Citation, Finished, Reading, Sentence
+
+    on_file = Citation(DOC, "b1-0001.pdf", 1, "b1-0001.pdf, page 1", "inventory")
+    streaming.events = [
+        Reading(passages_read=1),
+        Sentence("On file: Meridian Assurance, Private Car Insurance Policy.", (), [on_file]),
+        Finished([], "Not financial advice.", 1, 1, unanswered=True),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(
+        client_for(settings, conn).post("/api/ask/stream", json={"question": "floods?"}).text
+    )
+
+    assert body[-1]["kind"] == "finished"
+    assert body[-1]["unanswered"] is True

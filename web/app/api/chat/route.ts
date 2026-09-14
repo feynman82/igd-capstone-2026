@@ -32,14 +32,19 @@ type ParrotEvent =
       passages_read: number;
       dropped: number;
       person?: string | null;
+      disclaimer?: string;
     }
   | { kind: "refusal"; text: string }
+  | { kind: "declined"; text: string; disclaimer: string; offer: string }
   | {
       kind: "finished";
       disclaimer: string;
       passages_read: number;
       dropped: number;
       person?: string | null;
+      quarantined?: number;
+      truncated?: boolean;
+      unanswered?: boolean;
     }
   | { kind: "error"; detail: string };
 
@@ -116,6 +121,12 @@ export async function POST(request: Request) {
           case "refusal":
             writer.write({ type: "data-refusal", data: { text: event.text } });
             break;
+          case "declined":
+            writer.write({
+              type: "data-declined",
+              data: { text: event.text, disclaimer: event.disclaimer, offer: event.offer },
+            });
+            break;
           case "finished":
             writer.write({
               type: "data-finished",
@@ -124,6 +135,9 @@ export async function POST(request: Request) {
                 passages_read: event.passages_read,
                 dropped: event.dropped,
                 person: event.person,
+                quarantined: event.quarantined,
+                truncated: event.truncated,
+                unanswered: event.unanswered,
               },
             });
             break;
@@ -191,6 +205,8 @@ function priorTurns(messages: ParrotMessage[]): { role: "user" | "assistant"; te
           if (part.type === "data-abstention")
             return `I could not answer: ${(part as { data: { reason: string } }).data.reason}.`;
           if (part.type === "data-refusal") return (part as { data: { text: string } }).data.text;
+          if (part.type === "data-declined")
+            return (part as { data: { text: string } }).data.text;
           return "";
         })
         .filter(Boolean)

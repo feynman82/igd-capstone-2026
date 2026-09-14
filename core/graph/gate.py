@@ -33,8 +33,11 @@ rules; the streaming path and the batch path are two ways of asking it.
 from __future__ import annotations
 
 import logging
+import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
+from core.contracts import Exclusions
 from core.graph.ports import Passage
 
 log = logging.getLogger(__name__)
@@ -43,10 +46,10 @@ log = logging.getLogger(__name__)
 @dataclass(frozen=True, slots=True)
 class Claim:
     text: str
-    supports: tuple[int, ...]  # chunk ids
+    supports: tuple[str, ...]  # passage refs, "document:11"
 
-    def with_citation(self, by_id: dict[int, Passage]) -> str:
-        cited = [by_id[chunk_id].cite() for chunk_id in self.supports if chunk_id in by_id]
+    def with_citation(self, by_ref: dict[str, Passage]) -> str:
+        cited = [by_ref[ref].cite() for ref in self.supports if ref in by_ref]
         seen: list[str] = []
         for citation in cited:
             if citation not in seen:
@@ -87,17 +90,18 @@ def precheck(passages: list[Passage], *, abstain_below: float) -> str | None:
     return None
 
 
-def check_one(claim: Claim, retrieved: set[int]) -> str | None:
+def check_one(claim: Claim, retrieved: set[str]) -> str | None:
     """Why this one sentence cannot be kept, or `None` if it can.
 
     Depends on nothing but the sentence and what was retrieved, which is what lets a sentence be
     released the moment the model finishes writing it.
     """
-    if not claim.text.strip():
+    # "See passages 1, 2." is "." once its passage numbers are removed: a citation, not a claim.
+    if not re.search(r"[^\W_]", claim.text):
         return "empty"
     if not claim.supports:
         return "no supporting passage"
-    unknown = [chunk_id for chunk_id in claim.supports if chunk_id not in retrieved]
+    unknown = [ref for ref in claim.supports if ref not in retrieved]
     if unknown:
         return f"cites passage(s) that were not retrieved: {unknown}"
     return None
@@ -118,7 +122,7 @@ def check(
     if refusal is not None:
         return Verdict([], [], True, refusal)
 
-    retrieved = {passage.chunk_id for passage in passages}
+    retrieved = {passage.ref for passage in passages}
     grounded: list[Claim] = []
     dropped: list[tuple[str, str]] = []
     for claim in claims:
@@ -134,3 +138,89 @@ def check(
     if not grounded:
         return Verdict([], dropped, True, "nothing in the answer could be traced to a document")
     return Verdict(grounded, dropped, False)
+
+
+_NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
+
+# A policy number, claim reference or the like: letters, a hyphen, then digits and letters —
+# "MV-2026-448120", "Covid-19". Digits inside one of these are not independent numbers; the
+# whole token is the identifier, and it either matches or it doesn't.
+_IDENTIFIER = re.compile(r"(?<![\w-])[A-Za-z]{1,10}-[A-Za-z0-9-]*\d[A-Za-z0-9-]*")
+
+
+def _normal(number: str) -> str:
+    """ "1,860.00", "1860" and "01" → "1860", "1860", "1": formatting is not a different number."""
+    plain = number.replace(",", "")
+    if "." in plain:
+        plain = plain.rstrip("0").rstrip(".")
+    return plain.lstrip("0") or "0"
+
+
+def unprinted_numbers(text: str, cited: Sequence[Passage]) -> list[str]:
+    """Every number or identifier in a sentence that no cited passage prints. An identifier (a
+    policy number, a claim reference) is copied whole, verbatim, or it is unprinted — its digits
+    are not independent numbers that can be satisfied by matching fragments elsewhere. Every other
+    number may be reformatted (comma grouping, trailing zeros, a leading zero) and is compared by
+    value."""
+    haystacks = [f"{passage.context_prefix}\n{passage.text}".lower() for passage in cited]
+
+    identifiers: list[str] = []
+    covered: list[tuple[int, int]] = []
+    for match in _IDENTIFIER.finditer(text):
+        identifier = match.group().rstrip("-.")
+        identifiers.append(identifier)
+        covered.append((match.start(), match.start() + len(identifier)))
+
+    missing = [
+        identifier
+        for identifier in identifiers
+        if not any(identifier.lower() in haystack for haystack in haystacks)
+    ]
+
+    printed = {
+        _normal(found)
+        for passage in cited
+        for found in _NUMBER.findall(f"{passage.context_prefix}\n{passage.text}")
+    }
+    for found in _NUMBER.finditer(text):
+        if any(start <= found.start() < end for start, end in covered):
+            continue  # part of an identifier already checked above
+        if _normal(found.group()) not in printed:
+            missing.append(found.group())
+    return missing
+
+
+def states_a_printed_value(text: str, cited: Sequence[Passage]) -> bool:
+    """Does this sentence state a number or identifier, and is every one printed by what it cites?
+
+    Asked of a sentence read from documents on file alone. That line names a document, its
+    numbers and its dates; a sentence cited to it that states none of them — "your car policy
+    covers flood damage" — says more than the line does, however well it is cited.
+    """
+    if not (_NUMBER.search(text) or _IDENTIFIER.search(text)):
+        return False
+    return not unprinted_numbers(text, cited)
+
+
+def _says(text: str, phrases: Sequence[str]) -> bool:
+    lowered = text.lower()
+    return any(re.search(rf"(?<!\w){re.escape(p.lower())}(?!\w)", lowered) for p in phrases)
+
+
+def check_content(
+    claim: Claim, by_ref: Mapping[str, Passage], *, exclusions: Exclusions | None = None
+) -> str | None:
+    """Why a cited sentence still cannot be kept, or `None`. Asked after `check_one` passes."""
+    cited = [by_ref[ref] for ref in claim.supports if ref in by_ref]
+    missing = unprinted_numbers(claim.text, cited)
+    if missing:
+        return f"states a number no cited passage prints: {missing}"
+    if (
+        exclusions is not None
+        and cited
+        and _says(claim.text, exclusions.claims)
+        and not _says(claim.text, exclusions.negations)
+        and all(_says(passage.context_prefix, exclusions.headings) for passage in cited)
+    ):
+        return "claims cover from an exclusion"
+    return None

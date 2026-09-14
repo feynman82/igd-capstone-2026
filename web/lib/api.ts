@@ -29,6 +29,8 @@ export type Source = {
   page: number | null;
   /** "policy.pdf, page 1" — already formatted, so a list renders without work. */
   text: string;
+  /** A page of a document, a document on file (the inventory), or published guidance (PR 3). */
+  kind?: "document" | "inventory" | "guidance";
 };
 
 export type TodayItem = {
@@ -49,7 +51,7 @@ export type TodayResponse = { as_of: string; items: TodayItem[] };
 export type Claim = { text: string; chunk_ids: number[]; citations: Source[] };
 
 export type AskResponse = {
-  kind: "answer" | "abstention" | "refusal";
+  kind: "answer" | "abstention" | "refusal" | "declined";
   text: string;
   claims: Claim[];
   citations: Source[];
@@ -58,6 +60,7 @@ export type AskResponse = {
   missing: string;
   passages_read: number;
   dropped: number;
+  offer?: string;
 };
 
 export type VaultFact = {

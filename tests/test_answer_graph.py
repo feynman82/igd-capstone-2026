@@ -14,13 +14,29 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 
-from core.graph.answer import Abstained, AnswerGraph, Finished, Reading, Refused, Sentence
+from core.contracts import DEFAULT_DECLINE
+from core.graph.answer import (
+    ANSWER_SYSTEM,
+    ROUTE_SYSTEM,
+    Abstained,
+    AnswerGraph,
+    Declined,
+    Finished,
+    Reading,
+    Refused,
+    Sentence,
+    _either,
+    _without_passage_numbers,
+)
 from core.graph.gate import Claim, check
+from core.graph.inventory import Holding
+from core.graph.knowledge import categorise
 from core.graph.ports import Passage
+from core.packs import InstalledPack, pack
 from core.runtime.ollama import Generated, ModelUnavailable
 
 DOC = uuid4()
@@ -53,6 +69,7 @@ class ScriptedOllama:
     def __init__(self, *replies: dict[str, Any] | Exception) -> None:
         self._replies = list(replies)
         self.prompts: list[str] = []
+        self.systems: list[str] = []
 
     def constrained(
         self,
@@ -63,6 +80,7 @@ class ScriptedOllama:
         images: list[str] | None = None,
         temperature: float = 0.0,
     ) -> Generated:
+        self.systems.append(system)
         self.prompts.append(prompt)
         # The understanding step, when a test did not script it: an empty reply, which the graph
         # reads as "search the question as asked". Most tests here are about the gate, not it.
@@ -90,6 +108,7 @@ class ScriptedOllama:
         `SentenceScanner`, so a sentence that only survives when the whole reply arrives at once
         fails here rather than on the demonstration machine.
         """
+        self.systems.append(system)
         self.prompts.append(prompt)
         reply = self._replies.pop(0)
         if isinstance(reply, Exception):
@@ -173,7 +192,9 @@ def test_every_phrasing_is_searched_and_a_passage_keeps_its_best_score() -> None
 
     events = list(graph.stream(asked))
 
-    assert retriever.queries == [asked, search], "the person's words are always searched"
+    # "warded" is in the pack's vocabulary, so the question as the policy prints it is searched too.
+    printed = asked.replace("warded", "hospitalised as an inpatient")
+    assert retriever.queries == [asked, printed, search], "the person's words are always searched"
     assert isinstance(events[0], Reading), "the document's wording cleared the floor"
     assert isinstance(events[-1], Finished)
 
@@ -312,7 +333,10 @@ def test_a_question_naming_another_member_does_not_call_them_the_asker() -> None
 
 def test_a_sentence_with_no_supporting_passage_is_dropped() -> None:
     verdict = check(
-        [Claim("The premium is SGD 1,248.90.", (11,)), Claim("It is good value.", ())],
+        [
+            Claim("The premium is SGD 1,248.90.", ("document:11",)),
+            Claim("It is good value.", ()),
+        ],
         PASSAGES,
         abstain_below=0.45,
     )
@@ -322,7 +346,9 @@ def test_a_sentence_with_no_supporting_passage_is_dropped() -> None:
 
 
 def test_a_sentence_citing_a_passage_that_was_never_retrieved_is_dropped() -> None:
-    verdict = check([Claim("The excess is SGD 500.", (99,))], PASSAGES, abstain_below=0.45)
+    verdict = check(
+        [Claim("The excess is SGD 500.", ("document:99",))], PASSAGES, abstain_below=0.45
+    )
 
     assert verdict.grounded == []
     assert verdict.abstained
@@ -331,29 +357,29 @@ def test_a_sentence_citing_a_passage_that_was_never_retrieved_is_dropped() -> No
 
 def test_weak_evidence_abstains_before_anything_is_written() -> None:
     weak = [Passage(11, DOC, 1, "unrelated text", 0.2, "note.pdf")]
-    verdict = check([Claim("Something.", (11,))], weak, abstain_below=0.45)
+    verdict = check([Claim("Something.", ("document:11",))], weak, abstain_below=0.45)
 
     assert verdict.abstained
     assert "not close enough" in (verdict.reason or "")
 
 
 def test_no_passages_at_all_abstains() -> None:
-    verdict = check([Claim("Something.", (1,))], [], abstain_below=0.45)
+    verdict = check([Claim("Something.", ("document:1",))], [], abstain_below=0.45)
 
     assert verdict.abstained
     assert not verdict.has_answer
 
 
 def test_a_grounded_claim_renders_its_document_and_page() -> None:
-    claim = Claim("The premium is SGD 1,248.90.", (11,))
-    rendered = claim.with_citation({p.chunk_id: p for p in PASSAGES})
+    claim = Claim("The premium is SGD 1,248.90.", ("document:11",))
+    rendered = claim.with_citation({p.ref: p for p in PASSAGES})
 
     assert rendered.endswith("[renewal-notice.pdf, page 1]")
 
 
 def test_a_claim_citing_the_same_document_twice_says_it_once() -> None:
-    claim = Claim("It renews on 30 November 2026.", (11, 11))
-    rendered = claim.with_citation({p.chunk_id: p for p in PASSAGES})
+    claim = Claim("It renews on 30 November 2026.", ("document:11", "document:11"))
+    rendered = claim.with_citation({p.ref: p for p in PASSAGES})
 
     assert rendered.count("renewal-notice.pdf") == 1
 
@@ -561,7 +587,11 @@ def test_a_model_that_dies_before_any_sentence_abstains() -> None:
 
 
 def passage(chunk_id: int, score: float, pack_id: str) -> Passage:
-    return Passage(chunk_id, DOC, 1, "text", score, "doc.pdf", pack_id=pack_id)
+    # Prints the date the scripted sentences state: a sentence stating a number no cited passage
+    # prints is dropped by the gate, and these tests are about which pack signs, not about that.
+    return Passage(
+        chunk_id, DOC, 1, "Expires on 30 November 2026.", score, "doc.pdf", pack_id=pack_id
+    )
 
 
 def test_the_best_passage_chooses_the_pack_even_when_it_is_outnumbered() -> None:
@@ -612,3 +642,421 @@ def test_the_floor_that_is_applied_belongs_to_the_passage_that_has_to_clear_it()
 
     assert isinstance(stream[0], Abstained)
     assert "0.45" in stream[0].reason, stream[0].reason
+
+
+# ----------------------------------------------------------------- what a pack makes of a question
+#
+# 13 September, live vault: "do i have dental insurance?" was answered with the hospital plan's
+# dental exclusion; "warded for dengue 3 days, can claim?" was misread as "awarded" and cited the
+# car policy's benefit table; "should i buy critical illness cover?" was explained, not declined.
+
+
+def insurance() -> InstalledPack:
+    return pack("insurance_agent")
+
+
+def holding(
+    name: str,
+    printed: str,
+    fact_id: int,
+    document_id: UUID | None = None,
+    details: tuple[tuple[str, str], ...] | None = None,
+) -> Holding:
+    categories = insurance().manifest.answering.categories
+    assert categories is not None
+    return Holding(
+        document_id=document_id or uuid4(),
+        document_name=name,
+        pack_id="insurance_agent",
+        doc_type="policy_schedule",
+        title=f"Meridian Assurance, {printed}",
+        subject="Marcus Lim Jun Wei",
+        category=categorise(printed, categories),
+        printed_name=printed,
+        fact_id=fact_id,
+        page=1,
+        details=details if details is not None else (("product_name", printed),),
+    )
+
+
+class FakeInventory:
+    def __init__(self, held: list[Holding], quarantined: int = 0) -> None:
+        self.held = held
+        self._quarantined = quarantined
+
+    def holdings(self, packs: Any) -> list[Holding]:
+        return self.held
+
+    def quarantined(self) -> int:
+        return self._quarantined
+
+
+def test_a_request_for_a_recommendation_is_declined_before_anything_is_searched() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    retriever = PhrasingRetriever({})
+    graph = AnswerGraph(client, retriever, PassThroughReranker(), packs=[insurance()])
+
+    got = list(graph.stream("should i buy critical illness cover?"))
+
+    assert len(got) == 1 and isinstance(got[0], Declined)
+    assert "recommend" in got[0].text
+    assert got[0].disclaimer
+    assert retriever.queries == []
+    assert len(client.systems) == 1, "only the router ran"
+
+
+def test_a_decline_no_single_pack_owns_is_still_signed_with_a_disclaimer() -> None:
+    both = [insurance(), pack("iras_tax")]
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "advise"}),
+        PhrasingRetriever({}),
+        PassThroughReranker(),
+        packs=both,
+    )
+
+    (declined,) = list(graph.stream("is my cover enough?"))
+
+    assert isinstance(declined, Declined)
+    assert declined.text == DEFAULT_DECLINE
+    assert declined.disclaimer == insurance().manifest.guardrails.disclaimer.strip()
+
+
+def test_a_decline_offers_the_question_it_can_answer_without_answering_it() -> None:
+    held = [holding("b1-0033.pdf", "CareShield Critical Illness Plan", 7)]
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "advise"}),
+        PhrasingRetriever({}),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory(held),
+    )
+    (declined,) = list(graph.stream("is my critical illness cover enough?"))
+    assert isinstance(declined, Declined)
+    assert declined.offer == "What does my CareShield Critical Illness Plan say?"
+
+
+def test_a_kind_of_cover_nobody_holds_is_answered_with_what_is_on_file() -> None:
+    held = [
+        holding("b1-0001.pdf", "Private Car Insurance Policy", 501),
+        holding("b1-0032.pdf", "PrivateCare Hospital and Surgical Plan", 502),
+    ]
+    client = ScriptedOllama({"intent": "explain"}, {"sentences": []})
+    graph = AnswerGraph(
+        client,
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory(held, quarantined=1),
+    )
+
+    got = list(graph.stream("do i have dental insurance?"))
+
+    sentences = [event for event in got if isinstance(event, Sentence)]
+    assert sentences[0].text == "None of the 2 policies on file is a dental plan."
+    assert {citation.kind for citation in sentences[0].citations} == {"inventory"}
+    assert len(sentences[0].citations) == 2
+    assert isinstance(got[-1], Finished) and got[-1].quarantined == 1
+
+
+def test_no_is_still_said_when_the_passages_are_too_weak_to_answer_from() -> None:
+    weak: list[Passage] = []
+    held = [holding("b1-0001.pdf", "Private Car Insurance Policy", 501)]
+    client = ScriptedOllama({"intent": "explain"})
+    graph = AnswerGraph(
+        client,
+        FixedRetriever(weak),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory(held),
+    )
+
+    got = list(graph.stream("how much is my pet insurance premium?"))
+
+    assert [type(event) for event in got] == [Reading, Sentence, Finished]
+    assert got[1].text == "The only document on file is not a pet policy."  # type: ignore[union-attr]
+    assert isinstance(got[-1], Finished) and got[-1].unanswered is False, (
+        "the absence sentence is the answer; nothing else was asked of the model"
+    )
+
+
+def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
+    car_id, hospital_id = uuid4(), uuid4()
+    held = [
+        holding("b1-0001.pdf", "Private Car Insurance Policy", 501, car_id),
+        holding("b1-0032.pdf", "PrivateCare Hospital and Surgical Plan", 502, hospital_id),
+    ]
+    passages = [
+        Passage(
+            1,
+            car_id,
+            1,
+            "Third Party Property Damage limit.",
+            0.60,
+            "b1-0001.pdf",
+            pack_id="insurance_agent",
+        ),
+        Passage(
+            2,
+            hospital_id,
+            4,
+            "Infectious diseases are covered as inpatient treatment.",
+            0.55,
+            "b1-0032.pdf",
+            pack_id="insurance_agent",
+        ),
+    ]
+    reply = {
+        "sentences": [
+            {"text": "Infectious diseases are covered as inpatient treatment.", "supports": [1]}
+        ]
+    }
+    client = ScriptedOllama({"intent": "explain"}, reply)
+    graph = AnswerGraph(
+        client,
+        FixedRetriever(passages),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory(held),
+    )
+
+    got = list(graph.stream("warded for dengue 3 days, can claim?"))
+
+    assert "Third Party Property Damage" not in client.prompts[-1]
+    # The hospital plan on file now leads with a line of its own, cited to the inventory; what is
+    # asserted here is the page read, and no page of the car policy is.
+    cited = [
+        c.document_name
+        for e in got
+        if isinstance(e, Sentence)
+        for c in e.citations
+        if c.kind == "document"
+    ]
+    assert cited == ["b1-0032.pdf"]
+
+
+def test_the_households_word_is_searched_the_way_the_policy_prints_it() -> None:
+    retriever = PhrasingRetriever({})
+    client = ScriptedOllama({"intent": "explain"})
+    graph = AnswerGraph(client, retriever, PassThroughReranker(), packs=[insurance()])
+
+    list(graph.stream("got warded 2 days, claimable?"))
+
+    assert "got hospitalised as an inpatient 2 days, can claim?" in retriever.queries
+    assert any("warded = hospitalised as an inpatient" in prompt for prompt in client.prompts)
+
+
+def test_an_answer_stops_at_the_packs_sentence_limit() -> None:
+    reply = {"sentences": [{"text": f"Clause {n} applies.", "supports": [1]} for n in range(1, 10)]}
+    passage = Passage(
+        11, DOC, 1, "Clauses 1 2 3 4 5 6 7 8 9 apply.", 0.8, "p.pdf", pack_id="insurance_agent"
+    )
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever([passage]),
+        PassThroughReranker(),
+        packs=[insurance()],
+    )
+
+    got = list(graph.stream("what applies?"))
+
+    assert sum(isinstance(event, Sentence) for event in got) == 6
+    assert isinstance(got[-1], Finished) and got[-1].truncated
+
+
+def test_a_sentence_stating_a_number_the_passage_never_printed_is_not_said() -> None:
+    reply = {"sentences": [{"text": "Three days pays SGD 3,000.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        packs=[insurance()],
+    )
+    got = list(graph.stream("how much will I get for 3 days?"))
+    assert isinstance(got[-1], Abstained) and got[-1].dropped == 1
+
+
+def test_an_abstention_is_signed_with_the_packs_disclaimer() -> None:
+    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}),
+        FixedRetriever(weak),
+        PassThroughReranker(),
+        packs=[insurance()],
+    )
+    (abstained,) = list(graph.stream("what about the thing?"))
+    assert isinstance(abstained, Abstained) and "Financial Advisers Act" in abstained.disclaimer
+
+
+def test_the_persona_speaks_before_the_rules_and_never_replaces_them() -> None:
+    client = ScriptedOllama({"intent": "explain"}, ANSWERED)
+    graph = AnswerGraph(
+        client, FixedRetriever(PASSAGES), PassThroughReranker(), packs=[insurance()]
+    )
+    list(graph.stream("when does it renew?"))
+    system = client.systems[-1]
+    assert system.startswith(insurance().manifest.persona.system.strip())
+    assert ANSWER_SYSTEM in system
+
+
+def test_asking_whether_something_can_be_claimed_is_described_as_explain_to_the_router() -> None:
+    """14 September: "warded for dengue 3 days, can claim?" was declined as advice because the
+    router was told a question about whether a claim will be approved is advise."""
+    assert "claim will be approved" not in ROUTE_SYSTEM
+    assert "can be claimed is explain" in ROUTE_SYSTEM
+
+
+# ------------------------------------------------------------------- 14 September, live probe
+
+
+def test_a_policy_on_file_is_named_by_code_with_its_number_and_dates() -> None:
+    car = holding(
+        "b1-0001.pdf",
+        "Private Car Insurance Policy",
+        501,
+        details=(
+            ("insurer", "MERIDIAN ASSURANCE"),
+            ("policy_no", "MV-2026-448120"),
+            ("product_name", "Private Car Insurance Policy"),
+            ("expiry_date", "2027-04-11"),
+        ),
+    )
+    reply = {"sentences": [{"text": "Yes, you have car insurance.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([car]),
+    )
+
+    got = [
+        event for event in graph.stream("do i have car insurance?") if isinstance(event, Sentence)
+    ]
+
+    assert got[0].text == (
+        "On file for Marcus Lim Jun Wei: Meridian Assurance, Private Car Insurance Policy "
+        "(policy no MV-2026-448120; expiry date 2027-04-11)."
+    )
+    assert [c.kind for c in got[0].citations] == ["inventory"]
+
+
+def test_weak_passages_still_answer_from_the_document_on_file() -> None:
+    car = holding(
+        "b1-0001.pdf",
+        "Private Car Insurance Policy",
+        501,
+        details=(("product_name", "Private Car Insurance Policy"), ("premium_payable", "1284.00")),
+    )
+    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    reply = {"sentences": [{"text": "The premium payable is SGD 1,284.00.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(weak),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([car]),
+    )
+
+    got = list(graph.stream("how much is my car insurance premium?"))
+
+    assert [type(event) for event in got] == [Reading, Sentence, Sentence, Finished]
+    assert got[2].text == "The premium payable is SGD 1,284.00."  # type: ignore[union-attr]
+    assert isinstance(got[-1], Finished) and got[-1].unanswered is False
+
+
+def test_a_document_on_file_alone_does_not_carry_a_sentence_it_does_not_print() -> None:
+    """The inventory line names a policy, its number and its dates. It does not say what the
+    policy covers, so a sentence about flood damage cited to it alone says more than it does."""
+    car = holding(
+        "b1-0001.pdf",
+        "Private Car Insurance Policy",
+        501,
+        details=(("product_name", "Private Car Insurance Policy"), ("premium_payable", "1284.00")),
+    )
+    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    reply = {"sentences": [{"text": "Your car policy covers flood damage.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(weak),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([car]),
+    )
+
+    got = list(graph.stream("does my car insurance cover flood damage?"))
+
+    assert [type(event) for event in got] == [Reading, Sentence, Finished]
+    assert got[1].text.startswith("On file")  # type: ignore[union-attr]
+    finished = got[-1]
+    assert isinstance(finished, Finished)
+    assert finished.dropped == 1
+    assert finished.unanswered is True
+
+
+def test_a_sentence_that_is_only_a_citation_is_not_an_answer() -> None:
+    reply = {"sentences": [{"text": "See passage 1.", "supports": [1]}]}
+    got = events(ScriptedOllama({"intent": "explain"}, reply), "what is the premium?")
+
+    assert not any(isinstance(event, Sentence) for event in got)
+    assert isinstance(got[-1], Abstained)
+
+
+def test_passage_numbers_written_into_a_sentence_are_not_mistaken_for_figures() -> None:
+    reply = {"sentences": [{"text": "The annual premium is SGD 1,248.90 (1).", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+    )
+    got = [event for event in graph.stream("what is the premium?") if isinstance(event, Sentence)]
+    assert [event.text for event in got] == ["The annual premium is SGD 1,248.90."]
+
+
+@pytest.mark.parametrize(
+    ("text", "numbers", "expected"),
+    [
+        ("Cover is described within (1).", [1], "Cover is described within."),
+        (
+            "You do not have dental insurance as per [3], which lists x.",
+            [3],
+            "You do not have dental insurance, which lists x.",
+        ),
+        ("According to (2), cover ends.", [2], "Cover ends."),
+        ("As stated in passages 1 and 2, cover ends.", [1, 2], "Cover ends."),
+        (
+            "A thirty (30) day waiting period applies (1).",
+            [1],
+            "A thirty (30) day waiting period applies.",
+        ),
+        ("The premium is SGD 1,248.90 (1).", [1], "The premium is SGD 1,248.90."),
+        ("Clause 4(1) excludes dental.", [1], "Clause 4(1) excludes dental."),
+        ("Dental is excluded (see 2).", [2], "Dental is excluded."),
+        ("Payment is due per [1] the terms.", [1], "Payment is due per the terms."),
+        ("The claim was paid from [1] your salary.", [1], "The claim was paid from your salary."),
+        (
+            "According to [1] the policy, you are covered.",
+            [1],
+            "According to the policy, you are covered.",
+        ),
+        ("Refer to (1) the appendix for details.", [1], "Refer to the appendix for details."),
+        ("Seen in passage 2 of the schedule (2).", [2], "Seen in passage 2 of the schedule."),
+        (
+            "Your premium is SGD 1,860.00, as stated in the policy document (6) and confirmed "
+            "on file (7).",
+            [6, 7],
+            "Your premium is SGD 1,860.00, as stated in the policy document and confirmed on file.",
+        ),
+        ("The limit is SGD 1,000 per day (2).", [1], "The limit is SGD 1,000 per day (2)."),
+        ("No mention here at all.", [1], "No mention here at all."),
+        ("It ends in 2027 [1][2].", [1, 2], "It ends in 2027."),
+    ],
+)
+def test_a_printed_figure_in_brackets_is_not_taken_for_a_passage_number(
+    text: str, numbers: list[int], expected: str
+) -> None:
+    assert _without_passage_numbers(text, numbers) == expected
+
+
+def test_an_is_written_only_before_a_e_i_or_o() -> None:
+    assert _either(["unit-linked plan"]) == "a unit-linked plan"
+    assert _either(["investment-linked plan"]) == "an investment-linked plan"

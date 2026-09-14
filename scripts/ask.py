@@ -39,8 +39,9 @@ def main(argv: list[str] | None = None) -> int:
 
     from core.graph.answer import AnswerGraph
     from core.graph.baseline import DenseRetriever, NoReranker
+    from core.graph.inventory import HouseholdInventory
     from core.graph.scope import HouseholdScope
-    from core.registry import enabled_pack_ids
+    from core.registry import enabled_pack_ids, enabled_packs
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
     from core.runtime.settings import ConfigurationError, Settings
@@ -64,6 +65,8 @@ def main(argv: list[str] | None = None) -> int:
                 candidates=args.candidates,
                 keep=args.keep,
                 household=HouseholdScope(conn),
+                inventory=HouseholdInventory(conn),
+                packs=enabled_packs(conn),
             )
             if args.question:
                 _ask(graph, " ".join(args.question), args.show_evidence)
@@ -95,6 +98,8 @@ def _ask(
     answer = graph.ask(question, history=history or [])  # type: ignore[attr-defined]
     print()
     print(answer.text)
+    if getattr(answer, "offer", ""):
+        print(f"\nYou could ask: {answer.offer}")
     if answer.citations:
         print("\nSources: " + "; ".join(answer.citations))
     if answer.disclaimer:

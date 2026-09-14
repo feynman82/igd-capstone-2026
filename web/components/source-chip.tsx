@@ -42,7 +42,9 @@ export function SourceChip({ source }: { source: Source }) {
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
       >
-        <span className="truncate">{source.document_name}</span>
+        <span className="truncate">
+          {source.kind === "inventory" ? `On file · ${source.document_name}` : source.document_name}
+        </span>
         <span className="num">p.{source.page}</span>
       </button>
 
