@@ -6,8 +6,13 @@
 # Never edit a generated file by hand.
 
 id: insurance_agent
-version: 0.3.0
+version: 0.4.0
 display_name: Insurance and Coverage
+
+# Every `example:` below is deliberately NOT a value from corpus/canon.md. An example is placed
+# in the extraction model's prompt, so an example that is also the answer key lets a model score
+# by reciting the prompt instead of reading the page. Plausible and Singaporean, never the canon's
+# own insurers, policy numbers or people.
 
 document_types:
 
@@ -18,11 +23,11 @@ document_types:
       - name: insurer
         type: string
         description: Name of the insurance company as printed on the schedule letterhead
-        example: Meridian Assurance
+        example: Eastvale Assurance
       - name: policy_no
         type: identifier
         description: Policy number exactly as printed, not normalised
-        example: MV-2026-448120
+        example: MV-2025-100734
       - name: insured
         type: person
         description: Name of the policyholder as printed against Name of Insured
@@ -35,10 +40,19 @@ document_types:
         type: date
         description: First day of the period of insurance, the from date on that line
         example: "2026-03-01"
+      # A whole life policy has no period of insurance, so it prints a maturity date and no
+      # expiry. corpus/canon.md registered maturity-at-100 under `expiry_date` as a workaround
+      # and asked for this fix here rather than there. One of the two is printed, never neither.
       - name: expiry_date
         type: date
+        required: false
         description: Last day of the period of insurance, the to date on that line
         example: "2027-02-28"
+      - name: maturity_date
+        type: date
+        required: false
+        description: Date a whole life or endowment schedule matures, where it prints one instead
+        example: "2087-05-07"
       - name: premium_payable
         type: money
         description: Total premium payable for the period of insurance shown, in SGD
@@ -61,11 +75,11 @@ document_types:
       - name: insurer
         type: string
         description: Name of the insurance company issuing the notice, from the letterhead
-        example: Meridian Assurance
+        example: Eastvale Assurance
       - name: policy_no
         type: identifier
         description: Policy number exactly as printed, not normalised
-        example: MV-2026-448120
+        example: MV-2025-100734
       - name: insured
         type: person
         description: Name of the policyholder the notice is addressed to
@@ -90,7 +104,7 @@ document_types:
       - name: insurer
         type: string
         description: Name of the insurance company, from the letterhead
-        example: Meridian Assurance
+        example: Eastvale Assurance
       - name: policy_no
         type: identifier
         description: Policy the claim was made against, exactly as printed
@@ -156,6 +170,13 @@ document_types:
         type: person
         description: Name of the person covered, as printed on the statement
         example: Marcus Fernandez
+      # Four fields below are "as at the statement date", and until now that date was not
+      # captured. The same policy is restated every year, so without it the yearly statements
+      # cannot be told apart or put in order.
+      - name: statement_date
+        type: date
+        description: Date the statement is made up to, printed as At or As at near the head
+        example: "2026-06-01"
       - name: sum_assured
         type: money
         description: Sum assured as at the statement date, in SGD
@@ -188,7 +209,13 @@ registers:
   reminder:
     - key: policy_expiry
       from_field: expiry_date
-      lead_days: [60, 30, 14, 1]
+      lead_days: [60, 30, 14, 1]   # shop, read the notice, pay, cover ends tomorrow
+    # The renewal notice prints a pay-by date 7-14 days before cover ends, and it is the date
+    # the household must act on. Two windows, each a distinct action: arrange the payment, then
+    # pay it. Cover lapsing is already the last `policy_expiry` window, so it is not repeated.
+    - key: renewal_payment_due
+      from_field: payment_due_date
+      lead_days: [14, 3]
   alert:
     - metric: days_uncovered
       ceiling: 0
@@ -263,6 +290,14 @@ answering:
         label: personal accident plan
         printed: [personal accident]
         asked: [personal accident, accident, injury, fracture]
+      # Before `home`, whose printed word "home" would otherwise claim it, and before the life
+      # rules, which would file it as ordinary life cover. The Home Protection Scheme is
+      # mortgage-reducing term assurance on a flat: neither a contents policy nor a life plan
+      # that pays a family.
+      - id: mortgage_reducing_term
+        label: mortgage reducing term plan
+        printed: [home protection scheme, mortgage reducing term, mortgage protection]
+        asked: [hps, home protection, mortgage insurance, mortgage cover, housing loan insurance]
       - id: whole_life
         label: whole life plan
         printed: [whole life]

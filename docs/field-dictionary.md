@@ -6,7 +6,7 @@ header in the corpus register, the `facts.key` it is stored under, and the attri
 on the extraction model. Renaming one renames all three, so rename in `pack.yaml`
 and regenerate.
 
-## Insurance and Coverage (`insurance_agent` v0.3.0)
+## Insurance and Coverage (`insurance_agent` v0.4.0)
 
 ### `policy_schedule`
 
@@ -19,7 +19,8 @@ Policy schedule or certificate of insurance setting out cover and premium.
 | `insured` | person | yes | `facts.value_text` | Name of the policyholder as printed against Name of Insured |
 | `product_name` | string | yes | `facts.value_text` | Product name as printed at the head of the schedule, not a category |
 | `cover_from` | date | yes | `facts.value_date` | First day of the period of insurance, the from date on that line |
-| `expiry_date` | date | yes | `facts.value_date` | Last day of the period of insurance, the to date on that line |
+| `expiry_date` | date | no | `facts.value_date` | Last day of the period of insurance, the to date on that line |
+| `maturity_date` | date | no | `facts.value_date` | Date a whole life or endowment schedule matures, where it prints one instead |
 | `premium_payable` | money | yes | `facts.value_num` | Total premium payable for the period of insurance shown, in SGD |
 | `sum_insured` | money | no | `facts.value_num` | Sum insured or limit of liability where the schedule prints one, in SGD |
 | `excess` | money | no | `facts.value_num` | Amount the policyholder bears per claim, printed as Excess, in SGD |
@@ -71,12 +72,13 @@ Annual statement issued on the anniversary of a life or investment-linked policy
 | `insurer` | string | yes | `facts.value_text` | Name of the insurance company, from the statement letterhead |
 | `policy_no` | identifier | yes | `facts.value_text` | Policy number exactly as printed, not normalised |
 | `life_assured` | person | yes | `facts.value_text` | Name of the person covered, as printed on the statement |
+| `statement_date` | date | yes | `facts.value_date` | Date the statement is made up to, printed as At or As at near the head |
 | `sum_assured` | money | yes | `facts.value_num` | Sum assured as at the statement date, in SGD |
 | `annual_premium` | money | yes | `facts.value_num` | Premium payable each year as printed on the statement, in SGD |
 | `surrender_value` | money | no | `facts.value_num` | Cash or surrender value as at the statement date, in SGD |
 | `premiums_paid_to_date` | money | no | `facts.value_num` | Total premiums paid since inception where the statement prints it, in SGD |
 
-## Tax and Reliefs (`iras_tax` v0.2.0)
+## Tax and Reliefs (`iras_tax` v0.3.0)
 
 ### `payslip`
 

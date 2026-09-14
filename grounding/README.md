@@ -17,9 +17,13 @@ A pack points at a corpus by directory:
 
 ```yaml
 grounding:
-  corpus: grounding/iras_reliefs_ya2026/
+  corpus: iras_reliefs_ya2026    # the directory name, not a path — `Grounding.corpus` is a slug
   top_k: 8
 ```
+
+A pack with no signed-off sources points at nothing — `corpus: null, top_k: 0` — rather than at
+an empty directory. Both packs are in that state today, and `packs/README.md` §7 explains why
+that is a designed guardrail and not a gap.
 
 ## Rules
 

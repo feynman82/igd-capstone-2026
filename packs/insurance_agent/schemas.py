@@ -26,8 +26,13 @@ class PolicySchedule(BaseModel):
     cover_from: date = Field(
         description="First day of the period of insurance, the from date on that line",
     )
-    expiry_date: date = Field(
+    expiry_date: date | None = Field(
+        default=None,
         description="Last day of the period of insurance, the to date on that line",
+    )
+    maturity_date: date | None = Field(
+        default=None,
+        description="Date a whole life or endowment schedule matures, where it prints one instead",
     )
     premium_payable: Decimal = Field(
         ge=0,
@@ -118,6 +123,9 @@ class PolicyAnniversaryStatement(BaseModel):
     insurer: str = Field(description="Name of the insurance company, from the statement letterhead")
     policy_no: str = Field(description="Policy number exactly as printed, not normalised")
     life_assured: str = Field(description="Name of the person covered, as printed on the statement")
+    statement_date: date = Field(
+        description="Date the statement is made up to, printed as At or As at near the head",
+    )
     sum_assured: Decimal = Field(ge=0, description="Sum assured as at the statement date, in SGD")
     annual_premium: Decimal = Field(
         ge=0,
@@ -156,6 +164,7 @@ FACT_COLUMNS: dict[str, str] = {
     "insured": "value_text",
     "insurer": "value_text",
     "life_assured": "value_text",
+    "maturity_date": "value_date",
     "payment_due_date": "value_date",
     "policy_no": "value_text",
     "premium_payable": "value_num",
@@ -163,6 +172,7 @@ FACT_COLUMNS: dict[str, str] = {
     "product_name": "value_text",
     "renewal_premium": "value_num",
     "settled_amount": "value_num",
+    "statement_date": "value_date",
     "sum_assured": "value_num",
     "sum_insured": "value_num",
     "surrender_value": "value_num",

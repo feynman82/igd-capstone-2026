@@ -6,8 +6,12 @@
 # Never edit a generated file by hand.
 
 id: iras_tax
-version: 0.2.0
+version: 0.3.0
 display_name: Tax and Reliefs
+
+# Every `example:` below is deliberately NOT a value from corpus/canon.md. An example is placed
+# in the extraction model's prompt, so an example that is also the answer key lets a model score
+# by reciting the prompt instead of reading the page.
 
 document_types:
 
@@ -52,7 +56,7 @@ document_types:
       - name: charity
         type: string
         description: Name of the receiving organisation as printed
-        example: Riverbend Community Fund
+        example: Clementi Wellbeing Society
       - name: receipt_no
         type: identifier
         description: The receipt reference exactly as printed, not normalised
@@ -100,7 +104,7 @@ document_types:
       - name: account_holder
         type: person
         description: Name of the SRS account holder
-        example: Priya Nair
+        example: Nadia Rahim
       - name: account_no
         type: identifier
         description: SRS account reference exactly as printed
@@ -143,11 +147,15 @@ document_types:
         description: Date the notice requires payment by, as printed
         example: "2026-06-30"
 
-# The corpus has no documents yet (grounding/iras_reliefs_ya2026/sources.yaml), so nothing is
-# cited from it until one is recorded and reviewed.
+# No grounding corpus yet. grounding/iras_reliefs_ya2026/sources.yaml records no documents and
+# has never been signed off (`reviewed_on: null`), so pointing at it with `top_k: 8` claimed a
+# second evidence lane that does not exist — packs/README.md §7 calls that a lie the pack tells.
+# `null` is the designed guardrail: until real IRAS pages are recorded with their retrieval dates
+# and Siew signs them off, this pack answers only from the household's own documents. Restoring
+# `corpus: iras_reliefs_ya2026, top_k: 8` is the W6 task, and it is one line.
 grounding:
-  corpus: iras_reliefs_ya2026
-  top_k: 8
+  corpus: null
+  top_k: 0
 
 registers:
   reminder:
@@ -160,6 +168,12 @@ registers:
     - key: srs_contribution_cutoff
       on_date: 2026-12-31
       lead_days: [30]
+    # The Notice of Assessment prints its own pay-by date, so this one is read off the document
+    # rather than fixed to a year, and it does not fall silent. Three windows, three distinct
+    # actions: check the assessment and arrange the money, pay it, it is due tomorrow.
+    - key: tax_payment_due
+      from_field: payment_due_date
+      lead_days: [30, 7, 1]
   alert:
     - metric: srs_contributions_ytd
       ceiling: 15300
@@ -169,14 +183,35 @@ registers:
 
 persona:
   system: >
-    You explain what the user's own tax documents say, and how published IRAS guidance
-    applies to the figures in them. You never state a relief amount or eligibility rule
-    that is not in the grounding corpus, and you never estimate a tax liability.
+    You explain what the user's own tax documents say — what was earned, contributed, donated
+    and assessed, and on what date it is payable. You never state a relief amount, a rate or an
+    eligibility rule, because this pack indexes no IRAS guidance, and you never estimate a tax
+    liability or what someone may claim.
 
 guardrails:
   must_cite: true
   abstain_below: 0.42
   never_acts: true
+  never_recommends: true
   disclaimer: >
-    Informational analysis of your own documents and published IRAS guidance.
-    This is not tax advice. Verify against IRAS before filing.
+    Informational analysis of your own tax documents. This is not tax advice, and it does not
+    tell you what you may claim, what you will owe, or whether a relief applies to you. Reliefs,
+    rates and eligibility change by Year of Assessment. Verify against IRAS, or ask a tax
+    professional, before you file.
+  advice_decline: >
+    I can explain what your own tax documents say, but I cannot tell you what relief you qualify
+    for, estimate what you will owe, or advise whether to contribute more. IRAS publishes the
+    rules, and a tax professional can apply them to your situation.
+
+# How a household says it, mapped to what the paper prints. Nothing here is a field, nothing is
+# stored, and none of it becomes a register column. No `categories`: they match on a printed
+# product name, and a payslip or a notice of assessment does not print one.
+answering:
+  max_sentences: 6
+  vocabulary:
+    ir8a: Return of Employee's Remuneration
+    take home: net pay
+    take-home: net pay
+    cpf top up: voluntary contribution
+    cpf topup: voluntary contribution
+    noa: Notice of Assessment
