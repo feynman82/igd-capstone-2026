@@ -7,10 +7,12 @@ prints SGD 1,000 a day and a SGD 3,500 deductible — and cover claimed from an 
 
 from __future__ import annotations
 
+from decimal import Decimal
 from uuid import uuid4
 
 from core.contracts import Exclusions
-from core.graph.gate import Claim, check_content, check_one, unprinted_numbers
+from core.graph.advice import Calculation, Figure, Input, passages_for
+from core.graph.gate import Claim, check_advice, check_content, check_one, unprinted_numbers
 from core.graph.ports import Passage
 
 DOC = uuid4()
@@ -94,3 +96,168 @@ def test_a_date_on_file_may_be_written_the_way_a_person_says_it() -> None:
         4, DOC, 1, "Private Car Insurance Policy. expiry date: 2027-04-11.", 1.0, kind="inventory"
     )
     assert unprinted_numbers("It expires on 11 April 2027.", [on_file]) == []
+
+
+# ------------------------------------------------------------------------------- check_advice
+
+
+def _advice_calculation() -> Calculation:
+    return Calculation(
+        pack_id="sample_pack",
+        shape_id="need",
+        label="Sample need",
+        subject="Alex Tan",
+        person_ids=(1,),
+        inputs=(
+            Input(
+                ref="fact:5",
+                role="amount",
+                label="amount on file",
+                value_text="SGD 100,000.00",
+                citation="statement.pdf, page 1",
+                document_id="doc-1",
+                page=1,
+            ),
+        ),
+        figures=(
+            Figure(
+                name="target",
+                value=Decimal("451200.00"),
+                text="SGD 451,200.00",
+                words=("target", "guideline"),
+            ),
+            Figure(
+                name="gap",
+                value=Decimal("251200.00"),
+                text="SGD 251,200.00",
+                words=("gap", "shortfall"),
+            ),
+        ),
+        verdict="no_room",
+        verdict_text="Alex Tan has a gap of SGD 251,200.00.",
+    )
+
+
+ADVICE_FIGURES = _advice_calculation().figures
+BY_REF_ADVICE = {p.ref: p for p in passages_for(_advice_calculation())}
+
+
+def _shared_value_calculation() -> Calculation:
+    """An input that happens to print the same value as a figure, so the role check (which asks
+    only about `calculation:0`) has something to prove it correctly leaves alone."""
+    return Calculation(
+        pack_id="sample_pack",
+        shape_id="need",
+        label="Sample need",
+        subject="Alex Tan",
+        person_ids=(1,),
+        inputs=(
+            Input(
+                ref="fact:9",
+                role="held",
+                label="amount held",
+                value_text="SGD 451,200.00",
+                citation="statement.pdf, page 2",
+                document_id="doc-2",
+                page=2,
+            ),
+        ),
+        figures=ADVICE_FIGURES,
+        verdict="no_room",
+        verdict_text="Alex Tan has a gap of SGD 251,200.00.",
+    )
+
+
+BY_REF_SHARED_VALUE = {p.ref: p for p in passages_for(_shared_value_calculation())}
+
+
+def _meets_calculation() -> Calculation:
+    """A `meets` outcome: the gap figure is negative, and only its printed text carries the
+    number — `_NUMBER` matches through `figure.text`, never through the signed `Decimal`."""
+    return Calculation(
+        pack_id="sample_pack",
+        shape_id="need",
+        label="Sample need",
+        subject="Alex Tan",
+        person_ids=(1,),
+        inputs=(),
+        figures=(
+            Figure(
+                name="gap",
+                value=Decimal("-48800.00"),
+                text="SGD 48,800.00 above the guideline",
+                words=("above the guideline", "surplus"),
+            ),
+        ),
+        verdict="meets",
+        verdict_text="Alex Tan is SGD 48,800.00 above the guideline.",
+    )
+
+
+MEETS_FIGURES = _meets_calculation().figures
+BY_REF_MEETS = {p.ref: p for p in passages_for(_meets_calculation())}
+
+
+def test_check_advice_drops_a_verdict_word() -> None:
+    claim = Claim("You should buy more cover.", ("calculation:0",))
+    assert (
+        check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES)
+        == "a verdict is said by code, not the explanation"
+    )
+
+
+def test_check_advice_keeps_a_figure_stated_with_its_own_word() -> None:
+    claim = Claim("The gap is SGD 251,200.00.", ("calculation:0",))
+    assert check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES) is None
+
+
+def test_check_advice_drops_a_figures_value_stated_in_the_wrong_role() -> None:
+    claim = Claim("You are short by SGD 451,200.00.", ("calculation:0",))
+    assert (
+        check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES)
+        == "states SGD 451,200.00 without saying it is the target"
+    )
+
+
+def test_check_advice_keeps_a_figures_value_stated_with_a_different_one_of_its_words() -> None:
+    claim = Claim("The guideline works out to SGD 451,200.00.", ("calculation:0",))
+    assert check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES) is None
+
+
+def test_check_advice_keeps_recommended_alone_but_recommended_to_is_a_verdict() -> None:
+    claim = Claim("The recommended guideline works out to SGD 451,200.00.", ("calculation:0",))
+    assert check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES) is None
+
+
+def test_check_advice_keeps_a_number_printed_only_by_a_cited_fact() -> None:
+    claim = Claim("The amount on file is SGD 100,000.00.", ("fact:5",))
+    assert check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES) is None
+
+
+def test_check_advice_does_not_role_check_a_number_cited_only_to_its_input() -> None:
+    # SGD 451,200.00 is also the target figure's value, but this claim cites fact:9, not
+    # calculation:0, so check 4 never runs — it would otherwise drop this for using neither
+    # of the target figure's words.
+    claim = Claim("The amount held is SGD 451,200.00.", ("fact:9",))
+    assert check_advice(claim, BY_REF_SHARED_VALUE, ADVICE_FIGURES) is None
+
+
+def test_check_advice_drops_a_never_say_phrase() -> None:
+    claim = Claim("This plan is a good fit for you.", ("calculation:0",))
+    assert (
+        check_advice(claim, BY_REF_ADVICE, ADVICE_FIGURES, never_say=("good fit",))
+        == "says what this advice never says"
+    )
+
+
+def test_check_advice_matches_a_negative_figure_through_its_printed_text() -> None:
+    claim = Claim("You are SGD 48,800.00 above the guideline.", ("calculation:0",))
+    assert check_advice(claim, BY_REF_MEETS, MEETS_FIGURES) is None
+
+
+def test_check_advice_drops_a_negative_figures_value_stated_without_its_words() -> None:
+    claim = Claim("You are SGD 48,800.00 clear of the minimum.", ("calculation:0",))
+    assert (
+        check_advice(claim, BY_REF_MEETS, MEETS_FIGURES)
+        == "states SGD 48,800.00 above the guideline without saying it is the gap"
+    )

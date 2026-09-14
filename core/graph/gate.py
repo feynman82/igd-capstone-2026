@@ -38,6 +38,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from core.contracts import Exclusions
+from core.graph.advice import Figure
 from core.graph.ports import Passage
 
 log = logging.getLogger(__name__)
@@ -223,4 +224,81 @@ def check_content(
         and all(_says(passage.context_prefix, exclusions.headings) for passage in cited)
     ):
         return "claims cover from an exclusion"
+    return None
+
+
+VERDICT_WORDS = (
+    "enough",
+    "adequate",
+    "adequately",
+    "sufficient",
+    "insufficient",
+    "should",
+    "shouldn't",
+    "recommend",
+    "recommended to",
+    "must",
+    "better",
+    "best",
+    "worse",
+    "buy",
+    "surrender",
+    "cancel",
+    "switch",
+    "upgrade",
+    "downgrade",
+)
+
+
+def check_advice(
+    claim: Claim,
+    by_ref: Mapping[str, Passage],
+    figures: Sequence[Figure],
+    *,
+    never_say: Sequence[str] = (),
+) -> str | None:
+    """Why an advice explanation cannot be kept, or `None`. Asked of a claim built over
+    `advice.passages_for` instead of `check_content`: the calculator has already produced the
+    verdict and every figure (ADR 0016), so what is left to police is not whether a number was
+    printed but whether the *words* around it claim more than the calculator did.
+
+    Checks, in order:
+
+    1. A verdict word (`VERDICT_WORDS`, matched whole and case-insensitive by `_says`) — the
+       calculator decides "should", "recommend", "buy"; the model only explains.
+    2. A `never_say` phrase, matched the same way — a pack's own list of things this advice
+       must never say.
+    3. `unprinted_numbers`, exactly as `check_content` asks it: a number no cited passage prints.
+    4. A number token in the text equal, by `_normal`, to one of `figures`' printed values, used
+       without any of that figure's `words` — "you are short by SGD 451,200.00" when
+       SGD 451,200.00 is the *target*, not the *gap*. Matched against `_normal` of the `_NUMBER`
+       tokens found in `figure.text`, never `str(figure.value)`: `_NUMBER` carries no sign, so a
+       `meets` gap of Decimal("-48800.00") is only found through the "48,800.00" its text
+       prints. Asked only when the claim cites `calculation:0` — a number that equals a
+       figure's value but is cited to the fact or rule passage that printed it first is that
+       input's own number, not a mislabelled figure, and check 4 leaves it alone.
+    """
+    if _says(claim.text, VERDICT_WORDS):
+        return "a verdict is said by code, not the explanation"
+    if never_say and _says(claim.text, never_say):
+        return "says what this advice never says"
+
+    cited = [by_ref[ref] for ref in claim.supports if ref in by_ref]
+    missing = unprinted_numbers(claim.text, cited)
+    if missing:
+        return f"states a number no cited passage prints: {missing}"
+
+    if "calculation:0" in claim.supports:
+        covered: list[tuple[int, int]] = []
+        for match in _IDENTIFIER.finditer(claim.text):
+            identifier = match.group().rstrip("-.")
+            covered.append((match.start(), match.start() + len(identifier)))
+        for found in _NUMBER.finditer(claim.text):
+            if any(start <= found.start() < end for start, end in covered):
+                continue  # part of an identifier, already ruled on above
+            token = _normal(found.group())
+            for figure in figures:
+                figure_numbers = {_normal(n) for n in _NUMBER.findall(figure.text)}
+                if token in figure_numbers and not _says(claim.text, figure.words):
+                    return f"states {figure.text} without saying it is the {figure.name}"
     return None
