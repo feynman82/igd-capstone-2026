@@ -12,6 +12,7 @@ never edited — is enforced by `python -m packs.build --check` in `make check`,
 from __future__ import annotations
 
 import importlib
+from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -81,7 +82,33 @@ def installed_packs() -> tuple[InstalledPack, ...]:
             continue  # `_template` is a worked example to copy, not an installed pack
         if pack_dir.is_dir() and (pack_dir / "pack.yaml").is_file():
             found.append(_load_one(pack_dir))
+    check_advice_links(found)
     return tuple(found)
+
+
+def check_advice_links(packs: Iterable[InstalledPack]) -> None:
+    """Every fact an advice shape reads from another pack is declared by an installed pack.
+
+    A manifest checks the facts it reads from itself; it cannot see another pack. So a shape
+    reading `iras_tax.payslip.gross_salary` is checked here, once every pack has loaded, and a
+    missing pack stops the load rather than silently withholding advice at question time.
+    """
+    by_id = {installed.id: installed.manifest for installed in packs}
+    for pack_id, manifest in by_id.items():
+        if manifest.advice is None:
+            continue
+        for shape in manifest.advice.shapes:
+            for fact in shape.facts:
+                if fact.pack is None:
+                    continue
+                where = f"{pack_id}: advice shape {shape.id!r}, fact {fact.role!r}"
+                source = by_id.get(fact.pack)
+                if source is None:
+                    raise PackUnavailable(
+                        f"{where} reads pack {fact.pack!r}, which is not installed"
+                    )
+                if reason := source.undeclared(fact.doc_types, fact.field):
+                    raise PackUnavailable(f"{where}: {reason}")
 
 
 def pack(pack_id: str) -> InstalledPack:

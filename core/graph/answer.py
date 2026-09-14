@@ -9,10 +9,10 @@ deciding what to do next.
        ├──► refuse                                      (a request to act, not to explain)
        └──► decline                                     (a request for a recommendation)
 
-`route` exists for one reason worth stating: `never_acts` and `never_recommends` are
-`Literal[True]` in every pack manifest, and a question like "renew it for me" or "should I buy
-critical illness cover?" must be turned away at the top of the graph rather than politely
-declined at the bottom by a model that might not.
+`route` exists for one reason worth stating: `never_acts` and `verdict_by_code` are
+`Literal[True]` in every pack manifest, and a pack without advice declines, so a question like
+"renew it for me" or "should I buy critical illness cover?" must be turned away at the top of the
+graph rather than politely declined at the bottom by a model that might not.
 
 **`stream` is the implementation and `ask` drains it.** There is one path through this file, so
 `scripts/ask.py` and the Ask screen cannot come to different conclusions about the same
@@ -290,9 +290,9 @@ class Refused:
 class Declined:
     """A request for a recommendation or a judgement, declined before anything is searched.
 
-    `never_recommends` is `Literal[True]` in every pack. `offer` is a neutral question Parrot can
-    answer instead, shown as a suggestion and never answered on its own: a policy summary placed
-    under "should I buy critical illness cover?" reads as an answer to it.
+    A pack without advice declines, and no model writes a verdict. `offer` is a neutral question
+    Parrot can answer instead, shown as a suggestion and never answered on its own: a policy
+    summary placed under "should I buy critical illness cover?" reads as an answer to it.
     """
 
     text: str

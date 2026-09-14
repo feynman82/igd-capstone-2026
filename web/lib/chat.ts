@@ -46,7 +46,7 @@ export type ParrotMessage = UIMessage<
     /** `never_acts` is `Literal[True]` in every pack. This is that, surfaced. */
     refusal: { text: string };
 
-    /** A request for a recommendation or a judgement. `never_recommends`, surfaced. */
+    /** A request for a recommendation or a judgement, declined by a pack without advice. */
     declined: { text: string; disclaimer: string; offer: string };
 
     /** The trace line under a finished answer, and the pack's disclaimer. */

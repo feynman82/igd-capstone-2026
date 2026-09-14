@@ -126,7 +126,7 @@ class RefusalEvent(BaseModel):
 
 
 class DeclinedEvent(BaseModel):
-    """A request for a recommendation or a judgement. `never_recommends` reaching a person."""
+    """A request for a recommendation or a judgement, declined by a pack without advice."""
 
     kind: Literal["declined"] = "declined"
     text: str

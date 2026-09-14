@@ -200,12 +200,12 @@ Authoritative reference material indexed alongside the user's own documents, so 
 assistant can say what the published rule is and cite it.
 
 ```
-grounding/iras_reliefs_ya2026/
+packs/iras_tax/grounding/iras_reliefs_ya2026/
   sources.yaml        provenance for every file — required, no exceptions
   individual-reliefs.md
 ```
 
-Five rules, in `grounding/README.md`. The two that catch people out:
+Five rules, in `packs/README.md` §7. The two that catch people out:
 
 - **Never paraphrase a rule into the corpus.** Index what the publisher wrote. The moment
   you summarise, the assistant starts citing your summary as though it were IRAS.

@@ -174,7 +174,7 @@ function Refusal({ part }: { part: Part }) {
 }
 
 /**
- * `never_recommends` is `Literal[True]` in every pack. This is that reaching a person — and it
+ * A pack without advice declines a recommendation. This is that reaching a person — and it
  * offers the question it *can* answer rather than answering it, because a summary of a policy
  * placed under "should I buy?" reads as a yes or a no.
  */
