@@ -11,25 +11,31 @@ five documents tolerable, not parallelism.
 dies mid-parse. The pipeline is idempotent on a SHA-256 — re-running it rewrites the same rows
 — so at-least-once delivery is the safe side to err on.
 
-`solo` on Windows and macOS because the prefork pool is not safe for this workload there:
-RapidOCR/PyTorch can initialise GPU backends (MPS/Metal on Apple Silicon), and a forked child
-cannot safely initialise/use that Metal stack. Linux keeps prefork available.
+`solo` on Windows and macOS because the prefork pool is not safe for this workload there. On
+Windows it does not work at all, and the workstation this runs on is a Windows machine. On
+macOS a forked child aborts the moment RapidOCR's PyTorch backend touches Metal (issue #4).
+Linux keeps prefork available; with concurrency 1 the pools behave the same anyway.
 
 JSON only, and no pickle: the message carries a document id and a digest, and a broker that
 can be persuaded to unpickle is a broker that can be persuaded to execute.
 """
 
 from __future__ import annotations
+
 import sys
 from typing import Any
+
 from core.runtime.settings import Settings
 from core.worker.schedule import beat_schedule
 
 INGEST_QUEUE = "ingest"
 
+
 def build(settings: Settings) -> Any:
-    """Construct the Celery application."""
+    """Construct the Celery application. Imported lazily by callers so that nothing which
+    merely registers a document has to load Celery."""
     from celery import Celery
+
     app = Celery("parrot", broker=settings.redis_url, backend=settings.redis_url)
     app.conf.update(
         task_default_queue=INGEST_QUEUE,
