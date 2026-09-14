@@ -14,6 +14,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Iterator
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from pathlib import Path
@@ -31,7 +32,6 @@ from modules import advice
 from modules.advice import (
     FEWER_THAN_TWO,
     NOTHING_SHARED,
-    TIMES,
     Basis,
     FactRow,
     ModuleAdviser,
@@ -54,6 +54,10 @@ HELD_MISSING = "The schedule of each critical illness plan you hold."
 MULTIPLE_MISSING = "Reviewed guidance on how much cover to hold."
 MARKET_MISSING = "Reviewed published premiums to compare against."
 RATE_MISSING = "The published tax rate for your income band."
+CAP_MISSING = "The published SRS contribution cap."
+HELD_PLAN_MISSING = "The schedule of the hospital plan you hold."
+VALUE_MISSING = "The statement that prints what the plan is worth now."
+PAID_MISSING = "The statement that prints the premiums paid to date."
 
 
 # ---------------------------------------------------------------------------------- fakes
@@ -160,6 +164,7 @@ def basis(
     *,
     compared: dict[str, list[FactRow]] | None = None,
     market: dict[str, list[ValueRow]] | None = None,
+    qualifiers: dict[str, tuple[str, ...]] | None = None,
 ) -> Basis:
     return Basis(
         "insurance_agent",
@@ -170,6 +175,7 @@ def basis(
         rules or {},
         compared or {},
         market or {},
+        qualifiers or {},
     )
 
 
@@ -261,6 +267,21 @@ def figures_of(result: Calculation) -> dict[str, Decimal]:
     return {figure.name: figure.value for figure in result.figures}
 
 
+def assert_nothing_negative(result: Calculation) -> None:
+    """No figure below zero, and no "-SGD" in anything a sentence or the gate could read.
+
+    The gate's number check ignores signs, so a negative figure beside its role word would let
+    "a gap of SGD 48,800.00" through when the holding is SGD 48,800.00 above the guideline.
+    """
+    assert all(figure.value >= 0 for figure in result.figures)
+    printed = [
+        result.verdict_text,
+        *(figure.text for figure in result.figures),
+        *(passage.text for passage in passages_for(result)),
+    ]
+    assert not [text for text in printed if "-SGD" in text]
+
+
 # ------------------------------------------------------------------------------ formatting
 
 
@@ -302,7 +323,7 @@ def test_a_gap_is_the_guideline_less_what_is_held() -> None:
 
     assert isinstance(result, Calculation)
     figures = figures_of(result)
-    assert figures[f"income (monthly {TIMES} 12)"] == Decimal("112800.00")
+    assert figures["annual income"] == Decimal("112800.00")
     assert figures["target"] == Decimal("451200.00")
     assert figures["held"] == Decimal("200000.00")
     assert figures["gap"] == Decimal("251200.00")
@@ -321,16 +342,58 @@ def test_a_gap_is_the_guideline_less_what_is_held() -> None:
         "sum insured: SGD 200,000.00",
         "ci multiple: 4 times",
     ]
+    # How the year's income was made is not printed anywhere a sentence's number could match.
+    assert "annual income: SGD 112,800.00" in texts[-1]
+    for text in texts:
+        assert "\N{MULTIPLICATION SIGN}" not in text
+        assert "monthly" not in text
 
 
-def test_holding_more_than_the_guideline_meets_it() -> None:
+def test_holding_more_than_the_guideline_is_stated_as_above_it_never_as_a_negative_gap() -> None:
     result = calculate(_gap_basis([fact(2, "ci-a", "500000")]))
 
     assert isinstance(result, Calculation)
-    assert figures_of(result)["gap"] == Decimal("-48800.00")
+    figures = figures_of(result)
+    assert "gap" not in figures
+    assert figures["above"] == Decimal("48800.00")
     assert result.verdict == "meets"
-    assert result.verdict_text.endswith("which meets the guideline.")
-    assert "48,800" not in result.verdict_text
+    assert result.verdict_text.endswith(
+        "SGD 500,000.00 is held, which meets the guideline and is SGD 48,800.00 above it."
+    )
+    assert_nothing_negative(result)
+
+
+def test_a_guideline_published_per_age_band_is_not_guessed() -> None:
+    held = [fact(2, "ci-a", "200000")]
+    by_band = replace(
+        _gap_basis(held),
+        rules={
+            "multiple": [
+                published(7, "ci_multiple", "4", unit="multiple", age_band="35-44"),
+                published(8, "ci_multiple", "3", unit="multiple", age_band="45-54"),
+            ]
+        },
+        qualifiers={"ci_multiple": ("age_band",)},
+    )
+
+    result = calculate(by_band)
+    assert isinstance(result, Missing)
+    assert result.items == (MULTIPLE_MISSING, "which age band applies")
+
+    # Two current values for the same band settle nothing to ask: the newest is read.
+    same_band = replace(
+        by_band,
+        rules={
+            "multiple": [
+                published(7, "ci_multiple", "4", unit="multiple", age_band="35-44"),
+                published(6, "ci_multiple", "3", unit="multiple", age_band="35-44"),
+            ]
+        },
+    )
+    newest = calculate(same_band)
+    assert isinstance(newest, Calculation)
+    assert "rule:7" in {item.ref for item in newest.inputs}
+    assert figures_of(newest)["target"] == Decimal("451200.00")
 
 
 def test_a_missing_income_is_named_in_the_packs_words() -> None:
@@ -455,6 +518,16 @@ def test_an_unanswerable_shape_reads_nothing_more() -> None:
     assert len(conn.cursor_obj.executed) == 4, "no product names are read for no facts"
 
 
+@pytest.mark.parametrize("people", [frozenset(), frozenset({1, 2})])
+def test_advice_is_calculated_for_exactly_one_person(people: frozenset[int]) -> None:
+    conn = FakeConn()
+    with pytest.raises(ValueError, match="exactly one person"):
+        ModuleAdviser(conn).calculate(
+            advised_pack(), GAP, person_ids=people, subject="Marcus", today=TODAY
+        )
+    assert conn.cursor_obj.executed == [], "nothing is read for a question the graph must ask"
+
+
 def test_a_price_goes_stale_sooner_than_a_rule() -> None:
     conn = FakeConn([])
     values_for(conn, advised_pack(), "annual_premium", TODAY)
@@ -474,9 +547,53 @@ ROOM = shape(
             "missing": "Your SRS statement for this year.",
         }
     ],
-    rules=[{"role": "cap", "key": "srs_cap", "missing": "The published SRS contribution cap."}],
+    rules=[{"role": "cap", "key": "srs_cap", "missing": CAP_MISSING}],
     label="SRS contribution room",
 )
+
+
+def _used(value: str) -> list[FactRow]:
+    return [fact(1, "srs", value, key="contributions_ytd", doc_type="srs_statement")]
+
+
+def test_a_cap_published_for_one_age_band_beside_one_for_every_age_is_not_guessed() -> None:
+    """A row that carries no age band counts as its own value, not as a match for every band."""
+    result = calculate(
+        basis(
+            ROOM,
+            {"used": _used("12400")},
+            {
+                "cap": [
+                    published(8, "srs_cap", "15300"),
+                    published(9, "srs_cap", "35700", age_band="55-64"),
+                ]
+            },
+            qualifiers={"srs_cap": ("age_band",)},
+        )
+    )
+    assert isinstance(result, Missing)
+    assert result.items == (CAP_MISSING, "which age band applies")
+
+
+def test_a_total_declared_per_month_is_refused_rather_than_read_once() -> None:
+    """The contract refuses it on load; a shape built without a manifest is refused here."""
+    monthly = shape(
+        "remaining_room",
+        [
+            {
+                "role": "used",
+                "doc_types": ["srs_statement"],
+                "field": "contributions_ytd",
+                "per": "month",
+                "missing": "Your SRS statement for this year.",
+            }
+        ],
+        rules=[{"role": "cap", "key": "srs_cap", "missing": CAP_MISSING}],
+    )
+    with pytest.raises(ValueError, match="reads 'used' per month, which only income may be"):
+        calculate(
+            basis(monthly, {"used": _used("1000")}, {"cap": [published(8, "srs_cap", "15300")]})
+        )
 
 
 @pytest.mark.parametrize(
@@ -500,31 +617,47 @@ def test_room_is_the_cap_less_what_is_used_and_never_below_zero(
     assert f"the room left is {money(room)}." in result.verdict_text
 
 
-def test_surrendering_below_what_was_paid_states_both_figures_and_the_difference() -> None:
-    keep = shape(
+def _keep_shape(
+    value_missing: str = VALUE_MISSING, paid_missing: str = PAID_MISSING
+) -> AdviceShape:
+    return shape(
         "keep_or_surrender",
         [
             {
                 "role": "value_now",
                 "doc_types": ["policy_anniversary_statement"],
                 "field": "surrender_value",
-                "missing": "Your latest anniversary statement.",
+                "missing": value_missing,
             },
             {
                 "role": "paid_to_date",
                 "doc_types": ["policy_anniversary_statement"],
                 "field": "premiums_paid_to_date",
-                "missing": "Your latest anniversary statement.",
+                "missing": paid_missing,
             },
         ],
         label="whole life plan",
     )
+
+
+KEEP = _keep_shape()
+
+
+def _value_now(fact_id: int, document: str, value: str, **changes: Any) -> FactRow:
+    return replace(fact(fact_id, document, value, key="surrender_value"), **changes)
+
+
+def _paid(fact_id: int, document: str, value: str, **changes: Any) -> FactRow:
+    return replace(fact(fact_id, document, value, key="premiums_paid_to_date"), **changes)
+
+
+def test_surrendering_below_what_was_paid_states_both_figures_and_the_difference() -> None:
     result = calculate(
         basis(
-            keep,
+            KEEP,
             {
-                "value_now": [fact(1, "stmt", "24800", key="surrender_value")],
-                "paid_to_date": [fact(2, "stmt", "39600", key="premiums_paid_to_date")],
+                "value_now": [_value_now(1, "stmt", "24800")],
+                "paid_to_date": [_paid(2, "stmt", "39600")],
             },
         )
     )
@@ -537,27 +670,112 @@ def test_surrendering_below_what_was_paid_states_both_figures_and_the_difference
     assert not any(word in result.verdict_text.lower() for word in ("should", "recommend", "keep"))
 
 
-def test_an_estimated_saving_reads_the_rate_band_the_income_falls_in() -> None:
-    saving = shape(
-        "estimate_saving",
-        [
+def test_a_value_above_what_was_paid_is_a_gain_never_a_negative_loss() -> None:
+    result = calculate(
+        basis(
+            KEEP,
             {
-                "role": "income",
-                "doc_types": ["notice_of_assessment"],
-                "field": "assessable_income",
-                "missing": INCOME_MISSING,
+                "value_now": [_value_now(1, "stmt", "39600")],
+                "paid_to_date": [_paid(2, "stmt", "24800")],
             },
-            {
-                "role": "amount",
-                "doc_types": ["srs_statement"],
-                "field": "contributions_ytd",
-                "missing": "Your SRS statement for this year.",
-            },
-        ],
-        rules=[{"role": "rate", "key": "tax_rate", "missing": RATE_MISSING}],
-        label="SRS tax saving",
-        estimate=True,
+        )
     )
+
+    assert isinstance(result, Calculation)
+    figures = figures_of(result)
+    assert "loss" not in figures
+    assert figures["gain"] == Decimal("14800.00")
+    assert result.verdict == "gains"
+    assert result.verdict_text.endswith("a gain of SGD 14,800.00 more than has been paid.")
+    assert_nothing_negative(result)
+
+
+def test_both_surrender_figures_come_from_the_newest_statement_that_prints_both() -> None:
+    later = INGESTED + timedelta(days=300)
+    # Newest document first, as FACTS_FOR orders them: this year's statement prints only the
+    # value now, so last year's, which prints both, is the one compared.
+    result = calculate(
+        basis(
+            KEEP,
+            {
+                "value_now": [
+                    _value_now(3, "stmt-2026", "26000", when=later),
+                    _value_now(1, "stmt-2025", "24800"),
+                ],
+                "paid_to_date": [_paid(2, "stmt-2025", "39600")],
+            },
+        )
+    )
+
+    assert isinstance(result, Calculation)
+    assert figures_of(result)["loss"] == Decimal("14800.00")
+    assert [item.ref for item in result.inputs] == ["fact:2", "fact:1"]
+    assert "SGD 26,000.00" not in result.verdict_text
+
+
+def test_no_statement_printing_both_surrender_figures_names_what_the_newest_leaves_out() -> None:
+    later = INGESTED + timedelta(days=300)
+    result = calculate(
+        basis(
+            KEEP,
+            {
+                "value_now": [_value_now(3, "stmt-2026", "26000", when=later)],
+                "paid_to_date": [_paid(2, "stmt-2025", "39600")],
+            },
+        )
+    )
+
+    assert isinstance(result, Missing)
+    assert result.items == (PAID_MISSING,)
+
+
+def test_two_inputs_worded_alike_are_asked_for_once() -> None:
+    statement = "Your latest anniversary statement."
+    result = calculate(
+        basis(_keep_shape(statement, statement), {"value_now": [], "paid_to_date": []})
+    )
+
+    assert isinstance(result, Missing)
+    assert result.items == (statement,)
+
+
+SAVING = shape(
+    "estimate_saving",
+    [
+        {
+            "role": "income",
+            "doc_types": ["notice_of_assessment"],
+            "field": "assessable_income",
+            "missing": INCOME_MISSING,
+        },
+        {
+            "role": "amount",
+            "doc_types": ["srs_statement"],
+            "field": "contributions_ytd",
+            "missing": "Your SRS statement for this year.",
+        },
+    ],
+    rules=[{"role": "rate", "key": "tax_rate", "missing": RATE_MISSING}],
+    label="SRS tax saving",
+    estimate=True,
+)
+
+
+def _saving_basis(income: str, bands: list[ValueRow]) -> Basis:
+    return basis(
+        SAVING,
+        {
+            "income": [
+                fact(1, "noa", income, key="assessable_income", doc_type="notice_of_assessment")
+            ],
+            "amount": [fact(2, "srs", "2900", key="contributions_ytd", doc_type="srs_statement")],
+        },
+        {"rate": bands},
+        qualifiers={"tax_rate": ("band_lower", "band_upper", "assessment_year")},
+    )
+
+
+def test_an_estimated_saving_reads_the_rate_band_the_income_falls_in() -> None:
     bands = [
         published(20, "tax_rate", "7", unit="rate", band_lower=40000, band_upper=80000),
         published(21, "tax_rate", "11.5", unit="rate", band_lower="80000", band_upper="120000"),
@@ -565,26 +783,7 @@ def test_an_estimated_saving_reads_the_rate_band_the_income_falls_in() -> None:
     ]
 
     def run(income: str) -> Calculation | Missing:
-        return calculate(
-            basis(
-                saving,
-                {
-                    "income": [
-                        fact(
-                            1,
-                            "noa",
-                            income,
-                            key="assessable_income",
-                            doc_type="notice_of_assessment",
-                        )
-                    ],
-                    "amount": [
-                        fact(2, "srs", "2900", key="contributions_ytd", doc_type="srs_statement")
-                    ],
-                },
-                {"rate": bands},
-            )
-        )
+        return calculate(_saving_basis(income, bands))
 
     result = run("112800")
     assert isinstance(result, Calculation)
@@ -597,6 +796,38 @@ def test_an_estimated_saving_reads_the_rate_band_the_income_falls_in() -> None:
     outside = run("500000")
     assert isinstance(outside, Missing)
     assert outside.items == (RATE_MISSING,)
+
+
+def test_a_rate_published_for_two_years_in_the_same_band_is_not_guessed() -> None:
+    def rate(value_id: int, number: str, year: str, lower: int, upper: int) -> ValueRow:
+        return published(
+            value_id,
+            "tax_rate",
+            number,
+            unit="rate",
+            band_lower=lower,
+            band_upper=upper,
+            assessment_year=year,
+        )
+
+    two_years = calculate(
+        _saving_basis(
+            "112800",
+            [rate(21, "11.5", "2026", 80000, 120000), rate(23, "12", "2025", 80000, 120000)],
+        )
+    )
+    assert isinstance(two_years, Missing)
+    assert two_years.items == (RATE_MISSING, "which assessment year applies")
+
+    # A different year in a band the income is not in is not a choice to make.
+    one_year = calculate(
+        _saving_basis(
+            "112800",
+            [rate(21, "11.5", "2026", 80000, 120000), rate(22, "15", "2025", 120000, 160000)],
+        )
+    )
+    assert isinstance(one_year, Calculation)
+    assert figures_of(one_year)["saving"] == Decimal("333.50")
 
 
 # ------------------------------------------------------------------------------ comparisons
@@ -687,7 +918,7 @@ MARKET = shape(
             "role": "held",
             "doc_types": ["policy_schedule"],
             "field": "product_name",
-            "missing": "The schedule of the hospital plan you hold.",
+            "missing": HELD_PLAN_MISSING,
         }
     ],
     rules=[{"role": "market", "key": "annual_premium", "missing": MARKET_MISSING}],
@@ -700,8 +931,10 @@ def _held() -> list[FactRow]:
     return [fact(1, "h", "MyShield Standard", key="product_name", field_type="string")]
 
 
-def _premium(value_id: int, number: str, product: str, insurer: str | None) -> ValueRow:
-    qualifiers = {"product": product, "age_band": "35-44"}
+def _premium(
+    value_id: int, number: str, product: str, insurer: str | None, age_band: str = "35-44"
+) -> ValueRow:
+    qualifiers = {"product": product, "age_band": age_band}
     if insurer is not None:
         qualifiers["insurer"] = insurer
     return published(value_id, "annual_premium", number, **qualifiers)
@@ -784,7 +1017,30 @@ def test_a_market_product_without_the_ordering_field_is_listed_after_the_ranked_
     )
 
 
+def _held_ward() -> dict[str, list[FactRow]]:
+    """The held plan prints its ward class and no premium."""
+    return {
+        "annual_premium": [],
+        "ward_class": [fact(3, "h", "B1", key="ward_class", field_type="string")],
+    }
+
+
 def test_no_market_product_sharing_a_field_withholds_in_the_rules_words() -> None:
+    premiums = [_premium(30, "900", "Shield A", "Insurer X")]
+    result = calculate(
+        basis(
+            MARKET,
+            {"held": _held()},
+            {"market": premiums},
+            compared=_held_ward(),
+            market={"annual_premium": premiums},
+        )
+    )
+    assert isinstance(result, Missing)
+    assert result.items == (MARKET_MISSING,)
+
+
+def test_a_held_plan_printing_no_compared_field_withholds_in_the_held_facts_words() -> None:
     premiums = [_premium(30, "900", "Shield A", "Insurer X")]
     result = calculate(
         basis(
@@ -796,7 +1052,49 @@ def test_no_market_product_sharing_a_field_withholds_in_the_rules_words() -> Non
         )
     )
     assert isinstance(result, Missing)
-    assert result.items == (MARKET_MISSING,)
+    assert result.items == (HELD_PLAN_MISSING,)
+
+
+def test_a_market_comparison_with_nothing_to_rank_by_is_withheld_naming_the_ordering_field() -> (
+    None
+):
+    premiums = [_premium(30, "900", "Shield A", "Insurer X")]
+    result = calculate(
+        basis(
+            MARKET,
+            {"held": _held()},
+            {"market": premiums},
+            compared=_held_ward(),
+            market={
+                "annual_premium": premiums,
+                "ward_class": [_ward(35, "B1", "Shield D", "Insurer W")],
+            },
+        )
+    )
+    assert isinstance(result, Missing)
+    assert result.items == ("annual premium printed on every one compared",)
+
+
+def test_a_market_premium_published_per_age_band_is_not_guessed() -> None:
+    premiums = [
+        _premium(30, "900", "Shield A", "Insurer X", age_band="35-44"),
+        _premium(36, "1400", "Shield A", "Insurer X", age_band="45-54"),
+    ]
+    result = calculate(
+        basis(
+            MARKET,
+            {"held": _held()},
+            {"market": premiums},
+            compared={
+                "annual_premium": [fact(2, "h", "1200", key="annual_premium")],
+                "ward_class": [],
+            },
+            market={"annual_premium": premiums},
+            qualifiers={"annual_premium": ("product", "insurer", "age_band")},
+        )
+    )
+    assert isinstance(result, Missing)
+    assert result.items == (MARKET_MISSING, "which age band applies")
 
 
 # ------------------------------------------------------------------------ against Postgres
@@ -837,16 +1135,25 @@ def db() -> Iterator[Any]:
         connection.close()
 
 
-def _source(cur: Any, file: str, *, reviewed: bool, review_by: date, retrieved_on: date) -> int:
+def _source(
+    cur: Any,
+    file: str,
+    *,
+    reviewed: bool,
+    review_by: date,
+    retrieved_on: date,
+    pack: str = "insurance_agent",
+) -> int:
     cur.execute(
         "INSERT INTO grounding_sources (pack_id, corpus_id, file, title, publisher,"
         " publisher_kind, url, retrieved_on, applies_to, review_by, reviewed_by, reviewed_on,"
         " sha256)"
-        " VALUES ('insurance_agent', 'guides', %(file)s, 'Guide title', 'Publisher', 'regulator',"
+        " VALUES (%(pack)s, 'guides', %(file)s, 'Guide title', 'Publisher', 'regulator',"
         " 'https://example.gov.sg/guide', %(retrieved_on)s, 'Singapore households',"
         " %(review_by)s, %(reviewer)s, %(reviewed_on)s, %(sha)s)"
         " RETURNING id",
         {
+            "pack": pack,
             "file": file,
             "retrieved_on": retrieved_on,
             "review_by": review_by,
@@ -866,17 +1173,21 @@ def _value(
     *,
     status: str = "approved",
     unit: str = "multiple",
+    effective_from: date | None = None,
     effective_to: date | None = None,
+    pack: str = "insurance_agent",
 ) -> int:
     cur.execute(
         "INSERT INTO grounding_values (source_id, pack_id, key, unit, value_num, qualifiers,"
-        " passage, extracted_by, status, reviewed_by, reviewed_on, effective_to)"
-        " VALUES (%(source_id)s, 'insurance_agent', %(key)s, %(unit)s, 4, %(qualifiers)s::jsonb,"
+        " passage, extracted_by, status, reviewed_by, reviewed_on, effective_from, effective_to)"
+        " VALUES (%(source_id)s, %(pack)s, %(key)s, %(unit)s, 4, %(qualifiers)s::jsonb,"
         " 'four times annual income', 'model', %(status)s, %(reviewer)s, %(reviewed_on)s,"
-        " %(effective_to)s)"
+        " %(effective_from)s, %(effective_to)s)"
         " RETURNING id",
         {
             "source_id": source_id,
+            "pack": pack,
+            "effective_from": effective_from,
             "key": key,
             "unit": unit,
             "qualifiers": json.dumps({"product": "Shield A", "insurer": "Insurer X"}),
@@ -909,12 +1220,22 @@ def test_only_approved_reviewed_current_and_recent_values_are_read(db: Any) -> N
         aged = _source(
             cur, "aged.md", reviewed=True, review_by=later, retrieved_on=TODAY - timedelta(days=200)
         )
+        due_today = _source(
+            cur, "due.md", reviewed=True, review_by=TODAY, retrieved_on=TODAY - timedelta(days=60)
+        )
+        other_pack = _source(
+            cur, "tax.md", reviewed=True, review_by=later, retrieved_on=TODAY, pack="iras_tax"
+        )
 
         rule_fresh = _value(cur, fresh, "ci_multiple")
         _value(cur, fresh, "ci_multiple", status="pending")
+        _value(cur, fresh, "ci_multiple", status="rejected")
         _value(cur, unreviewed, "ci_multiple")
         _value(cur, expired, "ci_multiple")
         _value(cur, fresh, "ci_multiple", effective_to=TODAY - timedelta(days=1))
+        _value(cur, fresh, "ci_multiple", effective_from=TODAY + timedelta(days=1))
+        _value(cur, other_pack, "ci_multiple", pack="iras_tax")
+        rule_due = _value(cur, due_today, "ci_multiple")  # review_by today is still in date
         rule_aged = _value(cur, aged, "ci_multiple")  # 200 days is within a rule's 365
 
         price_fresh = _value(cur, fresh, "annual_premium", unit="money")
@@ -924,21 +1245,27 @@ def test_only_approved_reviewed_current_and_recent_values_are_read(db: Any) -> N
     rules = values_for(db, pack, "ci_multiple", TODAY)
     prices = values_for(db, pack, "annual_premium", TODAY)
 
-    assert [row.value_id for row in rules] == [rule_fresh, rule_aged]
+    # Newest retrieval first: 30, 60 and 200 days ago.
+    assert [row.value_id for row in rules] == [rule_fresh, rule_due, rule_aged]
     assert [row.value_id for row in prices] == [price_fresh]
     assert prices[0].qualifiers == {"product": "Shield A", "insurer": "Insurer X"}
     assert prices[0].value_num == Decimal(4)
 
 
 def _document(
-    cur: Any, name: str, *, status: str = "indexed", doc_type: str = "policy_schedule"
+    cur: Any,
+    name: str,
+    *,
+    status: str = "indexed",
+    doc_type: str = "policy_schedule",
+    ingested_at: datetime = INGESTED,
 ) -> Any:
     cur.execute(
         "INSERT INTO documents (sha256, source_channel, original_name, mime, doc_type, pack_id,"
-        " status, synthetic)"
-        " VALUES (%s, 'folder', %s, 'application/pdf', %s, 'insurance_agent', %s, true)"
+        " status, synthetic, ingested_at)"
+        " VALUES (%s, 'folder', %s, 'application/pdf', %s, 'insurance_agent', %s, true, %s)"
         " RETURNING id",
-        (hashlib.sha256(name.encode()).digest(), name, doc_type, status),
+        (hashlib.sha256(name.encode()).digest(), name, doc_type, status, ingested_at),
     )
     (document_id,) = cur.fetchone()
     return document_id
@@ -974,6 +1301,10 @@ def test_facts_are_read_only_under_a_persons_confirmed_names(db: Any) -> None:
             ],
         )
         _sum_insured(cur, _document(cur, "marcus.pdf"), f" {MARCUS} ")
+        # Ingested a year earlier but inserted later, so its fact id is higher: only
+        # `ingested_at` can put it second.
+        older = _document(cur, "marcus-2025.pdf", ingested_at=INGESTED - timedelta(days=365))
+        _sum_insured(cur, older, MARCUS)
         _sum_insured(cur, _document(cur, "guessed.pdf"), "M. Lim")
         _sum_insured(cur, _document(cur, "rachel.pdf"), "Rachel Ng Hui Shan")
         _sum_insured(cur, _document(cur, "quarantined.pdf", status="quarantined"), MARCUS)
@@ -991,6 +1322,6 @@ def test_facts_are_read_only_under_a_persons_confirmed_names(db: Any) -> None:
     )
 
     assert names == ["marcus", "marcus lim jun wei"]
-    assert [row.name for row in rows] == ["marcus.pdf"]
+    assert [row.name for row in rows] == ["marcus.pdf", "marcus-2025.pdf"]
     assert rows[0].value == Decimal(200000)
     assert rows[0].field_type == "money"

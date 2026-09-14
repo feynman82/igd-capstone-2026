@@ -23,6 +23,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable, Hashable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
+from dataclasses import field as dataclass_field
 from datetime import date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
@@ -37,8 +38,6 @@ CENT = Decimal("0.01")
 ZERO = Decimal("0.00")
 MONTHS = Decimal(12)
 HUNDRED = Decimal(100)
-# The multiplication sign, by code point: a literal one reads as an x and is flagged by RUF001.
-TIMES = chr(0xD7)
 
 COMPARING = frozenset({"compare_own", "compare_market"})
 NUMERIC = frozenset({"gap", "remaining_room", "keep_or_surrender", "estimate_saving"})
@@ -48,6 +47,11 @@ NUMERIC = frozenset({"gap", "remaining_room", "keep_or_surrender", "estimate_sav
 FEWER_THAN_TWO = "fewer than two to compare"
 NOTHING_SHARED = "a field printed on every one compared"
 
+# Rule values published per qualifier a calculator never matches to the household on its own.
+# A product is matched by name, and a rate band by the income it contains.
+MARKET_MATCHED = frozenset({"product", "insurer"})
+BAND_MATCHED = frozenset({"band_lower", "band_upper"})
+
 ORDER_WORDS = {"asc": "lowest first", "desc": "highest first"}
 
 # The words a sentence must use to state each figure (`core.graph.advice.Figure.words`).
@@ -55,6 +59,11 @@ INCOME_WORDS = ("income", "annual", "yearly", "a year")
 TARGET_WORDS = ("target", "guideline", "recommended")
 HELD_WORDS = ("held", "have", "hold", "current")
 GAP_WORDS = ("gap", "short", "shortfall", "more")
+# A met guideline or a gain is stated as a positive figure with words that say so, never as a
+# negative gap or loss: the gate reads numbers without their sign, so "a gap of -SGD 48,800.00"
+# would pass as "a gap of SGD 48,800.00", which says the opposite.
+ABOVE_WORDS = ("above", "over", "beyond", "more than")
+GAIN_WORDS = ("gain", "more than", "above")
 ROOM_WORDS = ("room", "left", "more", "remaining")
 LOSS_WORDS = ("loss", "less", "lose", "difference")
 SAVING_WORDS = ("save", "saving", "estimated", "less tax")
@@ -252,6 +261,10 @@ class Basis:
     `facts` and `rules` are keyed by role. `compared` holds, for a comparison, each compared
     field's facts on the same person's documents; `market` holds each compared field's published
     values when that field is also a value key.
+
+    `qualifiers` is each value key's declared qualifiers, in the order `grounding.values` lists
+    them. The pure layer has no manifest, so it is carried here: it is what names the qualifier
+    that leaves a calculator more than one published value to choose from.
     """
 
     pack_id: str
@@ -262,13 +275,18 @@ class Basis:
     rules: Mapping[str, Sequence[ValueRow]]
     compared: Mapping[str, Sequence[FactRow]]
     market: Mapping[str, Sequence[ValueRow]]
+    qualifiers: Mapping[str, tuple[str, ...]] = dataclass_field(default_factory=dict)
 
 
 def take(rows: Sequence[FactRow], how: str) -> list[FactRow]:
     """`latest` is the newest row. `sum` and `each` keep the newest row of each document.
 
     A document can carry the same field twice, from a re-extraction, and without the
-    per-document step one schedule's sum insured would be counted twice.
+    per-document step one document's figure would be counted twice.
+
+    Known limitation: `sum` counts one row per document, so a document that prints the field
+    twice for two different things (a main plan and a rider on one statement, say) is
+    undercounted. The facts carry no key telling a second printing from a re-extraction.
     """
     if how == "latest":
         return list(rows[:1])
@@ -330,19 +348,28 @@ def usable(basis: Basis) -> Basis:
 
 
 def _missing(basis: Basis, items: Iterable[str]) -> Missing:
+    """Each wording once, in first order: two inputs a pack says are on the same document share
+    their wording, and the household is asked for that document once, not twice."""
     return Missing(
         pack_id=basis.pack_id,
         shape_id=basis.shape.id,
         label=basis.shape.label,
         subject=basis.subject,
-        items=tuple(items),
+        items=tuple(dict.fromkeys(items)),
     )
+
+
+def _unordered(order_by: str | None) -> str:
+    """What is missing when a comparison has nothing to rank: the ordering field, printed on both
+    sides. Shared by both comparisons, so a ranking withholds in one wording."""
+    return f"{readable(order_by or 'the ordering field')} printed on every one compared"
 
 
 def withheld(basis: Basis) -> Missing | None:
     """Every fact and rule input with no rows, in the order the shape declares them.
 
-    All of them at once, so a household is told everything it needs to file in one answer.
+    All of them at once, so a household is told everything it needs to file in one answer, and
+    each wording once (`_missing`).
     """
     shape = basis.shape
     items = [fact.missing for fact in shape.facts if not basis.facts.get(fact.role)]
@@ -413,54 +440,113 @@ def _amount(
     A monthly income is made a year's, because every published multiple and rate band is annual,
     and the year's figure is a figure of its own: no document prints it. A total over several
     documents is a figure for the same reason.
+
+    Only income is ever multiplied. The contract refuses `per` on any other role; this refuses it
+    again for a shape built without a manifest, rather than silently read a monthly total as once.
     """
     fact = _fact(basis.shape, role)
+    if fact.per != "once" and role != "income":
+        raise ValueError(
+            f"advice shape {basis.shape.id!r} reads {role!r} per {fact.per}, "
+            "which only income may be"
+        )
     rows = take(basis.facts[role], fact.take)
     inputs.extend(fact_input(role, row) for row in rows)
     total = sum((_number_of(row.value) for row in rows), Decimal(0))
     if role == "income" and fact.per == "month":
+        # Named for what it is, not how it was made: a passage printing "12" beside the figure
+        # would be a number the gate could match a sentence against.
         yearly = cents(total * MONTHS)
-        figures.append(Figure(f"income (monthly {TIMES} 12)", yearly, money(yearly), INCOME_WORDS))
+        figures.append(Figure("annual income", yearly, money(yearly), INCOME_WORDS))
         return yearly
     if total_figure and len(rows) > 1:
         figures.append(Figure(role, cents(total), money(total), (readable(role), "total")))
     return total
 
 
-def _first_value(basis: Basis, role: str, inputs: list[Input]) -> Decimal:
-    """The current published value: `VALUES_FOR` puts the latest effective one first."""
-    row = basis.rules[role][0]
-    inputs.append(rule_input(role, row))
-    return _number_of(row.value_num)
+def _qualified(row: ValueRow, name: str) -> str | None:
+    raw = row.qualifiers.get(name)
+    return None if raw in (None, "") else str(raw).strip()
 
 
-def _gap(basis: Basis) -> Calculation:
+def _ambiguous(
+    rows: Sequence[ValueRow], matched: Iterable[str], declared: Sequence[str] = ()
+) -> str | None:
+    """The qualifier that leaves more than one published value to choose from, or `None`.
+
+    A calculator matches some qualifiers itself (`matched`: a product by name, a rate band by
+    income). Any other qualifier whose values differ across `rows` (an age band, a year) is one
+    it has no household fact to match, and picking the newest row would be confident arithmetic
+    on possibly the wrong band. So the first such qualifier is named instead, in the order the
+    pack declares them. A row that does not carry a qualifier counts as its own value: a value
+    published for every age sits beside one published for 35 to 44 and is not the same answer.
+    Qualifiers a row carries that the pack does not declare are checked too, after the declared
+    ones, so a `Basis` built without the declaration still refuses to guess.
+    """
+    skip = set(matched)
+    extra = sorted({name for row in rows for name in row.qualifiers} - set(declared))
+    for name in [*declared, *extra]:
+        if name not in skip and len({_qualified(row, name) for row in rows}) > 1:
+            return name
+    return None
+
+
+def _one_value(
+    basis: Basis, role: str, rows: Sequence[ValueRow], matched: Iterable[str] = ()
+) -> ValueRow | Missing:
+    """The current published value among `rows`, or `Missing` naming the qualifier to settle.
+
+    `VALUES_FOR` puts the latest effective value first, so with no qualifier left to settle the
+    first row is the current one.
+    """
+    rule = _rule(basis.shape, role)
+    declared = basis.qualifiers.get(rule.key, ())
+    if (qualifier := _ambiguous(rows, matched, declared)) is not None:
+        return _missing(basis, [rule.missing, f"which {readable(qualifier)} applies"])
+    return rows[0]
+
+
+def _gap(basis: Basis) -> Calculation | Missing:
+    """The published guideline against what is held.
+
+    Holding at least the guideline is stated as how far `above` it the holding is, a positive
+    figure, never as a negative gap: see `ABOVE_WORDS`.
+    """
     inputs: list[Input] = []
     figures: list[Figure] = []
     income = _amount(basis, "income", inputs, figures)
     held = cents(_amount(basis, "held", inputs, figures, total_figure=False))
-    multiple = _first_value(basis, "multiple", inputs)
-    target = cents(multiple * income)
-    gap = target - held
+    row = _one_value(basis, "multiple", basis.rules["multiple"])
+    if isinstance(row, Missing):
+        return row
+    inputs.append(rule_input("multiple", row))
+    target = cents(_number_of(row.value_num) * income)
     figures += [
         Figure("target", target, money(target), TARGET_WORDS),
         Figure("held", held, money(held), HELD_WORDS),
-        Figure("gap", gap, money(gap), GAP_WORDS),
     ]
     head = (
         f"{_capital(basis.shape.label)} for {basis.subject}: the published guideline works out "
         f"to {money(target)}, and {money(held)} is held"
     )
-    if gap > 0:
+    if (gap := target - held) > 0:
+        figures.append(Figure("gap", gap, money(gap), GAP_WORDS))
         return _calculation(basis, inputs, figures, "short", f"{head}, so the gap is {money(gap)}.")
-    return _calculation(basis, inputs, figures, "meets", f"{head}, which meets the guideline.")
+    above = held - target
+    figures.append(Figure("above", above, money(above), ABOVE_WORDS))
+    text = f"{head}, which meets the guideline and is {money(above)} above it."
+    return _calculation(basis, inputs, figures, "meets", text)
 
 
-def _remaining_room(basis: Basis) -> Calculation:
+def _remaining_room(basis: Basis) -> Calculation | Missing:
     inputs: list[Input] = []
     figures: list[Figure] = []
     used = cents(_amount(basis, "used", inputs, figures))
-    cap = cents(_first_value(basis, "cap", inputs))
+    row = _one_value(basis, "cap", basis.rules["cap"])
+    if isinstance(row, Missing):
+        return row
+    inputs.append(rule_input("cap", row))
+    cap = cents(_number_of(row.value_num))
     room = max(cap - used, ZERO)  # over the cap is no room, never negative room
     figures.append(Figure("room", room, money(room), ROOM_WORDS))
     text = (
@@ -470,21 +556,62 @@ def _remaining_room(basis: Basis) -> Calculation:
     return _calculation(basis, inputs, figures, "room_left" if room > 0 else "no_room", text)
 
 
-def _keep_or_surrender(basis: Basis) -> Calculation:
+def _newest(rows: Iterable[FactRow]) -> FactRow:
+    """The row from the most recently ingested document; the first listed wins a tie."""
+    return max(rows, key=lambda row: row.when.timestamp() if row.when is not None else 0.0)
+
+
+def _keep_or_surrender(basis: Basis) -> Calculation | Missing:
+    """What has been paid to date against the value now, both read from one document.
+
+    The two only compare as of the same statement: last year's paid-to-date against this
+    year's value is a difference no document prints. So both come from the newest document
+    that prints both. If none does, the roles the newest document leaves out are named.
+
+    A value at or above what was paid is stated as a positive `gain`, never as a negative loss:
+    see `ABOVE_WORDS`.
+    """
+    value_rows = basis.facts["value_now"]
+    paid_rows = basis.facts["paid_to_date"]
+    paid_documents = {row.document_id for row in paid_rows}
+    # FACTS_FOR lists rows newest document first, so the first shared document is the newest.
+    document = next(
+        (row.document_id for row in value_rows if row.document_id in paid_documents), None
+    )
+    if document is None:
+        newest = _newest([*value_rows, *paid_rows]).document_id
+        printed_by = {"value_now": value_rows, "paid_to_date": paid_rows}
+        absent = [
+            fact.missing
+            for fact in basis.shape.facts
+            if fact.role in printed_by
+            and all(row.document_id != newest for row in printed_by[fact.role])
+        ]
+        return _missing(basis, absent)
+
+    one = replace(
+        basis,
+        facts={
+            **basis.facts,
+            "value_now": [row for row in value_rows if row.document_id == document],
+            "paid_to_date": [row for row in paid_rows if row.document_id == document],
+        },
+    )
     inputs: list[Input] = []
     figures: list[Figure] = []
-    paid = cents(_amount(basis, "paid_to_date", inputs, figures))
-    value_now = cents(_amount(basis, "value_now", inputs, figures))
-    loss = paid - value_now
-    figures.append(Figure("loss", loss, money(loss), LOSS_WORDS))
+    paid = cents(_amount(one, "paid_to_date", inputs, figures))
+    value_now = cents(_amount(one, "value_now", inputs, figures))
     head = (
         f"{_capital(basis.shape.label)} for {basis.subject}: {money(paid)} has been paid to date "
         f"and the value now is {money(value_now)}"
     )
-    if loss > 0:
+    if (loss := paid - value_now) > 0:
+        figures.append(Figure("loss", loss, money(loss), LOSS_WORDS))
         text = f"{head}, a difference of {money(loss)} less than has been paid."
         return _calculation(basis, inputs, figures, "loses", text)
-    text = f"{head}, a difference of {money(-loss)} more than has been paid."
+    gain = value_now - paid
+    figures.append(Figure("gain", gain, money(gain), GAIN_WORDS))
+    text = f"{head}, a gain of {money(gain)} more than has been paid."
     return _calculation(basis, inputs, figures, "gains", text)
 
 
@@ -529,8 +656,7 @@ def _compare_own(basis: Basis) -> Calculation | Missing:
         return _missing(basis, [NOTHING_SHARED])
     order_by = shape.order_by
     if order_by is None or order_by not in shared:
-        field = readable(order_by or "the ordering field")
-        return _missing(basis, [f"{field} printed on every one compared"])
+        return _missing(basis, [_unordered(order_by)])
 
     by_id = {row.document_id: row for row in documents}
     order = _ordered(
@@ -566,6 +692,11 @@ def _compare_market(basis: Basis) -> Calculation | Missing:
     document's facts. A product enters the table only if it shares at least one field with the
     held document, is ranked only if its row shows `order_by`, and is otherwise listed after the
     ranked rows, alphabetically. The held document is ranked alongside the products.
+
+    What is withheld is named by where it went missing: the held fact's own wording when the held
+    document prints none of the compared fields, the market rule's when no product shares one,
+    the qualifier to settle when a product publishes more than one value for a field (an age
+    band, say), and the ordering field when nothing on either side can be ranked by it.
     """
     shape = basis.shape
     rule = _rule(shape, "market")
@@ -577,19 +708,29 @@ def _compare_market(basis: Basis) -> Calculation | Missing:
             cell := _latest_per_document(rows, {held.document_id}).get(held.document_id)
         ) is not None:
             held_cells[f] = cell
+    if not held_cells:
+        return _missing(basis, [_fact(shape, "held").missing])
 
     market = {f: list(basis.market.get(f, ())) for f in shape.compare_fields}
     if rule.key in market and not market[rule.key]:
         market[rule.key] = list(basis.rules["market"])
-    products: dict[str, dict[str, ValueRow]] = {}
+    candidates: dict[str, dict[str, list[ValueRow]]] = {}
     for f in shape.compare_fields:
         if f not in held_cells:
             continue
         for row in market[f]:
             if (name := _product_name(row)) is not None:
-                products.setdefault(name, {}).setdefault(f, row)  # newest value per field wins
-    if not products:
+                candidates.setdefault(name, {}).setdefault(f, []).append(row)
+    if not candidates:
         return _missing(basis, [rule.missing])
+
+    products: dict[str, dict[str, ValueRow]] = {}
+    for name, by_field in candidates.items():
+        for f, values in by_field.items():
+            declared = basis.qualifiers.get(f, ())
+            if (qualifier := _ambiguous(values, MARKET_MATCHED, declared)) is not None:
+                return _missing(basis, [rule.missing, f"which {readable(qualifier)} applies"])
+            products.setdefault(name, {})[f] = values[0]  # the newest current value
 
     columns = [f for f in shape.compare_fields if any(f in cells for cells in products.values())]
     order_by = shape.order_by or ""
@@ -601,6 +742,8 @@ def _compare_market(basis: Basis) -> Calculation | Missing:
         (name, name, cells[order_by].value) for name, cells in products.items() if order_by in cells
     ]
     ranked = [str(key) for key in _ordered(entries, shape.order)]
+    if not ranked:
+        return _missing(basis, [_unordered(shape.order_by)])
     unranked = sorted(
         (name for name in [held_name, *products] if name not in ranked), key=str.casefold
     )
@@ -622,15 +765,12 @@ def _compare_market(basis: Basis) -> Calculation | Missing:
         ]
 
     field = readable(order_by)
-    if ranked:
-        text = (
-            f"Ranked by {field} ({ORDER_WORDS[shape.order]}), only on fields both print: "
-            f"{' then '.join(ranked)}."
-        )
-        if unranked:
-            text += f" Listed without {field}: {', '.join(unranked)}."
-    else:
-        text = f"Not ranked by {field}, which is not printed on both sides: {', '.join(unranked)}."
+    text = (
+        f"Ranked by {field} ({ORDER_WORDS[shape.order]}), only on fields both print: "
+        f"{' then '.join(ranked)}."
+    )
+    if unranked:
+        text += f" Listed without {field}: {', '.join(unranked)}."
     return _calculation(basis, inputs, [], "ranked", text, rows=(header, *body), names_product=True)
 
 
@@ -671,9 +811,12 @@ def _estimate_saving(basis: Basis) -> Calculation | Missing:
     figures: list[Figure] = []
     income = cents(_amount(basis, "income", inputs, figures))
     amount = cents(_amount(basis, "amount", inputs, figures))
-    band = next((row for row in basis.rules["rate"] if _in_band(row, income)), None)
-    if band is None:
+    in_band = [row for row in basis.rules["rate"] if _in_band(row, income)]
+    if not in_band:
         return _missing(basis, [_rule(basis.shape, "rate").missing])
+    band = _one_value(basis, "rate", in_band, BAND_MATCHED)
+    if isinstance(band, Missing):
+        return band
     inputs.append(rule_input("rate", band, _band_label(band)))
     saving = cents(amount * _number_of(band.value_num) / HUNDRED)
     figures.append(Figure("saving", saving, money(saving), SAVING_WORDS))
@@ -788,13 +931,31 @@ class ModuleAdviser:
         subject: str,
         today: date,
     ) -> Calculation | Missing:
+        """One person's advice. The graph asks whose first when a question names several people
+        or nobody, so more or fewer than one here is a caller's mistake, not a household to sum:
+        one person's guideline set against two people's cover is no figure anyone could check."""
+        if len(person_ids) != 1:
+            raise ValueError(f"advice is calculated for exactly one person, not {len(person_ids)}")
         names = names_for(self._conn, person_ids)
         facts = {fact.role: self._facts(installed, fact, names) for fact in shape.facts}
         rules = {
             rule.role: values_for(self._conn, installed, rule.key, today) for rule in shape.rules
         }
+        declared = {
+            value.key: tuple(value.qualifiers) for value in installed.manifest.grounding.values
+        }
         basis = usable(
-            Basis(installed.id, shape, subject, tuple(sorted(person_ids)), facts, rules, {}, {})
+            Basis(
+                installed.id,
+                shape,
+                subject,
+                tuple(sorted(person_ids)),
+                facts,
+                rules,
+                {},
+                {},
+                declared,
+            )
         )
         if (missing := withheld(basis)) is not None:
             return missing  # nothing further is read for a shape that cannot be answered
