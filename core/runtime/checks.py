@@ -22,6 +22,10 @@ SELECT count(*),
   FROM documents
 """
 
+TELEGRAM_QUERY = """
+SELECT count(*) FROM documents WHERE source_channel = 'telegram'
+"""
+
 SCHEMA_QUERY = """
 SELECT current_setting('server_version_num')::int,
        EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'vector'),
@@ -85,6 +89,51 @@ def capture_check(settings: Settings) -> Check:
     if quarantined:
         detail += f", {quarantined} needing your eyes"
     return Check("Capture", "available", detail + ".")
+
+
+def telegram_check(settings: Settings) -> Check:
+    """Whether a bot is configured, and how much has actually arrived through it.
+
+    It deliberately makes no call to Telegram. This runs on every poll of the startup page, and
+    a diagnostic that reaches out to a third party every few seconds is not the privacy claim
+    `docs/governance/` makes — so it reports configuration and the count of documents that came
+    in on this channel, which is the question a person is really asking. `getMe` stays where it
+    belongs: `scripts/telegram_bot.py --check`, run once, by a person.
+    """
+    if not settings.telegram_configured:
+        return Check(
+            "Telegram capture",
+            "unverified",
+            "No bot token configured, so documents arrive only through the watched folder. "
+            "Set TELEGRAM_BOT_TOKEN in .env to file from a phone.",
+        )
+    try:
+        with psycopg.connect(
+            settings.database_url,
+            connect_timeout=2,
+            options="-c statement_timeout=2000 -c default_transaction_read_only=on",
+        ) as connection:
+            row = connection.execute(TELEGRAM_QUERY).fetchone()
+    except psycopg.Error:
+        return Check("Telegram capture", "blocked", "A bot is configured but the database is not.")
+    filed = row[0] if row else 0
+    chats = (
+        "any chat"
+        if not settings.telegram_chat_ids
+        else f"{len(settings.telegram_chat_ids)} chat(s)"
+    )
+    if not filed:
+        return Check(
+            "Telegram capture",
+            "unverified",
+            f"A bot is configured and accepted from {chats}, but nothing has arrived through it "
+            "yet. Send the bot a photograph; the Parrot window says what happened to it.",
+        )
+    return Check(
+        "Telegram capture",
+        "available",
+        f"{filed} document(s) filed from Telegram, accepted from {chats}.",
+    )
 
 
 def redis_check(settings: Settings) -> Check:
@@ -207,6 +256,7 @@ async def collect_checks(settings: Settings) -> list[Check]:
             asyncio.to_thread(redis_check, settings),
             asyncio.to_thread(worker_check, settings),
             asyncio.to_thread(capture_check, settings),
+            asyncio.to_thread(telegram_check, settings),
             asyncio.to_thread(interface_check, settings),
             model_check(
                 client,
