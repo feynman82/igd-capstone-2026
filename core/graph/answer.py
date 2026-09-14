@@ -216,6 +216,10 @@ class Citation:
     `document_id` and `page` are what makes that chip open the page. Keeping them together from
     the moment the passage is retrieved is what stops the interface having to find the document
     again by name — a lookup that has to guess when two files share one.
+
+    The four trailing fields are a rule value's own citation (ADR 0016): a published number has
+    no page to open, only who published it, under what title, on what date, at what URL. They
+    default to empty so every existing document citation, which has none of them, is unchanged.
     """
 
     document_id: Any
@@ -223,6 +227,10 @@ class Citation:
     page: int
     text: str  # "policy.pdf, page 1"
     kind: Kind = "document"  # a page of a document, or a document on file
+    publisher: str = ""
+    title: str = ""
+    dated: str = ""
+    url: str = ""
 
 
 @dataclass(frozen=True, slots=True)

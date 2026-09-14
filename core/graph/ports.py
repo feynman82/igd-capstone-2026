@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
-Kind = Literal["document", "inventory", "guidance"]
+Kind = Literal["document", "inventory", "guidance", "fact", "rule", "calculation"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,7 +27,9 @@ class Passage:
     document_name: str = ""
     context_prefix: str = ""
     pack_id: str = ""  # which pack's guardrails govern an answer built on this passage
-    kind: Kind = "document"  # a page of a document, a document on file, or published guidance
+    # a page of a document, a document on file, published guidance, or (ADR 0016) a cited fact,
+    # a cited rule value, or the one calculation passage a `Calculation`'s figures are printed on
+    kind: Kind = "document"
 
     def cite(self) -> str:
         """How a passage names itself: the document and the page, as a person would say it."""
