@@ -7,8 +7,8 @@ Every factual sentence comes back with the document and page it came from. When 
 do not answer the question, it says so and names what would have — that abstention is the point
 of the demonstration, not a failure of it.
 
-Retrieval here is the dense-only stopgap in `core/graph/baseline.py`. When Lane B's hybrid
-search lands in `core/retrieve/`, this script changes by two import lines.
+Retrieval is Lane B's hybrid search in `core/retrieve/hybrid.py`: dense and full-text, fused
+by rank, so an exact policy number is found and a paraphrase still works.
 """
 
 from __future__ import annotations
@@ -40,10 +40,11 @@ def main(argv: list[str] | None = None) -> int:
     from core.advice_consent import HouseholdConsents
     from core.advice_records import HouseholdAdviceLog
     from core.graph.answer import AnswerGraph
-    from core.graph.baseline import DenseRetriever, NoReranker
+    from core.graph.baseline import NoReranker
     from core.graph.inventory import HouseholdInventory
     from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids, enabled_packs
+    from core.retrieve.hybrid import HybridRetriever
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
     from core.runtime.settings import ConfigurationError, Settings
@@ -63,7 +64,7 @@ def main(argv: list[str] | None = None) -> int:
                 client,
                 # `None` means the registry is empty, which is "do not filter". An *empty* set
                 # means a person has switched every pack off, which is a different thing.
-                DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
+                HybridRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
                 NoReranker(),
                 candidates=args.candidates,
                 keep=args.keep,

@@ -83,6 +83,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--label", default="", help="what changed; part of the file name")
     parser.add_argument("--judge", default="", help="Ollama model for the Ragas metrics")
     parser.add_argument("--no-judge", action="store_true", help="code-scored metrics only")
+    parser.add_argument(
+        "--retriever",
+        choices=["hybrid", "dense"],
+        default="hybrid",
+        help="dense is the stopgap, kept so a retrieval change is measured on the same vault",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -128,13 +134,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{target} already exists and results are append-only. Choose another --label.")
         return 2
 
-    print(f"{len(questions)} questions ({_counts(questions)}); retrieval: dense-only")
+    print(f"{len(questions)} questions ({_counts(questions)}); retrieval: {args.retriever}")
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
 
     try:
         with connect(settings) as conn:
             graph, recorder = harness.build(
-                conn, settings, candidates=args.candidates, keep=args.keep
+                conn,
+                settings,
+                candidates=args.candidates,
+                keep=args.keep,
+                retriever=args.retriever,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
@@ -173,7 +183,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "generator": settings.generation_model,
             "embedder": settings.embedding_model,
             "judge": judge_model or None,
-            "retriever": "dense-only",
+            "retriever": args.retriever,
             "reranker": "none",
             "candidates": args.candidates,
             "keep": args.keep,

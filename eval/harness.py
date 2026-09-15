@@ -13,7 +13,7 @@ from __future__ import annotations
 import time
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import Any, Literal, Protocol
 
 from core.graph.answer import Answer, AnswerGraph
 from core.graph.ports import Passage, Reranker, Retriever
@@ -99,29 +99,43 @@ def trace_all(
     return traces
 
 
+RetrieverName = Literal["hybrid", "dense"]
+
+
 def build(
-    conn: Any, settings: Settings, *, candidates: int = 40, keep: int = 6
+    conn: Any,
+    settings: Settings,
+    *,
+    candidates: int = 40,
+    keep: int = 6,
+    retriever: RetrieverName = "hybrid",
 ) -> tuple[AnswerGraph, Recorder]:
     """The graph `scripts/ask.py` builds, with the recorder in the seam. Kept in step with that
-    script by hand; when hybrid retrieval lands the two change by the same import lines."""
+    script by hand. `retriever="dense"` is the stopgap in `core/graph/baseline.py`, kept
+    selectable so a change to retrieval can be measured against it on the same vault."""
     from core.advice_consent import HouseholdConsents
     from core.advice_records import HouseholdAdviceLog
     from core.graph.baseline import DenseRetriever, NoReranker
     from core.graph.inventory import HouseholdInventory
     from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids, enabled_packs
+    from core.retrieve.hybrid import HybridRetriever
     from core.runtime.ollama import Ollama
     from modules.advice import ModuleAdviser
 
     client = Ollama(settings)
     enabled = enabled_pack_ids(conn)
-    retriever = RecordingRetriever(
-        DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled)))
+    packs = None if enabled is None else tuple(sorted(enabled))
+    retriever_impl: Retriever = (
+        DenseRetriever(conn, client, packs)
+        if retriever == "dense"
+        else HybridRetriever(conn, client, packs)
     )
+    retriever_rec = RecordingRetriever(retriever_impl)
     reranker = RecordingReranker(NoReranker())
     graph = AnswerGraph(
         client,
-        retriever,
+        retriever_rec,
         reranker,
         candidates=candidates,
         keep=keep,
@@ -132,4 +146,4 @@ def build(
         consents=HouseholdConsents(conn),
         advice_log=HouseholdAdviceLog(conn),
     )
-    return graph, Recorder(retriever, reranker)
+    return graph, Recorder(retriever_rec, reranker)

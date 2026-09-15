@@ -88,11 +88,12 @@ from api.models import (
 from core import corrections, household, registry, vault
 from core.graph import answer as graph
 from core.graph.answer import Answer, AnswerGraph
-from core.graph.baseline import DenseRetriever, NoReranker
+from core.graph.baseline import NoReranker
 from core.graph.inventory import HouseholdInventory
 from core.graph.scope import HouseholdScope
 from core.ingest import quarantine, source
 from core.pages import PageUnavailable, RendererUnavailable, render_page
+from core.retrieve.hybrid import HybridRetriever
 from core.runtime.db import DatabaseUnavailable, connect
 from core.runtime.ollama import Ollama
 from core.runtime.settings import Settings
@@ -262,7 +263,7 @@ def build_router() -> APIRouter:
         enabled = registry.enabled_pack_ids(conn)
         return AnswerGraph(
             client,
-            DenseRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
+            HybridRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
             NoReranker(),
             inventory=HouseholdInventory(conn),
             packs=registry.enabled_packs(conn),
