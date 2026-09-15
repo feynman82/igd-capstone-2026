@@ -6,7 +6,7 @@
 # Never edit a generated file by hand.
 
 id: insurance_agent
-version: 0.3.0
+version: 0.4.0
 display_name: Insurance and Coverage
 
 document_types:
