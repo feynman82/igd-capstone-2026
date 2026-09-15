@@ -37,8 +37,14 @@ document_types:
         example: "2026-03-01"
       - name: expiry_date
         type: date
-        description: Last day of the period of insurance, the to date on that line
+        required: false
+        description: Last day of the period of insurance, the to date on that line, when the policy has a fixed expiry
         example: "2027-02-28"
+      - name: maturity_date
+        type: date
+        required: false
+        description: Date a life policy matures where the contract has a maturity date instead of a fixed expiry
+        example: "2087-05-07"
       - name: premium_payable
         type: money
         description: Total premium payable for the period of insurance shown, in SGD
