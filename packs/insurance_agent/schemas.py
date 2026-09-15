@@ -29,6 +29,10 @@ class PolicySchedule(BaseModel):
     expiry_date: date = Field(
         description="Last day of the period of insurance, the to date on that line",
     )
+    maturity_date: date | None = Field(
+        default=None,
+        description="Date a life policy matures where the contract has a maturity date instead of a fixed expiry",
+    )
     premium_payable: Decimal = Field(
         ge=0,
         description="Total premium payable for the period of insurance shown, in SGD",
@@ -157,6 +161,7 @@ FACT_COLUMNS: dict[str, str] = {
     "insured": "value_text",
     "insurer": "value_text",
     "life_assured": "value_text",
+    "maturity_date": "value_date",
     "payment_due_date": "value_date",
     "policy_no": "value_text",
     "premium_payable": "value_num",
