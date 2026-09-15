@@ -71,6 +71,7 @@ Annual statement issued on the anniversary of a life or investment-linked policy
 | `insurer` | string | yes | `facts.value_text` | Name of the insurance company, from the statement letterhead |
 | `policy_no` | identifier | yes | `facts.value_text` | Policy number exactly as printed, not normalised |
 | `life_assured` | person | yes | `facts.value_text` | Name of the person covered, as printed on the statement |
+| `statement_date` | date | yes | `facts.value_date` | Date the annual statement is stated to be for, as printed on the statement |
 | `sum_assured` | money | yes | `facts.value_num` | Sum assured as at the statement date, in SGD |
 | `annual_premium` | money | yes | `facts.value_num` | Premium payable each year as printed on the statement, in SGD |
 | `surrender_value` | money | no | `facts.value_num` | Cash or surrender value as at the statement date, in SGD |
