@@ -118,6 +118,7 @@ class PolicyAnniversaryStatement(BaseModel):
     insurer: str = Field(description="Name of the insurance company, from the statement letterhead")
     policy_no: str = Field(description="Policy number exactly as printed, not normalised")
     life_assured: str = Field(description="Name of the person covered, as printed on the statement")
+    statement_date: date = Field(description="Date the annual statement is stated to be for, as printed on the statement")
     sum_assured: Decimal = Field(ge=0, description="Sum assured as at the statement date, in SGD")
     annual_premium: Decimal = Field(
         ge=0,
@@ -163,6 +164,7 @@ FACT_COLUMNS: dict[str, str] = {
     "product_name": "value_text",
     "renewal_premium": "value_num",
     "settled_amount": "value_num",
+    "statement_date": "value_date",
     "sum_assured": "value_num",
     "sum_insured": "value_num",
     "surrender_value": "value_num",
