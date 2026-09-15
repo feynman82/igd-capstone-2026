@@ -110,6 +110,25 @@ def test_a_register_value_is_recognised_however_it_is_printed(
     assert score.mentions(text, value) is expected
 
 
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("The chassis number is not listed in the provided documents.", True),
+        ("No reversionary bonus amount is stated. The surrender value is not itemised.", True),
+        ("The premium is SGD 1,284.00.", False),
+        ("The premium is SGD 1,284.00. No excess is listed.", False),  # one claim is a claim
+        ("None of the 5 policies on file for Marcus Lim is a travel policy.", True),
+        ("On file for Marcus Lim: HomeShelter (policy no HM-1). No excess is printed.", True),
+        ("On file for Marcus Lim: HomeShelter (policy no HM-1).", False),  # nothing was said
+    ],
+)
+def test_a_decline_written_in_prose_is_recognised(text: str, expected: bool) -> None:
+    sentences = [s.strip() for s in text.split(". ") if s.strip()]
+    answer = Answer(text, claims=[Cited(s, (1,), []) for s in sentences])
+    assert score.says_not_on_file(answer) is expected
+    assert not score.says_not_on_file(Answer("I can't answer that.", abstained=True))
+
+
 def test_same_value_normalises_dates_numbers_and_text() -> None:
     assert score.same_value("2027-04-11", "2027-04-11")
     assert score.same_value("1284.00", "1284")

@@ -61,6 +61,30 @@ def refused(answer: Answer) -> bool:
     return answer.refused or answer.declined
 
 
+NOT_ON_FILE = re.compile(
+    r"\b(none|not|no|never)\b[^.]{0,60}\b(listed|stated|specified|provided|itemi[sz]ed|"
+    r"mentioned|printed|contain|contains|include|includes|on file|in the (provided )?documents?)\b",
+    re.IGNORECASE,
+)
+# The inventory's own line naming a document on file ("On file for Marcus Lim: …") is neither a
+# claim about the question nor a decline; it is skipped when deciding what an answer said.
+ON_FILE_LINE = re.compile(r"^On file for ", re.IGNORECASE)
+
+
+def says_not_on_file(answer: Answer) -> bool:
+    """A grounded answer whose sentences say, in words, that the documents do not state it.
+
+    That is an honest decline written by the model rather than by the gate — "the chassis
+    number is not listed in the provided documents" — and it is reported beside the strict
+    abstention rate rather than folded into it, so the two can be argued about separately.
+    """
+    if held_back(answer):
+        return False
+    sentences = [claim.text for claim in answer.claims] or [answer.text]
+    said = [s for s in sentences if s.strip() and not ON_FILE_LINE.match(s.strip())]
+    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+
+
 # ------------------------------------------------------------------------------- value matching
 
 
@@ -352,6 +376,7 @@ class Scored:
             "lane": question.lane,
             "kind": question.expected.kind,
             "outcome": self.outcome,
+            "says_not_on_file": says_not_on_file(answer),
             "correct": self.correct,
             "cited": self.cited,
             "shown": self.shown,
@@ -475,6 +500,7 @@ def summarise(
             if abstentions == 0 or not b
             else round(sum(held_back(i.trace.answer) for i in b) / abstentions, 4)
         ),
+        "said_not_on_file_b": _rate([says_not_on_file(i.trace.answer) for i in b]),
         "refusal_rate_c": _rate([refused(i.trace.answer) for i in c]),
         "held_back_rate_c": _rate([held_back(i.trace.answer) for i in c]),
         "median_latency_ms": _median([i.trace.latency_ms for i in scored]),
