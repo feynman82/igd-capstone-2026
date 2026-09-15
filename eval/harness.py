@@ -100,6 +100,7 @@ def trace_all(
 
 
 RetrieverName = Literal["hybrid", "dense"]
+RerankerName = Literal["cross-encoder", "none"]
 
 
 def build(
@@ -109,10 +110,12 @@ def build(
     candidates: int = 40,
     keep: int = 6,
     retriever: RetrieverName = "hybrid",
+    reranker: RerankerName = "cross-encoder",
 ) -> tuple[AnswerGraph, Recorder]:
     """The graph `scripts/ask.py` builds, with the recorder in the seam. Kept in step with that
-    script by hand. `retriever="dense"` is the stopgap in `core/graph/baseline.py`, kept
-    selectable so a change to retrieval can be measured against it on the same vault."""
+    script by hand. `retriever="dense"` and `reranker="none"` are the stopgaps in
+    `core/graph/baseline.py`, kept selectable so a change is measured against them on the same
+    vault, one variable at a time."""
     from core.advice_consent import HouseholdConsents
     from core.advice_records import HouseholdAdviceLog
     from core.graph.baseline import DenseRetriever, NoReranker
@@ -120,6 +123,7 @@ def build(
     from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids, enabled_packs
     from core.retrieve.hybrid import HybridRetriever
+    from core.retrieve.rerank import CrossEncoderReranker
     from core.runtime.ollama import Ollama
     from modules.advice import ModuleAdviser
 
@@ -132,11 +136,14 @@ def build(
         else HybridRetriever(conn, client, packs)
     )
     retriever_rec = RecordingRetriever(retriever_impl)
-    reranker = RecordingReranker(NoReranker())
+    reranker_impl: Reranker = (
+        NoReranker() if reranker == "none" else CrossEncoderReranker(settings.rerank_model)
+    )
+    reranker_rec = RecordingReranker(reranker_impl)
     graph = AnswerGraph(
         client,
         retriever_rec,
-        reranker,
+        reranker_rec,
         candidates=candidates,
         keep=keep,
         household=HouseholdScope(conn),
@@ -146,4 +153,4 @@ def build(
         consents=HouseholdConsents(conn),
         advice_log=HouseholdAdviceLog(conn),
     )
-    return graph, Recorder(retriever_rec, reranker)
+    return graph, Recorder(retriever_rec, reranker_rec)

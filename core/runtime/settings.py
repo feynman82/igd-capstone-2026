@@ -162,12 +162,16 @@ class Settings:
             "PARROT_GEN_MODEL", "hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M"
         )
         embed_model = values.get("PARROT_EMBED_MODEL", "embeddinggemma:300m")
-        rerank_model = values.get(
-            "PARROT_RERANK_MODEL", "hf.co/gpustack/bge-reranker-v2-m3-GGUF:latest"
-        )
+        # A Hugging Face model id, not an Ollama tag: the reranker runs in-process (ADR 0017).
+        rerank_model = values.get("PARROT_RERANK_MODEL", "BAAI/bge-reranker-v2-m3")
         models = [gen_model, embed_model, rerank_model]
         if any(not model.strip() for model in models):
             raise ConfigurationError("Configured model names must not be empty.")
+        if rerank_model.strip().startswith("hf.co/"):
+            raise ConfigurationError(
+                "PARROT_RERANK_MODEL is an Ollama tag, but Ollama cannot serve a cross-encoder. "
+                "Name a Hugging Face model id such as BAAI/bge-reranker-v2-m3 (docs/adr/0017)."
+            )
         return cls(
             database_url=local_url(
                 values.get("DATABASE_URL")

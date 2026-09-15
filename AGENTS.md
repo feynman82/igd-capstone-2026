@@ -11,7 +11,9 @@ repository. Humans should read it too — it is the shortest description of how 
   live here.
 - LangGraph for orchestration. **No LlamaIndex, no LangChain agents.** Retrieval is one
   tool call we wrote ourselves.
-- Ollama for all inference: generation, embedding, reranking, schema-constrained extraction.
+- Ollama for all inference: generation, embedding, schema-constrained extraction. The one
+  exception is the reranker, which runs in-process because Ollama cannot serve a
+  cross-encoder (ADR 0017).
   Generator is `Qwen-SEA-LION-v4-4B-VL` (AI Singapore, MIT, vision-language). It is also the
   model used for the quarantine second pass, which reads the page image rather than parsed text.
 - Next.js 15 (App Router), Tailwind, shadcn/ui, AI SDK `useChat`.

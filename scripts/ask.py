@@ -40,11 +40,11 @@ def main(argv: list[str] | None = None) -> int:
     from core.advice_consent import HouseholdConsents
     from core.advice_records import HouseholdAdviceLog
     from core.graph.answer import AnswerGraph
-    from core.graph.baseline import NoReranker
     from core.graph.inventory import HouseholdInventory
     from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids, enabled_packs
     from core.retrieve.hybrid import HybridRetriever
+    from core.retrieve.rerank import CrossEncoderReranker
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import Ollama
     from core.runtime.settings import ConfigurationError, Settings
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
                 # `None` means the registry is empty, which is "do not filter". An *empty* set
                 # means a person has switched every pack off, which is a different thing.
                 HybridRetriever(conn, client, None if enabled is None else tuple(sorted(enabled))),
-                NoReranker(),
+                CrossEncoderReranker(settings.rerank_model),
                 candidates=args.candidates,
                 keep=args.keep,
                 household=HouseholdScope(conn),

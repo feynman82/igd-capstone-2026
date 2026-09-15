@@ -13,6 +13,7 @@ import psycopg
 from redis import Redis
 from redis.exceptions import RedisError
 
+from core.runtime.ollama import ModelUnavailable
 from core.runtime.settings import Settings
 
 CAPTURE_QUERY = """
@@ -211,6 +212,23 @@ def worker_check(settings: Settings) -> Check:
     )
 
 
+def reranker_check(settings: Settings) -> Check:
+    """The reranker the way it is used: loaded in-process and asked to score one pair. It is not
+    an Ollama model (ADR 0017), so `/api/show` would prove nothing about it."""
+    from core.retrieve.rerank import load, score_pairs
+
+    try:
+        _, _, device = load(settings.rerank_model)
+        scores = score_pairs(
+            settings.rerank_model, "when does the policy expire", ["Period of Insurance To: 2027"]
+        )
+    except ModelUnavailable as error:
+        return Check("Reranker", "blocked", str(error))
+    if len(scores) != 1:
+        return Check("Reranker", "blocked", "The reranker returned no score for one pair.")
+    return Check("Reranker", "available", f"{settings.rerank_model} loaded in-process on {device}.")
+
+
 async def model_check(
     client: httpx.AsyncClient,
     name: str,
@@ -272,14 +290,14 @@ async def collect_checks(settings: Settings) -> list[Check]:
                 settings.embedding_model,
                 {"embedding"},
             ),
-            model_check(client, "Reranker", settings.auxiliary_url, settings.rerank_model, set()),
+            asyncio.to_thread(reranker_check, settings),
         )
     return [
         *checks,
         Check(
             "Document processing",
             "unverified",
-            "Parse, classify, extract and quarantine run. Retrieval is the dense-only stopgap "
-            "in core/graph/baseline.py, so answer quality is not yet measured.",
+            "Parse, classify, extract and quarantine run. Retrieval is hybrid search with the "
+            "cross-encoder reranker; answer quality is measured by `make eval`.",
         ),
     ]

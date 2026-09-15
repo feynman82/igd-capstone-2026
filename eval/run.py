@@ -89,6 +89,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="hybrid",
         help="dense is the stopgap, kept so a retrieval change is measured on the same vault",
     )
+    parser.add_argument(
+        "--reranker",
+        choices=["cross-encoder", "none"],
+        default="cross-encoder",
+        help="none is the stopgap that keeps retrieval's order",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -134,7 +140,10 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{target} already exists and results are append-only. Choose another --label.")
         return 2
 
-    print(f"{len(questions)} questions ({_counts(questions)}); retrieval: {args.retriever}")
+    print(
+        f"{len(questions)} questions ({_counts(questions)}); "
+        f"retrieval {args.retriever}, reranker {args.reranker}"
+    )
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
 
     try:
@@ -145,6 +154,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 candidates=args.candidates,
                 keep=args.keep,
                 retriever=args.retriever,
+                reranker=args.reranker,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
@@ -184,7 +194,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "embedder": settings.embedding_model,
             "judge": judge_model or None,
             "retriever": args.retriever,
-            "reranker": "none",
+            "reranker": args.reranker,
             "candidates": args.candidates,
             "keep": args.keep,
             "runtime_numbers_from": runtime_source,
