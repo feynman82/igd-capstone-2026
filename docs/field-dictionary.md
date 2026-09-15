@@ -6,7 +6,7 @@ header in the corpus register, the `facts.key` it is stored under, and the attri
 on the extraction model. Renaming one renames all three, so rename in `pack.yaml`
 and regenerate.
 
-## Insurance and Coverage (`insurance_agent` v0.3.0)
+## Insurance and Coverage (`insurance_agent` v0.4.0)
 
 ### `policy_schedule`
 
