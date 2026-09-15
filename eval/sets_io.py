@@ -12,6 +12,7 @@ import csv
 import json
 import random
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -174,7 +175,7 @@ def read_registers(root: Path) -> list[dict[str, str]]:
     return rows
 
 
-def field_page(row: dict[str, str], key: str) -> int:
+def field_page(row: Mapping[str, str], key: str) -> int:
     """Which page a value is printed on. `field_pages` names only the fields that are not on
     page 1, in the form `expiry_date=2;premium_payable=2`."""
     for item in (row.get("field_pages") or "").split(";"):

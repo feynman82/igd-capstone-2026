@@ -99,7 +99,9 @@ def value_forms(value: str) -> set[str]:
         forms |= {
             when.isoformat(),
             f"{when.day} {when:%B %Y}".casefold(),
+            f"{when:%d %B %Y}".casefold(),  # "01 March 2026", as the schedules print it
             f"{when.day} {when:%b %Y}".casefold(),
+            f"{when:%d %b %Y}".casefold(),
             f"{when:%d/%m/%Y}",
             f"{when.day}/{when.month}/{when.year}",
         }

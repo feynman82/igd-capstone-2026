@@ -95,6 +95,7 @@ def test_subset_is_stable_and_spread_across_lanes() -> None:
         ("2027-04-11", "It expires on 11 April 2027.", True),
         ("2027-04-11", "Expiry: 2027-04-11", True),
         ("2027-04-11", "renews 11 Apr 2027", True),
+        ("2026-03-01", "Cover starts on 01 March 2026.", True),
         ("2027-04-11", "expires 12 April 2027", False),
         ("1284.00", "The premium is $1,284.00 a year.", True),
         ("1284.00", "premium payable: 1284", True),
