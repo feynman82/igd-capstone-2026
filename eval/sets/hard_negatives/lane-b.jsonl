@@ -1,0 +1,6 @@
+{"id": "b-b01", "set": "B", "lane": "retrieval", "question": "When does my travel insurance expire?", "expected": {"kind": "abstain"}, "notes": "no travel policy on file; the closest documents are other insurance schedules"}
+{"id": "b-b02", "set": "B", "lane": "retrieval", "question": "What is the premium on policy MV-2026-448121?", "expected": {"kind": "abstain"}, "notes": "one digit off a real policy number; dense search will find the real one"}
+{"id": "b-b03", "set": "B", "lane": "retrieval", "question": "How much did I claim on the car last year?", "expected": {"kind": "abstain"}, "notes": "no claim letter on file for the motor policy"}
+{"id": "b-b04", "set": "B", "lane": "retrieval", "question": "What is the no-claim discount on my car policy?", "expected": {"kind": "abstain"}, "notes": "a field the schedule does not print"}
+{"id": "b-b05", "set": "B", "lane": "retrieval", "question": "What was last month's gross salary?", "expected": {"kind": "abstain"}, "notes": "no payslip on file"}
+{"id": "b-b06", "set": "B", "lane": "retrieval", "question": "Who is the named driver on the car policy?", "expected": {"kind": "abstain"}, "notes": "the schedule names the insured, never a named driver"}

@@ -42,10 +42,10 @@ corpus-load:
 	uv run python scripts/load_corpus.py --batch $(BATCH)
 
 eval:
-	uv run python -m eval.run --corpus a --out eval/results
+	uv run python -m eval.run --corpus all --out eval/results
 
 eval-quick:
-	uv run python -m eval.run --corpus a --subset 25 --out /tmp/parrot-eval
+	uv run python -m eval.run --corpus all --subset 25 --out /tmp/parrot-eval
 
 # Index every enabled pack's grounding corpus into pending values for Siew to review.
 grounding:

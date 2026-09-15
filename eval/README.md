@@ -11,6 +11,21 @@ Three sets, three runs, one committed results file per run.
 Runs land in weeks 3, 5 and 8. `eval/results/` is committed so the report can show movement
 rather than a single number.
 
+## Running the harness
+
+```
+make eval-quick        # every set, at most 25 questions each, to /tmp/parrot-eval
+make eval              # every set, all questions, appended under eval/results/
+```
+
+`python -m eval.run` asks PARROT each question exactly as `scripts/ask.py` would, records the
+passages the model was shown, and writes `<date>-<label>.json` with the nine metrics, one line
+per question, and a `not_measured` reason for every number it could not produce. The Ragas
+metrics need a judge: `--judge MODEL` or `PARROT_JUDGE_MODEL`, served by the same local Ollama
+(a larger model than the generator is better — a model marking its own work is generous), and
+`--no-judge` writes the code-scored metrics alone. A result file is never overwritten. See the
+docstring in `eval/run.py` for every flag.
+
 ## Writing questions
 
 Everyone writes questions for their own lane — it is the highest-value work with the lowest
