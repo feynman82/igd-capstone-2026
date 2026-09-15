@@ -1736,16 +1736,10 @@ def test_a_stream_closed_exactly_at_the_card_is_still_committed_by_the_api() -> 
     assert (conn.commits, conn.rollbacks) == (1, 0)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=ValueError,
-    reason=(
-        "core/graph/answer.py yields AdviceCard before the `try` whose `finally` writes the "
-        "advised record, so a graph stream closed while parked on the card records nothing. The "
-        "API side holds (the test above); the fix is in core/graph/answer.py, outside task D1."
-    ),
-)
 def test_a_graph_stream_closed_exactly_at_the_card_still_records_it() -> None:
+    """C5 fix round 2 closed the gap this test used to mark: `AdviceCard` is now yielded inside
+    the `try` whose `finally` writes the advised record, so a graph stream closed while parked on
+    the card still records what was shown, the same as the API-side test above."""
     ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
     advised, _, _, log, _ = build_advised_graph(ollama)
 
@@ -1753,7 +1747,7 @@ def test_a_graph_stream_closed_exactly_at_the_card_still_records_it() -> None:
     next(stream)  # the card
     stream.close()
 
-    [record] = log.records  # ValueError: not enough values to unpack
+    [record] = log.records
     assert record.outcome == "advised" and record.basis["explanation"] == "stopped"
 
 

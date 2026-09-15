@@ -1077,10 +1077,11 @@ class AnswerGraph:
 
         A withheld or refused record is written *before* the ending it records is yielded, for the
         same reason: a consumer may stop at the first terminal event — `ask` does. An advised
-        record is written from the explanation's `finally`, after the card, because the card
-        itself is shown before that record exists — a consumer may stop right there, at a
-        `yield Sentence` or between one and the next, and the record must still be written for
-        what was actually shown (fix 1, task C5 review round 1).
+        record is written from a single `finally`, whose `try` opens with the card's own `yield`
+        and continues through the explanation, so a consumer may stop right there — at the card
+        itself, at a `yield Sentence`, or between one and the next — and the record is still
+        written for what was actually shown (fix 1, task C5 review round 1; the card moved inside
+        the `try` in fix round 2, so a close exactly at the card is covered too).
         """
         adviser, consents, advice_log = self._adviser, self._consents, self._advice_log
         match = self._advice_shape(question, packs)
@@ -1174,25 +1175,7 @@ class AnswerGraph:
         cards = list(chips.values())
         chips[evidence[-1].ref] = Citation(None, "", 0, CALCULATION_CITATION, "calculation")
         product_disclosure = advice.product_disclosure.strip() if calc.names_product else ""
-        yield AdviceCard(
-            pack_id=installed.id,
-            label=calc.label,
-            person=person,
-            verdict=calc.verdict,
-            verdict_text=calc.verdict_text,
-            figures=[(figure.name, figure.text) for figure in calc.figures],
-            inputs=cards,
-            rows=[list(row) for row in calc.rows],
-            estimate=calc.estimate,
-            disclaimer=disclaimer,
-            product_disclosure=product_disclosure,
-            consent_version=advice.consent_version,
-        )
-
-        by_ref = {passage.ref: passage for passage in evidence}
-        retrieved = set(by_ref)
         exclusions = installed.manifest.answering.exclusions
-        prompt = _advice_prompt(calc, shape, subject, today, evidence)
         scanner = SentenceScanner()
         # The verdict on the card rests on every input, but never on the calculation passage
         # itself: "Worked out by Parrot from the inputs above" is not a source a screen can open,
@@ -1204,13 +1187,35 @@ class AnswerGraph:
         truncated = False
         deltas: Iterator[str] = iter(())
         # How the explanation ended, written into the record below regardless of how this exits
-        # (fix 1). "stopped" is the honest default: a consumer that closes the stream after the
-        # card, or any exception besides `ModelUnavailable`, leaves it as is. The `try` sets
-        # "complete" only once its body runs to its own end — whether the model exhausted itself
-        # or the sentence cap broke the loop, both from inside the `try` — and the `except` sets
-        # "model_unavailable". Nothing else may write to it.
+        # (fix 1). "stopped" is the honest default: a consumer that closes the stream at or after
+        # the card — the card's own `yield` below, now the first statement in the `try`, included
+        # (fix round 2) — or any exception besides `ModelUnavailable`, leaves it as is. The `try`
+        # sets "complete" only once its body runs to its own end — whether the model exhausted
+        # itself or the sentence cap broke the loop, both from inside the `try` — and the `except`
+        # sets "model_unavailable". Nothing else may write to it.
         explanation = "stopped"
         try:
+            # The card is yielded first, inside the `try`, so a `GeneratorExit` thrown into this
+            # `yield` reaches the same `finally` as one thrown into a `yield Sentence` below —
+            # a consumer that closes the stream exactly at the card still leaves a record
+            # (task C5 fix round 2; previously the card was yielded before this `try` opened).
+            yield AdviceCard(
+                pack_id=installed.id,
+                label=calc.label,
+                person=person,
+                verdict=calc.verdict,
+                verdict_text=calc.verdict_text,
+                figures=[(figure.name, figure.text) for figure in calc.figures],
+                inputs=cards,
+                rows=[list(row) for row in calc.rows],
+                estimate=calc.estimate,
+                disclaimer=disclaimer,
+                product_disclosure=product_disclosure,
+                consent_version=advice.consent_version,
+            )
+            by_ref = {passage.ref: passage for passage in evidence}
+            retrieved = set(by_ref)
+            prompt = _advice_prompt(calc, shape, subject, today, evidence)
             deltas = self._client.constrained_stream(
                 answer_system(installed), prompt, _ANSWER_SCHEMA
             )
@@ -1246,10 +1251,12 @@ class AnswerGraph:
             close = getattr(deltas, "close", None)
             if callable(close):
                 close()
-            # Written here, after the stream is closed, so that a consumer stopping at or after
-            # the card — a `GeneratorExit` thrown into a `yield Sentence` above included — still
-            # leaves a record (fix 1). This is the only place the advised outcome is recorded, so
-            # it is written exactly once whichever way the `try` exits.
+            # Written here, after the stream is closed, so that a consumer stopping anywhere from
+            # the card onward — a `GeneratorExit` thrown into the card's own `yield` above, or
+            # into a `yield Sentence` further down, both included — still leaves a record (fix 1;
+            # the card joined this `try` in fix round 2, closing the gap where a close exactly at
+            # the card left nothing written). This is the only place the advised outcome is
+            # recorded, so it is written exactly once whichever way the `try` exits.
             advice_log.record(
                 replace(
                     entry,
