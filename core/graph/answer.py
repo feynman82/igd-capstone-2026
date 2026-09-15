@@ -39,6 +39,7 @@ a separate reviewed pull request. The swap is one line once that migration lands
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import re
 from collections.abc import Iterable, Iterator, Sequence
@@ -224,8 +225,8 @@ CALCULATION_CITATION = "Worked out by Parrot from the inputs above"
 
 NO_OWNER = "Say who you are on the Household page first."
 
-WHOSE_REASON = "Parrot cannot tell whose situation this is about"
-WHOSE_MISSING = "Say whose situation this is about, one person at a time."
+WHOSE_REASON = "the question could be about more than one person"
+WHOSE_MISSING = "Name one person, then ask again."
 
 
 class State(TypedDict, total=False):
@@ -697,7 +698,9 @@ def _advice_prompt(
         )
         addressee = f"the person asking, about {name}"
     elif name and subject.someone_else:
-        whose = f"The result is about {name}, not the person asking: say {name}'s, not your.\n"
+        whose = (
+            f'The result is about {name}, not the person asking: write "{name}\'s", not "your".\n'
+        )
         addressee = f"the person asking, about {name}"
     else:
         whose = f"The person asking is {name}. 'You' and 'your' mean them.\n" if name else ""
@@ -718,11 +721,26 @@ def _advice_prompt(
 
 
 def _advice_basis(
-    calc: Calculation, kept: Sequence[str], dropped: Sequence[tuple[str, str]]
+    calc: Calculation,
+    kept: Sequence[str],
+    dropped: Sequence[tuple[str, str]],
+    explanation: str,
+    product_disclosure: str,
 ) -> dict[str, Any]:
     """Everything an advised answer rested on, so it can be reconstructed from its record alone
-    (ADR 0016) — including what the gate refused to say, which is what a reviewer checks first."""
-    return {
+    (ADR 0016) — including what the gate refused to say, which is what a reviewer checks first.
+
+    `explanation` says how the explanation stream ended: "complete" (the model finished or the
+    sentence cap stopped it), "model_unavailable" (the card stands alone), or "stopped" (a
+    consumer closed the stream, or anything else cut it off) — the default, so a record written
+    from `finally` on an exit nobody named still says so honestly.
+
+    `product_disclosure_sha256` is written only when the calculation names a product: the hash
+    lets a reviewer confirm which wording of the pack's disclosure the person actually saw,
+    without the record carrying that text a second time. `basis` is jsonb, so no migration is
+    needed for either field.
+    """
+    basis: dict[str, Any] = {
         "inputs": [
             {
                 "ref": item.ref,
@@ -748,7 +766,13 @@ def _advice_basis(
         "names_product": calc.names_product,
         "kept": list(kept),
         "dropped": [{"text": text, "why": why} for text, why in dropped],
+        "explanation": explanation,
     }
+    if calc.names_product:
+        basis["product_disclosure_sha256"] = hashlib.sha256(
+            product_disclosure.encode("utf-8")
+        ).hexdigest()
+    return basis
 
 
 def _as_sentence(text: str) -> str:
@@ -1051,8 +1075,12 @@ class AnswerGraph:
         calculation, every input of it already cited. The order is the order of what may stop it:
         whose situation, then consent, then whether the inputs are there, and only then a model.
 
-        A record is written *before* the ending it records is yielded. A consumer may stop at the
-        first terminal event — `ask` does — and a record written after that yield never would be.
+        A withheld or refused record is written *before* the ending it records is yielded, for the
+        same reason: a consumer may stop at the first terminal event — `ask` does. An advised
+        record is written from the explanation's `finally`, after the card, because the card
+        itself is shown before that record exists — a consumer may stop right there, at a
+        `yield Sentence` or between one and the next, and the record must still be written for
+        what was actually shown (fix 1, task C5 review round 1).
         """
         adviser, consents, advice_log = self._adviser, self._consents, self._advice_log
         match = self._advice_shape(question, packs)
@@ -1123,6 +1151,20 @@ class AnswerGraph:
             yield AdviceWithheld(installed.id, result.label, person, items, disclaimer)
             return
         calc = result
+        # A calculator that returned someone else's figures, or the wrong shape's, must never be
+        # shown: showing them would be one household reading another's numbers. `_advise` already
+        # guarantees a single-person subject before `calculate` is called, so a mismatch here is a
+        # calculator bug, not a state this branch can recover from.
+        if (
+            calc.pack_id != installed.id
+            or calc.shape_id != shape.id
+            or set(calc.person_ids) != subject.person_ids
+        ):
+            raise ValueError(
+                f"calculation for pack={calc.pack_id!r} shape={calc.shape_id!r} "
+                f"person_ids={set(calc.person_ids)!r} does not match the question asked "
+                f"(pack={installed.id!r} shape={shape.id!r} person_ids={subject.person_ids!r})"
+            )
 
         evidence = passages_for(calc)
         chips = {
@@ -1131,6 +1173,7 @@ class AnswerGraph:
         }
         cards = list(chips.values())
         chips[evidence[-1].ref] = Citation(None, "", 0, CALCULATION_CITATION, "calculation")
+        product_disclosure = advice.product_disclosure.strip() if calc.names_product else ""
         yield AdviceCard(
             pack_id=installed.id,
             label=calc.label,
@@ -1142,7 +1185,7 @@ class AnswerGraph:
             rows=[list(row) for row in calc.rows],
             estimate=calc.estimate,
             disclaimer=disclaimer,
-            product_disclosure=advice.product_disclosure.strip() if calc.names_product else "",
+            product_disclosure=product_disclosure,
             consent_version=advice.consent_version,
         )
 
@@ -1151,11 +1194,22 @@ class AnswerGraph:
         exclusions = installed.manifest.answering.exclusions
         prompt = _advice_prompt(calc, shape, subject, today, evidence)
         scanner = SentenceScanner()
-        cited = [chip.text for chip in cards]  # the verdict on the card rests on every input
+        # The verdict on the card rests on every input, but never on the calculation passage
+        # itself: "Worked out by Parrot from the inputs above" is not a source a screen can open,
+        # so it is left out of what `Finished.citations` lists (minor 3). A kept sentence's own
+        # `citations` still carries it when the sentence cited the calculation, for the card.
+        cited = [chip.text for chip in cards]
         kept: list[str] = []
         dropped: list[tuple[str, str]] = []
         truncated = False
         deltas: Iterator[str] = iter(())
+        # How the explanation ended, written into the record below regardless of how this exits
+        # (fix 1). "stopped" is the honest default: a consumer that closes the stream after the
+        # card, or any exception besides `ModelUnavailable`, leaves it as is. The `try` sets
+        # "complete" only once its body runs to its own end — whether the model exhausted itself
+        # or the sentence cap broke the loop, both from inside the `try` — and the `except` sets
+        # "model_unavailable". Nothing else may write to it.
+        explanation = "stopped"
         try:
             deltas = self._client.constrained_stream(
                 answer_system(installed), prompt, _ANSWER_SCHEMA
@@ -1174,7 +1228,7 @@ class AnswerGraph:
                             log.info("gate dropped an explanation (%s): %.80s", why, claim.text)
                         continue
                     citations = _distinct(chips[ref] for ref in claim.supports)
-                    cited.extend(citation.text for citation in citations)
+                    cited.extend(c.text for c in citations if c.kind != "calculation")
                     kept.append(claim.text)
                     yield Sentence(claim.text, (), citations)
                     if len(kept) >= ADVICE_SENTENCES:
@@ -1182,24 +1236,30 @@ class AnswerGraph:
                         break
                 if truncated:
                     break
+            explanation = "complete"
         except ModelUnavailable as error:
             # The card is the answer and it has been given. An explanation that could not be
             # written is an explanation missing, not advice withdrawn.
             log.info("advice explanation stopped: %s", error)
+            explanation = "model_unavailable"
         finally:
             close = getattr(deltas, "close", None)
             if callable(close):
                 close()
-
-        advice_log.record(
-            replace(
-                entry,
-                outcome="advised",
-                verdict=calc.verdict,
-                basis=_advice_basis(calc, kept, dropped),
-                answer_text=" ".join([calc.verdict_text, *kept]),
+            # Written here, after the stream is closed, so that a consumer stopping at or after
+            # the card — a `GeneratorExit` thrown into a `yield Sentence` above included — still
+            # leaves a record (fix 1). This is the only place the advised outcome is recorded, so
+            # it is written exactly once whichever way the `try` exits.
+            advice_log.record(
+                replace(
+                    entry,
+                    outcome="advised",
+                    verdict=calc.verdict,
+                    basis=_advice_basis(calc, kept, dropped, explanation, product_disclosure),
+                    answer_text=" ".join([calc.verdict_text, *kept]),
+                )
             )
-        )
+
         yield Finished(
             sorted(set(cited)),
             disclaimer,

@@ -10,12 +10,15 @@ Zee's, reviewed by Siew, so it is never written into `pack.yaml` by a test.
 
 from __future__ import annotations
 
+import hashlib
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
+import pytest
 import yaml
 
 from core.contracts import AdviceShape, PackManifest
@@ -362,7 +365,11 @@ def test_a_calculation_gives_the_card_then_gated_sentences_then_finished() -> No
         "gap",
     ]
     assert record.basis["kept"] == [THE_GAP["text"], THE_GUIDELINE["text"]]
+    assert record.basis["explanation"] == "complete"
     assert record.answer_text == f"{VERDICT} {THE_GAP['text']} {THE_GUIDELINE['text']}"
+    assert CALCULATION_CITATION not in finished.citations, (
+        "not a source a screen can open; scripts/ask.py must not print it"
+    )
 
 
 def test_a_verdict_in_the_explanation_is_dropped_and_the_figure_kept() -> None:
@@ -463,11 +470,26 @@ def test_an_ambiguous_subject_asks_whose_and_is_never_calculated() -> None:
     assert [type(event) for event in got] == [Abstained]
     abstained = got[0]
     assert isinstance(abstained, Abstained)
-    assert abstained.missing == "Say whose situation this is about, one person at a time."
+    assert abstained.reason == "the question could be about more than one person"
+    assert abstained.missing == "Name one person, then ask again."
     assert (abstained.passages_read, abstained.dropped, abstained.person) == (0, 0, None)
     assert abstained.disclaimer == DISCLAIMER
     assert adviser.calls == [] and consents.asked == [] and log.records == []
     assert len(client.systems) == 1
+
+
+def test_ask_reads_naturally_for_an_ambiguous_subject() -> None:
+    graph, *_ = build(
+        ScriptedOllama({"intent": "advise"}), subject=Subject(frozenset(), "", ambiguous=True)
+    )
+
+    answer = graph.ask("is our critical illness cover enough?")
+
+    assert answer.text == (
+        "I can't answer that from your documents: the question could be about more than one "
+        "person. Name one person, then ask again."
+    )
+    assert not answer.grounded and answer.disclaimer == DISCLAIMER
 
 
 def test_nobody_having_said_who_they_are_withholds_advice() -> None:
@@ -498,12 +520,14 @@ def test_a_relation_nobody_holds_abstains_as_an_explanation_would() -> None:
 def test_advice_about_someone_else_is_explained_to_the_asker_about_them() -> None:
     client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
     rachel = Subject(frozenset({2}), "Rachel Ng Hui Shan", someone_else=True)
-    graph, adviser, *_ = build(client, subject=rachel)
+    for_rachel = replace(CALCULATION, person_ids=(2,), subject="Rachel Ng Hui Shan")
+    graph, adviser, *_ = build(client, subject=rachel, result=for_rachel)
 
     list(graph.stream("is Rachel's critical illness cover enough?"))
 
     prompt = client.prompts[1]
     assert "The result is about Rachel Ng Hui Shan, not the person asking" in prompt
+    assert 'write "Rachel Ng Hui Shan\'s", not "your"' in prompt
     assert "to the person asking, about Rachel Ng Hui Shan" in prompt
     assert "The person asking is Rachel" not in prompt
     assert adviser.calls[0]["person_ids"] == frozenset({2})
@@ -553,6 +577,136 @@ def test_a_model_that_is_down_still_leaves_the_card_and_finishes() -> None:
     finished = got[-1]
     assert isinstance(finished, Finished)
     assert finished.unanswered is False and finished.dropped == 0
+    assert len(client.systems) == 2, "route, then the explanation that failed"
     [record] = log.records
     assert record.outcome == "advised" and record.basis["kept"] == []
+    assert record.basis["explanation"] == "model_unavailable"
     assert record.answer_text == VERDICT
+
+
+# --------------------------------------------------------------- review round 1: fix 1, recording
+
+
+def test_a_stream_closed_after_the_card_still_records_what_was_shown() -> None:
+    """Fix 1: a consumer that stops reading after the card and one sentence — a `GeneratorExit`
+    thrown into the `yield Sentence` below the card — must not lose the advised record. Before the
+    fix, `advice_log.record(...)` for the advised outcome ran only after the `try` finished
+    normally or with `ModelUnavailable`, so a dropped stream recorded nothing at all."""
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    graph, _, _, log, _ = build(client)
+
+    stream = graph.stream(ASKED)
+    assert isinstance(next(stream), AdviceCard)
+    sentence = next(stream)
+    assert isinstance(sentence, Sentence) and sentence.text == THE_GAP["text"]
+    stream.close()
+
+    [record] = log.records
+    assert record.outcome == "advised" and record.verdict == "short"
+    assert record.basis["kept"] == [THE_GAP["text"]], "only the sentence actually shown"
+    assert record.basis["explanation"] == "stopped"
+
+
+def test_the_advised_record_is_never_written_twice() -> None:
+    """The `finally` that writes the advised record runs exactly once per stream, whether the
+    stream is drained to `Finished` or closed early — so draining it fully must still leave
+    exactly one record, not one from an old code path plus one from the fix."""
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
+    graph, _, _, log, _ = build(client)
+
+    list(graph.stream(ASKED))
+
+    assert len(log.records) == 1
+
+
+# ------------------------------------------------------------------ review round 1: fix 2, safety
+
+
+def test_a_never_say_phrase_is_dropped_even_when_correctly_labelled() -> None:
+    """Fix 2(a). The sentence names the gap figure with its own word ("gap") and cites the
+    calculation passage, so nothing but the pack's `never_say` list catches it: remove
+    `never_say=shape.never_say` from the `check_advice` call and this sentence is kept."""
+    client = ScriptedOllama(
+        {"intent": "advise"},
+        {
+            "sentences": [
+                {"text": "The gap is SGD 251,200.00, a guaranteed payout.", "supports": [4]}
+            ]
+        },
+    )
+    graph, *_ = build(client)
+
+    got = list(graph.stream(ASKED))
+
+    assert [event for event in got if isinstance(event, Sentence)] == []
+    finished = got[-1]
+    assert isinstance(finished, Finished) and finished.dropped == 1
+
+
+def test_a_mislabelled_figure_through_the_graph_is_dropped() -> None:
+    """Fix 2(c). SGD 451,200.00 is the *target*, not a gap: "short by" states it without the
+    target's own words, so `check_advice`'s mislabelled-figure check drops it."""
+    client = ScriptedOllama(
+        {"intent": "advise"},
+        {"sentences": [{"text": "You are short by SGD 451,200.00.", "supports": [4]}]},
+    )
+    graph, *_ = build(client)
+
+    got = list(graph.stream(ASKED))
+
+    assert [event for event in got if isinstance(event, Sentence)] == []
+    finished = got[-1]
+    assert isinstance(finished, Finished) and finished.dropped == 1
+
+
+def test_a_named_product_carries_its_disclosure_and_its_hash() -> None:
+    """Fix 2(b), and minor 6: `names_product=True` puts the pack's own disclosure on the card and
+    in `ask()`'s disclaimer, and the record's basis carries its sha256 rather than the text a
+    second time."""
+    named = replace(CALCULATION, names_product=True)
+
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
+    graph, _, _, log, _ = build(client, result=named)
+    got = list(graph.stream(ASKED))
+    card = got[0]
+    assert isinstance(card, AdviceCard)
+    assert card.product_disclosure == DISCLOSURE
+    [record] = log.records
+    assert (
+        record.basis["product_disclosure_sha256"]
+        == hashlib.sha256(DISCLOSURE.encode("utf-8")).hexdigest()
+    )
+
+    client2 = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
+    graph2, *_ = build(client2, result=named)
+    answer = graph2.ask(ASKED)
+    assert DISCLOSURE in answer.disclaimer
+
+
+def test_no_product_named_gives_no_disclosure_or_hash() -> None:
+    """Fix 2(b): `names_product=False` (the default `CALCULATION` fixture) gives an empty card
+    disclosure and no hash in the record's basis."""
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
+    graph, _, _, log, _ = build(client)  # CALCULATION: names_product=False
+
+    got = list(graph.stream(ASKED))
+    card = got[0]
+    assert isinstance(card, AdviceCard)
+    assert card.product_disclosure == ""
+    [record] = log.records
+    assert "product_disclosure_sha256" not in record.basis
+
+
+# ------------------------------------------------------------- review round 1: minor 4, the guard
+
+
+def test_a_calculation_for_the_wrong_person_is_never_shown() -> None:
+    """Minor 4: `_advise` already guarantees a single-person subject before `calculate` runs, so a
+    result naming a different person, pack or shape is a calculator bug — shown, it would be one
+    household reading another's figures. The graph refuses to show it."""
+    mismatched = replace(CALCULATION, person_ids=(99,))
+    client = ScriptedOllama({"intent": "advise"})
+    graph, *_ = build(client, result=mismatched)
+
+    with pytest.raises(ValueError, match="does not match the question asked"):
+        list(graph.stream(ASKED))
