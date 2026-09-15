@@ -17,7 +17,7 @@
 #   Fill it AFTER the mail merge, when the page layout exists.
 #
 # Insurance and Coverage (insurance_agent)
-#   policy_schedule: required = insurer, policy_no, insured, product_name, cover_from, expiry_date OR maturity_date, premium_payable
+#   policy_schedule: required = insurer, policy_no, insured, product_name, cover_from, premium_payable
 #   renewal_notice: required = insurer, policy_no, insured, expiry_date, renewal_premium, payment_due_date
 #   claim_letter: required = insurer, policy_no, claim_no, claimant
 #   benefit_illustration: required = insurer, life_assured, sum_assured, annual_premium
@@ -29,4 +29,4 @@
 #   srs_statement: required = account_holder, account_no, statement_year, contributions_ytd
 #   notice_of_assessment: required = taxpayer, assessment_year, assessable_income, tax_payable, payment_due_date
 #
-doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,maturity_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,statement_date,sum_assured,annual_premium,surrender_value,premiums_paid_to_date,employee,employer,pay_period,gross_salary,cpf_employee,net_pay,donor,charity,receipt_no,donation_date,donation_amount,tax_deductible,member,statement_year,total_contributions,ordinary_account_balance,account_holder,account_no,contributions_ytd,taxpayer,assessment_year,assessable_income,tax_payable,field_pages,notes
+doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,maturity_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,sum_assured,annual_premium,statement_date,surrender_value,premiums_paid_to_date,employee,employer,pay_period,gross_salary,cpf_employee,net_pay,donor,charity,receipt_no,donation_date,donation_amount,tax_deductible,member,statement_year,total_contributions,ordinary_account_balance,account_holder,account_no,contributions_ytd,taxpayer,assessment_year,assessable_income,tax_payable,field_pages,notes

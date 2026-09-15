@@ -26,8 +26,9 @@ class PolicySchedule(BaseModel):
     cover_from: date = Field(
         description="First day of the period of insurance, the from date on that line",
     )
-    expiry_date: date = Field(
-        description="Last day of the period of insurance, the to date on that line",
+    expiry_date: date | None = Field(
+        default=None,
+        description="Last day of the period of insurance, the to date on that line, when the policy has a fixed expiry",
     )
     maturity_date: date | None = Field(
         default=None,
@@ -122,7 +123,9 @@ class PolicyAnniversaryStatement(BaseModel):
     insurer: str = Field(description="Name of the insurance company, from the statement letterhead")
     policy_no: str = Field(description="Policy number exactly as printed, not normalised")
     life_assured: str = Field(description="Name of the person covered, as printed on the statement")
-    statement_date: date = Field(description="Date the annual statement is stated to be for, as printed on the statement")
+    statement_date: date = Field(
+        description="Date the annual statement is stated to be for, as printed on the statement",
+    )
     sum_assured: Decimal = Field(ge=0, description="Sum assured as at the statement date, in SGD")
     annual_premium: Decimal = Field(
         ge=0,

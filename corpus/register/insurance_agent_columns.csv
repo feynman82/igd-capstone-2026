@@ -12,8 +12,8 @@
 #   that cannot be known while the register is being written. It is what lets a
 #   golden-set question say which page the answer should be cited from.
 #
-# policy_schedule: required = insurer, policy_no, insured, product_name, cover_from, expiry_date, premium_payable
-#                  optional = sum_insured, excess
+# policy_schedule: required = insurer, policy_no, insured, product_name, cover_from, premium_payable
+#                  optional = expiry_date, maturity_date, sum_insured, excess
 # renewal_notice: required = insurer, policy_no, insured, expiry_date, renewal_premium, payment_due_date
 # claim_letter: required = insurer, policy_no, claim_no, claimant
 #               optional = incident_date, settled_amount
@@ -22,4 +22,4 @@
 # policy_anniversary_statement: required = insurer, policy_no, life_assured, statement_date, sum_assured, annual_premium
 #                               optional = surrender_value, premiums_paid_to_date
 #
-doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,maturity_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,statement_date,sum_assured,annual_premium,surrender_value,premiums_paid_to_date,field_pages,notes
+doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,maturity_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,sum_assured,annual_premium,statement_date,surrender_value,premiums_paid_to_date,field_pages,notes
