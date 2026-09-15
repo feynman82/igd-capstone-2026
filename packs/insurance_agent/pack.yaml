@@ -156,6 +156,10 @@ document_types:
         type: person
         description: Name of the person covered, as printed on the statement
         example: Marcus Fernandez
+      - name: statement_date
+        type: date
+        description: Date the annual statement is stated to be for, as printed on the statement
+        example: "2026-06-01"
       - name: sum_assured
         type: money
         description: Sum assured as at the statement date, in SGD
