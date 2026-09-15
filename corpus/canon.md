@@ -100,19 +100,13 @@ Lionhead. Two hospital-shaped policies, two different people, two different insu
 different prefixes. The 40 per cent premium jump at the 2027 renewal belongs to
 `HS-2023-771904` and to Lim Ah Kow, and nothing about Marcus's plan may touch it.
 
-### Whole life has no expiry, and `policy_schedule` requires one
+### Whole life has no expiry, and now uses a separate `maturity_date`
 
-`packs/insurance_agent/pack.yaml` marks `expiry_date` required on `policy_schedule` — "last
-day of the period of insurance". A whole life policy has no period of insurance. The corpus
-convention is to register **maturity at age 100**: Marcus was born 1987-05-08, so
-`LF-2015-330277` carries `expiry_date 2087-05-07`, and the document prints it as a maturity
-date rather than as an expiry.
-
-This is a workaround, not a modelling decision, and it is recorded here so the next person
-does not reinvent it. The real fix is upstream — `expiry_date` should be optional on
-`policy_schedule`, or the pack should carry a `maturity_date` — and that is Zee's `pack.yaml`,
-raised rather than patched here. The practical cost is one dead `policy_expiry` obligation 61
-years out, which no `lead_days` window in the Reminder register will ever reach.
+A whole life policy has no fixed expiry. The insurance pack now makes `expiry_date` optional
+on `policy_schedule` and carries a separate optional `maturity_date` field. For
+`LF-2015-330277`, Marcus was born 1987-05-08 and the policy matures at age 100, so the register
+stores `maturity_date 2087-05-07` and leaves `expiry_date` blank. This avoids creating a
+false `policy_expiry` obligation for a whole-life policy.
 
 ## Issuers for the documents that have no `insurer` field
 
