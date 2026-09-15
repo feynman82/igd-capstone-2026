@@ -186,9 +186,9 @@ document_types:
         example: "9540.00"
 
 # No grounding corpus. This pack answers only from the user's own policy documents.
-# grounding/mas_fair_dealing/ is retained as a placeholder: its sources.yaml is empty, and
-# the MAS Fair Dealing Guidelines are a conduct standard for insurers rather than material
-# that answers what a household is covered for. Reopen with real sources and retrieval
+# grounding/mas_fair_dealing/ in this pack is retained as a placeholder: its sources.yaml is
+# empty, and the MAS Fair Dealing Guidelines are a conduct standard for insurers rather than
+# material that answers what a household is covered for. Reopen with real sources and retrieval
 # dates recorded, reviewed by Siew, before setting a corpus here.
 grounding:
   corpus: null
@@ -213,7 +213,7 @@ guardrails:
   must_cite: true
   abstain_below: 0.45
   never_acts: true
-  never_recommends: true
+  verdict_by_code: true
   disclaimer: >
     Informational analysis of your own policy documents only. This is not financial advice
     under the Financial Advisers Act, and it does not recommend or compare insurance

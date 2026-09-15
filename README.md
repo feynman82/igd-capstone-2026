@@ -91,7 +91,7 @@ uv run python scripts/worker.py --beat
 | `core/retrieve/` | Hybrid search, RRF fusion, reranking, score floor | Yew Mun |
 | `modules/` | Capability modules: reminder, alert, (tracker) | Christian |
 | `packs/` | Domain packs. One authored `pack.yaml` each; everything else generated | Zee |
-| `grounding/` | Authoritative reference corpora, with provenance in `sources.yaml` | Zee, reviewed by Siew |
+| `packs/*/grounding/` | Authoritative reference corpora, with provenance in `sources.yaml` | Zee, reviewed by Siew |
 | `web/` | Next.js 15 interface | Zee |
 | `corpus/` | The document register (ground truth) and its validator | Desmond |
 | `eval/` | Golden sets, Ragas harness, committed results | Yew Mun |

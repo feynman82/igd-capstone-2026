@@ -21,6 +21,8 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --all-extras
       - run: psql "$DATABASE_URL" -f db/migrations/0001_init.sql
+      - run: psql "$DATABASE_URL" -f db/migrations/0002_household.sql
+      - run: psql "$DATABASE_URL" -f db/migrations/0003_advice.sql
       # Fails if a pack.yaml was edited without regenerating. This is what stops Zee's field
       # names and Desmond's register columns drifting apart.
       - run: uv run python -m packs.build --check

@@ -88,7 +88,7 @@ grounding:
 ```
 
 Official issuers only — IRAS, CPF Board, MAS, MOH, a named regulator. Never a blog or a
-comparison site. Record the retrieval date in `grounding/<corpus>/sources.yaml`; rules
+comparison site. Record the retrieval date in `packs/<pack>/grounding/<corpus>/sources.yaml`; rules
 change by assessment year and the report must say which year was used. Twenty
 well-chosen pages beat two hundred scraped ones.
 
@@ -98,7 +98,7 @@ well-chosen pages beat two hundred scraped ones.
 
 - Hand-edit `packs/*/schemas.py`, `corpus/register/*_columns.csv` or
   `docs/field-dictionary.md`. They are generated.
-- Touch anything outside `packs/` and `grounding/`.
+- Touch anything outside `packs/`, noting that each pack's grounding corpora live in `packs/<pack>/grounding/`.
 - Add a dependency.
 - Invent a field name the author did not agree to.
 

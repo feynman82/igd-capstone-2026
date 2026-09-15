@@ -282,8 +282,8 @@ sentence claiming cover under a heading like "What is not covered" is dropped ra
 than quoted as if it were a benefit.
 
 **5. `advice_decline`** — the one sentence the assistant gives when someone asks it to
-recommend, compare or judge, rather than explain. Siew reviews this sentence, the same
-way she reviews the disclaimer.
+recommend, compare or judge, rather than explain, in a pack that has no `advice` block
+(§6c). Siew reviews this sentence, the same way she reviews the disclaimer.
 
 **6. None of this is a field.** A category is decided fresh each time a question is
 asked, from words a person reviewed — it is never written to a fact, never becomes a
@@ -292,16 +292,137 @@ depends on the spelling of it.
 
 ---
 
+## 6c. Advice: when a pack answers "is it enough?"
+
+This section is optional too. Without an `advice` block, a pack explains and politely
+declines to judge (§6b, point 5). With one, it can answer *"is my critical illness cover
+enough?"* — but not the way a person would. **Code does the arithmetic. The model only
+explains the result.** And the household's owner agrees once, in words you write, before
+any advice is given. ADR 0016 has the reasoning.
+
+**What an `advice` block holds**
+
+| Key | What you write |
+|---|---|
+| `consent_version` | A version like `1.0.0`. Change it whenever you change `consent_text`, and every household is asked again. |
+| `consent_text` | What the owner agrees to, in plain words. 40 to 1,500 characters. Siew reviews it. |
+| `disclaimer` | Shown with every piece of advice. 40 to 1,200 characters. Siew reviews it. |
+| `product_disclosure` | Shown whenever advice names a product. 40 to 800 characters. |
+| `max_rule_age_days` | Optional, default 365. How old a rule value may be and still be used. |
+| `max_price_age_days` | Optional, default 120. How old a market price may be and still be used. |
+| `shapes` | One entry per kind of advice question — next table. |
+
+**What a shape holds**
+
+| Key | What it means |
+|---|---|
+| `id` | A short name, lowercase with underscores: `ci_gap`. |
+| `calculator` | Which calculation runs. Pick one from the list below. |
+| `label` | What the advice is about, in a few words: `critical illness cover gap`. |
+| `asked` | Words a person uses when asking this question. They are how a question finds its shape. |
+| `facts` | The printed facts the calculation reads — see below. |
+| `rules` | The published rule values it reads: a `role`, a `key` from your `grounding.values`, and a `missing` sentence. |
+| `compare_fields` | Comparisons only: the fields shown side by side. |
+| `order_by`, `order` | Comparisons only: the one field the ranking follows (it must be in `compare_fields`), and `asc` for lowest first or `desc` for highest first. |
+| `estimate` | `true` when the result is an estimate. It is labelled as one. |
+| `disadvantages` | Known downsides, in your words. |
+| `never_say` | Phrases the explanation must never contain. |
+
+Each entry under `facts` points at something printed, the same way a field does:
+
+- **`role`** — what the calculator uses it as, from the list below (`income`, `held`, …).
+- **`doc_types`** and **`field`** — where it is printed. The field must be on every listed type.
+- **`pack`** — leave it out for this pack's documents. Write another pack's id to read its
+  documents instead: an insurance shape reads income from `iras_tax` payslips.
+- **`category`** — one of your §6b category `id`s, to read only, say, critical illness plans.
+- **`take`** — `latest` (the newest one), `sum` (add them all up) or `each` (keep them apart).
+- **`per`** — `once`, `month` or `year`. A monthly figure is multiplied by 12 when a yearly
+  one is needed.
+- **`missing`** — what the assistant says when that fact is not on file. It names what is
+  missing rather than guessing around it.
+
+**The calculators — a closed list**
+
+| `calculator` | The question it answers | Fact roles it needs | Rule roles it needs |
+|---|---|---|---|
+| `gap` | Is what I hold enough? | `income`, `held` | `multiple` |
+| `remaining_room` | How much more can I put in this year? | `used` | `cap` |
+| `keep_or_surrender` | Should I keep this plan? | `value_now`, `paid_to_date` | — |
+| `compare_own` | Which of my own plans is better? | `items` | — |
+| `compare_market` | Is my plan better than one on the market? | `held` | `market` |
+| `estimate_saving` | How much would this save me? | `income`, `amount` | `rate` |
+
+You cannot add a calculator in YAML. If a question needs one that is not here, tell
+Christian: it is a code change, reviewed like one.
+
+**You name rules. You never type numbers.** Under `grounding:` you list `values` — one
+`key` per rule your sources publish, with a `unit` (`multiple`, `money`, `percent`, `rate`,
+`years` or `count`), a `description`, and the `qualifiers` it depends on (`age_band`,
+`ward_class`, `insurer`, `product`, `residency`, `assessment_year`, `band_lower`,
+`band_upper`). The number itself is extracted automatically from the words of your
+grounding sources (§7), and nothing uses it until Siew has approved it. A number typed
+into `pack.yaml` would have no source to check it against and no date to go stale by, so
+there is nowhere to type one.
+
+**Example: a critical illness gap**
+
+```yaml
+grounding:
+  corpus: null
+  values:
+    - key: ci_multiple
+      unit: multiple
+      description: Multiple of annual income a household is guided to hold as cover
+      qualifiers: [age_band]
+
+advice:
+  # consent_version, consent_text, disclaimer and product_disclosure go here
+  shapes:
+    - id: ci_gap
+      calculator: gap
+      label: critical illness cover gap
+      asked: [enough critical illness, critical illness gap]
+      facts:
+        - role: income
+          pack: iras_tax
+          doc_types: [payslip]
+          field: gross_salary
+          per: month
+          missing: A recent payslip, to know your income.
+        - role: held
+          doc_types: [policy_schedule]
+          field: sum_insured
+          category: critical_illness
+          take: sum
+          missing: The schedule of each critical illness plan you hold.
+      rules:
+        - role: multiple
+          key: ci_multiple
+          missing: Reviewed guidance on how much cover to hold.
+      never_say: [you must buy]
+```
+
+**The build checks your shapes.** `python -m packs.build` refuses a shape that is missing a
+role its calculator needs, reads a document type or field the pack does not declare, names
+a category or rule key that does not exist, compares without an `order_by`, or repeats an
+`id`. The message names the shape. A shape reading another pack is checked when the packs
+load, and fails if that pack is not installed.
+
+---
+
 ## 7. Grounding — the optional second half
 
 Some packs need more than the user's own documents. A tax pack, asked *"can I claim
 this donation?"*, needs the actual IRAS relief rules, not a guess.
 
-That is what `grounding/` is for: a small, curated set of official public guidance,
-each source recorded with where it came from and when it was retrieved. See
-`grounding/README.md` and the two `sources.yaml` files already there.
+That is what a pack's `grounding/` folder is for: a small, curated set of official public
+guidance, each source recorded with where it came from and when it was retrieved. It lives
+**inside the pack**, at `packs/<pack_id>/grounding/<corpus_id>/`, so a pack someone
+downloads carries its sources with it. See the two `sources.yaml` files already there, in
+`packs/iras_tax/grounding/iras_reliefs_ya2026/` and
+`packs/insurance_agent/grounding/mas_fair_dealing/`.
 
-In your pack, you point at it:
+In your pack, you point at it by its id, never by a path:
 
 ```yaml
 grounding:
@@ -318,8 +439,43 @@ Rules for grounding sources:
 - **Keep it small.** Twenty well-chosen pages beat two hundred scraped ones. Every
   irrelevant page is a chance for the retriever to surface it instead of the right one.
 
-Siew reviews `grounding/` with you, because provenance is a governance artefact as much
-as a technical one.
+Siew reviews each pack's `grounding/` folder with you, because provenance is a governance
+artefact as much as a technical one.
+
+### What a corpus holds
+
+Authoritative reference material, indexed under a pack's namespace and kept separate from
+the user's own documents. This is ISO/IEC 5338's **knowledge acquisition** process (6.4.7),
+so it is a governance artefact as well as a build artefact.
+
+```
+packs/<pack_id>/grounding/<corpus_id>/
+  sources.yaml        provenance for every file — required, no exceptions
+  *.md                extracted text, one file per source document
+  *.pdf               the original, only where the licence clearly allows it
+```
+
+### The rules for a corpus
+
+1. **Every file has a `sources.yaml` entry.** Title, publisher, URL, the date it was
+   retrieved, and a licence note. A passage the assistant cites has to be traceable to a
+   real publication with a date, or the citation is worthless.
+2. **Prefer extracted text over the original PDF.** Committing the text you actually index
+   keeps the repository small, makes diffs readable, and avoids redistributing a third
+   party's file. Keep the original only where the licence plainly allows it.
+3. **Version by what the guidance applies to, not by when you downloaded it.** Tax relief
+   rules change by Year of Assessment, so the corpus id carries it: `iras_reliefs_ya2026`.
+   When YA2027 guidance appears it is a new corpus, not an edit to this one.
+4. **Never paraphrase a rule into the corpus.** Index what the publisher wrote. If you find
+   yourself summarising, you have moved from grounding into authorship, and the assistant
+   will cite your summary as if it were the source.
+5. **Do not publish the corpus with the report.** Cite the sources; link them. The corpus
+   lives in a private repository.
+
+### Owner
+
+Zee assembles the corpora. Siew reviews `sources.yaml` and writes the paragraph in the
+report explaining what third-party material the system indexes and on what basis.
 
 ---
 
@@ -410,7 +566,7 @@ against, and each one caught a real defect there.
 ## Grounding — real or null, never in between
 
 Official issuers only (IRAS, CPF Board, MAS, MOH, a named regulator), every source
-recorded in `grounding/<corpus>/sources.yaml` with its retrieval date.
+recorded in `packs/<pack_id>/grounding/<corpus>/sources.yaml` with its retrieval date.
 
 An empty corpus directory with `top_k: 6` is a lie the pack tells. If there are no
 real sources yet, set `corpus: null, top_k: 0` and say so in a comment — section 7
@@ -425,7 +581,7 @@ must behave — they cannot answer "am I covered for flood damage".*
 - **`pack.yaml` is the only file I author.** `schemas.py`, `corpus/register/*_columns.csv`
   and `docs/field-dictionary.md` are generated by `python -m packs.build`. Never
   hand-edit one. If one looks wrong, the YAML is wrong.
-- **Stay in `packs/`, `grounding/`, `web/`.** If a rename breaks something in
+- **Stay in `packs/` and `web/`.** If a rename breaks something in
   `corpus/` or `modules/`, stop and tell me — do not quietly fix it in someone
   else's lane. *(A rename in the insurance pack broke one token in
   `corpus/register/register.template.csv`. That needed Desmond's review.)*

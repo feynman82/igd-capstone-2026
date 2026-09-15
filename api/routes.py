@@ -769,6 +769,10 @@ def _as_event(event: graph.Event) -> Any:
         return RefusalEvent(text=event.text)
     if isinstance(event, graph.Declined):
         return DeclinedEvent(text=event.text, disclaimer=event.disclaimer, offer=event.offer)
+    if not isinstance(event, graph.Finished):
+        # The advice events. This API builds its graph without an adviser, so its advise branch
+        # declines and none of them can reach here; their wire shapes are task D1's to add.
+        raise TypeError(f"no API event for {type(event).__name__} yet")
     return FinishedEvent(
         citations=[],  # every source is already on the sentence that used it
         disclaimer=event.disclaimer,

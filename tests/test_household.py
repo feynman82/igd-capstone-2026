@@ -435,3 +435,148 @@ def test_a_household_with_no_owner_scopes_nothing(conn: Any) -> None:
     scoped = HouseholdScope(conn).apply("what is my premium", [_passage(1, "doc")])
     assert not scoped.scoped
     assert len(scoped.passages) == 1
+
+
+# --------------------------------------------------------------- whose a piece of advice is about
+
+
+def test_whose_gives_the_owner_by_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Nothing named, nothing ruled out: the question is the owner's, same as `apply` would
+    have scoped it."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is my critical illness cover enough?")
+
+    assert subject.person_ids == frozenset({MARCUS.id})
+    assert subject.name == "Marcus Lim Jun Wei"
+    assert subject.about is None
+    assert subject.unknown_relation is None
+    assert not subject.no_owner
+
+
+def test_whose_gives_the_relation_it_resolves_to(monkeypatch: pytest.MonkeyPatch) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is my dad's hospital cover enough?")
+
+    assert subject.person_ids == frozenset({FATHER.id})
+    assert subject.name == "Lim Ah Kow"
+    assert subject.about == "dad"
+
+
+def test_whose_gives_a_person_named_outright(monkeypatch: pytest.MonkeyPatch) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is Rachel's cover enough?")
+
+    assert subject.person_ids == frozenset({RACHEL.id})
+    assert subject.name == "Rachel Ng Hui Shan"
+    assert subject.about is None
+    assert subject.someone_else is True
+    assert subject.unknown_relation is None
+    assert not subject.no_owner
+
+
+def test_whose_reports_an_unknown_relation_rather_than_guessing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No child is recorded, so "son" cannot resolve to anybody -- reported, not defaulted to
+    the owner, the same abstention `apply` makes."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("my son's critical illness plan, is it enough?")
+
+    assert subject.unknown_relation == "son"
+    assert subject.person_ids == frozenset()
+    assert not subject.no_owner
+
+
+def test_whose_says_no_owner_when_nobody_has_claimed_the_household(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from core.graph.scope import HouseholdScope
+
+    monkeypatch.setattr(household, "owner", lambda conn: None)
+    scope = HouseholdScope(MagicMock())
+
+    subject = scope.whose("is my critical illness cover enough?")
+
+    assert subject.no_owner
+    assert subject.person_ids == frozenset()
+    assert subject.name == ""
+
+
+def test_whose_refuses_to_guess_between_two_people_named_at_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ "Compare Rachel's and Marcus's plans" names two people. `apply` can safely answer from
+    everything -- a wrong inclusion is still correctly cited -- but advice is written about one
+    person, so `whose` reports the ambiguity rather than picking one of them."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("compare Rachel's and Marcus's plans")
+
+    assert subject.ambiguous is True
+    assert subject.person_ids == frozenset()
+    assert subject.name == ""
+
+
+def test_whose_refuses_to_guess_when_a_someone_else_word_is_used(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ "My wife" has no possessive "'s", so `relation_asked` does not match it -- it is not
+    "my wife's cover", which the relation branch would resolve to Rachel outright. Without the
+    possessive there is only the someone-else word "wife", and that is real ambiguity for advice
+    even though `apply` would happily answer this from the whole vault."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("how much cover does my wife need?")
+
+    assert subject.ambiguous is True
+    assert subject.person_ids == frozenset()
+
+
+def test_whose_refuses_to_guess_between_two_confirmed_parents(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two confirmed members hold `parent` -- a father and a mother. `apply` keeps scoping to
+    both of them (Fix I2's `apply` requirement, unchanged); `whose` cannot honestly write advice
+    about one of two fathers, so it reports the ambiguity instead, with nobody in `person_ids`."""
+    mother = household.Person(4, "Lim Guek Hua", "parent", False, False, ("LIM GUEK HUA",))
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER, mother)
+
+    subject = scope.whose("is my dad's hospital cover enough?")
+
+    assert subject.ambiguous is True
+    assert subject.person_ids == frozenset()
+
+
+def test_whose_gives_the_owner_when_the_owner_names_themselves(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The owner naming themselves is unambiguous, unlike anybody else being named -- and it is
+    not `someone_else` either, since the owner is exactly who advice about them should address."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is Marcus's cover enough?")
+
+    assert subject.person_ids == frozenset({MARCUS.id})
+    assert subject.name == "Marcus Lim Jun Wei"
+    assert not subject.someone_else
+    assert not subject.ambiguous
+
+
+def test_whose_gives_the_owner_when_nobody_and_no_relation_is_named(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No first-person word, no relation word, no someone-else word, nobody named: there is
+    nothing here to be unsure about, so `whose` makes the same guess of last resort it makes for
+    an unambiguous first-person question, rather than reporting it as ambiguous."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is the hospital cover enough?")
+
+    assert subject.person_ids == frozenset({MARCUS.id})
+    assert subject.name == "Marcus Lim Jun Wei"
+    assert not subject.ambiguous
+    assert not subject.no_owner

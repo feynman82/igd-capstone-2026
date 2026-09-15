@@ -38,6 +38,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from core.contracts import Exclusions
+from core.graph.advice import Figure
 from core.graph.ports import Passage
 
 log = logging.getLogger(__name__)
@@ -223,4 +224,92 @@ def check_content(
         and all(_says(passage.context_prefix, exclusions.headings) for passage in cited)
     ):
         return "claims cover from an exclusion"
+    return None
+
+
+VERDICT_WORDS = (
+    "enough",
+    "adequate",
+    "adequately",
+    "sufficient",
+    "insufficient",
+    "should",
+    "shouldn't",
+    "recommend",
+    "recommended to",
+    "must",
+    "better",
+    "best",
+    "worse",
+    "buy",
+    "surrender",
+    "cancel",
+    "switch",
+    "upgrade",
+    "downgrade",
+)
+
+
+def check_advice(
+    claim: Claim,
+    by_ref: Mapping[str, Passage],
+    figures: Sequence[Figure],
+    *,
+    never_say: Sequence[str] = (),
+) -> str | None:
+    """Why an advice explanation cannot be kept, or `None`. Asked of a claim built over
+    `advice.passages_for` instead of `check_content`: the calculator has already produced the
+    verdict and every figure (ADR 0016), so what is left to police is not whether a number was
+    printed but whether the *words* around it claim more than the calculator did.
+
+    Checks, in order:
+
+    1. A verdict word (`VERDICT_WORDS`, matched whole and case-insensitive by `_says`) — the
+       calculator decides "should", "recommend", "buy"; the model only explains.
+    2. A `never_say` phrase, matched the same way — a pack's own list of things this advice
+       must never say.
+    3. `unprinted_numbers`, exactly as `check_content` asks it: a number no cited passage prints.
+    4. A number token in the text equal, by `_normal`, to one or more of `figures`' printed
+       values, used without any of those figures' `words` — "you are short by SGD 451,200.00"
+       when SGD 451,200.00 is the *target*, not the *gap*. Matched against `_normal` of the
+       `_NUMBER` tokens found in `figure.text`, never `str(figure.value)`: `_NUMBER` carries no
+       sign, so a `meets` gap of Decimal("-48800.00") is only found through the "48,800.00" its
+       text prints. Two figures can print the same value — the `_gap` calculator's `target` and
+       `gap` are equal whenever `held` is zero — so a token is checked against *every* figure it
+       matches, not just the first: the sentence is dropped only when none of those figures'
+       words appear, and the message names the first matching figure. Asked only when the claim
+       cites `calculation:0` — a number that equals a figure's value but is cited to the fact or
+       rule passage that printed it first is that input's own number, not a mislabelled figure,
+       and check 4 leaves it alone.
+    """
+    if _says(claim.text, VERDICT_WORDS):
+        return "a verdict is said by code, not the explanation"
+    if _says(claim.text, never_say):
+        return "says what this advice never says"
+
+    cited = [by_ref[ref] for ref in claim.supports if ref in by_ref]
+    missing = unprinted_numbers(claim.text, cited)
+    if missing:
+        return f"states a number no cited passage prints: {missing}"
+
+    if "calculation:0" in claim.supports:
+        # Hoisted once per figure, not once per token: cheap, and it is what makes the
+        # "every figure this token matches" scan below an O(numbers x figures) pass rather
+        # than one that recomputes the same set for every number in the sentence.
+        figure_numbers = [
+            (figure, {_normal(n) for n in _NUMBER.findall(figure.text)}) for figure in figures
+        ]
+        covered: list[tuple[int, int]] = []
+        for match in _IDENTIFIER.finditer(claim.text):
+            identifier = match.group().rstrip("-.")
+            covered.append((match.start(), match.start() + len(identifier)))
+        for found in _NUMBER.finditer(claim.text):
+            if any(start <= found.start() < end for start, end in covered):
+                continue  # part of an identifier, already ruled on above
+            token = _normal(found.group())
+            matching = [figure for figure, numbers in figure_numbers if token in numbers]
+            # A shared value (two figures printing the same number) is correctly labelled if
+            # the sentence names *either* figure's word; only naming neither is a violation.
+            if matching and not any(_says(claim.text, figure.words) for figure in matching):
+                return f"states {matching[0].text} without saying it is the {matching[0].name}"
     return None

@@ -31,7 +31,7 @@ in history, in every clone, and in every fork. There is no undo.
 Runtime dependencies are declared in `pyproject.toml` and `web/package.json` and retain
 their own licences. The generation model, `Qwen-SEA-LION-v4-4B-VL` (AI Singapore), is MIT
 licensed. Parsing uses Docling (MIT). Grounding corpora reproduce published guidance from
-named public bodies with provenance recorded in each `grounding/*/sources.yaml`.
+named public bodies with provenance recorded in each `packs/*/grounding/*/sources.yaml`.
 
 ## Use
 

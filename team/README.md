@@ -15,7 +15,7 @@ live here" explains why.
 | **Christian** | A · Integration and product | `core/contracts.py`, `core/graph/`, `core/adapters/`, `core/ingest/`, `modules/`, `db/migrations/`, the merge queue | [brief](christian/README.md) | [tasks](christian/tasks.md) |
 | **Yew Mun** | B · Retrieval and evaluation | `core/retrieve/`, `eval/` | [brief](yew-mun/README.md) | [tasks](yew-mun/tasks.md) |
 | **Siew** | C · Governance and assurance | `docs/governance/`, `eval/sets/adversarial/` | [brief](siew/README.md) | [tasks](siew/tasks.md) |
-| **Zee** | D · Domain packs and interface | `packs/`, `grounding/`, `web/` | [brief](zee/README.md) | [tasks](zee/tasks.md) |
+| **Zee** | D · Domain packs and interface | `packs/` (including each pack's `grounding/`), `web/` | [brief](zee/README.md) | [tasks](zee/tasks.md) |
 | **Desmond** | E · Corpus and adversarial testing | `corpus/` | [brief](desmond/README.md) | [tasks](desmond/tasks.md) |
 
 The reasoning behind the split — why these five lanes and not some other five — is in

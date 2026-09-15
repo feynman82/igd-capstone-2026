@@ -39,6 +39,10 @@ document_types:
 grounding:
   corpus: null                     # null = answer only from the user's own documents
   top_k: 6
+  # values:                        # rule keys your sources publish; never the numbers. §6c
+  #   - key: example_cap
+  #     unit: money
+  #     description: The published yearly cap on this kind of amount
 
 registers:
   reminder:
@@ -73,3 +77,30 @@ guardrails:
 #         label: first kind of document
 #         printed: [words printed in its name]
 #         asked: [words a person uses when asking about it]
+
+# Optional. Advice: code calculates, the model explains, the owner consents once.
+# See packs/README.md §6c. Without this block the pack declines to recommend.
+# advice:
+#   consent_version: 1.0.0
+#   consent_text: >
+#     I agree that the assistant may calculate advice from my household's documents and the
+#     published guidance this pack holds.
+#   disclaimer: >
+#     A calculation from your own documents and published guidance. Not professional advice.
+#   product_disclosure: >
+#     Where a product is named, only what both documents print is compared.
+#   shapes:
+#     - id: example_room
+#       calculator: remaining_room     # closed list: see packs/README.md §6c
+#       label: room left under the cap
+#       asked: [how much more can i, room left]
+#       facts:
+#         - role: used
+#           doc_types: [example_document]
+#           field: amount
+#           take: sum
+#           missing: The documents showing what has been used so far this year.
+#       rules:
+#         - role: cap
+#           key: example_cap           # a key under grounding.values, never a number
+#           missing: Reviewed guidance stating the yearly cap.
