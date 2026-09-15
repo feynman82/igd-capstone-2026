@@ -29,8 +29,17 @@ export type Source = {
   page: number | null;
   /** "policy.pdf, page 1" — already formatted, so a list renders without work. */
   text: string;
-  /** A page of a document, a document on file (the inventory), or published guidance (PR 3). */
-  kind?: "document" | "inventory" | "guidance";
+  /**
+   * A page of a document, a document on file (the inventory), published guidance, a fact read
+   * off a document, a published rule value, or a figure Parrot worked out from those (ADR 0016).
+   */
+  kind?: "document" | "inventory" | "guidance" | "fact" | "rule" | "calculation";
+  /** A rule value's own citation: it has no page to open, only who published it, and when. */
+  publisher?: string | null;
+  title?: string | null;
+  /** As the publisher printed it: "26 September 2023". */
+  dated?: string | null;
+  url?: string | null;
 };
 
 export type TodayItem = {
@@ -51,7 +60,14 @@ export type TodayResponse = { as_of: string; items: TodayItem[] };
 export type Claim = { text: string; chunk_ids: number[]; citations: Source[] };
 
 export type AskResponse = {
-  kind: "answer" | "abstention" | "refusal" | "declined";
+  kind:
+    | "answer"
+    | "abstention"
+    | "refusal"
+    | "declined"
+    | "advice"
+    | "consent_required"
+    | "advice_withheld";
   text: string;
   claims: Claim[];
   citations: Source[];
@@ -61,6 +77,81 @@ export type AskResponse = {
   passages_read: number;
   dropped: number;
   offer?: string;
+  /** The code-written verdict, when `kind` is `advice`. */
+  verdict_text?: string;
+};
+
+/* ------------------------------------------------------------------------------------ advice
+ *
+ * ADR 0016. Code chose the verdict and printed every figure on these; the model wrote none of
+ * it. They arrive on `/api/ask/stream` like every other event, `kind` discriminating.
+ */
+
+/** Advice was asked for before the owner agreed to this pack's current consent wording. */
+export type ConsentRequiredEvent = {
+  kind: "consent_required";
+  pack_id: string;
+  pack_name: string;
+  /** Sent back as `ConsentRequest.version`, so a yes is to the words that were shown. */
+  version: string;
+  consent_text: string;
+  disclaimer: string;
+  /** What was asked for, in the pack's own words. */
+  label: string;
+};
+
+/** Advice could not be worked out. `missing` names what it needs, in the pack's words. */
+export type AdviceWithheldEvent = {
+  kind: "advice_withheld";
+  pack_id: string;
+  label: string;
+  person: string | null;
+  missing: string[];
+  disclaimer: string;
+};
+
+/** One number a calculator produced, already printed. */
+export type AdviceFigure = { name: string; text: string };
+
+/** A worked result. At most three explaining `sentence` events and a `finished` follow it. */
+export type AdviceCardEvent = {
+  kind: "advice";
+  pack_id: string;
+  label: string;
+  person: string | null;
+  /** A short code to style by; `verdict_text` is what a person reads. */
+  verdict: string;
+  verdict_text: string;
+  figures: AdviceFigure[];
+  /** Facts open their page; rule values carry `publisher`, `title`, `dated` and `url`. */
+  inputs: Source[];
+  /** A comparison table, header row first. Empty when nothing is compared. */
+  rows: string[][];
+  estimate: boolean;
+  disclaimer: string;
+  /** Empty unless a product is named. */
+  product_disclosure: string;
+  consent_version: string;
+};
+
+/** `outdated`: the owner agreed to an earlier wording, so they are asked again. */
+export type ConsentStatus = "granted" | "withdrawn" | "none" | "outdated";
+
+/** One item of `GET /api/advice/consents`, and the body `POST` answers with. */
+export type AdviceConsent = {
+  pack_id: string;
+  display_name: string;
+  version: string;
+  consent_text: string;
+  disclaimer: string;
+  status: ConsentStatus;
+};
+
+/** The body of `POST /api/advice/consents`. */
+export type ConsentRequest = {
+  pack_id: string;
+  version: string;
+  action: "granted" | "withdrawn";
 };
 
 export type VaultFact = {
