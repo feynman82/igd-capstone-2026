@@ -1528,7 +1528,10 @@ def test_withheld_advice_names_what_is_missing_on_the_wire(
             "disclaimer": DISCLAIMER,
         }
     ]
-    assert (conn.commits, conn.rollbacks) == (1, 0), "the graph wrote a record; the request commits"
+    assert (conn.commits, conn.rollbacks) == (1, 0), (
+        "the API commits once withheld advice was shown -- StreamingGraph itself writes no "
+        "record, there is no `advice_log` behind it"
+    )
 
 
 def test_ask_gives_consent_and_withheld_advice_their_own_kinds(
@@ -1751,6 +1754,89 @@ def test_a_graph_stream_closed_exactly_at_the_card_still_records_it() -> None:
     assert record.outcome == "advised" and record.basis["explanation"] == "stopped"
 
 
+def test_closing_the_graph_when_the_record_write_fails_rolls_back() -> None:
+    """The graph's own cleanup can fail -- for example the record insert raises -- and there is
+    then no whole answer to commit, even though the card was already on the wire. `_answer_events`
+    catches whatever `events.close()` raises and treats it the same as a failure before advice."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    conn = FakeConn(rows_for())
+
+    def _raises(entry: Any) -> None:
+        raise RuntimeError("could not write the record")
+
+    log.record = _raises  # type: ignore[method-assign]
+
+    request = routes._answering(conn)
+    answering = next(request)
+    answering.events = routes._answer_events(conn, lambda: advised.stream(ASKED))
+    assert next_kind(answering.events) == "advice"
+
+    with pytest.raises(StopIteration):
+        next(request)  # the request ends; closing the graph raises inside `advice_log.record`
+
+    assert (conn.commits, conn.rollbacks) == (0, 1)
+
+
+class ClosingSpy:
+    """Wraps an event generator to record whether something called `.close()` on it, as opposed
+    to merely exhausting it by reading to the end -- the two look identical on the wire, but only
+    the first proves `_answering`'s teardown, not the read itself, is what ends the transaction."""
+
+    def __init__(self, inner: Iterator[str]) -> None:
+        self._inner = inner
+        self.closes = 0
+
+    def __iter__(self) -> Iterator[str]:
+        return self
+
+    def __next__(self) -> str:
+        return next(self._inner)
+
+    def close(self) -> None:
+        self.closes += 1
+        close = getattr(self._inner, "close", None)
+        if callable(close):
+            close()
+
+
+def test_ask_stream_hands_its_events_to_answering_so_its_teardown_can_close_them(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Starlette's own body iteration (`iterate_in_threadpool`) never calls `.close()` -- it just
+    calls `next()` until `StopIteration` -- so the only thing that ever closes the generator
+    `ask_stream` builds is `_answering`'s dependency teardown, and only because `ask_stream` stores
+    it on `answering.events` before returning. Delete that assignment and this fails: the response
+    still reads correctly end to end, but nothing ever closes the spy, so `closes` stays 0. Proved
+    by temporarily deleting the assignment and re-running this test.
+    """
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    monkeypatch.setattr(routes, "Ollama", lambda settings: object())
+    monkeypatch.setattr(routes, "AnswerGraph", lambda *args, **kwargs: advised)
+    conn = FakeConn(rows_for())
+
+    real_answer_events = routes._answer_events
+    spies: list[ClosingSpy] = []
+
+    def spying(conn: Any, stream: Any) -> ClosingSpy:
+        spy = ClosingSpy(real_answer_events(conn, stream))
+        spies.append(spy)
+        return spy
+
+    monkeypatch.setattr(routes, "_answer_events", spying)
+
+    response = client_for(settings, conn).post("/api/ask/stream", json={"question": ASKED})
+
+    assert response.status_code == 200
+    assert next(event["kind"] for event in sse(response.text)) == "advice"
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+    [record] = log.records
+    assert record.basis["explanation"] == "complete"
+    [spy] = spies
+    assert spy.closes == 1, "only `_answering`'s teardown closes the stream -- Starlette never does"
+
+
 def test_an_explain_answer_streams_as_before_and_ends_its_transaction_once(
     settings: Settings, streaming: type[StreamingGraph]
 ) -> None:
@@ -1818,7 +1904,13 @@ class ConsentCursor(FakeCursor):
 class ConsentConn(FakeConn):
     """`core.advice_consent`'s real SQL, against a household with or without an owner."""
 
-    def __init__(self, *, owner: bool = True, latest: tuple[int, str, str] | None = None) -> None:
+    def __init__(
+        self,
+        *,
+        owner: bool = True,
+        latest: tuple[int, str, str] | None = None,
+        pack_enabled: bool = True,
+    ) -> None:
         super().__init__(
             rows_for(
                 **{
@@ -1827,6 +1919,12 @@ class ConsentConn(FakeConn):
                     else [],
                     "FROM advice_consents": [latest] if latest is not None else [],
                     "INSERT INTO advice_consents": [(52,)],
+                    # `registry.enabled_pack_ids`'s own query -- a grant checks it, a withdrawal
+                    # does not, so a disabled pack here is what the disabled-pack tests turn on.
+                    "SELECT id, enabled FROM packs": [
+                        ("insurance_agent", pack_enabled),
+                        ("iras_tax", True),
+                    ],
                 }
             )
         )
@@ -1835,14 +1933,31 @@ class ConsentConn(FakeConn):
         return ConsentCursor(self.table, self.statements, self.calls)
 
 
+def _padded(installed: InstalledPack) -> InstalledPack:
+    """The same pack, its consent wording and disclaimer surrounded by the whitespace a YAML
+    author's layout leaves in a block string -- so a test against it exercises the `.strip()`
+    calls in `_as_consent` and `grant`/`withdraw`, rather than passing whether or not they run."""
+    advice = installed.manifest.advice
+    assert advice is not None  # only ever called with a pack that advises
+    padded_advice = advice.model_copy(
+        update={
+            "consent_text": f"  {advice.consent_text}\n",
+            "disclaimer": f"\t{advice.disclaimer}  ",
+        }
+    )
+    manifest = installed.manifest.model_copy(update={"advice": padded_advice})
+    return replace(installed, manifest=manifest)
+
+
 @pytest.fixture
 def advising(monkeypatch: pytest.MonkeyPatch) -> InstalledPack:
     """The insurance pack with an advice block, installed and enabled beside one that does not
-    advise."""
+    advise. Padded (see `_padded`), so every test built on this fixture is, incidentally, also a
+    strip test: `CONSENT` and `DISCLAIMER` are what a correct `.strip()` produces from it."""
     from core import registry
     from core.packs import pack
 
-    installed = (advised_pack(), pack("iras_tax"))
+    installed = (_padded(advised_pack()), pack("iras_tax"))
     monkeypatch.setattr(registry, "installed_packs", lambda: installed)
     monkeypatch.setattr(routes, "installed_packs", lambda: installed)
     return installed[0]
@@ -1917,6 +2032,47 @@ def test_withdrawing_consent_is_a_row_of_its_own(
     assert not any("UPDATE advice_consents" in s or "DELETE" in s for s in conn.statements)
 
 
+def test_withdrawing_at_a_stale_version_still_records_the_current_one(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    """Withdrawal never checks whether the wording shown was current -- taking consent back must
+    never wait on a pack update -- so it is recorded against the pack's current version and
+    wording, not the stale one the request named, and it is never a 409."""
+    conn = ConsentConn(latest=(3, "granted", "1.0.0"))
+
+    response = client_for(settings, conn).post(
+        "/api/advice/consents", json=consent("withdrawn", version="0.1.0")
+    )
+
+    assert response.status_code == 200 and response.json()["status"] == "withdrawn"
+    written = conn.params_for("INSERT INTO advice_consents")
+    assert written["action"] == "withdrawn" and written["version"] == "1.0.0"
+
+
+def test_granting_consent_to_a_disabled_pack_is_400(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    """Agreeing to advice from something switched off is not a choice a screen should offer."""
+    conn = ConsentConn(pack_enabled=False)
+
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent("granted"))
+
+    assert response.status_code == 400
+    assert not any("INSERT INTO advice_consents" in s for s in conn.statements)
+    assert conn.commits == 0
+
+
+def test_withdrawing_consent_from_a_disabled_pack_is_still_200(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    """A person switched the pack off; taking back consent from it is still theirs to do."""
+    conn = ConsentConn(pack_enabled=False, latest=(3, "granted", "1.0.0"))
+
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent("withdrawn"))
+
+    assert response.status_code == 200 and response.json()["status"] == "withdrawn"
+
+
 def test_consent_to_a_wording_that_is_no_longer_current_is_409(
     settings: Settings, advising: InstalledPack
 ) -> None:
@@ -1932,10 +2088,13 @@ def test_consent_to_a_wording_that_is_no_longer_current_is_409(
     assert conn.commits == 0
 
 
-def test_consent_without_an_owner_is_422(settings: Settings, advising: InstalledPack) -> None:
+@pytest.mark.parametrize("action", ["granted", "withdrawn"])
+def test_consent_without_an_owner_is_422(
+    settings: Settings, advising: InstalledPack, action: str
+) -> None:
     conn = ConsentConn(owner=False)
 
-    response = client_for(settings, conn).post("/api/advice/consents", json=consent("granted"))
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent(action))
 
     assert response.status_code == 422
     assert not any("INSERT INTO advice_consents" in s for s in conn.statements)

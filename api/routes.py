@@ -261,6 +261,12 @@ class _Answering:
 def _answering(conn: Conn) -> Iterator[_Answering]:
     """Close the answer stream when the request ends, whatever ended it.
 
+    Requires `fastapi>=0.118` (`pyproject.toml`). On 0.106-0.117 the exit code of a `yield`
+    dependency ran before the response body was sent, not after: this function would close the
+    stream, and `connection` below it would close the connection, before a single byte of the
+    answer went out. 0.118 restored running it after the response, which is what lets this
+    function do its work at all.
+
     Starlette stops pulling a body iterator whose client has gone, and never closes it. An
     advised record is written in the graph's own `finally` (ADR 0016), and the commit in
     `_answer_events`'s — both run only when the stream is closed, so this closes it. FastAPI tears
@@ -793,13 +799,20 @@ def build_router() -> APIRouter:
     def record_consent(body: ConsentRequest, conn: Conn) -> AdviceConsent:
         """Yes or no to one pack's consent wording, appended, never edited in place.
 
-        * **400** no installed pack has that id, or it does not advise
-        * **409** the wording shown was not the current one: a yes is to the words a person
+        * **400** no installed pack has that id, the pack does not advise, or a grant names a
+          pack that is switched off
+        * **409** a *grant's* wording was not the current one: a yes is to the words a person
           read, so a screen left open across a pack update must fetch the new wording and ask
+          again. A withdrawal is accepted at any version — taking consent back must never wait
+          on a wording update — and is recorded against the pack's current version and text, so
+          its row reads the same as a fresh grant would.
         * **422** there is no owner yet, and consent is the owner's to give
 
         Looked up among installed packs rather than only switched-on ones, so a person can still
-        withdraw consent from a pack they have switched off.
+        withdraw consent from a pack they have switched off. A *grant* additionally requires the
+        pack to be enabled (`registry.enabled_pack_ids`; `None` means every installed pack is
+        enabled): agreeing to advice from something switched off is not a choice this screen
+        should be offering.
         """
         installed = next((p for p in installed_packs() if p.id == body.pack_id), None)
         advice = installed.manifest.advice if installed is not None else None
@@ -807,6 +820,15 @@ def build_router() -> APIRouter:
             raise HTTPException(
                 status_code=400, detail=f"no installed pack with id {body.pack_id} gives advice"
             )
+        wording = advice.consent_text.strip()
+
+        if body.action == "withdrawn":
+            try:
+                advice_consent.withdraw(conn, installed.id, advice.consent_version, wording, "web")
+            except advice_consent.NoOwner as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            return _as_consent(conn, installed)
+
         if body.version != advice.consent_version:
             raise HTTPException(
                 status_code=409,
@@ -815,9 +837,14 @@ def build_router() -> APIRouter:
                     f"{advice.consent_version}, not {body.version}. Read it again before answering."
                 ),
             )
-        record = advice_consent.grant if body.action == "granted" else advice_consent.withdraw
+        enabled = registry.enabled_pack_ids(conn)
+        if enabled is not None and installed.id not in enabled:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{installed.manifest.display_name} is switched off; switch it on first",
+            )
         try:
-            record(conn, installed.id, advice.consent_version, advice.consent_text.strip(), "web")
+            advice_consent.grant(conn, installed.id, advice.consent_version, wording, "web")
         except advice_consent.NoOwner as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return _as_consent(conn, installed)
@@ -852,15 +879,20 @@ def _answer_events(
     It rolls back only when the graph raised before any advice event reached this function. By
     then nothing advised was shown and nothing was recorded. After one, advice is on the screen
     and its record describes it, so a failure later still commits.
+
+    `advised` is set only once the event's payload has been built by `_as_event` and handed to
+    the caller by `yield`, never before: setting it earlier would mean a payload that failed to
+    build — an exception raised while building it, before anything reached the wire — still
+    counted as advice shown, and the transaction would commit over nothing.
     """
     events: Iterator[graph.Event] | None = None
     advised = failed = False
     try:
         events = stream()
         for event in events:
+            yield _sse(_as_event(event))
             if isinstance(event, graph.ConsentRequired | graph.AdviceWithheld | graph.AdviceCard):
                 advised = True
-            yield _sse(_as_event(event))
     except Exception as error:  # the stream has started; a 500 would never be seen
         log.exception("the answer stream failed")
         failed = not advised
