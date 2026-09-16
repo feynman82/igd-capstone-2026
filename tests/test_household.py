@@ -580,3 +580,53 @@ def test_whose_gives_the_owner_when_nobody_and_no_relation_is_named(
     assert subject.name == "Marcus Lim Jun Wei"
     assert not subject.ambiguous
     assert not subject.no_owner
+
+
+def test_whose_asks_whose_when_a_member_is_named_without_a_possessive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ "Does Rachel have enough critical illness cover?" and "is critical illness cover enough
+    for Rachel?" both name Rachel, but `named_in` only matches a whole name/alias or a possessive
+    single word ("Rachel's") -- neither is true here, so `_decide` falls through to
+    `"impersonal"` and would otherwise hand the question to the owner: advice would sum Marcus's
+    facts against Rachel's question. `whose` catches this the way `named_in`'s possessive rule
+    would if the question had put an apostrophe on it -- the same word, without requiring one."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    for question in (
+        "does Rachel have enough critical illness cover?",
+        "is critical illness cover enough for Rachel?",
+    ):
+        subject = scope.whose(question)
+        assert subject.ambiguous is True, question
+        assert subject.person_ids == frozenset(), question
+        assert subject.name == "", question
+
+
+def test_whose_still_gives_the_owner_when_no_word_names_a_member(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A common word that happens not to be any confirmed member's own name word must not trip
+    the bare-word check `whose` now makes -- this stays the same "nothing to be unsure about"
+    fall-through the owner-by-default test above covers."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("is the reasonable cover enough?")
+
+    assert subject.person_ids == frozenset({MARCUS.id})
+    assert subject.name == "Marcus Lim Jun Wei"
+    assert not subject.ambiguous
+
+
+def test_whose_gives_the_owner_their_own_first_name_without_a_possessive(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The owner's own first name, unpossessive, is not somebody else's name in the question --
+    it is the owner, same as "my", and the new bare-word check must not flip that to ambiguous."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    subject = scope.whose("Is Marcus covered enough?")
+
+    assert subject.person_ids == frozenset({MARCUS.id})
+    assert subject.name == "Marcus Lim Jun Wei"
+    assert not subject.ambiguous

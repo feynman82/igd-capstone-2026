@@ -216,6 +216,31 @@ def _names(person: Person) -> set[str]:
     return {" ".join(n.split()) for n in (person.display_name, *person.aliases) if n.strip()}
 
 
+def _name_word_owners(people: Sequence[Person]) -> dict[str, set[int]]:
+    """Every name word (3+ letters) across `people`, mapped to whose names it appears in.
+
+    A word owned by exactly one person can name them on its own; a word two people share, like
+    the "Lim" both a son and his father carry, names nobody. Shared by `named_in`'s possessive
+    match and `whose`'s bare-word check, so both agree on which words are exclusive.
+    """
+    whose_word: dict[str, set[int]] = {}
+    for person in people:
+        for name in _names(person):
+            for word in _NAME_WORD.findall(name.lower()):
+                whose_word.setdefault(word, set()).add(person.id)
+    return whose_word
+
+
+def _own_name_words(person: Person, whose_word: dict[str, set[int]]) -> set[str]:
+    """`person`'s own name words (3+ letters) that belong to nobody else in the household."""
+    return {
+        word
+        for name in _names(person)
+        for word in _NAME_WORD.findall(name.lower())
+        if whose_word[word] == {person.id}
+    }
+
+
 def named_in(question: str, people: Sequence[Person]) -> list[Person]:
     """Everybody in `people` the question names.
 
@@ -224,11 +249,7 @@ def named_in(question: str, people: Sequence[Person]) -> list[Person]:
     Only people with a confirmed name can be named: a model proposal is a question on Today, not
     a member yet.
     """
-    whose_word: dict[str, set[int]] = {}
-    for person in people:
-        for name in _names(person):
-            for word in _NAME_WORD.findall(name.lower()):
-                whose_word.setdefault(word, set()).add(person.id)
+    whose_word = _name_word_owners(people)
 
     named: list[Person] = []
     for person in people:
@@ -239,15 +260,9 @@ def named_in(question: str, people: Sequence[Person]) -> list[Person]:
             re.search(r"(?i)(?<!\w)" + re.escape(name).replace(r"\ ", r"\s+") + r"(?!\w)", question)
             for name in names
         )
-        own_words = {
-            word
-            for name in names
-            for word in _NAME_WORD.findall(name.lower())
-            if whose_word[word] == {person.id}
-        }
         possessive = any(
             re.search(r"(?i)(?<!\w)" + re.escape(word) + _POSSESSIVE, question)
-            for word in own_words
+            for word in _own_name_words(person, whose_word)
         )
         if whole or possessive:
             named.append(person)
@@ -496,6 +511,32 @@ def _decide(conn: Any, question: str) -> _Decision:
     return _Decision(owner=owner, person_ids=frozenset({owner.id}), name=owner.display_name)
 
 
+def _names_a_member_impersonally(conn: Any, owner: Person, question: str) -> bool:
+    """Whether a confirmed non-owner member's own name word turns up anywhere in the question.
+
+    `named_in` only matches a whole name/alias or a possessive single word ("Rachel's"), so a
+    bare first name with no possessive — "does Rachel have enough cover?" — matches neither, and
+    `_decide` falls through to `"impersonal"`. Left there, `whose` would hand the question to the
+    owner, summing his facts against Rachel's question. This uses the same word rule `named_in`
+    uses for its possessive match (3+ letters, belonging to nobody else); only the possessive
+    requirement is dropped, since asking about somebody's cover names them whether or not the
+    question happens to put an apostrophe on it.
+    """
+    from core import household
+
+    roster = household.roster(conn)
+    whose_word = _name_word_owners(roster)
+    for person in roster:
+        if person.id == owner.id or not person.aliases:
+            continue
+        if any(
+            re.search(r"(?i)(?<!\w)" + re.escape(word) + r"(?!\w)", question)
+            for word in _own_name_words(person, whose_word)
+        ):
+            return True
+    return False
+
+
 @dataclass(frozen=True, slots=True)
 class HouseholdScope:
     """What `AnswerGraph` is handed so it can scope without holding a connection.
@@ -540,7 +581,11 @@ class HouseholdScope:
         a question that names nobody and uses no relation word or someone-else word, so there is
         nothing here to be unsure about — resolves to the owner, the same guess `whose` makes for
         an unambiguous first-person question: `_decide` already put the owner in
-        `person_ids`/`name` for that case, so this reads no differently.
+        `person_ids`/`name` for that case, so this reads no differently. `named_in` only finds a
+        member by a whole name or a possessive word, so "does Rachel have enough cover?" reaches
+        this same fall-through with nothing said about anybody, by `_decide`'s lights — before
+        guessing the owner, `whose` checks the question for a confirmed member's own name word
+        one more time, without requiring the possessive (`_names_a_member_impersonally`).
         """
         decision = _decide(self.conn, question)
         if decision.owner is None:
@@ -550,6 +595,13 @@ class HouseholdScope:
                 person_ids=frozenset(), name="", unknown_relation=decision.unknown_relation
             )
         if decision.relation_ambiguous or decision.fallthrough in ("named_other", "someone_else"):
+            return Subject(person_ids=frozenset(), name="", ambiguous=True)
+        if decision.fallthrough == "impersonal" and _names_a_member_impersonally(
+            self.conn, decision.owner, question
+        ):
+            # "Does Rachel have enough cover?" names Rachel exactly as much as "is Rachel's cover
+            # enough?" does; `_decide` cannot tell the two apart (see `_Decision.fallthrough`), so
+            # `whose` checks here rather than guessing the owner.
             return Subject(person_ids=frozenset(), name="", ambiguous=True)
         return Subject(
             person_ids=decision.person_ids,
