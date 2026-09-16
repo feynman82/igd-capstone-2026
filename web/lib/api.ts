@@ -364,6 +364,65 @@ export function pageImage(documentId: string, page: number): string {
   return `/api/parrot/documents/${encodeURIComponent(documentId)}/page/${page}`;
 }
 
+/* ---------------------------------------------------------------------------- advice consent
+ *
+ * Called from the browser, so through the guarded proxy rather than at `PARROT_API`: a yes to
+ * advice is exactly the kind of request a locked screen must not be walked around for.
+ */
+
+/** A failed consent call. `stale` is the 409: the wording moved since it was shown. */
+export type ConsentFailure = { ok: false; problem: Problem; stale: boolean };
+
+/** Every switched-on pack that advises, its consent wording, and the owner's standing answer. */
+export async function adviceConsents(): Promise<Result<AdviceConsent[]>> {
+  const outcome = await throughProxy<AdviceConsent[]>("/api/parrot/advice/consents", {
+    method: "GET",
+    headers: { accept: "application/json" },
+  });
+  return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
+}
+
+/**
+ * Agree to, or withdraw from, one pack's consent wording at `version`.
+ *
+ * A grant at a version that is no longer current is refused with 409 (`stale`), and the only
+ * right answer to that is to fetch the wording again and show it — never to retry with the new
+ * version, which would record a yes to words nobody read.
+ */
+export function setAdviceConsent(
+  request: ConsentRequest,
+): Promise<{ ok: true; data: AdviceConsent } | ConsentFailure> {
+  return throughProxy<AdviceConsent>("/api/parrot/advice/consents", {
+    method: "POST",
+    headers: { accept: "application/json", "content-type": "application/json" },
+    body: JSON.stringify(request),
+  });
+}
+
+async function throughProxy<T>(
+  path: string,
+  init: RequestInit,
+): Promise<{ ok: true; data: T } | ConsentFailure> {
+  let response: Response;
+  try {
+    response = await fetch(path, { ...init, cache: "no-store" });
+  } catch {
+    return {
+      ok: false,
+      problem: { kind: "offline", detail: "Parrot is not running on this computer." },
+      stale: false,
+    };
+  }
+  if (!response.ok) {
+    return {
+      ok: false,
+      problem: { kind: "error", detail: await problemDetail(response) },
+      stale: response.status === 409,
+    };
+  }
+  return { ok: true, data: (await response.json()) as T };
+}
+
 /* --------------------------------------------------------------------------------- household
  *
  * Who lives here, and which one of them is you. Without it "what is my term life premium?"
