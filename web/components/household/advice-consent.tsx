@@ -89,7 +89,7 @@ export function AdviceConsentSection() {
     <section className="mt-[var(--s-6)]" aria-busy={load.state === "loading"}>
       <h2 className="group-label">Advice</h2>
       <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-meta text-ink-3">
-        Packs that can advise ask for your agreement first. Your agreement covers the adults you
+        Packs that can advise ask for your agreement first. Your agreement covers the people you
         have confirmed in this household.
       </p>
 

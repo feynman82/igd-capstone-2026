@@ -1080,8 +1080,7 @@ class AnswerGraph:
         record is written from a single `finally`, whose `try` opens with the card's own `yield`
         and continues through the explanation, so a consumer may stop right there — at the card
         itself, at a `yield Sentence`, or between one and the next — and the record is still
-        written for what was actually shown (fix 1, task C5 review round 1; the card moved inside
-        the `try` in fix round 2, so a close exactly at the card is covered too).
+        written for what was actually shown.
         """
         adviser, consents, advice_log = self._adviser, self._consents, self._advice_log
         match = self._advice_shape(question, packs)
@@ -1179,26 +1178,25 @@ class AnswerGraph:
         scanner = SentenceScanner()
         # The verdict on the card rests on every input, but never on the calculation passage
         # itself: "Worked out by Parrot from the inputs above" is not a source a screen can open,
-        # so it is left out of what `Finished.citations` lists (minor 3). A kept sentence's own
+        # so it is left out of what `Finished.citations` lists. A kept sentence's own
         # `citations` still carries it when the sentence cited the calculation, for the card.
         cited = [chip.text for chip in cards]
         kept: list[str] = []
         dropped: list[tuple[str, str]] = []
         truncated = False
         deltas: Iterator[str] = iter(())
-        # How the explanation ended, written into the record below regardless of how this exits
-        # (fix 1). "stopped" is the honest default: a consumer that closes the stream at or after
-        # the card — the card's own `yield` below, now the first statement in the `try`, included
-        # (fix round 2) — or any exception besides `ModelUnavailable`, leaves it as is. The `try`
-        # sets "complete" only once its body runs to its own end — whether the model exhausted
-        # itself or the sentence cap broke the loop, both from inside the `try` — and the `except`
-        # sets "model_unavailable". Nothing else may write to it.
+        # How the explanation ended, written into the record below regardless of how this exits.
+        # "stopped" is the honest default: a consumer that closes the stream at or after the card
+        # — the card's own `yield` below is the first statement in the `try` — or any exception
+        # besides `ModelUnavailable`, leaves it as is. The `try` sets "complete" only once its
+        # body runs to its own end — whether the model exhausted itself or the sentence cap broke
+        # the loop, both from inside the `try` — and the `except` sets "model_unavailable".
+        # Nothing else may write to it.
         explanation = "stopped"
         try:
             # The card is yielded first, inside the `try`, so a `GeneratorExit` thrown into this
             # `yield` reaches the same `finally` as one thrown into a `yield Sentence` below —
-            # a consumer that closes the stream exactly at the card still leaves a record
-            # (task C5 fix round 2; previously the card was yielded before this `try` opened).
+            # a consumer that closes the stream exactly at the card still leaves a record.
             yield AdviceCard(
                 pack_id=installed.id,
                 label=calc.label,
@@ -1253,10 +1251,10 @@ class AnswerGraph:
                 close()
             # Written here, after the stream is closed, so that a consumer stopping anywhere from
             # the card onward — a `GeneratorExit` thrown into the card's own `yield` above, or
-            # into a `yield Sentence` further down, both included — still leaves a record (fix 1;
-            # the card joined this `try` in fix round 2, closing the gap where a close exactly at
-            # the card left nothing written). This is the only place the advised outcome is
-            # recorded, so it is written exactly once whichever way the `try` exits.
+            # into a `yield Sentence` further down, both included — still leaves a record: the
+            # card is the first statement of the `try`, so a close from either point reaches this
+            # one `finally`. This is the only place the advised outcome is recorded, so it is
+            # written exactly once whichever way the `try` exits.
             advice_log.record(
                 replace(
                     entry,

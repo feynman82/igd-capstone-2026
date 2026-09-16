@@ -158,6 +158,13 @@ export function Turn({
  * should feel that the system held a line, not that something went wrong — that is the whole
  * reason the trust story works, and a red error box would undo it.
  */
+// core/graph/answer.py's `WHOSE_REASON` — advice held back because a question could name more
+// than one household member, not because no document answers it. There is no field on this
+// event that says which kind of abstention this is (m4), so the one honest option left is to
+// match the reason core actually sends, in this one place, rather than repeat "no document" copy
+// that would misdescribe why Parrot stopped.
+const WHOSE_REASON = "the question could be about more than one person";
+
 function Abstention({ part }: { part: Part }) {
   const data = (
     part as {
@@ -170,17 +177,22 @@ function Abstention({ part }: { part: Part }) {
       };
     }
   ).data;
+  const whoseQuestion = data.reason === WHOSE_REASON;
 
   return (
     <div className="rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-4)]">
       <div className="flex items-center gap-[var(--s-2)]">
         <FileQuestion aria-hidden size={16} strokeWidth={2} className="text-brass" />
         <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-brass uppercase">
-          No document supports an answer
+          {whoseQuestion ? "Whose situation this is about" : "No document supports an answer"}
         </h3>
       </div>
       <p className="mt-[var(--s-2)] text-lead text-ink">
-        I do not have a document that answers this. {sentence(data.reason)}
+        {whoseQuestion ? (
+          sentence(data.reason)
+        ) : (
+          <>I do not have a document that answers this. {sentence(data.reason)}</>
+        )}
       </p>
       {data.missing ? (
         <p className="mt-[var(--s-2)] text-body text-ink-2">{sentence(data.missing)}</p>

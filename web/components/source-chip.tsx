@@ -44,7 +44,9 @@ export function SourceChip({ source }: { source: Source }) {
   const openable = source.document_id !== null && source.page !== null;
   // A fact read off a page arrives with its document id and page but no name; its `text` is
   // already "payslip-august.pdf, page 1". Without this fallback the chip and its dialog are empty.
-  const name = source.document_name || source.text;
+  // The page number is stripped back off: the chip prints its own "p.1" beside it, so the
+  // fallback would otherwise say the page twice.
+  const name = source.document_name || stripTrailingPage(source.text);
 
   if (!openable) {
     return (
@@ -239,6 +241,11 @@ function SourcePanel({
       </div>
     </dialog>
   );
+}
+
+/** ", page 1" off the end of a fallback `text` -- the chip prints its own page number beside it. */
+function stripTrailingPage(text: string): string {
+  return text.replace(/,\s*page\s*\d+$/i, "");
 }
 
 function PanelMessage({

@@ -93,7 +93,7 @@ export function AdviceCard({ advice }: { advice: Advice }) {
             {advice.figures.map((figure, index) => (
               <tr key={`${figure.name}-${index}`} className="border-t border-hairline first:border-t-0">
                 <th scope="row" className="py-[var(--s-2)] pr-[var(--s-4)] text-left font-normal text-ink-2">
-                  {capitalise(figure.name)}
+                  {capitalise(figure.name.replace(/_/g, " "))}
                 </th>
                 <td className="num py-[var(--s-2)] text-right text-ink">{figure.text}</td>
               </tr>
@@ -197,7 +197,7 @@ export function AdviceWithheld({ withheld }: { withheld: Withheld }) {
       {withheld.missing.length > 0 ? (
         <ul className="mt-[var(--s-3)] list-disc space-y-[var(--s-1)] pl-[var(--s-5)] text-body text-ink">
           {withheld.missing.map((item, index) => (
-            <li key={index}>{item}</li>
+            <li key={index}>{sentence(item)}</li>
           ))}
         </ul>
       ) : null}
@@ -207,7 +207,11 @@ export function AdviceWithheld({ withheld }: { withheld: Withheld }) {
         <Link href="/vault" className="font-medium text-ink underline underline-offset-2">
           Open your vault
         </Link>{" "}
-        to see what is on file.
+        to see what is on file, or the{" "}
+        <Link href="/household" className="font-medium text-ink underline underline-offset-2">
+          Household page
+        </Link>{" "}
+        to say who is who.
       </p>
 
       <AdviceNote disclaimer={withheld.disclaimer} />
@@ -242,4 +246,12 @@ export function AdviceNote({
 function capitalise(text: string): string {
   const trimmed = text.trim();
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+}
+
+/** A withheld item arrives lower-case and unpunctuated, in the pack's own words -- read as a
+ * sentence on screen, the way `answer.tsx`'s `sentence()` helper reads an abstention's. */
+function sentence(text: string): string {
+  if (!text) return "";
+  const capitalised = capitalise(text);
+  return /[.!?]$/.test(capitalised) ? capitalised : `${capitalised}.`;
 }
