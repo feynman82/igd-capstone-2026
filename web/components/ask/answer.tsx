@@ -151,6 +151,13 @@ export function Turn({
   );
 }
 
+// core/graph/answer.py's `WHOSE_REASON`: advice held back because a question could be about more
+// than one household member, not because no document answers it. The abstain event carries no
+// field saying which kind of abstention it is, so the reason core sends is matched here, in this
+// one place, rather than showing "no document" copy that would misdescribe why Parrot stopped.
+// If core's wording changes, this card falls back to the no-document copy.
+const WHOSE_REASON = "the question could be about more than one person";
+
 /**
  * Silence beats a guess, and it is designed as a considered state rather than as a failure.
  *
@@ -158,13 +165,6 @@ export function Turn({
  * should feel that the system held a line, not that something went wrong — that is the whole
  * reason the trust story works, and a red error box would undo it.
  */
-// core/graph/answer.py's `WHOSE_REASON` — advice held back because a question could name more
-// than one household member, not because no document answers it. There is no field on this
-// event that says which kind of abstention this is (m4), so the one honest option left is to
-// match the reason core actually sends, in this one place, rather than repeat "no document" copy
-// that would misdescribe why Parrot stopped.
-const WHOSE_REASON = "the question could be about more than one person";
-
 function Abstention({ part }: { part: Part }) {
   const data = (
     part as {
