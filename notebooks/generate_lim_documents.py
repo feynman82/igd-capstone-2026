@@ -17,8 +17,8 @@ Usage:
 
 import argparse
 import subprocess
-import sys
 from pathlib import Path
+
 from jinja2 import Environment, FileSystemLoader
 
 TEMPLATES_DIR = Path("corpus/templates")
@@ -244,8 +244,12 @@ def generate_documents(output_dir: Path, as_pdf: bool = True) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate synthetic Lim family documents")
-    parser.add_argument("--output", type=Path, default=Path("inbox"), help="Output directory (default: inbox/)")
-    parser.add_argument("--html-only", action="store_true", help="Generate HTML without compiling to PDF")
+    parser.add_argument(
+        "--output", type=Path, default=Path("inbox"), help="Output directory (default: inbox/)"
+    )
+    parser.add_argument(
+        "--html-only", action="store_true", help="Generate HTML without compiling to PDF"
+    )
     args = parser.parse_args()
 
     generate_documents(args.output, as_pdf=not args.html_only)

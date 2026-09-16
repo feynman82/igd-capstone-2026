@@ -21,14 +21,24 @@ from pydantic import BaseModel, Field
 
 
 class Source(BaseModel):
-    """A document and a page, as a person would cite it."""
+    """A document and a page, as a person would cite it — or, for published guidance, who
+    published it and when.
+
+    A published rule value (ADR 0016) has no document and no page to open, so `document_id` and
+    `page` are null and `publisher`, `title`, `dated` and `url` say where it came from instead.
+    """
 
     document_id: str | None = None
     document_name: str | None = None
     page: int | None = None
     text: str  # "policy.pdf, page 1" — already formatted, so a list renders without work
-    # What the citation is evidence of: a page, a document on file, or (PR 3) published guidance.
-    kind: Literal["document", "inventory", "guidance"] = "document"
+    # What the citation is evidence of: a page, a document on file, published guidance, a fact
+    # read off a document, a published rule value, or a figure worked out from those.
+    kind: Literal["document", "inventory", "guidance", "fact", "rule", "calculation"] = "document"
+    publisher: str | None = None
+    title: str | None = None
+    dated: str | None = None  # as the publisher printed it: "26 September 2023"
+    url: str | None = None
 
 
 # ------------------------------------------------------------------------------------ today
@@ -146,6 +156,71 @@ class FinishedEvent(BaseModel):
     unanswered: bool = False  # only a line about the documents on file was said, not the answer
 
 
+# The advice events (ADR 0016). Code chose the verdict and printed every figure on them; the model
+# wrote none of it. `consent_required` and `advice_withheld` are the whole stream on their own;
+# `advice` is followed by at most three `sentence` events explaining it, then `finished`.
+
+
+class ConsentRequiredEvent(BaseModel):
+    """Advice was asked for before the owner agreed to this pack's current consent wording.
+
+    Nothing was calculated and nothing was recorded. It carries what `POST /api/advice/consents`
+    needs back — the pack and the version — so a screen can ask and record the answer without
+    looking anything up.
+    """
+
+    kind: Literal["consent_required"] = "consent_required"
+    pack_id: str
+    pack_name: str
+    version: str
+    consent_text: str
+    disclaimer: str
+    label: str  # what was asked for, in the pack's own words
+
+
+class AdviceWithheldEvent(BaseModel):
+    """Advice could not be worked out. `missing` names each fact or rule it needed, in the pack's
+    own words, because the honest answer to a missing fact is to name it, not estimate around it.
+    """
+
+    kind: Literal["advice_withheld"] = "advice_withheld"
+    pack_id: str
+    label: str
+    person: str | None = None
+    missing: list[str]
+    disclaimer: str
+
+
+class AdviceFigure(BaseModel):
+    """One number a calculator produced, already printed the way the verdict prints it."""
+
+    name: str
+    text: str
+
+
+class AdviceCardEvent(BaseModel):
+    """A worked result, sent before any explanation so it stands alone if the model does not.
+
+    `inputs` are what it rests on, each a `Source`: a fact opens its page, a published rule value
+    names its publisher, title, date and URL. `rows` is a comparison table with its header row
+    first, empty when nothing is compared. `product_disclosure` is empty unless a product is named.
+    """
+
+    kind: Literal["advice"] = "advice"
+    pack_id: str
+    label: str
+    person: str | None = None
+    verdict: str  # a short code a screen can style by; `verdict_text` is what a person reads
+    verdict_text: str
+    figures: list[AdviceFigure]
+    inputs: list[Source]
+    rows: list[list[str]] = Field(default_factory=list)
+    estimate: bool = False
+    disclaimer: str
+    product_disclosure: str = ""
+    consent_version: str
+
+
 class ErrorEvent(BaseModel):
     """The stream broke after it began. A client cannot read an HTTP status by then."""
 
@@ -154,8 +229,21 @@ class ErrorEvent(BaseModel):
 
 
 class AskResponse(BaseModel):
-    kind: Literal["answer", "abstention", "refusal", "declined"]
+    """The whole answer, once. `text` is the consent wording when `kind` is `consent_required`,
+    and the verdict followed by its explanation when `kind` is `advice`. The card's figures,
+    inputs and table are streamed only: a screen drawing advice reads `/api/ask/stream`."""
+
+    kind: Literal[
+        "answer",
+        "abstention",
+        "refusal",
+        "declined",
+        "advice",
+        "consent_required",
+        "advice_withheld",
+    ]
     text: str
+    verdict_text: str = ""  # the code-written verdict, when advice was given
     claims: list[Claim] = Field(default_factory=list)
     citations: list[Source] = Field(default_factory=list)
     disclaimer: str = ""
@@ -410,3 +498,36 @@ class ForgottenDocument(BaseModel):
 class TelegramLinkRequest(BaseModel):
     chat_id: int
     person_id: int
+
+
+# ---------------------------------------------------------------------------------- advice
+#
+# The owner's consent to a pack's advice (ADR 0016). Read and recorded here, never by an answer:
+# an answer that needs consent ends on `consent_required`, and a person answers it on this screen.
+
+
+class AdviceConsent(BaseModel):
+    """One advising pack, the wording a person is asked to agree to, and what the owner last said.
+
+    `outdated` means the owner agreed to an earlier `version`: the wording has changed since, so
+    they are asked again, with this text.
+    """
+
+    pack_id: str
+    display_name: str
+    version: str
+    consent_text: str
+    disclaimer: str
+    status: Literal["granted", "withdrawn", "none", "outdated"]
+
+
+class ConsentRequest(BaseModel):
+    """Yes or no to one pack's consent wording, at the version the screen showed.
+
+    `version` is sent back rather than assumed, so a person who read one wording is never
+    recorded as agreeing to a newer one that arrived while the screen was open: that is a 409.
+    """
+
+    pack_id: str = Field(min_length=1, max_length=64)
+    version: str = Field(min_length=1, max_length=32)
+    action: Literal["granted", "withdrawn"]

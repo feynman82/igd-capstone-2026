@@ -1,5 +1,10 @@
 import type { UIMessage } from "ai";
-import type { Source } from "@/lib/api";
+import type {
+  AdviceCardEvent,
+  AdviceWithheldEvent,
+  ConsentRequiredEvent,
+  Source,
+} from "@/lib/api";
 
 /**
  * The shape of an answer in the interface.
@@ -16,6 +21,9 @@ import type { Source } from "@/lib/api";
  *   abstention                            nothing in the vault supports one
  *   refusal                               a request to act, refused at the router
  *   declined                              a request for advice, declined at the router
+ *   advice → sentence* → finished         advice, worked out by code and then explained
+ *   consent_required                      advice asked for before the owner agreed to it
+ *   advice_withheld                       advice that needs a fact or rule not on file
  *   …anything → error                     the stream broke after it began
  */
 export type ParrotMessage = UIMessage<
@@ -48,6 +56,15 @@ export type ParrotMessage = UIMessage<
 
     /** A request for a recommendation or a judgement, declined by a pack without advice. */
     declined: { text: string; disclaimer: string; offer: string };
+
+    /** Advice asked for before the owner agreed to the pack's consent wording. Nothing follows. */
+    consent_required: Omit<ConsentRequiredEvent, "kind">;
+
+    /** Advice that could not be worked out; `missing` names what it needs. Nothing follows. */
+    advice_withheld: Omit<AdviceWithheldEvent, "kind">;
+
+    /** A worked result, written by code. Explaining sentences and `finished` follow it. */
+    advice: Omit<AdviceCardEvent, "kind">;
 
     /** The trace line under a finished answer, and the pack's disclaimer. */
     finished: {

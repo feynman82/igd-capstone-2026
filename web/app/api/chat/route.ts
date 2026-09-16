@@ -1,7 +1,13 @@
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { PARROT_API, type Source } from "@/lib/api";
+import {
+  PARROT_API,
+  type AdviceCardEvent,
+  type AdviceWithheldEvent,
+  type ConsentRequiredEvent,
+  type Source,
+} from "@/lib/api";
 import type { ParrotMessage } from "@/lib/chat";
 import { SESSION_COOKIE, isUnlocked } from "@/lib/lock";
 
@@ -14,15 +20,19 @@ import { SESSION_COOKIE, isUnlocked } from "@/lib/lock";
  * and forwards them, and there is deliberately no place in it where a sentence could be
  * altered, reordered or dropped.
  *
- * One behaviour worth stating: the upstream connection is **not** abandoned when the reader
- * goes away. A person who closes the tab mid-answer has still had the model run; letting the
- * request finish is cheaper than a half-written generation on a machine with one GPU.
+ * One behaviour worth stating: when the reader goes away, so does the upstream request. The
+ * browser's abort signal is handed to the upstream `fetch`, because the API writes down what an
+ * answer showed — an advice record says whether its explanation was read to the end — and a
+ * record that says "complete" for sentences nobody was still there to see is a false record.
  */
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 /** What `/api/ask/stream` emits. Mirrors `api/models.py`; `kind` discriminates. */
 type ParrotEvent =
+  | ConsentRequiredEvent
+  | AdviceWithheldEvent
+  | AdviceCardEvent
   | { kind: "reading"; passages_read: number; person?: string | null }
   | { kind: "sentence"; text: string; chunk_ids: number[]; citations: Source[] }
   | {
@@ -70,6 +80,8 @@ export async function POST(request: Request) {
         upstream = await fetch(`${PARROT_API}/api/ask/stream`, {
           method: "POST",
           headers: { "content-type": "application/json", accept: "text/event-stream" },
+          // A reader who leaves ends the upstream request too, so the API records what was shown.
+          signal: request.signal,
           // A thread id per conversation: the graph's checkpointer is keyed on it. The earlier
           // turns go too, so "what about 3 nights?" is understood as the question it follows.
           body: JSON.stringify({
@@ -141,6 +153,17 @@ export async function POST(request: Request) {
               },
             });
             break;
+          // Advice (ADR 0016). `consent_required` and `advice_withheld` are the whole answer:
+          // nothing follows them, `finished` included, and the screen ends the turn on them.
+          case "consent_required":
+            writer.write({ type: "data-consent_required", data: withoutKind(event) });
+            break;
+          case "advice_withheld":
+            writer.write({ type: "data-advice_withheld", data: withoutKind(event) });
+            break;
+          case "advice":
+            writer.write({ type: "data-advice", data: withoutKind(event) });
+            break;
           case "error":
             writer.write({ type: "data-error", data: { detail: event.detail } });
             break;
@@ -153,6 +176,13 @@ export async function POST(request: Request) {
   });
 
   return createUIMessageStreamResponse({ stream });
+}
+
+/** An event's fields without its discriminator: the part's `type` already says which it is. */
+function withoutKind<T extends { kind: string }>(event: T): Omit<T, "kind"> {
+  const data: Partial<T> = { ...event };
+  delete data.kind;
+  return data as Omit<T, "kind">;
 }
 
 /** The text of the newest user turn. `useChat` sends the whole conversation; the graph asks one. */
@@ -207,6 +237,14 @@ function priorTurns(messages: ParrotMessage[]): { role: "user" | "assistant"; te
           if (part.type === "data-refusal") return (part as { data: { text: string } }).data.text;
           if (part.type === "data-declined")
             return (part as { data: { text: string } }).data.text;
+          // Advice: the code-written verdict, never the figures table, and the words a person
+          // was asked to agree to — so "yes, and for my wife?" is read as the follow-up it is.
+          if (part.type === "data-advice")
+            return (part as { data: { verdict_text: string } }).data.verdict_text;
+          if (part.type === "data-consent_required")
+            return (part as { data: { consent_text: string } }).data.consent_text;
+          if (part.type === "data-advice_withheld")
+            return `I could not advise yet: ${(part as { data: { missing: string[] } }).data.missing.join(" ")}`;
           return "";
         })
         .filter(Boolean)
