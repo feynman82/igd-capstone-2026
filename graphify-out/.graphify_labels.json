@@ -207,5 +207,13 @@
   "205": "test_generated_files_are_in_sync",
   "206": "test_advice_is_a_module",
   "207": "_meets_calculation",
-  "208": "next.config.ts"
+  "208": "next.config.ts",
+  "209": "page.tsx",
+  "210": "is_first_person",
+  "211": "values_for",
+  "212": "find_browser_executable",
+  "213": "AdviceConsent",
+  "214": "HouseholdAdviceLog",
+  "215": "1. Record architecture decisions",
+  "216": "6. pypdfium2 renders the page images the quarantine second pass reads"
 }
