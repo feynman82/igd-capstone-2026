@@ -607,6 +607,25 @@ def test_a_stream_closed_after_the_card_still_records_what_was_shown() -> None:
     assert record.basis["explanation"] == "stopped"
 
 
+def test_a_stream_closed_exactly_at_the_card_still_records_it() -> None:
+    """C5 fix round 2. Before this fix, `yield AdviceCard(...)` sat *before* the explanation's
+    `try`, so a `GeneratorExit` thrown into that `yield` — a consumer stopping right at the card,
+    before it even reads a sentence — landed outside the `try` and its `finally` never ran: the
+    card was shown but nothing was recorded. The card now opens the `try`, so this closes into the
+    same `finally` as any later `yield Sentence` does."""
+    client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    graph, _, _, log, _ = build(client)
+
+    stream = graph.stream(ASKED)
+    assert isinstance(next(stream), AdviceCard)
+    stream.close()
+
+    [record] = log.records
+    assert record.outcome == "advised" and record.verdict == "short"
+    assert record.basis["explanation"] == "stopped"
+    assert record.basis["kept"] == []
+
+
 def test_the_advised_record_is_never_written_twice() -> None:
     """The `finally` that writes the advised record runs exactly once per stream, whether the
     stream is drained to `Finished` or closed early — so draining it fully must still leave

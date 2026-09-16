@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AdviceConsentSection } from "@/components/household/advice-consent";
 import { OwnerForm } from "@/components/household/owner-form";
 import { Roster } from "@/components/household/roster";
 import { WhoIsThis } from "@/components/household/who-is-this";
@@ -67,6 +68,9 @@ export default async function HouseholdPage() {
       ) : null}
 
       {owner ? <Roster people={people} /> : null}
+
+      {/* Consent is the owner's, so there is nothing to agree to or withdraw until there is one. */}
+      {owner ? <AdviceConsentSection /> : null}
 
       <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-meta text-ink-3">
         Parrot never invents a person. Every name here was printed on a document you filed, or

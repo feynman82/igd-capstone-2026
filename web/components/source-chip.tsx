@@ -1,6 +1,6 @@
 "use client";
 
-import { FileWarning, ImageOff, X } from "lucide-react";
+import { Calculator, ExternalLink, FileWarning, ImageOff, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { pageImage, type Source } from "@/lib/api";
 
@@ -16,6 +16,12 @@ import { pageImage, type Source } from "@/lib/api";
  * button. The sentence still says what it said; it simply is not a link, which is the honest
  * outcome for a document somebody has since deleted.
  *
+ * Advice (ADR 0016) adds two chips that have no page at all. A **rule** value was published by
+ * somebody, on a date, at an address: it shows who, what and when, and links out to the
+ * publisher. A **calculation** is Parrot's own arithmetic over the inputs beside it: it is plain
+ * text, because there is nothing to open. Neither is ever drawn as a page link — a "p.0" button
+ * that opens an error is a citation that lies about what it is.
+ *
  * The panel grows out of the chip that opened it, which is the one piece of choreography on
  * this surface: `transform-origin` is set from the chip's own position so the page appears to
  * come from the thing that was pressed rather than from the middle of the screen.
@@ -24,7 +30,23 @@ export function SourceChip({ source }: { source: Source }) {
   const [open, setOpen] = useState(false);
   const chip = useRef<HTMLButtonElement>(null);
 
+  if (source.kind === "rule") return <RuleChip source={source} />;
+
+  if (source.kind === "calculation") {
+    return (
+      <span className="inline-flex max-w-full items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[11px] py-[7px] text-meta text-ink-3">
+        <Calculator aria-hidden size={13} strokeWidth={2} className="shrink-0" />
+        {source.text}
+      </span>
+    );
+  }
+
   const openable = source.document_id !== null && source.page !== null;
+  // A fact read off a page arrives with its document id and page but no name; its `text` is
+  // already "payslip-august.pdf, page 1". Without this fallback the chip and its dialog are empty.
+  // The page number is stripped back off: the chip prints its own "p.1" beside it, so the
+  // fallback would otherwise say the page twice.
+  const name = source.document_name || stripTrailingPage(source.text);
 
   if (!openable) {
     return (
@@ -40,10 +62,10 @@ export function SourceChip({ source }: { source: Source }) {
         ref={chip}
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+        className="inline-flex max-w-full items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
       >
         <span className="truncate">
-          {source.kind === "inventory" ? `On file · ${source.document_name}` : source.document_name}
+          {source.kind === "inventory" ? `On file · ${name}` : name}
         </span>
         <span className="num">p.{source.page}</span>
       </button>
@@ -51,6 +73,7 @@ export function SourceChip({ source }: { source: Source }) {
       {open ? (
         <SourcePanel
           source={source}
+          name={name}
           onClose={() => {
             setOpen(false);
             // Focus goes back to what opened it. Losing your place in a list of eight rows
@@ -63,7 +86,59 @@ export function SourceChip({ source }: { source: Source }) {
   );
 }
 
-function SourcePanel({ source, onClose }: { source: Source; onClose: () => void }) {
+/**
+ * A published rule value: who published it, what it is called, and when.
+ *
+ * A link out rather than a panel, because the page is the publisher's and not a document in
+ * the vault. Only an `http(s)` address is ever made a link — the address came from a pack's
+ * source list, and a pack is a download.
+ */
+function RuleChip({ source }: { source: Source }) {
+  const title = source.title || source.document_name || source.text;
+  const said = [source.publisher, source.dated].filter(Boolean).join(" · ");
+  const href = source.url && /^https?:\/\//i.test(source.url) ? source.url : null;
+
+  const body = (
+    <>
+      <span className="min-w-0">
+        <span className="font-medium text-ink">{title}</span>
+        {said ? <span className="text-ink-3"> · {said}</span> : null}
+      </span>
+      {href ? (
+        <>
+          <ExternalLink aria-hidden size={13} strokeWidth={2} className="shrink-0 text-ink-3" />
+          <span className="sr-only">(opens the publisher&rsquo;s page in a new tab)</span>
+        </>
+      ) : null}
+    </>
+  );
+
+  const shape =
+    "inline-flex max-w-full items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-hairline bg-surface px-[11px] py-[7px] text-left text-meta";
+
+  return href ? (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${shape} underline-offset-2 transition-colors hover:bg-surface-2 hover:underline`}
+    >
+      {body}
+    </a>
+  ) : (
+    <span className={shape}>{body}</span>
+  );
+}
+
+function SourcePanel({
+  source,
+  name,
+  onClose,
+}: {
+  source: Source;
+  name: string;
+  onClose: () => void;
+}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [state, setState] = useState<"loading" | "shown" | "gone" | "norender" | "error">(
     "loading",
@@ -105,12 +180,12 @@ function SourcePanel({ source, onClose }: { source: Source; onClose: () => void 
       onClose={onClose}
       // The backdrop closes it, which is what everyone expects of a panel over a page.
       onClick={(event) => event.target === dialog.current && dialog.current?.close()}
-      aria-label={`${source.document_name}, page ${source.page}`}
+      aria-label={`${name}, page ${source.page}`}
       className="m-auto w-[min(52rem,92vw)] rounded-[var(--r)] border border-hairline bg-surface p-0 text-ink shadow-lift-2 backdrop:bg-[rgb(27_24_20/0.5)]"
     >
       <div className="flex items-center gap-[var(--s-3)] border-b border-hairline px-[var(--s-4)] py-[var(--s-3)]">
         <div className="min-w-0">
-          <p className="truncate text-body font-medium">{source.document_name}</p>
+          <p className="truncate text-body font-medium">{name}</p>
           <p className="num text-meta text-ink-3">Page {source.page}</p>
         </div>
         <button
@@ -132,7 +207,7 @@ function SourcePanel({ source, onClose }: { source: Source; onClose: () => void 
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={pageImage(source.document_id!, source.page!)}
-            alt={`Page ${source.page} of ${source.document_name}`}
+            alt={`Page ${source.page} of ${name}`}
             className="mx-auto w-full rounded-[var(--r-sm)] border border-hairline bg-white"
           />
         ) : null}
@@ -166,6 +241,11 @@ function SourcePanel({ source, onClose }: { source: Source; onClose: () => void 
       </div>
     </dialog>
   );
+}
+
+/** ", page 1" off the end of a fallback `text` -- the chip prints its own page number beside it. */
+function stripTrailingPage(text: string): string {
+  return text.replace(/,\s*page\s*\d+$/i, "");
 }
 
 function PanelMessage({

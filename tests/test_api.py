@@ -21,6 +21,7 @@ What these protect, in order of how much it would hurt to lose:
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 from collections.abc import Iterator
 from dataclasses import replace
@@ -37,7 +38,21 @@ from api import routes
 from api.main import create_app
 from core.adapters.base import sha256
 from core.graph.answer import Answer, Citation, Cited
+from core.packs import InstalledPack
 from core.runtime.settings import Settings
+from tests.test_advice_graph import (
+    ASKED,
+    CONSENT,
+    DISCLAIMER,
+    MARCUS,
+    MULTIPLE,
+    THE_GAP,
+    THE_GUIDELINE,
+    VERDICT,
+    advised_pack,
+)
+from tests.test_advice_graph import build as build_advised_graph
+from tests.test_answer_graph import ScriptedOllama
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1368,3 +1383,733 @@ def test_a_finished_answer_says_on_the_wire_when_the_pages_did_not_answer_the_re
 
     assert body[-1]["kind"] == "finished"
     assert body[-1]["unanswered"] is True
+
+
+# ---------------------------------------------------------------------------------- advice
+#
+# ADR 0016 on the wire. The graph's own order of refusals belongs to `tests/test_advice_graph.py`;
+# what is tested here is the translation, the transaction an answer is, and the consent endpoints.
+# The advising pack is the insurance manifest with an advice block injected by that file's
+# `advised_pack`, never written into `pack.yaml`: the real advice wording is Zee's.
+
+
+def rule_citation() -> Citation:
+    """A published value's chip: no document and no page, only who published it and when."""
+    return Citation(
+        None,
+        MULTIPLE.title,
+        0,
+        MULTIPLE.citation,
+        "rule",
+        publisher=MULTIPLE.publisher,
+        title=MULTIPLE.title,
+        dated=MULTIPLE.dated,
+        url=MULTIPLE.url,
+    )
+
+
+def advice_card(inputs: list[Citation]) -> Any:
+    from core.graph.answer import AdviceCard
+
+    return AdviceCard(
+        pack_id="insurance_agent",
+        label="critical illness cover gap",
+        person=MARCUS,
+        verdict="short",
+        verdict_text=VERDICT,
+        figures=[("target", "SGD 451,200.00"), ("gap", "SGD 251,200.00")],
+        inputs=inputs,
+        rows=[["plan", "sum insured"], ["Plan A", "SGD 200,000.00"]],
+        estimate=False,
+        disclaimer=DISCLAIMER,
+        product_disclosure="",
+        consent_version="1.0.0",
+    )
+
+
+def test_advice_asked_for_before_consent_asks_for_it_on_the_wire(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import ConsentRequired
+
+    streaming.events = [
+        ConsentRequired(
+            "insurance_agent",
+            "Insurance",
+            "1.0.0",
+            CONSENT,
+            DISCLAIMER,
+            "critical illness cover gap",
+        )
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": ASKED}).text)
+
+    assert body == [
+        {
+            "kind": "consent_required",
+            "pack_id": "insurance_agent",
+            "pack_name": "Insurance",
+            "version": "1.0.0",
+            "consent_text": CONSENT,
+            "disclaimer": DISCLAIMER,
+            "label": "critical illness cover gap",
+        }
+    ]
+
+
+def test_an_advice_card_carries_a_rules_publisher_on_the_wire(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """A published number has no page to open. What makes it checkable is who published it, under
+    what title and when, so those reach the screen through `_as_source` — and `page` is null
+    rather than the 0 the graph holds for "none", which a screen would link to."""
+    from core.graph.answer import Finished, Sentence
+
+    fact = Citation(DOC, "", 1, "payslip-august.pdf, page 1", "fact")
+    rule = rule_citation()
+    streaming.events = [
+        advice_card([fact, rule]),
+        Sentence(str(THE_GUIDELINE["text"]), (), [rule]),
+        Finished([fact.text, rule.text], DISCLAIMER, 4, 0, MARCUS),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": ASKED}).text)
+
+    assert [event["kind"] for event in body] == ["advice", "sentence", "finished"]
+    card = body[0]
+    assert card["verdict"] == "short" and card["verdict_text"] == VERDICT
+    assert card["person"] == MARCUS and card["consent_version"] == "1.0.0"
+    assert card["label"] == "critical illness cover gap" and card["pack_id"] == "insurance_agent"
+    assert card["figures"] == [
+        {"name": "target", "text": "SGD 451,200.00"},
+        {"name": "gap", "text": "SGD 251,200.00"},
+    ]
+    assert card["rows"] == [["plan", "sum insured"], ["Plan A", "SGD 200,000.00"]]
+    assert card["estimate"] is False and card["product_disclosure"] == ""
+    assert card["disclaimer"] == DISCLAIMER
+
+    on_page, published = card["inputs"]
+    assert on_page["kind"] == "fact"
+    assert on_page["document_id"] == str(DOC) and on_page["page"] == 1
+    assert published == {
+        "document_id": None,
+        "document_name": "Guide title",
+        "page": None,
+        "text": MULTIPLE.citation,
+        "kind": "rule",
+        "publisher": "Publisher",
+        "title": "Guide title",
+        "dated": "26 September 2023",
+        "url": "https://example.gov.sg/guide",
+    }
+    assert body[1]["citations"][0]["publisher"] == "Publisher", "the explanation's chip says it too"
+
+
+def test_withheld_advice_names_what_is_missing_on_the_wire(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    from core.graph.answer import AdviceWithheld
+
+    missing = ["A recent payslip, to know your income.", "which age band applies"]
+    streaming.events = [
+        AdviceWithheld("insurance_agent", "critical illness cover gap", MARCUS, missing, DISCLAIMER)
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": ASKED}).text)
+
+    assert body == [
+        {
+            "kind": "advice_withheld",
+            "pack_id": "insurance_agent",
+            "label": "critical illness cover gap",
+            "person": MARCUS,
+            "missing": missing,
+            "disclaimer": DISCLAIMER,
+        }
+    ]
+    assert (conn.commits, conn.rollbacks) == (1, 0), (
+        "the API commits once withheld advice was shown -- StreamingGraph itself writes no "
+        "record, there is no `advice_log` behind it"
+    )
+
+
+def test_ask_gives_consent_and_withheld_advice_their_own_kinds(
+    client: TestClient, graph: type[FakeGraph]
+) -> None:
+    graph.answer = Answer(CONSENT, consent_required=True, disclaimer=DISCLAIMER)
+    body = client.post("/api/ask", json={"question": ASKED}).json()
+    assert body["kind"] == "consent_required"
+    assert body["text"] == CONSENT and body["disclaimer"] == DISCLAIMER
+
+    graph.answer = Answer(
+        "Critical illness cover gap cannot be worked out yet. A recent payslip.",
+        withheld=True,
+        missing="A recent payslip.",
+        disclaimer=DISCLAIMER,
+        person=MARCUS,
+    )
+    body = client.post("/api/ask", json={"question": ASKED}).json()
+    assert body["kind"] == "advice_withheld"
+    assert body["missing"] == "A recent payslip." and body["person"] == MARCUS
+
+
+def test_both_ask_endpoints_hand_the_graph_the_same_advice_ports(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One construction for both. With any port missing the graph declines advice, so an endpoint
+    that forgot one would decline quietly rather than fail loudly."""
+    from core.advice_consent import HouseholdConsents
+    from core.advice_records import HouseholdAdviceLog
+    from modules.advice import ModuleAdviser
+
+    built: list[dict[str, Any]] = []
+
+    class Wired:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            built.append(kwargs)
+
+        def ask(self, question: str, *, thread_id: str = "local", history: Any = ()) -> Answer:
+            return Answer("The policy renews in November.")
+
+        def stream(
+            self, question: str, *, thread_id: str = "local", history: Any = ()
+        ) -> Iterator[Any]:
+            yield from ()
+
+    monkeypatch.setattr(routes, "Ollama", lambda settings: object())
+    monkeypatch.setattr(routes, "AnswerGraph", Wired)
+    conn = FakeConn(rows_for())
+    asking = client_for(settings, conn)
+    asking.post("/api/ask", json={"question": "when does it renew?"})
+    asking.post("/api/ask/stream", json={"question": "when does it renew?"})
+
+    assert len(built) == 2
+    for ports in built:
+        assert isinstance(ports["adviser"], ModuleAdviser)
+        assert isinstance(ports["consents"], HouseholdConsents) and ports["consents"].conn is conn
+        assert isinstance(ports["advice_log"], HouseholdAdviceLog)
+        assert ports["advice_log"].conn is conn
+
+
+@pytest.mark.parametrize("path", ["/api/ask", "/api/ask/stream"])
+def test_an_advised_answer_is_committed_once(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch, path: str
+) -> None:
+    """The graph writes the record and never commits. The request that asked commits once the
+    answer is over: not mid-stream, and not twice."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    monkeypatch.setattr(routes, "Ollama", lambda settings: object())
+    monkeypatch.setattr(routes, "AnswerGraph", lambda *args, **kwargs: advised)
+    conn = FakeConn(rows_for())
+
+    response = client_for(settings, conn).post(path, json={"question": ASKED})
+
+    assert response.status_code == 200
+    [record] = log.records
+    assert record.outcome == "advised" and record.basis["explanation"] == "complete"
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+    if path == "/api/ask":
+        body = response.json()
+        assert body["kind"] == "advice" and body["verdict_text"] == VERDICT
+        assert body["text"].startswith(VERDICT)
+    else:
+        kinds = [event["kind"] for event in sse(response.text)]
+        assert kinds == ["advice", "sentence", "sentence", "finished"]
+
+
+class Fails:
+    """Yields `before`, then raises. `ask` raises at once."""
+
+    before: ClassVar[list[Any]] = []
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        pass
+
+    def ask(self, question: str, *, thread_id: str = "local", history: Any = ()) -> Answer:
+        raise RuntimeError("the model went away")
+
+    def stream(
+        self, question: str, *, thread_id: str = "local", history: Any = ()
+    ) -> Iterator[Any]:
+        yield from type(self).before
+        raise RuntimeError("the model went away")
+
+
+def test_an_answer_that_fails_before_any_advice_is_rolled_back_and_after_it_is_kept(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Nothing shown, nothing recorded. Once advice is on the screen, a failure after it still
+    commits: the record describes what the person already has in front of them."""
+    from core.graph.answer import Reading
+
+    monkeypatch.setattr(routes, "Ollama", lambda settings: object())
+    monkeypatch.setattr(routes, "AnswerGraph", Fails)
+
+    monkeypatch.setattr(Fails, "before", [Reading(passages_read=2)])
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "hi"}).text)
+    assert [event["kind"] for event in body] == ["reading", "error"]
+    assert (conn.commits, conn.rollbacks) == (0, 1)
+
+    monkeypatch.setattr(Fails, "before", [advice_card([rule_citation()])])
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": ASKED}).text)
+    assert [event["kind"] for event in body] == ["advice", "error"]
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+
+    conn = FakeConn(rows_for())
+    with pytest.raises(RuntimeError):
+        client_for(settings, conn).post("/api/ask", json={"question": ASKED})
+    assert (conn.commits, conn.rollbacks) == (0, 1)
+
+
+def next_kind(events: Iterator[str]) -> str:
+    """The kind of the next event on the wire."""
+    return str(json.loads(next(events)[len("data: ") :])["kind"])
+
+
+def test_a_client_that_leaves_mid_explanation_still_commits_what_it_was_shown() -> None:
+    """Starlette never closes a body iterator a disconnected client stopped pulling. `_answering`
+    does, when FastAPI ends the request: closing it runs the graph's own `finally`, which writes
+    the advised record, and then the commit — before `connection` closes the connection."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    conn = FakeConn(rows_for())
+
+    request = routes._answering(conn)
+    answering = next(request)
+    answering.events = routes._answer_events(conn, lambda: advised.stream(ASKED))
+    assert next_kind(answering.events) == "advice"
+    assert next_kind(answering.events) == "sentence"
+    assert log.records == [] and conn.commits == 0, "nothing is committed mid-stream"
+
+    with pytest.raises(StopIteration):
+        next(request)  # the request ends, with the client already gone
+
+    [record] = log.records
+    assert record.outcome == "advised" and record.basis["explanation"] == "stopped"
+    assert record.basis["kept"] == [THE_GAP["text"]], "only the sentence that was sent"
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+
+
+def test_a_client_that_leaves_after_the_card_commits_one_record(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The ruling's case as it happens on a socket: Starlette sends the card and at once pulls the
+    next event, so the graph is already writing its explanation when the client is found gone.
+    The request ends, the stream is closed, the record is written for the card alone, and it is
+    committed once."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    conn = FakeConn(rows_for())
+
+    request = routes._answering(conn)
+    answering = next(request)
+    answering.events = routes._answer_events(conn, lambda: advised.stream(ASKED))
+    assert next_kind(answering.events) == "advice"
+    # The client is gone. The transport's pull for the next event is already under way and
+    # comes back with a sentence nobody receives; the request then ends.
+    next(answering.events)
+
+    with pytest.raises(StopIteration):
+        next(request)
+
+    [record] = log.records
+    assert record.outcome == "advised" and record.basis["explanation"] == "stopped"
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+
+
+def test_a_stream_closed_exactly_at_the_card_is_still_committed_by_the_api() -> None:
+    """What the API owns when a stream is closed with the graph still parked on the card: the
+    stream is closed and the transaction committed, once, never rolled back."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, _, _ = build_advised_graph(ollama)
+    conn = FakeConn(rows_for())
+
+    request = routes._answering(conn)
+    answering = next(request)
+    answering.events = routes._answer_events(conn, lambda: advised.stream(ASKED))
+    assert next_kind(answering.events) == "advice"
+
+    with pytest.raises(StopIteration):
+        next(request)
+
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+
+
+def test_a_graph_stream_closed_exactly_at_the_card_still_records_it() -> None:
+    """C5 fix round 2 closed the gap this test used to mark: `AdviceCard` is now yielded inside
+    the `try` whose `finally` writes the advised record, so a graph stream closed while parked on
+    the card still records what was shown, the same as the API-side test above."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+
+    stream = advised.stream(ASKED)
+    next(stream)  # the card
+    stream.close()
+
+    [record] = log.records
+    assert record.outcome == "advised" and record.basis["explanation"] == "stopped"
+
+
+def test_closing_the_graph_when_the_record_write_fails_rolls_back() -> None:
+    """The graph's own cleanup can fail -- for example the record insert raises -- and there is
+    then no whole answer to commit, even though the card was already on the wire. `_answer_events`
+    catches whatever `events.close()` raises and treats it the same as a failure before advice."""
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    conn = FakeConn(rows_for())
+
+    def _raises(entry: Any) -> None:
+        raise RuntimeError("could not write the record")
+
+    log.record = _raises  # type: ignore[method-assign]
+
+    request = routes._answering(conn)
+    answering = next(request)
+    answering.events = routes._answer_events(conn, lambda: advised.stream(ASKED))
+    assert next_kind(answering.events) == "advice"
+
+    with pytest.raises(StopIteration):
+        next(request)  # the request ends; closing the graph raises inside `advice_log.record`
+
+    assert (conn.commits, conn.rollbacks) == (0, 1)
+
+
+class ClosingSpy:
+    """Wraps an event generator to record whether something called `.close()` on it, as opposed
+    to merely exhausting it by reading to the end -- the two look identical on the wire, but only
+    the first proves `_answering`'s teardown, not the read itself, is what ends the transaction."""
+
+    def __init__(self, inner: Iterator[str]) -> None:
+        self._inner = inner
+        self.closes = 0
+
+    def __iter__(self) -> Iterator[str]:
+        return self
+
+    def __next__(self) -> str:
+        return next(self._inner)
+
+    def close(self) -> None:
+        self.closes += 1
+        close = getattr(self._inner, "close", None)
+        if callable(close):
+            close()
+
+
+def test_ask_stream_hands_its_events_to_answering_so_its_teardown_can_close_them(
+    settings: Settings, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Starlette's own body iteration (`iterate_in_threadpool`) never calls `.close()` -- it just
+    calls `next()` until `StopIteration` -- so the only thing that ever closes the generator
+    `ask_stream` builds is `_answering`'s dependency teardown, and only because `ask_stream` stores
+    it on `answering.events` before returning. Delete that assignment and this fails: the response
+    still reads correctly end to end, but nothing ever closes the spy, so `closes` stays 0. Proved
+    by temporarily deleting the assignment and re-running this test.
+    """
+    ollama = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP, THE_GUIDELINE]})
+    advised, _, _, log, _ = build_advised_graph(ollama)
+    monkeypatch.setattr(routes, "Ollama", lambda settings: object())
+    monkeypatch.setattr(routes, "AnswerGraph", lambda *args, **kwargs: advised)
+    conn = FakeConn(rows_for())
+
+    real_answer_events = routes._answer_events
+    spies: list[ClosingSpy] = []
+
+    def spying(conn: Any, stream: Any) -> ClosingSpy:
+        spy = ClosingSpy(real_answer_events(conn, stream))
+        spies.append(spy)
+        return spy
+
+    monkeypatch.setattr(routes, "_answer_events", spying)
+
+    response = client_for(settings, conn).post("/api/ask/stream", json={"question": ASKED})
+
+    assert response.status_code == 200
+    assert next(event["kind"] for event in sse(response.text)) == "advice"
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+    [record] = log.records
+    assert record.basis["explanation"] == "complete"
+    [spy] = spies
+    assert spy.closes == 1, "only `_answering`'s teardown closes the stream -- Starlette never does"
+
+
+def test_an_explain_answer_streams_as_before_and_ends_its_transaction_once(
+    settings: Settings, streaming: type[StreamingGraph]
+) -> None:
+    """Advice changed how a stream ends, not what an explain answer sends. Nothing on the wire
+    moved, nothing is committed mid-stream, and the empty transaction is committed once."""
+    from core.graph.answer import Finished, Reading, Sentence
+
+    cited = a_citation(page=2, name="policy.pdf")
+    streaming.events = [
+        Reading(passages_read=3, person=MARCUS),
+        Sentence("Great Eastern covered it.", (2,), [cited]),
+        Finished(["policy.pdf, page 2"], "Not financial advice.", 3, 1, MARCUS, 0, True),
+    ]
+    conn = FakeConn(rows_for())
+    body = sse(client_for(settings, conn).post("/api/ask/stream", json={"question": "who?"}).text)
+
+    assert body == [
+        {"kind": "reading", "passages_read": 3, "person": MARCUS},
+        {
+            "kind": "sentence",
+            "text": "Great Eastern covered it.",
+            "chunk_ids": [2],
+            "citations": [
+                {
+                    "document_id": str(DOC),
+                    "document_name": "policy.pdf",
+                    "page": 2,
+                    "text": "policy.pdf, page 2",
+                    "kind": "document",
+                    "publisher": None,
+                    "title": None,
+                    "dated": None,
+                    "url": None,
+                }
+            ],
+        },
+        {
+            "kind": "finished",
+            "citations": [],
+            "disclaimer": "Not financial advice.",
+            "passages_read": 3,
+            "dropped": 1,
+            "person": MARCUS,
+            "quarantined": 0,
+            "truncated": True,
+            "unanswered": False,
+        },
+    ]
+    assert (conn.commits, conn.rollbacks) == (1, 0)
+
+
+# ---------------------------------------------------------------------------- advice consent
+
+
+class ConsentCursor(FakeCursor):
+    """Remembers what `grant` or `withdraw` inserted, so the next read of the latest action sees
+    it."""
+
+    def execute(self, query: str, params: Any = None) -> None:
+        super().execute(query, params)
+        if "INSERT INTO advice_consents" in query:
+            self._table["FROM advice_consents"] = [(52, params["action"], params["version"])]
+
+
+class ConsentConn(FakeConn):
+    """`core.advice_consent`'s real SQL, against a household with or without an owner."""
+
+    def __init__(
+        self,
+        *,
+        owner: bool = True,
+        latest: tuple[int, str, str] | None = None,
+        pack_enabled: bool = True,
+    ) -> None:
+        super().__init__(
+            rows_for(
+                **{
+                    "WHERE p.is_owner": [(1, MARCUS, "self", True, False, [MARCUS])]
+                    if owner
+                    else [],
+                    "FROM advice_consents": [latest] if latest is not None else [],
+                    "INSERT INTO advice_consents": [(52,)],
+                    # `registry.enabled_pack_ids`'s own query -- a grant checks it, a withdrawal
+                    # does not, so a disabled pack here is what the disabled-pack tests turn on.
+                    "SELECT id, enabled FROM packs": [
+                        ("insurance_agent", pack_enabled),
+                        ("iras_tax", True),
+                    ],
+                }
+            )
+        )
+
+    def cursor(self) -> FakeCursor:
+        return ConsentCursor(self.table, self.statements, self.calls)
+
+
+def _padded(installed: InstalledPack) -> InstalledPack:
+    """The same pack, its consent wording and disclaimer surrounded by the whitespace a YAML
+    author's layout leaves in a block string -- so a test against it exercises the `.strip()`
+    calls in `_as_consent` and `grant`/`withdraw`, rather than passing whether or not they run."""
+    advice = installed.manifest.advice
+    assert advice is not None  # only ever called with a pack that advises
+    padded_advice = advice.model_copy(
+        update={
+            "consent_text": f"  {advice.consent_text}\n",
+            "disclaimer": f"\t{advice.disclaimer}  ",
+        }
+    )
+    manifest = installed.manifest.model_copy(update={"advice": padded_advice})
+    return replace(installed, manifest=manifest)
+
+
+@pytest.fixture
+def advising(monkeypatch: pytest.MonkeyPatch) -> InstalledPack:
+    """The insurance pack with an advice block, installed and enabled beside one that does not
+    advise. Padded (see `_padded`), so every test built on this fixture is, incidentally, also a
+    strip test: `CONSENT` and `DISCLAIMER` are what a correct `.strip()` produces from it."""
+    from core import registry
+    from core.packs import pack
+
+    installed = (_padded(advised_pack()), pack("iras_tax"))
+    monkeypatch.setattr(registry, "installed_packs", lambda: installed)
+    monkeypatch.setattr(routes, "installed_packs", lambda: installed)
+    return installed[0]
+
+
+def consent(
+    action: str = "granted", version: str = "1.0.0", pack_id: str = "insurance_agent"
+) -> Any:
+    return {"pack_id": pack_id, "version": version, "action": action}
+
+
+def test_consents_list_each_advising_pack_and_what_the_owner_last_said(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    conn = ConsentConn()
+    response = client_for(settings, conn).get("/api/advice/consents")
+
+    assert response.status_code == 200
+    assert response.json() == [
+        {
+            "pack_id": "insurance_agent",
+            "display_name": advising.manifest.display_name,
+            "version": "1.0.0",
+            "consent_text": CONSENT,
+            "disclaimer": DISCLAIMER,
+            "status": "none",
+        }
+    ], "a pack that does not advise has nothing to agree to, so it is not listed"
+    assert conn.commits == 0
+
+
+def test_a_grant_to_an_older_wording_is_listed_as_outdated(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    conn = ConsentConn(latest=(3, "granted", "0.9.0"))
+    [listed] = client_for(settings, conn).get("/api/advice/consents").json()
+    assert listed["status"] == "outdated"
+
+
+def test_granting_consent_is_recorded_from_the_web_and_then_listed_as_granted(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    conn = ConsentConn()
+    web = client_for(settings, conn)
+
+    response = web.post("/api/advice/consents", json=consent("granted"))
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "granted"
+    written = conn.params_for("INSERT INTO advice_consents")
+    assert written["person_id"] == 1 and written["pack_id"] == "insurance_agent"
+    assert written["action"] == "granted" and written["version"] == "1.0.0"
+    assert written["channel"] == "web"
+    assert written["wording_sha256"] == hashlib.sha256(CONSENT.encode("utf-8")).digest(), (
+        "the words agreed to are the words the screen showed"
+    )
+    assert conn.commits == 1
+
+    [listed] = web.get("/api/advice/consents").json()
+    assert listed["status"] == "granted"
+
+
+def test_withdrawing_consent_is_a_row_of_its_own(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    conn = ConsentConn(latest=(3, "granted", "1.0.0"))
+
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent("withdrawn"))
+
+    assert response.status_code == 200 and response.json()["status"] == "withdrawn"
+    assert conn.params_for("INSERT INTO advice_consents")["action"] == "withdrawn"
+    assert not any("UPDATE advice_consents" in s or "DELETE" in s for s in conn.statements)
+
+
+def test_withdrawing_at_a_stale_version_still_records_the_current_one(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    """Withdrawal never checks whether the wording shown was current -- taking consent back must
+    never wait on a pack update -- so it is recorded against the pack's current version and
+    wording, not the stale one the request named, and it is never a 409."""
+    conn = ConsentConn(latest=(3, "granted", "1.0.0"))
+
+    response = client_for(settings, conn).post(
+        "/api/advice/consents", json=consent("withdrawn", version="0.1.0")
+    )
+
+    assert response.status_code == 200 and response.json()["status"] == "withdrawn"
+    written = conn.params_for("INSERT INTO advice_consents")
+    assert written["action"] == "withdrawn" and written["version"] == "1.0.0"
+
+
+def test_granting_consent_to_a_disabled_pack_is_400(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    """Agreeing to advice from something switched off is not a choice a screen should offer."""
+    conn = ConsentConn(pack_enabled=False)
+
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent("granted"))
+
+    assert response.status_code == 400
+    assert not any("INSERT INTO advice_consents" in s for s in conn.statements)
+    assert conn.commits == 0
+
+
+def test_withdrawing_consent_from_a_disabled_pack_is_still_200(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    """A person switched the pack off; taking back consent from it is still theirs to do."""
+    conn = ConsentConn(pack_enabled=False, latest=(3, "granted", "1.0.0"))
+
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent("withdrawn"))
+
+    assert response.status_code == 200 and response.json()["status"] == "withdrawn"
+
+
+def test_consent_to_a_wording_that_is_no_longer_current_is_409(
+    settings: Settings, advising: InstalledPack
+) -> None:
+    conn = ConsentConn()
+
+    response = client_for(settings, conn).post(
+        "/api/advice/consents", json=consent("granted", version="0.9.0")
+    )
+
+    assert response.status_code == 409
+    assert "1.0.0" in response.json()["detail"]
+    assert not any("INSERT INTO advice_consents" in s for s in conn.statements)
+    assert conn.commits == 0
+
+
+@pytest.mark.parametrize("action", ["granted", "withdrawn"])
+def test_consent_without_an_owner_is_422(
+    settings: Settings, advising: InstalledPack, action: str
+) -> None:
+    conn = ConsentConn(owner=False)
+
+    response = client_for(settings, conn).post("/api/advice/consents", json=consent(action))
+
+    assert response.status_code == 422
+    assert not any("INSERT INTO advice_consents" in s for s in conn.statements)
+    assert conn.commits == 0
+
+
+@pytest.mark.parametrize("pack_id", ["not_a_pack", "iras_tax"])
+def test_consent_to_an_unknown_pack_or_one_that_does_not_advise_is_400(
+    settings: Settings, advising: InstalledPack, pack_id: str
+) -> None:
+    conn = ConsentConn()
+
+    response = client_for(settings, conn).post(
+        "/api/advice/consents", json=consent("granted", pack_id=pack_id)
+    )
+
+    assert response.status_code == 400
+    assert not any("INSERT INTO advice_consents" in s for s in conn.statements)

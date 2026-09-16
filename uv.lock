@@ -2712,7 +2712,7 @@ requires-dist = [
     { name = "celery", specifier = ">=5.4" },
     { name = "datasets", marker = "extra == 'eval'", specifier = ">=3.0" },
     { name = "docling", specifier = ">=2.0" },
-    { name = "fastapi", specifier = ">=0.115" },
+    { name = "fastapi", specifier = ">=0.118" },
     { name = "httpx", specifier = ">=0.27" },
     { name = "langgraph", specifier = ">=0.2" },
     { name = "langgraph-checkpoint-postgres", specifier = ">=2.0" },

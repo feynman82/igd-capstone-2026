@@ -39,7 +39,8 @@ the only one in this file that returns bytes instead of JSON.
 from __future__ import annotations
 
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Generator, Iterator
+from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 from typing import Annotated, Any
@@ -49,11 +50,17 @@ from fastapi.responses import StreamingResponse
 
 from api.models import (
     AbstentionEvent,
+    AdviceCardEvent,
+    AdviceConsent,
+    AdviceFigure,
+    AdviceWithheldEvent,
     AskRequest,
     AskResponse,
     Claim,
     CloseRequest,
     ConfirmNameRequest,
+    ConsentRequest,
+    ConsentRequiredEvent,
     CorrectionRequest,
     CorrectionResponse,
     DeclinedEvent,
@@ -85,18 +92,21 @@ from api.models import (
     VaultFact,
     VaultResponse,
 )
-from core import corrections, household, registry, vault
+from core import advice_consent, corrections, household, registry, vault
+from core.advice_records import HouseholdAdviceLog
 from core.graph import answer as graph
 from core.graph.answer import Answer, AnswerGraph
 from core.graph.baseline import DenseRetriever, NoReranker
 from core.graph.inventory import HouseholdInventory
 from core.graph.scope import HouseholdScope
 from core.ingest import quarantine, source
+from core.packs import InstalledPack, installed_packs
 from core.pages import PageUnavailable, RendererUnavailable, render_page
 from core.runtime.db import DatabaseUnavailable, connect
 from core.runtime.ollama import Ollama
 from core.runtime.settings import Settings
 from modules import alert, reminder
+from modules.advice import ModuleAdviser
 
 log = logging.getLogger(__name__)
 
@@ -241,6 +251,40 @@ Conn = Annotated[Any, Depends(connection)]
 Config = Annotated[Settings, Depends(_settings)]
 
 
+@dataclass
+class _Answering:
+    """The event stream one request is sending, held where the request's cleanup can reach it."""
+
+    events: Generator[str, None, None] | None = None
+
+
+def _answering(conn: Conn) -> Iterator[_Answering]:
+    """Close the answer stream when the request ends, whatever ended it.
+
+    Requires `fastapi>=0.118` (`pyproject.toml`). On 0.106-0.117 the exit code of a `yield`
+    dependency ran before the response body was sent, not after: this function would close the
+    stream, and `connection` below it would close the connection, before a single byte of the
+    answer went out. 0.118 restored running it after the response, which is what lets this
+    function do its work at all.
+
+    Starlette stops pulling a body iterator whose client has gone, and never closes it. An
+    advised record is written in the graph's own `finally` (ADR 0016), and the commit in
+    `_answer_events`'s — both run only when the stream is closed, so this closes it. FastAPI tears
+    this down after the response, and before `connection`, which it depends on, closes the
+    connection: so the record is committed on the connection that wrote it. Closing a stream that
+    already ran to its end does nothing, so an answer read to the last event commits once.
+    """
+    answering = _Answering()
+    try:
+        yield answering
+    finally:
+        if answering.events is not None:
+            answering.events.close()
+
+
+Answering = Annotated[_Answering, Depends(_answering)]
+
+
 def build_router() -> APIRouter:
     """The API surface. Settings are read from app state per request, not captured here, so a
     test can build one app per configuration without rebuilding the router."""
@@ -269,22 +313,39 @@ def build_router() -> APIRouter:
             # Who is asking. Built here because this is where the connection is; the graph
             # itself holds none. See `core/graph/scope.py` and ADR 0011.
             household=HouseholdScope(conn),
+            # ADR 0016, wired as `scripts/ask.py` wires them. Calculators are modules, so they
+            # are injected here rather than imported by `core/`. With any of the three missing
+            # the graph declines advice, so both endpoints get all three from this one place.
+            adviser=ModuleAdviser(conn),
+            consents=advice_consent.HouseholdConsents(conn),
+            advice_log=HouseholdAdviceLog(conn),
         )
 
     @router.post("/ask", response_model=AskResponse)
     def ask(ask_request: AskRequest, conn: Conn, config: Config) -> AskResponse:
-        """The whole answer, once. For `scripts/ask.py`, for tests, and for anything that would
-        rather wait than render progressively."""
-        return _as_response(
-            _graph_for(conn, config).ask(
+        """The whole answer, once. For tests, and for anything that would rather wait than render
+        progressively.
+
+        The answer is the transaction. The graph writes an advice record and never commits it,
+        so this commits once the answer is whole and rolls back if it never became whole: a
+        person who got a 500 was shown nothing, and nothing is recorded as shown.
+        """
+        try:
+            answer = _graph_for(conn, config).ask(
                 ask_request.question,
                 thread_id=ask_request.thread_id,
                 history=_history(ask_request),
             )
-        )
+        except Exception:
+            conn.rollback()
+            raise
+        conn.commit()
+        return _as_response(answer)
 
     @router.post("/ask/stream")
-    def ask_stream(ask_request: AskRequest, conn: Conn, config: Config) -> StreamingResponse:
+    def ask_stream(
+        ask_request: AskRequest, conn: Conn, config: Config, answering: Answering
+    ) -> StreamingResponse:
         """The same answer, one verified sentence at a time.
 
         Server-sent events rather than a websocket: this is one question producing a short
@@ -294,23 +355,19 @@ def build_router() -> APIRouter:
         The sentences are already gated when they arrive here, so the only thing this handler
         does is turn a dataclass into a line of JSON. A `ModelUnavailable` that escapes the graph
         becomes an `error` event, because by the time it happens the response has begun and
-        there is no status code left to send.
+        there is no status code left to send. How the answer's transaction ends is
+        `_answer_events`'s to decide, and `_answering` makes sure it gets to.
         """
-
-        def events() -> Iterator[str]:
-            try:
-                for event in _graph_for(conn, config).stream(
-                    ask_request.question,
-                    thread_id=ask_request.thread_id,
-                    history=_history(ask_request),
-                ):
-                    yield _sse(_as_event(event))
-            except Exception as error:  # the stream has started; a 500 would never be seen
-                log.exception("the answer stream failed")
-                yield _sse(ErrorEvent(detail=f"Parrot stopped answering: {error}"))
-
+        answering.events = _answer_events(
+            conn,
+            lambda: _graph_for(conn, config).stream(
+                ask_request.question,
+                thread_id=ask_request.thread_id,
+                history=_history(ask_request),
+            ),
+        )
         return StreamingResponse(
-            events(),
+            answering.events,
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-store",
@@ -720,6 +777,78 @@ def build_router() -> APIRouter:
         household.link_telegram(conn, request.chat_id, request.person_id)
         return _saved(conn)
 
+    # ---------------------------------------------------------------------------- advice
+    #
+    # The owner's consent to a pack's advice (ADR 0016). An answer never records consent: one
+    # that needs it ends on `consent_required`, and a person answers it here. `grant` and
+    # `withdraw` commit on their own, because consent is its own action, not part of an answer.
+
+    @router.get("/advice/consents", response_model=list[AdviceConsent])
+    def advice_consents(conn: Conn) -> list[AdviceConsent]:
+        """Every switched-on pack that advises, its consent wording, and what the owner last said.
+
+        A pack without `advice` has nothing to agree to, so it is not listed at all.
+        """
+        return [
+            _as_consent(conn, installed)
+            for installed in registry.enabled_packs(conn)
+            if installed.manifest.advice is not None
+        ]
+
+    @router.post("/advice/consents", response_model=AdviceConsent)
+    def record_consent(body: ConsentRequest, conn: Conn) -> AdviceConsent:
+        """Yes or no to one pack's consent wording, appended, never edited in place.
+
+        * **400** no installed pack has that id, the pack does not advise, or a grant names a
+          pack that is switched off
+        * **409** a *grant's* wording was not the current one: a yes is to the words a person
+          read, so a screen left open across a pack update must fetch the new wording and ask
+          again. A withdrawal is accepted at any version — taking consent back must never wait
+          on a wording update — and is recorded against the pack's current version and text, so
+          its row reads the same as a fresh grant would.
+        * **422** there is no owner yet, and consent is the owner's to give
+
+        Looked up among installed packs rather than only switched-on ones, so a person can still
+        withdraw consent from a pack they have switched off. A *grant* additionally requires the
+        pack to be enabled (`registry.enabled_pack_ids`; `None` means every installed pack is
+        enabled): agreeing to advice from something switched off is not a choice this screen
+        should be offering.
+        """
+        installed = next((p for p in installed_packs() if p.id == body.pack_id), None)
+        advice = installed.manifest.advice if installed is not None else None
+        if installed is None or advice is None:
+            raise HTTPException(
+                status_code=400, detail=f"no installed pack with id {body.pack_id} gives advice"
+            )
+        wording = advice.consent_text.strip()
+
+        if body.action == "withdrawn":
+            try:
+                advice_consent.withdraw(conn, installed.id, advice.consent_version, wording, "web")
+            except advice_consent.NoOwner as error:
+                raise HTTPException(status_code=422, detail=str(error)) from error
+            return _as_consent(conn, installed)
+
+        if body.version != advice.consent_version:
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"{installed.manifest.display_name}'s consent wording is now version "
+                    f"{advice.consent_version}, not {body.version}. Read it again before answering."
+                ),
+            )
+        enabled = registry.enabled_pack_ids(conn)
+        if enabled is not None and installed.id not in enabled:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{installed.manifest.display_name} is switched off; switch it on first",
+            )
+        try:
+            advice_consent.grant(conn, installed.id, advice.consent_version, wording, "web")
+        except advice_consent.NoOwner as error:
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        return _as_consent(conn, installed)
+
     return router
 
 
@@ -736,14 +865,87 @@ def _sse(event: Any) -> str:
     return f"data: {event.model_dump_json()}\n\n"
 
 
+def _answer_events(
+    conn: Any, stream: Callable[[], Iterator[graph.Event]]
+) -> Generator[str, None, None]:
+    """One answer's events on the wire, and the end of its transaction.
+
+    The graph writes an advice record and never commits it; the answer is the transaction. So the
+    `finally` here closes the graph's stream first — which runs the graph's own `finally`, where
+    an advised record is written for what was actually sent — and then commits. It runs however
+    the stream ends: read to the end, broken by an exception, or closed by `_answering` when the
+    client left. An explain answer writes nothing, and committing nothing costs nothing.
+
+    It rolls back only when the graph raised before any advice event reached this function. By
+    then nothing advised was shown and nothing was recorded. After one, advice is on the screen
+    and its record describes it, so a failure later still commits.
+
+    `advised` is set only once the event's payload has been built by `_as_event` and handed to
+    the caller by `yield`, never before: setting it earlier would mean a payload that failed to
+    build — an exception raised while building it, before anything reached the wire — still
+    counted as advice shown, and the transaction would commit over nothing.
+    """
+    events: Iterator[graph.Event] | None = None
+    advised = failed = False
+    try:
+        events = stream()
+        for event in events:
+            yield _sse(_as_event(event))
+            if isinstance(event, graph.ConsentRequired | graph.AdviceWithheld | graph.AdviceCard):
+                advised = True
+    except Exception as error:  # the stream has started; a 500 would never be seen
+        log.exception("the answer stream failed")
+        failed = not advised
+        yield _sse(ErrorEvent(detail=f"Parrot stopped answering: {error}"))
+    finally:
+        close = getattr(events, "close", None)
+        try:
+            if callable(close):
+                close()
+        except Exception:
+            # The graph's own cleanup failed — most likely the record could not be written — so
+            # there is no whole answer to commit.
+            log.exception("the answer stream did not close cleanly")
+            failed = True
+        if failed:
+            conn.rollback()
+        else:
+            conn.commit()
+
+
 def _as_source(citation: graph.Citation) -> Source:
-    """A citation that never lost its document id, so the chip opens the page without a lookup."""
+    """A citation that never lost its document id, so the chip opens the page without a lookup.
+
+    A published rule value (ADR 0016) has no document and no page: the graph holds page 0 for
+    "none", which goes out as null so a screen never links to a page 0. What makes it checkable
+    instead is who published it, under what title, when and where.
+    """
     return Source(
         document_id=str(citation.document_id) if citation.document_id else None,
         document_name=citation.document_name or None,
-        page=citation.page,
+        page=citation.page or None,
         text=citation.text,
         kind=citation.kind,
+        publisher=citation.publisher or None,
+        title=citation.title or None,
+        dated=citation.dated or None,
+        url=citation.url or None,
+    )
+
+
+def _as_consent(conn: Any, installed: InstalledPack) -> AdviceConsent:
+    """One advising pack's consent wording and the owner's standing answer to it."""
+    advice = installed.manifest.advice
+    assert advice is not None  # only a pack that advises is ever passed here
+    return AdviceConsent(
+        pack_id=installed.id,
+        display_name=installed.manifest.display_name,
+        version=advice.consent_version,
+        # Stripped as the graph strips it for `consent_required` and as `grant` hashes it, so the
+        # words on the screen, the words hashed and the words asked for are the same words.
+        consent_text=advice.consent_text.strip(),
+        disclaimer=advice.disclaimer.strip(),
+        status=advice_consent.status(conn, installed.id, advice.consent_version),
     )
 
 
@@ -769,10 +971,38 @@ def _as_event(event: graph.Event) -> Any:
         return RefusalEvent(text=event.text)
     if isinstance(event, graph.Declined):
         return DeclinedEvent(text=event.text, disclaimer=event.disclaimer, offer=event.offer)
-    if not isinstance(event, graph.Finished):
-        # The advice events. This API builds its graph without an adviser, so its advise branch
-        # declines and none of them can reach here; their wire shapes are task D1's to add.
-        raise TypeError(f"no API event for {type(event).__name__} yet")
+    if isinstance(event, graph.ConsentRequired):
+        return ConsentRequiredEvent(
+            pack_id=event.pack_id,
+            pack_name=event.pack_name,
+            version=event.version,
+            consent_text=event.consent_text,
+            disclaimer=event.disclaimer,
+            label=event.label,
+        )
+    if isinstance(event, graph.AdviceWithheld):
+        return AdviceWithheldEvent(
+            pack_id=event.pack_id,
+            label=event.label,
+            person=event.person,
+            missing=list(event.missing),
+            disclaimer=event.disclaimer,
+        )
+    if isinstance(event, graph.AdviceCard):
+        return AdviceCardEvent(
+            pack_id=event.pack_id,
+            label=event.label,
+            person=event.person,
+            verdict=event.verdict,
+            verdict_text=event.verdict_text,
+            figures=[AdviceFigure(name=name, text=text) for name, text in event.figures],
+            inputs=[_as_source(citation) for citation in event.inputs],
+            rows=[list(row) for row in event.rows],
+            estimate=event.estimate,
+            disclaimer=event.disclaimer,
+            product_disclosure=event.product_disclosure,
+            consent_version=event.consent_version,
+        )
     return FinishedEvent(
         citations=[],  # every source is already on the sentence that used it
         disclaimer=event.disclaimer,
@@ -793,6 +1023,16 @@ def _as_response(answer: Answer) -> AskResponse:
         )
     if answer.refused:
         return AskResponse(kind="refusal", text=answer.text)
+    if answer.consent_required:
+        return AskResponse(kind="consent_required", text=answer.text, disclaimer=answer.disclaimer)
+    if answer.withheld:
+        return AskResponse(
+            kind="advice_withheld",
+            text=answer.text,
+            disclaimer=answer.disclaimer,
+            missing=answer.missing,
+            person=answer.person,
+        )
     if answer.abstained:
         return AskResponse(
             kind="abstention",
@@ -805,8 +1045,9 @@ def _as_response(answer: Answer) -> AskResponse:
             dropped=answer.dropped,
         )
     return AskResponse(
-        kind="answer",
+        kind="advice" if answer.advice else "answer",
         text=answer.text,
+        verdict_text=answer.verdict_text,
         claims=[
             Claim(
                 text=claim.text,

@@ -273,8 +273,9 @@ def check_advice(
        values, used without any of those figures' `words` — "you are short by SGD 451,200.00"
        when SGD 451,200.00 is the *target*, not the *gap*. Matched against `_normal` of the
        `_NUMBER` tokens found in `figure.text`, never `str(figure.value)`: `_NUMBER` carries no
-       sign, so a `meets` gap of Decimal("-48800.00") is only found through the "48,800.00" its
-       text prints. Two figures can print the same value — the `_gap` calculator's `target` and
+       sign, so matching through the printed text is what keeps a figure's value and its words
+       together, whatever sign or wording a calculator chose when it published that figure. Two
+       figures can print the same value — the `_gap` calculator's `target` and
        `gap` are equal whenever `held` is zero — so a token is checked against *every* figure it
        matches, not just the first: the sentence is dropped only when none of those figures'
        words appear, and the message names the first matching figure. Asked only when the claim

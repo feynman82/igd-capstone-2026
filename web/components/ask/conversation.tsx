@@ -21,7 +21,11 @@ const SUGGESTIONS = [
 ] as const;
 
 export function Conversation() {
-  const { messages, sendMessage, status, stop, error } = useChat<ParrotMessage>({});
+  // One id for the life of this conversation, sent as the thread id. The graph's checkpointer
+  // and every advice record are keyed on it; without it the route falls back to "local" and
+  // every conversation on this computer shares one thread.
+  const [threadId] = useState(() => crypto.randomUUID());
+  const { messages, sendMessage, status, stop, error } = useChat<ParrotMessage>({ id: threadId });
   const [draft, setDraft] = useState("");
   const thread = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
@@ -39,6 +43,14 @@ export function Conversation() {
     void sendMessage({ text: asked });
   }
 
+  // The question again, after the owner agreed to a pack's advice. Not `ask`: that clears the
+  // composer, and whatever the person has started typing meanwhile is theirs.
+  function askAgain(question: string) {
+    const asked = question.trim();
+    if (!asked || busy) return;
+    void sendMessage({ text: asked });
+  }
+
   // The one surface that is a viewport rather than a page: the thread scrolls and the composer
   // stays put. The subtraction is the chrome above it and the padding around it, which is why
   // `--bar` is a fixed height rather than whatever the header happens to measure. Below `lg`
@@ -51,8 +63,14 @@ export function Conversation() {
           <Opening onPick={ask} />
         ) : (
           <ul className="space-y-[var(--s-6)] pb-[var(--s-6)]">
-            {messages.map((message) => (
-              <Turn key={message.id} message={message} />
+            {messages.map((message, index) => (
+              <Turn
+                key={message.id}
+                message={message}
+                question={questionBefore(messages, index)}
+                busy={busy}
+                onConsented={askAgain}
+              />
             ))}
           </ul>
         )}
@@ -122,6 +140,19 @@ export function Conversation() {
       </p>
     </div>
   );
+}
+
+/** The newest question at or before `index`: what an assistant turn was answering. */
+function questionBefore(messages: ParrotMessage[], index: number): string {
+  for (let at = index; at >= 0; at -= 1) {
+    const message = messages[at];
+    if (message.role !== "user") continue;
+    return (message.parts ?? [])
+      .filter((part) => part.type === "text")
+      .map((part) => (part as { text: string }).text)
+      .join(" ");
+  }
+  return "";
 }
 
 /**

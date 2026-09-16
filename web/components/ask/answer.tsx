@@ -1,7 +1,10 @@
 "use client";
 
 import { Ban, CircleSlash, FileQuestion, Scale } from "lucide-react";
+import { AdviceCard, AdviceWithheld } from "@/components/ask/advice-card";
+import { ConsentPrompt } from "@/components/ask/consent-prompt";
 import { SourceChip } from "@/components/source-chip";
+import type { AdviceCardEvent, AdviceWithheldEvent, ConsentRequiredEvent } from "@/lib/api";
 import type { ParrotMessage } from "@/lib/chat";
 
 /**
@@ -14,7 +17,20 @@ import type { ParrotMessage } from "@/lib/chat";
 
 type Part = NonNullable<ParrotMessage["parts"]>[number];
 
-export function Turn({ message }: { message: ParrotMessage }) {
+export function Turn({
+  message,
+  question = "",
+  busy = false,
+  onConsented,
+}: {
+  message: ParrotMessage;
+  /** The question this turn answers. A consent prompt asks it again once the owner agrees. */
+  question?: string;
+  /** Another answer is still arriving. */
+  busy?: boolean;
+  /** Sends `question` again. Owned by the conversation, which owns `useChat`. */
+  onConsented?: (question: string) => void;
+}) {
   if (message.role === "user") {
     return (
       <li className="flex justify-end">
@@ -33,6 +49,20 @@ export function Turn({ message }: { message: ParrotMessage }) {
   const finished = parts.find((part) => part.type === "data-finished");
   const failure = parts.find((part) => part.type === "data-error");
   const reading = parts.find((part) => part.type === "data-reading");
+  // Advice (ADR 0016). The stream is the only source of the card: nothing here is fetched or
+  // rebuilt from `/api/ask`, which carries no figures, inputs or rows.
+  const advice = parts.find((part) => part.type === "data-advice") as
+    | { data: Omit<AdviceCardEvent, "kind"> }
+    | undefined;
+  const consent = parts.find((part) => part.type === "data-consent_required") as
+    | { data: Omit<ConsentRequiredEvent, "kind"> }
+    | undefined;
+  const withheld = parts.find((part) => part.type === "data-advice_withheld") as
+    | { data: Omit<AdviceWithheldEvent, "kind"> }
+    | undefined;
+  // A consent prompt and withheld advice are the whole answer: no `finished` follows, and the
+  // turn is over the moment either arrives.
+  const settled = Boolean(abstention || failure || declined || refusal || advice || consent || withheld);
 
   // Whose answer this is, when the question was first-person and the evidence was narrowed to
   // one member of the household. Shown for exactly the reason a citation is shown: the defence
@@ -58,14 +88,21 @@ export function Turn({ message }: { message: ParrotMessage }) {
       {/* Between the question and the first sentence. Not a spinner — a sentence about what is
           happening, because on a 4B model this is several seconds and "reading 6 passages" is
           more reassuring than a shape going round. */}
-      {reading && sentences.length === 0 && !abstention && !failure && !declined ? (
+      {reading && sentences.length === 0 && !settled ? (
         <p className="flex items-center gap-[var(--s-2)] text-meta text-ink-3">
           <span aria-hidden className="inline-block size-1.5 animate-pulse rounded-full bg-accent" />
           Reading {(reading as { data: { passages_read: number } }).data.passages_read} passages
         </p>
       ) : null}
 
-      {person && sentences.length > 0 ? (
+      {/* The advice card names its person in its own heading. */}
+      {advice ? (
+        <div className="mb-[var(--s-3)]">
+          <AdviceCard advice={advice.data} />
+        </div>
+      ) : null}
+
+      {person && sentences.length > 0 && !advice ? (
         <p className="mb-[var(--s-3)] flex items-center gap-[var(--s-2)] text-meta text-ink-3">
           <span className="rounded-[var(--r-sm)] border border-hairline bg-surface-2 px-[var(--s-2)] py-[2px] font-medium text-ink-2">
             for {person}
@@ -97,12 +134,29 @@ export function Turn({ message }: { message: ParrotMessage }) {
       {abstention ? <Abstention part={abstention} /> : null}
       {refusal ? <Refusal part={refusal} /> : null}
       {declined ? <Declined part={declined} /> : null}
+      {consent ? (
+        <ConsentPrompt
+          consent={consent.data}
+          busy={busy}
+          onConsented={() => onConsented?.(question)}
+        />
+      ) : null}
+      {withheld ? <AdviceWithheld withheld={withheld.data} /> : null}
       {failure ? <Broken part={failure} /> : null}
 
-      {finished && sentences.length > 0 ? <Trace part={finished} /> : null}
+      {finished && (sentences.length > 0 || advice) ? (
+        <Trace part={finished} advised={Boolean(advice)} />
+      ) : null}
     </li>
   );
 }
+
+// core/graph/answer.py's `WHOSE_REASON`: advice held back because a question could be about more
+// than one household member, not because no document answers it. The abstain event carries no
+// field saying which kind of abstention it is, so the reason core sends is matched here, in this
+// one place, rather than showing "no document" copy that would misdescribe why Parrot stopped.
+// If core's wording changes, this card falls back to the no-document copy.
+const WHOSE_REASON = "the question could be about more than one person";
 
 /**
  * Silence beats a guess, and it is designed as a considered state rather than as a failure.
@@ -123,17 +177,22 @@ function Abstention({ part }: { part: Part }) {
       };
     }
   ).data;
+  const whoseQuestion = data.reason === WHOSE_REASON;
 
   return (
     <div className="rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-4)]">
       <div className="flex items-center gap-[var(--s-2)]">
         <FileQuestion aria-hidden size={16} strokeWidth={2} className="text-brass" />
         <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-brass uppercase">
-          No document supports an answer
+          {whoseQuestion ? "Whose situation this is about" : "No document supports an answer"}
         </h3>
       </div>
       <p className="mt-[var(--s-2)] text-lead text-ink">
-        I do not have a document that answers this. {sentence(data.reason)}
+        {whoseQuestion ? (
+          sentence(data.reason)
+        ) : (
+          <>I do not have a document that answers this. {sentence(data.reason)}</>
+        )}
       </p>
       {data.missing ? (
         <p className="mt-[var(--s-2)] text-body text-ink-2">{sentence(data.missing)}</p>
@@ -221,7 +280,7 @@ function Broken({ part }: { part: Part }) {
  * how many sentences it wrote and then refused to show. A reader who can see that number trusts
  * the ones that got through more, not less.
  */
-function Trace({ part }: { part: Part }) {
+function Trace({ part, advised = false }: { part: Part; advised?: boolean }) {
   const data = (
     part as {
       data: {
@@ -237,8 +296,15 @@ function Trace({ part }: { part: Part }) {
   return (
     <div className="mt-[var(--s-4)] border-t border-hairline pt-[var(--s-3)]">
       <p className="text-meta text-ink-3">
-        answered from <span className="num">{data.passages_read}</span> passage
-        {data.passages_read === 1 ? "" : "s"}
+        {/* After advice the "passages" are the card's own inputs, so the line says that. */}
+        {advised ? (
+          "explained from the inputs on the card"
+        ) : (
+          <>
+            answered from <span className="num">{data.passages_read}</span> passage
+            {data.passages_read === 1 ? "" : "s"}
+          </>
+        )}
         {data.dropped > 0 ? (
           <>
             {" · "}
@@ -257,7 +323,8 @@ function Trace({ part }: { part: Part }) {
         ) : null}
         {" · local model, nothing left this computer"}
       </p>
-      {data.disclaimer ? (
+      {/* Advice already shows its disclaimer on the card, where it cannot be missed. */}
+      {data.disclaimer && !advised ? (
         <p className="mt-[var(--s-2)] text-meta text-ink-2">{data.disclaimer}</p>
       ) : null}
     </div>
