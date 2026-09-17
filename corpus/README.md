@@ -20,14 +20,15 @@ evaluation dataset instead of a pile of PDFs.
 ```
 
 **Start from the generated header.** `corpus/register/batch.template.csv` is written by
-`python -m packs.build` from every installed `pack.yaml`, one column per field across all
-packs. Copy it and fill rows underneath. Do not write a header by hand and do not merge the
+`python -m packs.build` from `core/documents.yaml`, one column per field across every
+document type (ADR 0017). Copy it and fill rows underneath. Do not write a header by hand and do not merge the
 per-pack files yourself — the column names and the field names drift the moment anybody
 types one out.
 
-The per-pack `<pack>_columns.csv` files are for reference: they show what one pack can
-extract. A batch is a *household's* documents, so it mixes payslips and policy schedules in
-one register with one row each, which is why the template spans both packs.
+`core_columns.csv` is for reference: what each document type can extract. A batch is a
+*household's* documents, so it mixes payslips, policy schedules and identity cards in one
+register with one row each; `pack_id` is always `core`. A repeating field (riders) is one cell:
+`Label=amount;Label=amount`.
 
 ---
 

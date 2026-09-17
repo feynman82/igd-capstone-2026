@@ -1,10 +1,10 @@
 # Provenance for every file indexed in this corpus. Captured verbatim 2026-09-17.
-# Nothing is cited until Christian signs off each document (reviewed_by / reviewed_on).
+# Signed off by Christian on 2026-09-17: nothing is cited from a document until it is.
 corpus_id: sg_protection_guidance
 applies_to: Protection and health insurance guidance for Singapore households
 maintained_by: Christian
 reviewed_by: Christian
-reviewed_on: null
+reviewed_on: 2026-09-17
 documents:
 - file: moneysense-basic-financial-planning.md
   title: Basic Financial Planning Guide
@@ -16,8 +16,8 @@ documents:
   applies_to: Rules of thumb for emergency funds, protection (9x/4x annual income, max 15% of income)
     and investment
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Site nav and breadcrumb cut. The old URL /basic-financial-planning-guide/ and the 2023 /files/
     PDF URLs now return 404, because the guide moved to /planning-your-finances-well/.
 - file: moneysense-bfpg-starting-a-family.md
@@ -30,8 +30,8 @@ documents:
   applies_to: Protection rules of thumb and worked case study (Death/TPD 9x, CI 4x, DPS, MediShield Life),
     age 25-34
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Linked from https://www.moneysense.gov.sg/planning-your-finances-well/support-dependants/ (the
     file sits on a gov.sg asset host). Pages 1-4 kept; page 5 (home purchase, investments) cut. Extraction
     follows the PDF layout, so the case-study table on page 2 is flattened. Its footnotes cite older MediShield
@@ -45,8 +45,8 @@ documents:
   retrieved: 2026-09-17
   applies_to: Rationale for 9x/4x/15% rules; illustrative median term premiums for two sample profiles
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: 'Linked from the Basic Financial Planning Guide page. Pages 1-5 kept (general, emergency funds,
     protection); pages 6-7 (investment) cut. The median premium illustration is undated and gives no comparefirst.sg
     retrieval date. compareFIRST premiums were not captured: they appear only after a search form is submitted.
@@ -61,8 +61,8 @@ documents:
   applies_to: Types of health insurance plans, who should buy, MediShield Life / CareShield Life / MediSave
     basics
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Site nav and "Related articles" section cut. Some of the text still talks about opting in to ElderShield,
     as the page prints it.
 - file: moneysense-integrated-shield-plans.md
@@ -75,8 +75,8 @@ documents:
   applies_to: How Integrated Shield Plans and riders work, deductibles and co-payment, MediSave withdrawal
     limits
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: The "Related articles" section was cut. The source formats the deductible/co-payment sentence
     as a heading and prints "capped at a minimum of $6,000 per year". It is kept verbatim; check what
     it means against MOH before a calculator relies on it.
@@ -90,8 +90,8 @@ documents:
   applies_to: MediShield Life annual premiums by age next birthday and premium subsidy rates, Singapore
     Citizens and PRs
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: The premium schedule applies to policies starting or renewing on or after 1 April 2025. The MediShield
     Life index page (/medishield-life/) is only a list of links, so it was downloaded to raw/ but not
     converted.
@@ -105,8 +105,8 @@ documents:
   applies_to: MediShield Life claim limits, deductibles, co-insurance and exclusions, admissions from
     1 June 2026
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Cut from "## Cancer Drug List" to the end (the drug list and the proton beam and clinical criteria).
     The limits apply to admissions or treatments on or after 1 June 2026.
 - file: moh-integrated-shield-plans.md
@@ -119,8 +119,8 @@ documents:
   applies_to: IPs by ward class, claims processing times, claim rejection reasons, Letters of Guarantee,
     disputes
   review_by: 2027-03-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: The "Comparison of lifetime premiums" tables are PNG images and were NOT transcribed; their URLs
     are in REPORT.md. The "Sample Policy Contracts" link list was cut. The plan list and lifetime premiums
     are "as at 1 Jun 2026". MOH notes that insurers may revise premiums regularly, so review_by is set
@@ -134,8 +134,8 @@ documents:
   retrieved: 2026-09-17
   applies_to: IP structure; MediSave Additional Withdrawal Limits for IP premiums by age
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: The panel-size statistics section at the end was cut.
 - file: moh-isp-standard-plan-comparison.md
   title: Standard Integrated Shield Plans Targeted at Ward Class B1 in Public Hospitals
@@ -147,8 +147,8 @@ documents:
   applies_to: Standard IP benefits and premiums by insurer and age next birthday, Singapore Citizens and
     PRs
   review_by: 2027-03-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: All 5 pages kept; the PDF says "Updated as of 1 Jun 2026". Tables are flattened in extraction.
     Page 3 keeps its column order, but ranges such as "238 - 239" are one cell. Pages 4-5 lose their insurer
     headers. Check every figure against the PDF before use.
@@ -161,8 +161,8 @@ documents:
   retrieved: 2026-09-17
   applies_to: Private hospital IP annual premiums by insurer and age next birthday
   review_by: 2027-03-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Only the premium pages (10-12) kept; benefit pages 1-9 cut. Where a cell is blank, extraction
     breaks the column alignment (the "41 to 50" row has 10 values for 11 plans), so values cannot be matched
     to plans from the text alone. The Class A, Class B1 and B2/C comparison PDFs were not captured.
@@ -175,8 +175,8 @@ documents:
   retrieved: 2026-09-17
   applies_to: MediShield Life overview, eligibility, premium payment via MediSave
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Cut the session-timeout, maintenance and hotline notices and the "Related reads" articles. The
     page prints no premium figures; see moh-medishield-life.md.
 - file: cpf-careshield-life.md
@@ -189,8 +189,8 @@ documents:
   applies_to: CareShield Life eligibility by birth year, payout examples, ADL claim criteria, premium
     support
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Same cuts as cpf-medishield-life.md. The page has no premium table; premiums sit behind a personalised
     calculator or sub-page, which was not captured. The payout examples are for someone born in 1980.
 - file: cpf-dependants-protection-scheme.md
@@ -202,8 +202,8 @@ documents:
   retrieved: 2026-09-17
   applies_to: DPS eligibility, automatic cover age 21-65, who may not need DPS
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Same page chrome cut. The page prints no cover amount or premiums. The CPF FAQ article that has
     them (/service/article/how-much-premium-...) is built by script (Salesforce), and curl got back an
     empty shell.
@@ -216,8 +216,8 @@ documents:
   retrieved: 2026-09-17
   applies_to: DPS sum assured ($70,000 / $55,000) and yearly premiums by age band, effective 1 April 2021
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: This is a news release from about 2020-21, not a live premium schedule. The published date is
     the page's "Last updated 25 Jun 2024". The rates took effect on 1 April 2021 under the Great Eastern
     contract, which a later CPF release says runs to 2028. Confirm the rates are still current. The MoneySense
@@ -232,8 +232,8 @@ documents:
   applies_to: Mortality and CI protection need multiples and gaps, economically active adults and platform
     workers
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: All 28 pages kept. This is still the latest study on lia.org.sg; no 2025/2026 study was found.
     Many figures are charts, so the text is fragmentary, but the text does print "Approximately 9X-10X"
     and "4.0X" of annual income. Every page footer reads "Confidential information. All rights reserved."
@@ -249,7 +249,7 @@ documents:
   retrieved: 2026-09-17
   applies_to: PGS 2022 headline gaps (21% mortality, 74% CI) and average coverage per policyholder
   review_by: 2027-09-17
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Christian
+  reviewed_on: 2026-09-17
   note: Whole PDF kept. The HTML release page (raw/lia-pgs-2022-release.html) only links to the PDFs and
     gives the date 08 Sep 2023.

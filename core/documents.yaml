@@ -39,12 +39,12 @@ document_types:
       - name: expiry_date
         type: date
         required: false
-        description: Last day of the period of insurance, the to date on that line, when the policy has a fixed expiry
+        description: Last day of the period of insurance, the date after To on the Period of Insurance line; not a maturity date
         example: "2027-02-28"
       - name: maturity_date
         type: date
         required: false
-        description: Date a life policy matures where the contract has a maturity date instead of a fixed expiry
+        description: Date a life policy matures, only where the schedule prints the words Maturity Date; never a Period of Insurance To date
         example: "2087-05-07"
       - name: premium_payable
         type: money
@@ -409,7 +409,7 @@ document_types:
       - name: monthly_repayment
         type: money
         required: false
-        description: Monthly repayment or instalment as printed, in SGD
+        description: Monthly repayment, instalment or installment amount as printed, often followed by per month, in SGD
         example: "2234.50"
       - name: agreement_date
         type: date
@@ -422,6 +422,10 @@ registers:
     - key: policy_expiry
       from_field: expiry_date
       lead_days: [60, 30, 14, 1]
+    # Many countries refuse entry on a passport with under six months left, so the first nudge is early.
+    - key: passport_expiry
+      from_field: date_of_expiry
+      lead_days: [180, 90, 30]
     # Both dates are fixed to a single year. ReminderConfig offers only `from_field` or
     # `on_date` — there is no recurring option — so each will fall silent once its date
     # passes. Making them recur is a core/contracts.py change, which is its own PR.

@@ -1,7 +1,7 @@
 # Graph Report - igd-wt-agent  (2026-09-17)
 
 ## Corpus Check
-- 287 files · ~680,813 words
+- 287 files · ~680,963 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `325239c8`
+- Built from commit: `48b354ce`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -484,8 +484,8 @@ Cohesion: 0.07
 Nodes (28): ./*, dom, dom.iterable, esnext, next-env.d.ts, .next/types/**/*.ts, node_modules, **/*.ts (+20 more)
 
 ### Community 65 - "parse.py"
-Cohesion: 0.10
-Nodes (21): Block, DoclingParser, _kind(), _pages_from(), Parser, PlainTextParser, Protocol, Turn captured bytes into pages of text, or say why it could not be done.  Ever (+13 more)
+Cohesion: 0.16
+Nodes (15): DoclingParser, _kind(), _pages_from(), Docling, held at arm's length: imported on first use, and never at module import, Group Docling's items by the page they were found on.      Docling's markdown, Docling's label, reduced to the one distinction chunking needs: is this a headin, A table as lines of text, one row per line: `label: value` when a row has two ce, _table_text() (+7 more)
 
 ### Community 66 - "test_startup.py"
 Cohesion: 0.13
@@ -500,8 +500,8 @@ Cohesion: 0.08
 Nodes (43): ModuleManifest, A capability module. Reads typed rows, writes its own namespace, renders somewhe, installed_modules(), InstalledModule, manifest(), ModuleUnavailable, RuntimeError, Load the installed capability modules at runtime.  The mirror of `core/packs.p (+35 more)
 
 ### Community 69 - "Ollama"
-Cohesion: 0.12
-Nodes (31): blocked_reasons(), forget(), page_images(), Any, Ollama, Path, ValueError, QuarantinedDocument (+23 more)
+Cohesion: 0.11
+Nodes (30): blocked_reasons(), forget(), page_images(), Any, Ollama, Path, ValueError, QuarantinedDocument (+22 more)
 
 ### Community 70 - "test_advice_module.py"
 Cohesion: 0.11
@@ -528,8 +528,8 @@ Cohesion: 0.14
 Nodes (22): Measurement, by_subject(), db(), FakeCursor, load_register(), Any, date, Reminder and Alert: what fires, once, and with what behind it.  Both modules are (+14 more)
 
 ### Community 76 - "DenseRetriever"
-Cohesion: 0.06
-Nodes (42): Chunk, Chunk, What is actually embedded: the prefix plus the text, matching the tsvector colum, Extraction, The ingestion worker.  Capture registers a document; this package turns it int, fixed(), from_facts(), Any (+34 more)
+Cohesion: 0.07
+Nodes (41): Chunk, Chunk, What is actually embedded: the prefix plus the text, matching the tsvector colum, Extraction, The ingestion worker.  Capture registers a document; this package turns it int, fixed(), from_facts(), Any (+33 more)
 
 ### Community 77 - "Notion"
 Cohesion: 0.29
@@ -784,8 +784,8 @@ Cohesion: 0.21
 Nodes (12): build(), Any, The one Celery application, built from `Settings`.  Every setting here is a co, Construct the Celery application. Imported lazily by callers so that nothing whi, beat_schedule(), cron_expressions(), crontab_from(), manifest() (+4 more)
 
 ### Community 151 - "test_ingest_pipeline.py"
-Cohesion: 0.11
-Nodes (25): chunk_pages(), _clean(), _lines(), _page_chunks(), _pieces(), Split parsed pages into retrieval-sized chunks that follow the document's own st, One flat list of chunks, ordinal running across the whole document., The page as `(is_heading, line)`, from the parser's structure when it has any. (+17 more)
+Cohesion: 0.08
+Nodes (31): chunk_pages(), _clean(), _lines(), _page_chunks(), _pieces(), Split parsed pages into retrieval-sized chunks that follow the document's own st, One flat list of chunks, ordinal running across the whole document., The page as `(is_heading, line)`, from the parser's structure when it has any. (+23 more)
 
 ### Community 152 - "Any"
 Cohesion: 0.11
@@ -912,8 +912,8 @@ Cohesion: 0.29
 Nodes (7): Done, Order of work, Starter prompt for your coding agent, Targets, The three golden sets, What you own, Yew Mun — Lane B · Retrieval and evaluation
 
 ### Community 185 - ".json"
-Cohesion: 0.13
-Nodes (11): Any, Client, A question, embedded the way the model was trained to embed a search query., Passages as `(title, text)`, embedded the way the model was trained to embed a d, Load the generator and the embedder now, and say where the generator landed., Generate against a JSON schema. This is how extraction is held to a pack's field, The same constrained generation, yielded as it is written.          Identical, Whether this embedding model expects `QUERY_PROMPT` and `DOCUMENT_PROMPT`. (+3 more)
+Cohesion: 0.14
+Nodes (13): Ollama, Any, Client, The one client that talks to Ollama.  Everything the platform infers goes thro, A question, embedded the way the model was trained to embed a search query., Passages as `(title, text)`, embedded the way the model was trained to embed a d, Load the generator and the embedder now, and say where the generator landed., Generate against a JSON schema. This is how extraction is held to a pack's field (+5 more)
 
 ### Community 186 - "contracts.py"
 Cohesion: 0.38
@@ -1031,7 +1031,7 @@ Nodes (3): _kind_of(), `"fact:12"` -> `"fact"`, `"rule:7"` -> `"rule"`. Anything
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Settings` connect `Settings` to `run_parrot.py`, `FolderAdapter`, `Any`, `_answer_events`, `IngestJob`, `test_api.py`, `FakeConn`, `PackManifest`, `test_worker_queue.py`, `test_household.py`, `schedule.py`, `obligation`, `test_modules.py`, `application`, `ModelUnavailable`, `settings`, `State`, `bench_runtime.py`, `test_startup.py`, `registry.py`, `Ollama`, `test_advice_module.py`, `api.ts`, `Any`, `DenseRetriever`, `ClosingSpy`, `build.py`, `InstalledPack`, `NoReranker`, `_Answering`, `test_telegram_capture.py`, `page.tsx`, `.load`, `TelegramAdapter`, `test_lifecycle.py`?**
+- **Why does `Settings` connect `Settings` to `run_parrot.py`, `FolderAdapter`, `Any`, `_answer_events`, `IngestJob`, `test_api.py`, `FakeConn`, `PackManifest`, `test_worker_queue.py`, `test_household.py`, `schedule.py`, `obligation`, `test_modules.py`, `application`, `ModelUnavailable`, `.json`, `settings`, `State`, `bench_runtime.py`, `test_startup.py`, `registry.py`, `Ollama`, `test_advice_module.py`, `api.ts`, `Any`, `ClosingSpy`, `build.py`, `InstalledPack`, `NoReranker`, `_Answering`, `test_telegram_capture.py`, `page.tsx`, `.load`, `TelegramAdapter`, `test_lifecycle.py`?**
   _High betweenness centrality (0.101) - this node is a cross-community bridge._
 - **Why does `InstalledPack` connect `ScriptedOllama` to `Any`, `_answer_events`, `test_api.py`, `ModuleAdviser`, `FakeConn`, `extract.py`, `obligation`, `ModelUnavailable`, `routes.py`, `__init__.py`, `settings`, `State`, `pipeline.py`, `registry.py`, `test_advice_module.py`, `test_grounding_index.py`, `api.ts`, `test_answer_graph.py`, `pack`, `NNNN · The decision, as a statement not a question`, `NoReranker`, `rows_for`, `_Answering`, `SourceText`?**
   _High betweenness centrality (0.059) - this node is a cross-community bridge._

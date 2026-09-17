@@ -19,8 +19,8 @@ Policy schedule or certificate of insurance setting out cover and premium.
 | `insured` | person | yes | `facts.value_text` | Name of the policyholder as printed against Name of Insured |
 | `product_name` | string | yes | `facts.value_text` | Product name as printed at the head of the schedule, not a category |
 | `cover_from` | date | yes | `facts.value_date` | First day of the period of insurance, the from date on that line |
-| `expiry_date` | date | no | `facts.value_date` | Last day of the period of insurance, the to date on that line, when the policy has a fixed expiry |
-| `maturity_date` | date | no | `facts.value_date` | Date a life policy matures where the contract has a maturity date instead of a fixed expiry |
+| `expiry_date` | date | no | `facts.value_date` | Last day of the period of insurance, the date after To on the Period of Insurance line; not a maturity date |
+| `maturity_date` | date | no | `facts.value_date` | Date a life policy matures, only where the schedule prints the words Maturity Date; never a Period of Insurance To date |
 | `premium_payable` | money | yes | `facts.value_num` | Total premium payable for the period of insurance shown, in SGD |
 | `sum_insured` | money | no | `facts.value_num` | Sum insured or limit of liability where the schedule prints one, in SGD |
 | `excess` | money | no | `facts.value_num` | Amount the policyholder bears per claim, printed as Excess, in SGD |
@@ -181,5 +181,5 @@ Housing loan facility letter or hire purchase agreement from a bank or finance c
 | `facility_no` | identifier | yes | `facts.value_text` | Loan reference or agreement number exactly as printed |
 | `borrower` | person | yes | `facts.value_text` | Name of the borrower or hirer as printed; the first named where there are two |
 | `principal` | money | yes | `facts.value_num` | Approved facility amount or principal amount financed, in SGD |
-| `monthly_repayment` | money | no | `facts.value_num` | Monthly repayment or instalment as printed, in SGD |
+| `monthly_repayment` | money | no | `facts.value_num` | Monthly repayment, instalment or installment amount as printed, often followed by per month, in SGD |
 | `agreement_date` | date | no | `facts.value_date` | Date of the letter or agreement as printed |

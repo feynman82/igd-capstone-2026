@@ -51,7 +51,7 @@ Three sets of files are generated and must be committed alongside their source:
 
 | Generated | From | Command |
 |---|---|---|
-| `packs/*/schemas.py`, `corpus/register/*_columns.csv`, `docs/field-dictionary.md` | `packs/*/pack.yaml` | `python -m packs.build` |
+| `core/document_schemas.py`, `corpus/register/core_columns.csv`, `corpus/register/batch.template.csv`, `docs/field-dictionary.md` | `core/documents.yaml` | `python -m packs.build` |
 | `team/*/tasks.md` | `docs/team-tasks.csv` | `python scripts/build_team_tasks.py` |
 
 CI fails if either is stale. Never hand-edit a generated file — the fix is always to

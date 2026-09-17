@@ -80,6 +80,7 @@ Previous: Blk 210 Hougang Ave 1 #05-14 Singapore 530210 (until 2021-03-05)
 | PH-2024-912404 | private hospital and surgical, on Rachel | Meridian Assurance | 2024-03-01 | yes |
 | ES-2020-119284 | long-term care / ElderShield supplement, on Tan Mei Ling | Lionhead Life Assurance | 2020-04-10 | yes |
 | CH-2024-339102 | junior health and surgical, on Lucas | Meridian Assurance | 2024-08-01 | yes |
+| LF-2026-641205 | life plan with CI, early CI, TPD and hospital cash riders, on Marcus (b2-0019) | Lionhead Life Assurance | 2026-07-01 | yes |
 
 A policy number is written identically everywhere it appears, and carries the same insurer
 and the same insured on every document. The validator enforces this.

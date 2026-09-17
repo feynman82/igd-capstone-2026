@@ -5,6 +5,12 @@ description: Author or revise a PARROT domain pack — a pack.yaml describing a 
 
 # Authoring a domain pack
 
+> **Since ADR 0017 (17 September 2026) document types and fields are the core's.** They are
+> written in `core/documents.yaml`, which generates `core/document_schemas.py`,
+> `corpus/register/core_columns.csv`, the batch template and `docs/field-dictionary.md`. A pack
+> (`packs/<id>/pack.yaml`) now holds only grounding, persona, guardrails, its own answering rules
+> and advice. Where this guide says a field goes in `pack.yaml`, it goes in `core/documents.yaml`.
+
 A domain pack is **one file you write** — `packs/<pack_id>/pack.yaml` — and three files
 generated from it. It tells the system what a kind of document is and what is printed
 on it.

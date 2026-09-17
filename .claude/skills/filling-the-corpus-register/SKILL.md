@@ -32,8 +32,8 @@ consistency the system can be caught failing on; and mass production without cod
 
 ## Column headings are not yours to choose
 
-They are generated from the pack manifests into
-`corpus/register/<pack_id>_columns.csv`. Open that file and the headings are already
+They are generated from `core/documents.yaml` (ADR 0017) into
+`corpus/register/core_columns.csv` and `corpus/register/batch.template.csv`. Open that file and the headings are already
 there.
 
 This is deliberate: an invented column called `period` against an extractor producing
@@ -42,7 +42,7 @@ difference. So the possibility was removed rather than documented.
 
 **If a column heading does not make sense, that is a real signal** — the field
 description upstream is unclear, and the extractor will struggle with it too. The fix is
-a change to `packs/<pack>/pack.yaml`, not to the spreadsheet. Raise it; do not
+a change to `core/documents.yaml`, not to the spreadsheet. Raise it; do not
 work around it.
 
 ## Validate before handing over

@@ -1,5 +1,11 @@
 # Authoring a domain pack
 
+> **Since ADR 0017 (17 September 2026) document types and fields are the core's.** They are
+> written in `core/documents.yaml`, which generates `core/document_schemas.py`,
+> `corpus/register/core_columns.csv`, the batch template and `docs/field-dictionary.md`. A pack
+> (`packs/<id>/pack.yaml`) now holds only grounding, persona, guardrails, its own answering rules
+> and advice. Where this guide says a field goes in `pack.yaml`, it goes in `core/documents.yaml`.
+
 **For Zee.** Everything a pack needs is one YAML file. You never write Python, and you never
 edit a generated file. Run one command and the platform stays consistent with you.
 
@@ -65,8 +71,8 @@ git commit -m "iras_tax: add srs_statement document type"
 
 | Generated | Who consumes it |
 |---|---|
-| `packs/<id>/schemas.py` | the ingestion worker, as a decode constraint on the AI |
-| `corpus/register/<id>_columns.csv` | Desmond, as the header row of his spreadsheet |
+| `core/document_schemas.py` | the ingestion worker, as a decode constraint on the AI |
+| `corpus/register/core_columns.csv` and the batch template | Desmond, as the header row of his spreadsheet |
 | `docs/field-dictionary.md` | everyone, as the human-readable list of every field |
 
 CI fails if you edit a pack and forget to regenerate. That is deliberate.
@@ -233,7 +239,7 @@ A pack is finished when all of these are true.
       first time, and every `example` is correctly formatted
 - [ ] The grounding corpus has a complete `sources.yaml`, reviewed by Siew
 - [ ] The disclaimer has been read by Siew
-- [ ] Desmond has the generated `corpus/register/<id>_columns.csv` and has confirmed he can
+- [ ] Desmond has the generated `corpus/register/core_columns.csv` and has confirmed he can
       fill it in
 - [ ] Three real documents from the corpus extract correctly end to end
 

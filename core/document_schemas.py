@@ -37,11 +37,11 @@ class PolicySchedule(BaseModel):
     )
     expiry_date: date | None = Field(
         default=None,
-        description="Last day of the period of insurance, the to date on that line, when the policy has a fixed expiry",
+        description="Last day of the period of insurance, the date after To on the Period of Insurance line; not a maturity date",
     )
     maturity_date: date | None = Field(
         default=None,
-        description="Date a life policy matures where the contract has a maturity date instead of a fixed expiry",
+        description="Date a life policy matures, only where the schedule prints the words Maturity Date; never a Period of Insurance To date",
     )
     premium_payable: Decimal = Field(
         ge=0,
@@ -320,7 +320,7 @@ class LoanAgreement(BaseModel):
     monthly_repayment: Decimal | None = Field(
         default=None,
         ge=0,
-        description="Monthly repayment or instalment as printed, in SGD",
+        description="Monthly repayment, instalment or installment amount as printed, often followed by per month, in SGD",
     )
     agreement_date: date | None = Field(
         default=None,

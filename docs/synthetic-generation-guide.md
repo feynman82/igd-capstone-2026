@@ -19,7 +19,7 @@ To ensure strict legal compliance and eliminate resemblance to official Singapor
 | **Marcus Lim Jun Wei** | Owner (`self`) | `S8714289B` | 1987-05-08 | Meridian Systems Pte Ltd | IT Manager; $9,400.00/mo |
 | **Rachel Ng Hui Shan** | Wife (`partner`) | `S8923156F` | 1989-02-17 | Northlight Health Pte Ltd | Senior Physiotherapist; $6,250.00/mo |
 | **Lucas Lim Kai En** | Son (`child`) | `T1942088J` | 2019-06-14 | Primary 1 Student | Born at KK Women's and Children's Hospital |
-| **Lim Ah Kow** | Father (`parent`) | `S5809142A` | 1958-10-12 | Retiree | Hypertension & diabetes; resident from 2021 |
+| **Lim Ah Kow** | Father (`parent`) | `S5809142E` | 1958-10-12 | Retiree | Hypertension & diabetes; resident from 2021 |
 | **Tan Mei Ling** | Mother (`parent`) | `S6134891C` | 1961-04-25 | Retiree / Homemaker | Osteoporosis; resident from 2021 |
 
 - **Canonical Address:** `Blk 45B Tampines Ave 8, #07-21, Xinkapow 521045` (effective from 2021-03-06).
@@ -232,7 +232,7 @@ All multi-page contracts are generated via [`notebooks/generate_lim_documents.py
 
 ### 3.5 Marcus's Life Policy Schedule with Riders (`b2-0019.pdf`)
 * **Why:** a schedule that prints several riders, each with its own sum assured (ADR 0017, decision 7). Ids `b2-0012`–`b2-0018` are the identity images.
-* **New policy:** `LF-2026-641205` is not yet in [`corpus/canon.md`](../corpus/canon.md); add its row there before the register entry, or `corpus.validate` will not know it.
+* **Canon:** `LF-2026-641205` is in [`corpus/canon.md`](../corpus/canon.md).
 * **Ground Truth (the schedule page, one row per item, each rider's name and amount on the same row):**
   * **Insurer:** Lionhead Life Assurance
   * **Policy Number:** `LF-2026-641205`
