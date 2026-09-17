@@ -11,6 +11,7 @@ expected values are the pack's ground truth rather than something invented here.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from types import SimpleNamespace
 from typing import Any
 
@@ -565,7 +566,41 @@ def _page_of_examples(spec: Any) -> list[ParsedPage]:
 
 
 def _reply_of_examples(spec: Any) -> dict[str, Any]:
-    return {f.name: f.example for f in spec.fields}
+    """Each field's example as the model reports it; a repeating one as label and amount rows."""
+    return {
+        f.name: (
+            [
+                dict(zip(("label", "amount"), row.split("="), strict=True))
+                for row in f.example.split(";")
+            ]
+            if f.repeats
+            else f.example
+        )
+        for f in spec.fields
+    }
+
+
+def test_each_rider_is_its_own_fact_with_its_name_and_sum_assured() -> None:
+    """ADR 0017: several riders on one schedule, each a row pairing its label and its amount."""
+    installed = catalog()
+    spec = installed.spec("policy_schedule")
+    reply = _reply_of_examples(spec)
+    reply["riders"] = [
+        {"label": "Critical Illness Rider", "amount": "SGD 150,000.00"},
+        {"label": "Total Permanent Disability Rider", "amount": "300,000.00"},
+    ]
+    page = _page_of_examples(spec)[0].text + (
+        "\nCritical Illness Rider SGD 150,000.00\nTotal Permanent Disability Rider SGD 300,000.00"
+    )
+    result = extract(  # type: ignore[arg-type]
+        FakeOllama([reply]), installed, "policy_schedule", [ParsedPage(1, page)], confidence=0.9
+    )
+
+    riders = [(f.value_text, f.value_num, f.page) for f in result.facts if f.key == "riders"]
+    assert riders == [
+        ("Critical Illness Rider", Decimal("150000.00"), 1),
+        ("Total Permanent Disability Rider", Decimal("300000.00"), 1),
+    ]
 
 
 @pytest.mark.parametrize("doc_type", list(catalog().documents.document_types))

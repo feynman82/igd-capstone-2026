@@ -10,6 +10,15 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class LabelledMoney(BaseModel):
+    """One printed row of a repeating amount: its label and its amount, in SGD."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    amount: Decimal = Field(ge=0)
+
+
 class PolicySchedule(BaseModel):
     """Policy schedule or certificate of insurance setting out cover and premium."""
 
@@ -51,6 +60,10 @@ class PolicySchedule(BaseModel):
     date_of_birth: date | None = Field(
         default=None,
         description="Date of birth of the insured where the schedule prints one",
+    )
+    riders: list[LabelledMoney] | None = Field(
+        default=None,
+        description="Each rider printed on the schedule, its name as the label and its own sum assured as the amount, in SGD",
     )
 
 
@@ -383,6 +396,7 @@ FACT_COLUMNS: dict[str, str] = {
     "receipt_no": "value_text",
     "registration_no": "value_text",
     "renewal_premium": "value_num",
+    "riders": "value_num",
     "settled_amount": "value_num",
     "statement_date": "value_date",
     "statement_year": "value_num",

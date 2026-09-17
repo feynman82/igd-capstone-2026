@@ -25,6 +25,7 @@ Policy schedule or certificate of insurance setting out cover and premium.
 | `sum_insured` | money | no | `facts.value_num` | Sum insured or limit of liability where the schedule prints one, in SGD |
 | `excess` | money | no | `facts.value_num` | Amount the policyholder bears per claim, printed as Excess, in SGD |
 | `date_of_birth` | date | no | `facts.value_date` | Date of birth of the insured where the schedule prints one |
+| `riders` | labelled_money | no | `facts.value_num` | Each rider printed on the schedule, its name as the label and its own sum assured as the amount, in SGD |
 
 ### `renewal_notice`
 

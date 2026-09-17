@@ -51,6 +51,7 @@ PY_TYPE = {
     "month": "str",
     "enum": "str",
     "boolean": "bool",
+    "labelled_money": "list[LabelledMoney]",
 }
 # Constraints the extraction model is held to at decode time.
 PY_FIELD_ARGS = {
@@ -67,11 +68,12 @@ def load_catalog(path: Path = CATALOG) -> DocumentCatalog:
     catalog = DocumentCatalog.model_validate(yaml.safe_load(path.read_text(encoding="utf-8")))
     for doc_type, spec in catalog.document_types.items():
         for f in spec.fields:
-            # ponytail: no field repeats yet; PR 7 adds generation and extraction for them.
-            if f.type == "labelled_money" or f.repeats:
+            # ponytail: a repeating field is a labelled amount (a rider and its sum assured); a
+            # repeating date or text needs its own generated item model first.
+            if (f.type == "labelled_money") != f.repeats:
                 raise SystemExit(
-                    f"{path}: {doc_type}.{f.name} uses labelled_money or repeats, which "
-                    "packs.build cannot generate yet"
+                    f"{path}: {doc_type}.{f.name}: only a labelled_money field repeats, and it "
+                    "always does"
                 )
     return catalog
 
@@ -122,6 +124,18 @@ def render_schemas(c: DocumentCatalog) -> str:
         "from pydantic import BaseModel, ConfigDict, Field\n",
         "",
     ]
+    if any(f.repeats for spec in c.document_types.values() for f in spec.fields):
+        lines += [
+            "class LabelledMoney(BaseModel):",
+            '    """One printed row of a repeating amount: its label and its amount, in SGD."""',
+            "",
+            '    model_config = ConfigDict(extra="forbid")',
+            "",
+            "    label: str",
+            "    amount: Decimal = Field(ge=0)",
+            "",
+            "",
+        ]
     names = []
     for doc_type, spec in c.document_types.items():
         cls = _class_name(doc_type)

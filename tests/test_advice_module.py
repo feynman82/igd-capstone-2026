@@ -506,6 +506,59 @@ def test_the_category_filter_leaves_a_hospital_cash_plan_out_of_critical_illness
     assert executed[4][1]["oldest"] == TODAY - timedelta(days=365), "a multiple is a rule"
 
 
+def test_a_critical_illness_rider_counts_and_a_hospital_cash_rider_does_not() -> None:
+    """ADR 0017: each rider is its own fact, categorised by its own printed name."""
+    from core.packs import pack as installed_pack
+
+    insurance = installed_pack("insurance_agent")
+    assert insurance.manifest.advice is not None
+    shape = next(s for s in insurance.manifest.advice.shapes if s.id == "ci_cover")
+
+    def rider(fact_id: int, label: str, amount: str) -> tuple[Any, ...]:
+        row = list(_facts_tuple(fact_id, "life-a", "riders", amount, "policy_schedule"))
+        row[7] = label
+        return tuple(row)
+
+    conn = FakeConn(
+        [(1, "Marcus", MARCUS)],
+        [_facts_tuple(1, "payslip", "gross_salary", "9400", "payslip")],
+        [_facts_tuple(2, "ci-a", "sum_insured", "200000", "policy_schedule")],
+        [("ci-a", "CareShield Critical Illness Plan")],
+        [
+            rider(3, "Critical Illness Rider", "150000"),
+            rider(4, "Hospital Cash Rider", "100"),
+            rider(5, "Early Critical Illness Rider", "50000"),
+        ],
+        [
+            (
+                7,
+                "ci_income_multiple",
+                "multiple",
+                Decimal("4"),
+                None,
+                {},
+                "Critical illness: 4x annual income",
+                None,
+                "Guide title",
+                "MoneySense",
+                "https://www.moneysense.gov.sg/",
+                None,
+                date(2026, 9, 1),
+            )
+        ],
+    )
+
+    result = ModuleAdviser(conn).calculate(
+        insurance, shape, person_ids=frozenset({1}), subject="Marcus", today=TODAY
+    )
+
+    assert isinstance(result, Calculation)
+    assert figures_of(result)["held"] == Decimal("400000.00"), "plan + two critical illness riders"
+    refs = {item.ref for item in result.inputs}
+    assert {"fact:2", "fact:3", "fact:5"} <= refs and "fact:4" not in refs
+    assert "Critical Illness Rider SGD 150,000.00" in {item.value_text for item in result.inputs}
+
+
 def test_an_unanswerable_shape_reads_nothing_more() -> None:
     conn = FakeConn([(1, "Marcus", None)], [], [], [])
     result = ModuleAdviser(conn).calculate(

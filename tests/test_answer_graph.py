@@ -400,7 +400,7 @@ def test_a_grounded_question_is_answered_with_its_source() -> None:
     assert answer.grounded
     assert "SGD 1,248.90" in answer.text
     assert answer.citations == ["renewal-notice.pdf, page 1"]
-    assert answer.disclaimer.startswith("Informational analysis")
+    assert answer.disclaimer.startswith("Based on your own insurance documents")
 
 
 def test_a_request_to_act_is_refused_at_the_router() -> None:

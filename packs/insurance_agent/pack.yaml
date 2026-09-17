@@ -34,8 +34,9 @@ grounding:
 
 persona:
   system: >
-    You explain a household's insurance documents plainly and briefly, naming the policy and the
-    clause each point comes from.
+    You are the household's insurance specialist. You explain its policies plainly and briefly,
+    naming the policy and the clause each point comes from, and when a calculation has been done
+    you explain it without changing its figures or its verdict.
 
 guardrails:
   must_cite: true
@@ -43,14 +44,94 @@ guardrails:
   never_acts: true
   verdict_by_code: true
   disclaimer: >
-    Informational analysis of your own policy documents only. This is not financial advice
-    under the Financial Advisers Act, and it does not recommend or compare insurance
-    products. Confirm cover, exclusions and renewal terms with your insurer or a licensed
-    financial adviser before you act.
+    Based on your own insurance documents and published Singapore guidance. Parrot is not a
+    financial adviser licensed by MAS under the Financial Advisers Act; confirm cover, exclusions
+    and renewal terms with your insurer or a licensed financial adviser before you act.
   advice_decline: >
-    I can explain what your policies say, but I cannot recommend whether to buy, keep, change
-    or add cover, compare products, or judge whether your cover is enough. A licensed financial
-    adviser can help with that.
+    I can explain what your policies say. For Parrot to calculate a recommendation on your cover,
+    turn on insurance advice in Household settings, or speak with a licensed financial adviser.
+
+# Advice (ADR 0016). Code calculates every figure and chooses the verdict from the household's own
+# cited facts and published values a person approved; the model only explains. Consent is the
+# owner's and covers adult household members.
+advice:
+  consent_version: 1.0.0
+  consent_text: >
+    I ask Parrot to calculate personalised insurance guidance for my household from our own
+    documents and from published Singapore guidance (MoneySense, MAS, MOH, CPF Board and LIA). I
+    understand that Parrot is not a MAS-licensed financial adviser and does not replace one, that
+    its figures are only as complete as the documents on file, and that I should confirm any
+    decision with a licensed adviser.
+  disclaimer: >
+    A calculation from your household's documents and published guidance, not a recommendation
+    from a MAS-licensed financial adviser. Figures cover only the policies on file; group or
+    employer cover that was never filed is not counted.
+  product_disclosure: >
+    Where a product is named, it is named because a document on file prints it. Parrot is not
+    paid by any insurer and does not sell or arrange insurance.
+  shapes:
+    - id: death_tpd_cover
+      calculator: gap
+      label: death and total permanent disability cover
+      asked:
+        - enough life insurance
+        - enough life cover
+        - enough death cover
+        - death and tpd
+        - life cover gap
+      facts:
+        - role: income
+          doc_types: [payslip]
+          field: gross_salary
+          per: month
+          missing: A recent payslip, so your annual income is known.
+        - role: held
+          doc_types: [policy_schedule]
+          field: sum_insured
+          category: whole_life
+          take: sum
+          missing: The schedule of each life policy you hold.
+        - role: held
+          doc_types: [policy_schedule]
+          field: sum_insured
+          category: term_life
+          take: sum
+          missing: The schedule of each life policy you hold.
+      rules:
+        - role: multiple
+          key: death_tpd_income_multiple
+          missing: Reviewed guidance on how much death and TPD cover to hold.
+      never_say: [you must buy, guaranteed]
+    - id: ci_cover
+      calculator: gap
+      label: critical illness cover
+      asked:
+        - enough critical illness
+        - critical illness gap
+        - enough ci cover
+      facts:
+        - role: income
+          doc_types: [payslip]
+          field: gross_salary
+          per: month
+          missing: A recent payslip, so your annual income is known.
+        - role: held
+          doc_types: [policy_schedule]
+          field: sum_insured
+          category: critical_illness
+          take: sum
+          missing: The schedule of each critical illness plan or rider you hold.
+        - role: held
+          doc_types: [policy_schedule]
+          field: riders
+          category: critical_illness
+          take: sum
+          missing: The schedule of each critical illness plan or rider you hold.
+      rules:
+        - role: multiple
+          key: ci_income_multiple
+          missing: Reviewed guidance on how much critical illness cover to hold.
+      never_say: [you must buy, guaranteed]
 
 # How people ask about insurance, applied by the core without a model. Nothing here is a field:
 # a category is a reading of the printed product name that a person reviewed, and it is never

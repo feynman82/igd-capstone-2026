@@ -65,6 +65,12 @@ document_types:
         required: false
         description: Date of birth of the insured where the schedule prints one
         example: "1958-10-12"
+      - name: riders
+        type: labelled_money
+        repeats: true
+        required: false
+        description: Each rider printed on the schedule, its name as the label and its own sum assured as the amount, in SGD
+        example: "Critical Illness Rider=150000.00;Early Critical Illness Rider=50000.00"
 
   renewal_notice:
     description: Notice issued before expiry inviting the policyholder to renew

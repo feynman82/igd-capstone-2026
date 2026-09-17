@@ -256,7 +256,14 @@ def _prepare(index: dict[str, FieldSpec], reported: dict[str, Any]) -> dict[str,
     }
     for name, spec in index.items():
         value = prepared.get(name)
-        if spec.type in NUMERIC_TYPES and isinstance(value, str):
+        if spec.type == "labelled_money" and isinstance(value, list):
+            prepared[name] = [
+                {**item, "amount": _CURRENCY.sub("", item["amount"]).strip() or None}
+                if isinstance(item, dict) and isinstance(item.get("amount"), str)
+                else item
+                for item in value
+            ]
+        elif spec.type in NUMERIC_TYPES and isinstance(value, str):
             prepared[name] = _CURRENCY.sub("", value).strip() or None
         elif spec.type == "date" and isinstance(value, str):
             prepared[name] = printed_date(value) or value
@@ -385,6 +392,26 @@ def _read(
     for name, field_spec in index.items():
         raw = getattr(validated, name, None)
         if raw is None:
+            continue
+        if field_spec.type == "labelled_money":
+            # One fact per printed row: the label in value_text, the amount in value_num, so the
+            # pairing lives in the row (ADR 0017). A row is placed by its amount, as money is.
+            for item in raw:
+                page = find_page(f"{item.amount}", pages)
+                if page is None or not item.label.strip():
+                    unplaced.append(f"{name} {item.label!r} (on no page)")
+                    continue
+                facts.append(
+                    ExtractedFact(
+                        key=name,
+                        page=page,
+                        subject=subject_value,
+                        value_text=item.label.strip(),
+                        value_num=Decimal(item.amount),
+                        value_date=None,
+                        confidence=confidence,
+                    )
+                )
             continue
         coerced = _coerce(field_spec, raw)
         if coerced is None:

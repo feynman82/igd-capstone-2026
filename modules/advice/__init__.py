@@ -127,6 +127,7 @@ class FactRow:
     subject: str | None
     when: datetime | None  # the document's ingested_at
     field_type: str
+    label: str | None = None  # a labelled_money row's printed label, e.g. the rider's name
 
 
 @dataclass(frozen=True, slots=True)
@@ -173,6 +174,7 @@ def fact_row(raw: Sequence[Any], types: Mapping[tuple[str, str], str]) -> FactRo
         subject=subject,
         when=when,
         field_type=types.get((str(doc_type), str(key)), "string"),
+        label=value_text if value_num is not None and value_text else None,
     )
 
 
@@ -201,6 +203,8 @@ def value_row(raw: Sequence[Any]) -> ValueRow:
 def printed(row: FactRow) -> str:
     value = row.value
     if isinstance(value, Decimal):
+        if row.field_type == "labelled_money":
+            return f"{row.label} {money(value)}" if row.label else money(value)
         if row.field_type == "money":
             return money(value)
         if row.field_type == "percent":
@@ -286,15 +290,16 @@ def take(rows: Sequence[FactRow], how: str) -> list[FactRow]:
 
     Known limitation: `sum` counts one row per document, so a document that prints the field
     twice for two different things (a main plan and a rider on one statement, say) is
-    undercounted. The facts carry no key telling a second printing from a re-extraction.
+    undercounted. The facts carry no key telling a second printing from a re-extraction. A
+    labelled row (a rider) is told apart by its label, so each rider on a schedule counts.
     """
     if how == "latest":
         return list(rows[:1])
     seen: set[Any] = set()
     kept: list[FactRow] = []
     for row in rows:
-        if row.document_id not in seen:
-            seen.add(row.document_id)
+        if (row.document_id, row.label) not in seen:
+            seen.add((row.document_id, row.label))
             kept.append(row)
     return kept
 
@@ -936,7 +941,11 @@ class ModuleAdviser:
         if len(person_ids) != 1:
             raise ValueError(f"advice is calculated for exactly one person, not {len(person_ids)}")
         names = names_for(self._conn, person_ids)
-        facts = {fact.role: self._facts(installed, fact, names) for fact in shape.facts}
+        # A role may be read from several facts — a critical illness plan's sum insured and a
+        # critical illness rider's sum assured are both held cover — so rows are gathered by role.
+        facts: dict[str, list[FactRow]] = {}
+        for fact in shape.facts:
+            facts.setdefault(fact.role, []).extend(self._facts(installed, fact, names))
         rules = {
             rule.role: values_for(self._conn, installed, rule.key, today) for rule in shape.rules
         }
@@ -981,6 +990,15 @@ class ModuleAdviser:
         )
         if categories is None:
             return []
+        if rows[0].field_type == "labelled_money":
+            # A rider is categorised by its own printed name, not by the plan it is attached to.
+            return [
+                row
+                for row in rows
+                if row.label
+                and (rule := categorise(row.label, categories)) is not None
+                and rule.id == fact.category
+            ]
         document_ids = list(dict.fromkeys(row.document_id for row in rows))
         printed_names = product_names(self._conn, document_ids, categories.match_field)
         return in_category(rows, printed_names, fact.category, categories)
