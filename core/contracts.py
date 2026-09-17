@@ -299,6 +299,17 @@ class AdviceShape(Strict):
     never_say: list[Phrase] = Field(default_factory=list)
 
 
+class Review(Strict):
+    """One question that runs several of a pack's shapes for a person, on one card (ADR 0016
+    addendum): every shortfall, met guideline and missing fact, and each category in `holds` that
+    nothing on file is."""
+
+    label: str = Field(min_length=3, max_length=60)
+    asked: list[Phrase] = Field(min_length=1)
+    shapes: list[Slug] = Field(min_length=1)  # ids of this pack's advice shapes, run in order
+    holds: list[Slug] = Field(default_factory=list)  # category ids named when none is on file
+
+
 class Advice(Strict):
     """What a pack that advises must say, once and in its own words, before it may."""
 
@@ -309,6 +320,7 @@ class Advice(Strict):
     max_rule_age_days: int = Field(default=365, ge=1, le=3650)
     max_price_age_days: int = Field(default=120, ge=1, le=3650)
     shapes: list[AdviceShape] = Field(min_length=1)
+    review: Review | None = None
 
 
 # The roles each calculator reads. A shape must supply every one; the loader says which is missing.
@@ -432,6 +444,9 @@ class PackManifest(Strict):
                 raise ValueError(
                     f"{where}: order_by {shape.order_by!r} is not one of compare_fields"
                 )
+        review = self.advice.review
+        if review is not None and (unknown := sorted(set(review.shapes) - seen)):
+            raise ValueError(f"advice review runs shapes {unknown} this pack does not declare")
         return self
 
     def check_against(self, catalog: DocumentCatalog) -> None:
@@ -472,6 +487,11 @@ class PackManifest(Strict):
                         "id in answering.categories"
                     )
             self._compares_what_its_documents_declare(shape, value_keys, catalog)
+        review = self.advice.review
+        if review is not None and (unknown := sorted(set(review.holds) - category_ids)):
+            raise ValueError(
+                f"{self.id}: advice review holds {unknown}, which are not category ids"
+            )
 
     def _compares_what_its_documents_declare(
         self, shape: AdviceShape, value_keys: set[str], catalog: DocumentCatalog
