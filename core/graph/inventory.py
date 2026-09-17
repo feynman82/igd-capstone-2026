@@ -62,6 +62,7 @@ class Holding:
                 f"{self.title} — {self.doc_type.replace('_', ' ')} — on file — page {self.page}"
             ),
             pack_id=self.pack_id,
+            doc_type=self.doc_type,
             kind="inventory",
         )
 

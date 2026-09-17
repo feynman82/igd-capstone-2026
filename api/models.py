@@ -308,8 +308,6 @@ class PackSummary(BaseModel):
     installed_at: datetime | None = None
     never_acts: bool = True
     disclaimer: str = ""
-    documents: int = 0
-    facts: int = 0
 
 
 class ModuleSummary(BaseModel):

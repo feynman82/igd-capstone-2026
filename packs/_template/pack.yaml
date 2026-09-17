@@ -31,6 +31,7 @@ guardrails:
 
 # Optional. How people ask about this domain. See packs/README.md §6b.
 # answering:
+#   documents: [payslip]          # core types whose answers this pack's guardrails govern
 #   max_sentences: 6
 #   vocabulary:
 #     everyday word: what the document prints

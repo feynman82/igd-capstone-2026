@@ -29,3 +29,7 @@ guardrails:
   disclaimer: >
     Informational analysis of your own documents and published IRAS guidance.
     This is not tax advice. Verify against IRAS before filing.
+
+# The core document types this pack speaks for: its guardrails and persona govern answers on them.
+answering:
+  documents: [payslip, donation_receipt, cpf_statement, srs_statement, notice_of_assessment]

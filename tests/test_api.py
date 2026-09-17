@@ -87,8 +87,6 @@ def rows_for(**overrides: list[tuple[Any, ...]]) -> dict[str, list[tuple[Any, ..
         "SELECT id, sha256": [],
         "installed_at\n  FROM packs": [],  # registry.SELECT_PACKS
         "FROM modules": [],
-        "WHERE pack_id IS NOT NULL": [],
-        "count(*) FROM facts": [],
         # The Alert module's metrics. Empty means no threshold is crossed, which is what most
         # of these tests want; the ones that want an alert override the metric they need.
         # Before corrections.SELECT_FACT below: every metric query joins documents the same way.
@@ -559,13 +557,11 @@ def pack_row(pack_id: str, enabled: bool) -> tuple[Any, ...]:
     )
 
 
-def test_packs_lists_what_is_installed_and_what_it_has_read(settings: Settings) -> None:
+def test_packs_lists_what_is_installed(settings: Settings) -> None:
     conn = FakeConn(
         rows_for(
             **{
                 "installed_at\n  FROM packs": [pack_row("insurance_agent", True)],
-                "WHERE pack_id IS NOT NULL": [("insurance_agent", 7)],
-                "count(*) FROM facts": [("insurance_agent", 41)],
             }
         )
     )
@@ -575,8 +571,7 @@ def test_packs_lists_what_is_installed_and_what_it_has_read(settings: Settings) 
     assert summary["id"] == "insurance_agent"
     assert summary["enabled"] is True
     assert summary["on_disk"] is True
-    assert summary["documents"] == 7
-    assert summary["facts"] == 41
+    assert "documents" not in summary and "facts" not in summary, "documents are the core's"
     assert summary["never_acts"] is True, "v1 advises; the manifest cannot say otherwise"
     assert "document_types" not in summary, "documents are the core's, not a pack's (ADR 0017)"
 

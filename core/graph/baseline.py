@@ -37,7 +37,8 @@ SELECT c.id,
        c.context_prefix,
        d.original_name,
        d.pack_id,
-       c.embedding <=> %(query)s::vector AS distance
+       c.embedding <=> %(query)s::vector AS distance,
+       d.doc_type
   FROM chunks c
   JOIN documents d ON d.id = c.document_id
  WHERE d.status = 'indexed'
@@ -74,6 +75,7 @@ class DenseRetriever:
                 document_name=row[5],
                 context_prefix=row[4] or "",
                 pack_id=row[6] or "",
+                doc_type=row[8] or "",
             )
             for row in rows
         ]

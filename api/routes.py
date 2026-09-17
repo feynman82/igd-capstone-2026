@@ -1126,8 +1126,6 @@ def _as_pack_summary(row: registry.RegisteredPack) -> PackSummary:
         installed_at=row.installed_at,
         never_acts=manifest.guardrails.never_acts if manifest else True,
         disclaimer=manifest.guardrails.disclaimer if manifest else "",
-        documents=row.documents,
-        facts=row.facts,
     )
 
 

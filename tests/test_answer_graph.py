@@ -50,6 +50,7 @@ PASSAGES = [
         score=0.81,
         document_name="renewal-notice.pdf",
         pack_id="insurance_agent",
+        doc_type="renewal_notice",
     ),
     Passage(
         chunk_id=12,
@@ -59,6 +60,7 @@ PASSAGES = [
         score=0.55,
         document_name="renewal-notice.pdf",
         pack_id="insurance_agent",
+        doc_type="renewal_notice",
     ),
 ]
 
@@ -172,6 +174,7 @@ class PhrasingRetriever:
                 score,
                 "privatecare.pdf",
                 pack_id="insurance_agent",
+                doc_type="renewal_notice",
             )
         ]
 
@@ -531,7 +534,18 @@ def test_a_sentence_the_gate_drops_is_never_yielded_at_all() -> None:
 def test_weak_evidence_abstains_without_running_the_model() -> None:
     """The floor is a retrieval question, so it is asked first. The scripted answer is left
     unused — if the model had been called, `ScriptedOllama` would have popped it."""
-    weak = [Passage(11, DOC, 1, "unrelated", 0.2, "note.pdf", pack_id="insurance_agent")]
+    weak = [
+        Passage(
+            11,
+            DOC,
+            1,
+            "unrelated",
+            0.2,
+            "note.pdf",
+            pack_id="insurance_agent",
+            doc_type="renewal_notice",
+        )
+    ]
     client = ScriptedOllama({"intent": "explain"}, {"sentences": [{"text": "no", "supports": [1]}]})
     stream = events(client, "what is my excess?", weak)
 
@@ -589,8 +603,10 @@ def test_a_model_that_dies_before_any_sentence_abstains() -> None:
 def passage(chunk_id: int, score: float, pack_id: str) -> Passage:
     # Prints the date the scripted sentences state: a sentence stating a number no cited passage
     # prints is dropped by the gate, and these tests are about which pack signs, not about that.
+    # ADR 0017: a pack governs the document types it speaks for, so the type is what chooses.
+    doc_type = {"insurance_agent": "renewal_notice", "iras_tax": "payslip"}.get(pack_id, "")
     return Passage(
-        chunk_id, DOC, 1, "Expires on 30 November 2026.", score, "doc.pdf", pack_id=pack_id
+        chunk_id, DOC, 1, "Expires on 30 November 2026.", score, "doc.pdf", doc_type=doc_type
     )
 
 
@@ -614,8 +630,8 @@ def test_the_best_passage_chooses_the_pack_even_when_it_is_outnumbered() -> None
 
 
 def test_a_passage_belonging_to_no_pack_does_not_choose_one() -> None:
-    """The RAG core answers from any document. A chunk that belongs to nothing cannot pick the
-    disclaimer, so the pack comes from the best passage that names one."""
+    """The RAG core answers from any document. A chunk no pack speaks for cannot pick the
+    disclaimer, so the pack comes from the best passage a pack speaks for."""
     evidence = [
         Passage(1, DOC, 1, "text", 0.95, "loose.pdf"),
         passage(2, 0.60, "insurance_agent"),
@@ -794,6 +810,7 @@ def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
             0.60,
             "b1-0001.pdf",
             pack_id="insurance_agent",
+            doc_type="renewal_notice",
         ),
         Passage(
             2,
@@ -803,6 +820,7 @@ def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
             0.55,
             "b1-0032.pdf",
             pack_id="insurance_agent",
+            doc_type="renewal_notice",
         ),
     ]
     reply = {
@@ -848,7 +866,14 @@ def test_the_households_word_is_searched_the_way_the_policy_prints_it() -> None:
 def test_an_answer_stops_at_the_packs_sentence_limit() -> None:
     reply = {"sentences": [{"text": f"Clause {n} applies.", "supports": [1]} for n in range(1, 10)]}
     passage = Passage(
-        11, DOC, 1, "Clauses 1 2 3 4 5 6 7 8 9 apply.", 0.8, "p.pdf", pack_id="insurance_agent"
+        11,
+        DOC,
+        1,
+        "Clauses 1 2 3 4 5 6 7 8 9 apply.",
+        0.8,
+        "p.pdf",
+        pack_id="insurance_agent",
+        doc_type="renewal_notice",
     )
     graph = AnswerGraph(
         ScriptedOllama({"intent": "explain"}, reply),
@@ -876,7 +901,18 @@ def test_a_sentence_stating_a_number_the_passage_never_printed_is_not_said() -> 
 
 
 def test_an_abstention_is_signed_with_the_packs_disclaimer() -> None:
-    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    weak = [
+        Passage(
+            11,
+            DOC,
+            1,
+            "Nothing relevant.",
+            0.2,
+            "p.pdf",
+            pack_id="insurance_agent",
+            doc_type="renewal_notice",
+        )
+    ]
     graph = AnswerGraph(
         ScriptedOllama({"intent": "explain"}),
         FixedRetriever(weak),
@@ -947,7 +983,18 @@ def test_weak_passages_still_answer_from_the_document_on_file() -> None:
         501,
         details=(("product_name", "Private Car Insurance Policy"), ("premium_payable", "1284.00")),
     )
-    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    weak = [
+        Passage(
+            11,
+            DOC,
+            1,
+            "Nothing relevant.",
+            0.2,
+            "p.pdf",
+            pack_id="insurance_agent",
+            doc_type="renewal_notice",
+        )
+    ]
     reply = {"sentences": [{"text": "The premium payable is SGD 1,284.00.", "supports": [1]}]}
     graph = AnswerGraph(
         ScriptedOllama({"intent": "explain"}, reply),
@@ -973,7 +1020,18 @@ def test_a_document_on_file_alone_does_not_carry_a_sentence_it_does_not_print() 
         501,
         details=(("product_name", "Private Car Insurance Policy"), ("premium_payable", "1284.00")),
     )
-    weak = [Passage(11, DOC, 1, "Nothing relevant.", 0.2, "p.pdf", pack_id="insurance_agent")]
+    weak = [
+        Passage(
+            11,
+            DOC,
+            1,
+            "Nothing relevant.",
+            0.2,
+            "p.pdf",
+            pack_id="insurance_agent",
+            doc_type="renewal_notice",
+        )
+    ]
     reply = {"sentences": [{"text": "Your car policy covers flood damage.", "supports": [1]}]}
     graph = AnswerGraph(
         ScriptedOllama({"intent": "explain"}, reply),
@@ -1083,13 +1141,34 @@ def test_with_no_pack_in_play_the_sentence_limit_is_the_catalogue_s(
     assert f"Write at most {limit} sentences." in answer.answer_system(pack("insurance_agent"))
 
 
-def test_a_core_passage_does_not_choose_whose_guardrails_govern() -> None:
+def test_a_payslip_is_governed_by_the_tax_pack_not_the_strictest() -> None:
+    """ADR 0017: every chunk is `core`'s, and the type a pack speaks for picks its guardrails."""
+    evidence = [
+        Passage(1, DOC, 1, "Gross salary 8,900.00", 0.50, "payslip.pdf", "", "core", "payslip")
+    ]
+    client = ScriptedOllama(
+        {"intent": "explain"},
+        {"sentences": [{"text": "Gross salary was 8,900.00.", "supports": [1]}]},
+    )
+    answer = build(client, evidence).ask("what was my gross salary?")
+
+    assert answer.grounded, "0.50 clears tax's 0.42; insurance's 0.45 would not have decided it"
+    assert "iras" in answer.disclaimer.lower()
+    assert "insurance" not in answer.disclaimer.lower()
+
+
+def test_a_type_no_pack_speaks_for_is_governed_by_the_core() -> None:
     from core.graph.answer import _pack_for
 
-    core_passage = Passage(1, uuid4(), 1, "text", 0.9, "a.pdf", "", pack_id="core")
-    holding = Passage(2, uuid4(), 1, "text", 0.5, "b.pdf", "", pack_id="iras_tax")
     packs = [pack("insurance_agent"), pack("iras_tax")]
-
-    assert _pack_for([core_passage, holding], packs) == pack("iras_tax")
+    letter = Passage(1, DOC, 1, "Nothing relevant.", 0.43, "letter.pdf", "", "core", "letter")
+    assert _pack_for([letter], packs) is None
     strictest = max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
-    assert _pack_for([core_passage], packs) == strictest
+    assert _pack_for([], packs) == strictest, "no evidence at all: the strictest floor stands in"
+
+    client = ScriptedOllama({"intent": "explain"}, {"sentences": []})
+    stream = events(client, "what does the letter say?", [letter])
+    assert type(stream[0]).__name__ == "Reading", (
+        "0.43 clears the core's 0.42, not insurance's 0.45"
+    )
+    assert stream[-1].disclaimer == "", "the core signs nothing"  # type: ignore[union-attr]

@@ -43,6 +43,13 @@ guardrails:
 # a category is a reading of the printed product name that a person reviewed, and it is never
 # stored. Order matters — the first rule whose printed words appear wins.
 answering:
+  # The core document types this pack speaks for: its guardrails and persona govern them.
+  documents:
+    - policy_schedule
+    - renewal_notice
+    - claim_letter
+    - benefit_illustration
+    - policy_anniversary_statement
   max_sentences: 6
   vocabulary:
     kena warded: was hospitalised as an inpatient

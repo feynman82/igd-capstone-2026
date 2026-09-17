@@ -474,3 +474,18 @@ def test_every_installed_pack_still_loads() -> None:
 
     installed_packs.cache_clear()
     assert {installed.id for installed in installed_packs()} >= {"insurance_agent", "iras_tax"}
+
+
+def test_a_pack_speaking_for_an_undeclared_type_is_rejected_at_load() -> None:
+    raw = _tax()
+    raw["answering"]["documents"] = ["payslip", "not_a_doc"]
+    with pytest.raises(ValueError, match=r"iras_tax: answering.documents names 'not_a_doc'"):
+        _checked(raw)
+
+
+def test_every_pack_speaks_only_for_catalogue_types() -> None:
+    from core.packs import installed_packs
+
+    spoken = {t for p in installed_packs() for t in p.manifest.answering.documents}
+    assert spoken <= set(catalog().documents.document_types)
+    assert {"policy_schedule", "payslip"} <= spoken

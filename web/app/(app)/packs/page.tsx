@@ -15,10 +15,10 @@ export const metadata: Metadata = {
  * Where the platform argument stops being an architecture diagram and becomes something a
  * person can switch.
  *
- * The demonstration this screen exists for is one gesture: turn Insurance Agent off, go to
- * Today, and watch its reminders be gone. Nothing in `core/` changed to make that work — the
- * registry is read once per request and handed to the modules and to retrieval, and neither of
- * them knows a screen exists.
+ * The demonstration this screen exists for is one gesture: turn Insurance Agent off, ask about
+ * a policy, and get the everyday answer without the insurance voice, rules or advice. The
+ * documents, their fields and their reminders are the core's (ADR 0017) and stay. The registry
+ * is read once per request, and nothing it is handed to knows a screen exists.
  *
  * Everything here is read from the registry. There is no hard-coded pack name in this file,
  * which is the point: a third pack appears on this screen because somebody dropped a YAML file
@@ -45,9 +45,9 @@ export default async function PacksPage() {
     <>
       <h1 className="font-display text-screen lg:text-display">Packs</h1>
       <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-lead text-ink-2">
-        What this assistant knows about. Switching a pack off silences its reminders and takes
-        its documents out of answers. Nothing is deleted, and switching it back on brings all of
-        it back.
+        What this assistant specialises in. Switching a pack off turns off its specialist voice,
+        rules, grounding and advice. Your documents stay searchable and in the vault, and
+        switching it back on brings all of it back.
       </p>
 
       <AlwaysOn />
@@ -57,8 +57,8 @@ export default async function PacksPage() {
         {installed.length === 0 ? (
           <div className="mt-[var(--s-3)]">
             <EmptyState title="No packs installed">
-              Parrot can still search and quote your documents, but nothing is reading typed
-              fields off them and no reminders are being set. A pack is one YAML file in{" "}
+              Parrot still reads, searches and reminds you about your documents; nothing adds
+              a specialist voice, rules or advice on top. A pack is one YAML file in{" "}
               <span className="num">packs/</span>.
             </EmptyState>
           </div>
@@ -75,10 +75,9 @@ export default async function PacksPage() {
         <p className="mt-[var(--s-4)] max-w-[var(--measure)] rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-3)] text-meta text-ink-2">
           {off.map((pack) => pack.display_name).join(" and ")}{" "}
           {off.length === 1 ? "is" : "are"} switched off.{" "}
-          {off.length === 1 ? "Its" : "Their"} reminders are silent,{" "}
-          {off.length === 1 ? "its" : "their"} documents are hidden from the vault listing, and
-          Ask cannot cite {off.length === 1 ? "them" : "any of them"} — so it will abstain on a
-          question only {off.length === 1 ? "that pack" : "they"} could have answered.
+          {off.length === 1 ? "Its" : "Their"} specialist voice, rules, grounding and advice are
+          off. Your documents stay searchable and in the vault, and Ask answers them in its
+          everyday voice.
         </p>
       ) : null}
 
@@ -116,8 +115,8 @@ export default async function PacksPage() {
  * What is true no matter what is switched on.
  *
  * Worth its own row: a person switching everything off should be able to see that Parrot has
- * not become useless, and a person reading this screen should understand that packs add typed
- * fields and reminders rather than being the thing that makes search work.
+ * not become useless, and a person reading this screen should understand that packs add a
+ * specialist voice, rules, grounding and advice rather than being the thing that makes search work.
  */
 function AlwaysOn() {
   return (
@@ -127,9 +126,9 @@ function AlwaysOn() {
         <span className="ml-auto text-meta text-ok">always on</span>
       </div>
       <p className="mt-[var(--s-1)] max-w-[var(--measure)] text-body text-ink-2">
-        Reading, chunking and answering are the core, not a pack. A document that belongs to no
-        pack is always searchable and can always be quoted — packs add the typed fields and the
-        dates worth reminding you about.
+        Reading, extracting, reminding and answering are the core, not a pack. Every document
+        is always searchable and can always be quoted — packs add a specialist voice, rules,
+        grounding and advice.
       </p>
     </div>
   );
@@ -157,17 +156,6 @@ function PackCard({ pack }: { pack: PackSummary }) {
               </span>
             ) : null}
           </div>
-
-          <p className="mt-[var(--s-2)] flex flex-wrap gap-x-[var(--s-3)] text-meta text-ink-2">
-            <span>
-              <span className="num">{pack.documents}</span> document
-              {pack.documents === 1 ? "" : "s"}
-            </span>
-            <span>
-              <span className="num">{pack.facts}</span> field
-              {pack.facts === 1 ? "" : "s"} read
-            </span>
-          </p>
         </div>
 
         <Toggle

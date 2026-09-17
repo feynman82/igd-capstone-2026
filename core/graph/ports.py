@@ -26,7 +26,8 @@ class Passage:
     score: float
     document_name: str = ""
     context_prefix: str = ""
-    pack_id: str = ""  # which pack's guardrails govern an answer built on this passage
+    pack_id: str = ""  # the pack id its document was written under; `core` since ADR 0017
+    doc_type: str = ""  # the catalogue type; a pack speaking for it governs the answer
     # a page of a document, a document on file, published guidance, or (ADR 0016) a cited fact,
     # a cited rule value, or the one calculation passage a `Calculation`'s figures are printed on
     kind: Kind = "document"

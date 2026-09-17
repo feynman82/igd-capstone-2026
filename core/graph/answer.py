@@ -70,7 +70,7 @@ from core.graph.knowledge import categories_asked, glossary, mentions, reworded
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
 from core.graph.sentences import SentenceScanner
-from core.packs import CORE, InstalledPack, catalog, installed_packs
+from core.packs import InstalledPack, catalog, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
@@ -602,7 +602,10 @@ def _max_sentences(installed: InstalledPack | None) -> int:
 
 
 def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> InstalledPack | None:
-    """The pack owning the best-scoring passage. Its guardrails govern the answer.
+    """The pack that speaks for the best-scoring passage's document type, or None for the core.
+
+    A pack speaks for the core document types in its `answering.documents` (ADR 0017), and its
+    guardrails, persona and exclusions govern an answer built on them.
 
     Packs declare different abstain floors — insurance is stricter than tax — and a different
     disclaimer, so this is not a detail: it decides both what it takes to answer and what the
@@ -619,24 +622,23 @@ def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> Instal
     same passage's score against the floor, so the passage that has to clear the bar is now the
     passage whose pack sets it.
 
-    A passage with no pack is skipped rather than counted: the RAG core answers from any
-    document, pack or no pack, and a chunk that belongs to nothing cannot be the one that
-    chooses a disclaimer. A `core` passage is skipped the same way: since ADR 0017 every
-    document is the core's, so only a passage an enabled pack read — a holding — names a pack.
-    When nothing in the evidence names a pack, the caller falls back to the strictest floor
-    rather than the loosest.
+    A passage whose document type no enabled pack speaks for does not choose: the core answers
+    everyday questions itself. When passages exist and none is spoken for, this is None and the
+    core governs — the default floor, no disclaimer, no persona, the catalogue's sentence limit.
+    Only with no evidence at all does the strictest enabled pack's floor stand in.
     """
     if not packs:
         return None
-    owned = [passage for passage in passages if passage.pack_id not in ("", CORE)]
-    if not owned:
+    if not passages:
         return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
-    winner = max(owned, key=lambda passage: passage.score).pack_id
-    for installed in packs:
-        if installed.id == winner:
-            return installed
-    # The evidence names a pack that is not installed any more. Strictest, not loosest.
-    return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
+
+    def speaker(passage: Passage) -> InstalledPack | None:
+        return next((p for p in packs if passage.doc_type in p.manifest.answering.documents), None)
+
+    spoken = [(passage, owner) for passage in passages if (owner := speaker(passage))]
+    if not spoken:
+        return None
+    return max(spoken, key=lambda pair: pair[0].score)[1]
 
 
 def _unknown_relation(word: str, disclaimer: str = "") -> Abstained:

@@ -198,8 +198,6 @@ export type PackSummary = {
   installed_at: string | null;
   never_acts: boolean;
   disclaimer: string;
-  documents: number;
-  facts: number;
 };
 
 export type ModuleSummary = {

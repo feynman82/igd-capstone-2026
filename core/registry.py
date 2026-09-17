@@ -82,17 +82,6 @@ UPDATE modules
 RETURNING id, version, manifest, enabled
 """
 
-# What a pack has to show for itself on the settings screen. Counted rather than estimated,
-# because "7 documents, 41 facts" is what makes switching one off a considered decision.
-COUNT_DOCUMENTS_BY_PACK = """
-SELECT pack_id, count(*)
-  FROM documents
- WHERE pack_id IS NOT NULL
- GROUP BY pack_id
-"""
-
-COUNT_FACTS_BY_PACK = "SELECT pack_id, count(*) FROM facts GROUP BY pack_id"
-
 
 # --------------------------------------------------------------------------------- the rows
 
@@ -107,8 +96,6 @@ class RegisteredPack:
     installed_at: datetime | None
     manifest: PackManifest | None  # None when the stored jsonb no longer validates
     on_disk: bool
-    documents: int = 0
-    facts: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -241,12 +228,7 @@ def enabled_module_ids(conn: Any) -> frozenset[str] | None:
     return frozenset(row[0] for row in rows if row[3])
 
 
-def _pack_row(
-    row: tuple[Any, ...],
-    on_disk: set[str],
-    documents: dict[str, int],
-    facts: dict[str, int],
-) -> RegisteredPack:
+def _pack_row(row: tuple[Any, ...], on_disk: set[str]) -> RegisteredPack:
     pack_id, version, raw, enabled, installed_at = row
     manifest: PackManifest | None
     try:
@@ -263,22 +245,16 @@ def _pack_row(
         installed_at=installed_at,
         manifest=manifest,
         on_disk=pack_id in on_disk,
-        documents=documents.get(pack_id, 0),
-        facts=facts.get(pack_id, 0),
     )
 
 
 def packs(conn: Any) -> list[RegisteredPack]:
-    """Every installed pack, with what it has extracted so far."""
+    """Every installed pack. Documents and facts are the core's (ADR 0017), so none are counted."""
     on_disk = {installed.id for installed in installed_packs()}
     with conn.cursor() as cur:
-        cur.execute(COUNT_DOCUMENTS_BY_PACK)
-        documents = {pack_id: count for pack_id, count in cur.fetchall()}
-        cur.execute(COUNT_FACTS_BY_PACK)
-        facts = {pack_id: count for pack_id, count in cur.fetchall()}
         cur.execute(SELECT_PACKS)
         rows = cur.fetchall()
-    return [_pack_row(row, on_disk, documents, facts) for row in rows]
+    return [_pack_row(row, on_disk) for row in rows]
 
 
 def _module_row(row: tuple[Any, ...], on_disk: set[str]) -> RegisteredModule:
@@ -319,7 +295,7 @@ def set_pack_enabled(conn: Any, pack_id: str, *, enabled: bool) -> RegisteredPac
         raise UnknownPack(pack_id)
     conn.commit()
     log.info("pack %s is now %s", pack_id, "enabled" if enabled else "disabled")
-    return _pack_row(row, {installed.id for installed in installed_packs()}, {}, {})
+    return _pack_row(row, {installed.id for installed in installed_packs()})
 
 
 def set_module_enabled(conn: Any, module_id: str, *, enabled: bool) -> RegisteredModule:
