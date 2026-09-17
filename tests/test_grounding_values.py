@@ -448,9 +448,11 @@ def test_the_model_is_held_to_the_keys_and_told_what_each_one_is() -> None:
     assert system == SYSTEM
     item = schema["properties"]["values"]["items"]
     assert item["properties"]["key"]["enum"] == [key.key for key in KEYS]
+    declared = sorted({q for key in KEYS for q in key.qualifiers})
     assert item["properties"]["qualifiers"] == {
         "type": "object",
-        "additionalProperties": {"type": "string"},
+        "properties": {name: {"type": "string"} for name in declared},
+        "additionalProperties": False,
     }
     for key in KEYS:
         assert key.key in prompt

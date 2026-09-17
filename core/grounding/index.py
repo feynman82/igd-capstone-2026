@@ -16,6 +16,7 @@ values and the review fields stay exactly as they were, and the next run tries a
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -24,7 +25,9 @@ from typing import Any
 from core.grounding.corpus import SourceText, load_corpus
 from core.grounding.values import extract_values
 from core.packs import PACKS_DIR, InstalledPack
-from core.runtime.ollama import Ollama
+from core.runtime.ollama import ModelUnavailable, Ollama
+
+log = logging.getLogger(__name__)
 
 # --------------------------------------------------------------------------------- the SQL
 
@@ -87,6 +90,7 @@ class IndexReport:
     unchanged: int
     pending: int
     superseded: int
+    unread: int = 0  # sources the model could not read; no hash is stored, so the next run retries
 
 
 def index_pack(
@@ -105,13 +109,17 @@ def index_pack(
 
     A new or changed source is extracted first, and only then are its pending values deleted,
     its approved values superseded, its row upserted with the new hash and the new values
-    inserted. Any error, `ModelUnavailable` above all, rolls the whole pack back and is re-raised:
-    nothing for this pack is committed.
+    inserted. A source the model cannot read (`ModelUnavailable`) is skipped before anything of it
+    is written, so its stored hash and values stay as they were and the next run retries it; the
+    other sources are kept. On 17 September one MoneySense FAQ section hung the 4B model until the
+    request timed out, and rolling the pack back threw away the 9x and 4x read from two other
+    sources. Any other error rolls the whole pack back and is re-raised.
     """
     sources = 0
     unchanged = 0
     pending = 0
     superseded = 0
+    unread = 0
     keys = installed.manifest.grounding.values
 
     try:
@@ -135,7 +143,12 @@ def index_pack(
 
                 # The model reads the new text before anything is written. An outage raises
                 # here, while the stored hash and approved values are still untouched.
-                values = extract_values(client, source, keys)
+                try:
+                    values = extract_values(client, source, keys)
+                except ModelUnavailable as error:
+                    log.warning("%s not read: %s", source.document.file, error)
+                    unread += 1
+                    continue
 
                 if existing is not None:
                     cur.execute(DELETE_PENDING, {"s": existing[0]})
@@ -164,7 +177,9 @@ def index_pack(
         raise
 
     conn.commit()
-    return IndexReport(sources=sources, unchanged=unchanged, pending=pending, superseded=superseded)
+    return IndexReport(
+        sources=sources, unchanged=unchanged, pending=pending, superseded=superseded, unread=unread
+    )
 
 
 def _upsert_source(cur: Any, source: SourceText) -> Any:

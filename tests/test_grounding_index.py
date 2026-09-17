@@ -266,7 +266,7 @@ def test_a_changed_source_is_extracted_before_anything_is_written(
 
 
 @pytest.mark.parametrize("stored", [None, b"\x11" * 32], ids=["new", "changed"])
-def test_an_outage_writes_nothing_and_rolls_back(
+def test_an_unreadable_source_is_skipped_and_the_rest_committed(
     monkeypatch: pytest.MonkeyPatch, stored: bytes | None
 ) -> None:
     unchanged = _source(sha256=b"\x33" * 32)
@@ -290,15 +290,16 @@ def test_an_outage_writes_nothing_and_rolls_back(
     monkeypatch.setattr(FakeCursor, "execute", execute)
     conn.script("INSERT INTO grounding_sources", rows=[(3,)])
 
-    with pytest.raises(ModelUnavailable):
-        index_module.index_pack(conn, object(), _installed(), today=TODAY)
+    report = index_module.index_pack(conn, object(), _installed(), today=TODAY)
 
-    assert conn.commits == 0
-    assert conn.rollbacks == 1
+    assert (report.unread, report.pending) == (1, 0)
+    assert conn.commits == 1
+    assert conn.rollbacks == 0
     touched = [q for q, _ in conn.calls if "grounding_values" in q]
-    assert touched == []  # no DELETE, UPDATE or INSERT of values
+    assert touched == []  # the unread source's values are neither deleted nor superseded
     upserted = conn.all_params_for("INSERT INTO grounding_sources")
-    assert [params["sha256"] for params in upserted] == [unchanged.sha256]  # rolled back
+    # only the unchanged source: the unread one keeps its old hash, so the next run retries it
+    assert [params["sha256"] for params in upserted] == [unchanged.sha256]
 
 
 def test_a_pack_with_no_corpus_returns_all_zeros(monkeypatch: pytest.MonkeyPatch) -> None:

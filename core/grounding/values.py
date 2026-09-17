@@ -270,9 +270,16 @@ def _schema(keys: Sequence[ValueKey]) -> dict[str, Any]:
                         "key": {"type": "string", "enum": [key.key for key in keys]},
                         "value": {"type": "string"},
                         "passage": {"type": "string"},
+                        # Only the qualifier names some key declares. Left open, the 4B model
+                        # filled it with "multiple", "money" and "units" on 17 September and every
+                        # 9x and 4x it found was dropped for an undeclared qualifier.
                         "qualifiers": {
                             "type": "object",
-                            "additionalProperties": {"type": "string"},
+                            "properties": {
+                                name: {"type": "string"}
+                                for name in sorted({q for key in keys for q in key.qualifiers})
+                            },
+                            "additionalProperties": False,
                         },
                     },
                     "required": ["key", "value", "passage", "qualifiers"],

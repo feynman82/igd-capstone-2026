@@ -84,6 +84,7 @@ def main(argv: list[str] | None = None) -> int:
                     f"  {installed.id}: {report.sources} source(s), {report.unchanged} "
                     f"unchanged, {report.pending} pending value(s), {report.superseded} "
                     "superseded"
+                    + (f", {report.unread} not read (run again to retry)" if report.unread else "")
                 )
             return 1 if failures else 0
     except DatabaseUnavailable as error:
