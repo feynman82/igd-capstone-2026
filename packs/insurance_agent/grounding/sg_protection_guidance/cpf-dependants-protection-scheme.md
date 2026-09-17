@@ -1,0 +1,122 @@
+<!-- source: https://www.cpf.gov.sg/member/account-services/providing-for-your-loved-ones/insuring-to-protect-your-dependants -->
+<!-- retrieved: 2026-09-17 · verbatim extraction; see sources.draft.yaml -->
+
+Account services
+
+Protect your loved ones with the Dependants’ Protection Scheme
+
+Dependants’ Protection Scheme (DPS) is a term life insurance scheme that provides basic financial protection for you and your family in the event of death, terminal illness or total permanent disability. DPS is solely administered by Great Eastern Life.
+
+Facebook Telegram WhatsApp Email LinkedIn X
+
+Eligibility
+
+Scheme details
+
+What to consider
+
+FAQs
+
+Eligibility Scheme details What to consider FAQs
+
+Eligibility
+
+Criteria for DPS
+
+1
+
+Automatic inclusion
+
+If you're a Singapore Citizen (SC) or Permanent Resident (PR) between age 21 and 65, DPS coverage is automatically extended to you upon a valid CPF working contribution.
+
+2
+
+Manual application
+
+If you’re between age 16 and 65 and have not been automatically covered by DPS, you can apply to join DPS with Great Eastern Life directly.
+
+Apply
+
+3
+
+Check your DPS coverage status
+
+You can check your status of your DPS coverage via the Providing for your loved ones dashboard by logging in with your Singpass.
+
+Check status
+
+Scheme details
+
+Find out more about DPS
+
+1
+
+DPS is not compulsory
+
+You can terminate your coverage any time by contacting Great Eastern Life. Before you do so, consider the financial protection DPS offers your family. If you decide to re-join DPS, you’ll need to submit a health declaration and coverage will only be provided subject to your good health.
+
+2
+
+DPS claim criteria
+
+A DPS claim can be made by your next of kin upon your demise or if you’re certified to be suffering from terminal illness or total permanent disability.
+
+Learn more
+
+3
+
+More details on DPS
+
+For more information on the DPS application, premium payment, claims, nomination, and other general enquiries, head over to Great Eastern Life’s DPS website.
+
+Learn more
+
+What to consider
+
+A few things to think about for DPS
+
+Evaluating your needs
+
+Retain DPS coverage to support dependants
+
+If you’re working and have dependants relying on your income, we encourage you to continue with your DPS coverage.
+
+For example, if a working adult has an accident or contracts a terminal illness resulting in the loss of income, their dependants may be left without support. The impact will be greater if they haven’t accumulated enough CPF or private savings to pass on to their dependants.
+
+This is why DPS is automatically extended to everyone upon their first CPF contribution between age 21 and 65.
+
+DPS premiums increase with age
+
+DPS premiums get more expensive when you’re older so it’s important to weigh the benefits between retaining your DPS coverage or conserving more of your CPF savings for retirement. If you wish to opt out of DPS, you can contact Great Eastern Life to terminate your DPS cover at any time.
+
+Examples of those who may not need DPS include:
+
+- Those whose dependants are grown up and are financially independent
+
+- Those with enough CPF or private savings to bequeath to their dependants to support them over the first few years of expenses in the event of an untimely death
+
+- Those with their own private term or life insurance, with enough insurance protection and payout to support dependants over the first few years of expenses in the event of an untimely death
+
+From early 2025, your CPF Special Account will be closed upon reaching age 55. This may also affect your DPS premium payment. If you plan to continue with your DPS coverage, consider making alternative payment arrangements.
+
+Declare your health truthfully
+
+Eligibility for DPS is subject to good health during application
+
+Your eligibility for DPS will be subject to your good health at the point of application. Do note that truthful health declaration is vital for the validity of your DPS policy.
+
+As with any life insurance, DPS covers may be declined or deferred if you have any serious pre-existing illnesses. This is to ensure that the scheme is viable, and premiums are kept affordable for all insured members.
+
+Learn more
+
+FAQs
+
+Common questions
+
+How much premium do I need to pay to be covered under Dependants’ Protection Scheme (DPS)?
+
+What are the claim exclusions for Dependants' Protection Scheme?
+
+My Dependants' Protection Scheme (DPS) is covered by NTUC Income prior to 1 April 2021. When my DPS cover is transferred over to Great Eastern Life from 1 April 2021, do I need to declare my health?
+
+View all

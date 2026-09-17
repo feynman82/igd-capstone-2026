@@ -420,7 +420,7 @@ guidance, each source recorded with where it came from and when it was retrieved
 **inside the pack**, at `packs/<pack_id>/grounding/<corpus_id>/`, so a pack someone
 downloads carries its sources with it. See the two `sources.yaml` files already there, in
 `packs/iras_tax/grounding/iras_reliefs_ya2026/` and
-`packs/insurance_agent/grounding/mas_fair_dealing/`.
+`packs/insurance_agent/grounding/sg_protection_guidance/`.
 
 In your pack, you point at it by its id, never by a path:
 

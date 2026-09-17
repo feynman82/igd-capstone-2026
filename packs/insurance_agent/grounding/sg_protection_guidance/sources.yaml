@@ -1,0 +1,255 @@
+# Provenance for every file indexed in this corpus. Captured verbatim 2026-09-17.
+# Nothing is cited until Christian signs off each document (reviewed_by / reviewed_on).
+corpus_id: sg_protection_guidance
+applies_to: Protection and health insurance guidance for Singapore households
+maintained_by: Christian
+reviewed_by: Christian
+reviewed_on: null
+documents:
+- file: moneysense-basic-financial-planning.md
+  title: Basic Financial Planning Guide
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://www.moneysense.gov.sg/planning-your-finances-well/
+  published: 2026-07-02
+  retrieved: 2026-09-17
+  applies_to: Rules of thumb for emergency funds, protection (9x/4x annual income, max 15% of income)
+    and investment
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Site nav and breadcrumb cut. The old URL /basic-financial-planning-guide/ and the 2023 /files/
+    PDF URLs now return 404, because the guide moved to /planning-your-finances-well/.
+- file: moneysense-bfpg-starting-a-family.md
+  title: Basic Financial Planning Guide for Working Adult 25 - 34 years old (Starting a family)
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://isomer-user-content.by.gov.sg/309/786cb098-6d93-4be5-8c9a-eb7ddff2a45c/english__working_adult__starting_a_family_.pdf
+  published: null
+  retrieved: 2026-09-17
+  applies_to: Protection rules of thumb and worked case study (Death/TPD 9x, CI 4x, DPS, MediShield Life),
+    age 25-34
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Linked from https://www.moneysense.gov.sg/planning-your-finances-well/support-dependants/ (the
+    file sits on a gov.sg asset host). Pages 1-4 kept; page 5 (home purchase, investments) cut. Extraction
+    follows the PDF layout, so the case-study table on page 2 is flattened. Its footnotes cite older MediShield
+    Life premiums ($397.29) than the current MOH table. The PDF is undated.
+- file: moneysense-bfpg-faq.md
+  title: Consumer FAQs on Basic Financial Planning Guide ("Guide")
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://isomer-user-content.by.gov.sg/309/3521b80b-3319-45e0-b8b5-a293c39604be/FAQs_for_consumers_on_Basic_Financial_Planning__finalised_.pdf
+  published: null
+  retrieved: 2026-09-17
+  applies_to: Rationale for 9x/4x/15% rules; illustrative median term premiums for two sample profiles
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: 'Linked from the Basic Financial Planning Guide page. Pages 1-5 kept (general, emergency funds,
+    protection); pages 6-7 (investment) cut. The median premium illustration is undated and gives no comparefirst.sg
+    retrieval date. compareFIRST premiums were not captured: they appear only after a search form is submitted.
+    The median premium table in this FAQ is the verbatim substitute, attributed by MoneySense to comparefirst.sg.'
+- file: moneysense-health-insurance.md
+  title: Understanding health insurance
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://www.moneysense.gov.sg/health-insurance/
+  published: 2026-07-02
+  retrieved: 2026-09-17
+  applies_to: Types of health insurance plans, who should buy, MediShield Life / CareShield Life / MediSave
+    basics
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Site nav and "Related articles" section cut. Some of the text still talks about opting in to ElderShield,
+    as the page prints it.
+- file: moneysense-integrated-shield-plans.md
+  title: Understanding integrated shield plans
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://www.moneysense.gov.sg/integrated-shield-plans/
+  published: 2026-07-02
+  retrieved: 2026-09-17
+  applies_to: How Integrated Shield Plans and riders work, deductibles and co-payment, MediSave withdrawal
+    limits
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: The "Related articles" section was cut. The source formats the deductible/co-payment sentence
+    as a heading and prints "capped at a minimum of $6,000 per year". It is kept verbatim; check what
+    it means against MOH before a calculator relies on it.
+- file: moh-medishield-life.md
+  title: Premium and Subsidy Tables
+  publisher: Ministry of Health
+  publisher_kind: government
+  url: https://www.moh.gov.sg/managing-expenses/schemes-and-subsidies/medishield-life/medishield-life-premium-and-subsidy-tables/
+  published: 2025-10-01
+  retrieved: 2026-09-17
+  applies_to: MediShield Life annual premiums by age next birthday and premium subsidy rates, Singapore
+    Citizens and PRs
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: The premium schedule applies to policies starting or renewing on or after 1 April 2025. The MediShield
+    Life index page (/medishield-life/) is only a list of links, so it was downloaded to raw/ but not
+    converted.
+- file: moh-medishield-life-benefits.md
+  title: MediShield Life Benefits
+  publisher: Ministry of Health
+  publisher_kind: government
+  url: https://www.moh.gov.sg/managing-expenses/schemes-and-subsidies/medishield-life/medishield-life-benefits/
+  published: 2026-06-03
+  retrieved: 2026-09-17
+  applies_to: MediShield Life claim limits, deductibles, co-insurance and exclusions, admissions from
+    1 June 2026
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Cut from "## Cancer Drug List" to the end (the drug list and the proton beam and clinical criteria).
+    The limits apply to admissions or treatments on or after 1 June 2026.
+- file: moh-integrated-shield-plans.md
+  title: Comparison of Integrated Shield Plans
+  publisher: Ministry of Health
+  publisher_kind: government
+  url: https://www.moh.gov.sg/managing-expenses/schemes-and-subsidies/integrated-shield-plans/comparision-of-integrated-shield-plans/
+  published: 2026-08-05
+  retrieved: 2026-09-17
+  applies_to: IPs by ward class, claims processing times, claim rejection reasons, Letters of Guarantee,
+    disputes
+  review_by: 2027-03-17
+  reviewed_by: null
+  reviewed_on: null
+  note: The "Comparison of lifetime premiums" tables are PNG images and were NOT transcribed; their URLs
+    are in REPORT.md. The "Sample Policy Contracts" link list was cut. The plan list and lifetime premiums
+    are "as at 1 Jun 2026". MOH notes that insurers may revise premiums regularly, so review_by is set
+    6 months out.
+- file: moh-about-integrated-shield-plans.md
+  title: About Integrated Shield Plan
+  publisher: Ministry of Health
+  publisher_kind: government
+  url: https://www.moh.gov.sg/managing-expenses/schemes-and-subsidies/integrated-shield-plans/about-integrated-shield-plans/
+  published: 2026-04-30
+  retrieved: 2026-09-17
+  applies_to: IP structure; MediSave Additional Withdrawal Limits for IP premiums by age
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: The panel-size statistics section at the end was cut.
+- file: moh-isp-standard-plan-comparison.md
+  title: Standard Integrated Shield Plans Targeted at Ward Class B1 in Public Hospitals
+  publisher: Ministry of Health
+  publisher_kind: government
+  url: https://isomer-user-content.by.gov.sg/3/a4407b11-a942-4a91-aa46-68aec5a61569/Comparison%20of%20Standard%20IPs%20(for%20Class%20B1%20coverage)%20(Jun%202026).pdf
+  published: 2026-06-01
+  retrieved: 2026-09-17
+  applies_to: Standard IP benefits and premiums by insurer and age next birthday, Singapore Citizens and
+    PRs
+  review_by: 2027-03-17
+  reviewed_by: null
+  reviewed_on: null
+  note: All 5 pages kept; the PDF says "Updated as of 1 Jun 2026". Tables are flattened in extraction.
+    Page 3 keeps its column order, but ranges such as "238 - 239" are one cell. Pages 4-5 lose their insurer
+    headers. Check every figure against the PDF before use.
+- file: moh-isp-private-hospital-premiums.md
+  title: Comparison of Private Hospital IPs (Jun 2026)
+  publisher: Ministry of Health
+  publisher_kind: government
+  url: https://isomer-user-content.by.gov.sg/3/d81f31f8-66af-44d3-af98-297be8ccbee8/Comparison%20of%20Private%20Hospital%20IPs%20(Jun%202026).pdf
+  published: 2026-06-01
+  retrieved: 2026-09-17
+  applies_to: Private hospital IP annual premiums by insurer and age next birthday
+  review_by: 2027-03-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Only the premium pages (10-12) kept; benefit pages 1-9 cut. Where a cell is blank, extraction
+    breaks the column alignment (the "41 to 50" row has 10 values for 11 plans), so values cannot be matched
+    to plans from the text alone. The Class A, Class B1 and B2/C comparison PDFs were not captured.
+- file: cpf-medishield-life.md
+  title: MediShield Life
+  publisher: CPF Board
+  publisher_kind: government
+  url: https://www.cpf.gov.sg/member/healthcare-financing/medishield-life
+  published: 2026-09-09
+  retrieved: 2026-09-17
+  applies_to: MediShield Life overview, eligibility, premium payment via MediSave
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Cut the session-timeout, maintenance and hotline notices and the "Related reads" articles. The
+    page prints no premium figures; see moh-medishield-life.md.
+- file: cpf-careshield-life.md
+  title: CareShield Life
+  publisher: CPF Board
+  publisher_kind: government
+  url: https://www.cpf.gov.sg/member/healthcare-financing/careshield-life
+  published: 2026-09-11
+  retrieved: 2026-09-17
+  applies_to: CareShield Life eligibility by birth year, payout examples, ADL claim criteria, premium
+    support
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Same cuts as cpf-medishield-life.md. The page has no premium table; premiums sit behind a personalised
+    calculator or sub-page, which was not captured. The payout examples are for someone born in 1980.
+- file: cpf-dependants-protection-scheme.md
+  title: Insuring to protect your dependants
+  publisher: CPF Board
+  publisher_kind: government
+  url: https://www.cpf.gov.sg/member/account-services/providing-for-your-loved-ones/insuring-to-protect-your-dependants
+  published: 2026-05-25
+  retrieved: 2026-09-17
+  applies_to: DPS eligibility, automatic cover age 21-65, who may not need DPS
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Same page chrome cut. The page prints no cover amount or premiums. The CPF FAQ article that has
+    them (/service/article/how-much-premium-...) is built by script (Salesforce), and curl got back an
+    empty shell.
+- file: cpf-dps-premium-rates-2021.md
+  title: CPF members to enjoy higher sum assured, increased coverage for Dependants' Protection Scheme
+  publisher: CPF Board
+  publisher_kind: government
+  url: https://www.cpf.gov.sg/member/infohub/news/news-releases/cpf-members-to-enjoy-higher-sum-assured-increased-coverage-for-dependants-protection-scheme
+  published: 2024-06-25
+  retrieved: 2026-09-17
+  applies_to: DPS sum assured ($70,000 / $55,000) and yearly premiums by age band, effective 1 April 2021
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: This is a news release from about 2020-21, not a live premium schedule. The published date is
+    the page's "Last updated 25 Jun 2024". The rates took effect on 1 April 2021 under the Great Eastern
+    contract, which a later CPF release says runs to 2028. Confirm the rates are still current. The MoneySense
+    FAQ (2023) still quotes $18/year for $70,000.
+- file: lia-protection-gap-study.md
+  title: 2022 Protection Gap Study Key Findings
+  publisher: Life Insurance Association Singapore
+  publisher_kind: industry_association
+  url: https://www.lia.org.sg/media/3973/lia-pgs-2022-key-findings_final_8-sep-2023.pdf
+  published: 2023-09-08
+  retrieved: 2026-09-17
+  applies_to: Mortality and CI protection need multiples and gaps, economically active adults and platform
+    workers
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: All 28 pages kept. This is still the latest study on lia.org.sg; no 2025/2026 study was found.
+    Many figures are charts, so the text is fragmentary, but the text does print "Approximately 9X-10X"
+    and "4.0X" of annual income. Every page footer reads "Confidential information. All rights reserved."
+    although the PDF is openly published, so reuse needs confirming. Every page is footed "Confidential
+    information. All rights reserved."; reuse is to be confirmed with LIA before this source is cited.
+- file: lia-protection-gap-study-media-release.md
+  title: 'Media Release: Singapore''s critical illness protection gap narrows while mortality protection
+    gap remains relatively unchanged: Protection Gap Study 2022'
+  publisher: Life Insurance Association Singapore
+  publisher_kind: industry_association
+  url: https://www.lia.org.sg/media/3972/lia-pgs-2022-press-release_final_8-sep-2023.pdf
+  published: 2023-09-08
+  retrieved: 2026-09-17
+  applies_to: PGS 2022 headline gaps (21% mortality, 74% CI) and average coverage per policyholder
+  review_by: 2027-09-17
+  reviewed_by: null
+  reviewed_on: null
+  note: Whole PDF kept. The HTML release page (raw/lia-pgs-2022-release.html) only links to the PDFs and
+    gives the date 08 Sep 2023.

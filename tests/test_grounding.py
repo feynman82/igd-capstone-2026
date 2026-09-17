@@ -10,7 +10,7 @@ from typing import Any
 import pytest
 import yaml
 
-from core.contracts import PackManifest
+from core.contracts import GroundingCorpus, PackManifest
 from core.grounding.corpus import CorpusInvalid, corpus_dir, load_corpus
 from core.packs import InstalledPack
 
@@ -108,3 +108,12 @@ def test_a_pack_with_no_corpus_gives_none_and_empty(tmp_path: Path) -> None:
 
     assert corpus_dir(installed, root=tmp_path) is None
     assert load_corpus(installed, root=tmp_path) == []
+
+
+def test_the_insurance_corpus_lists_exactly_the_files_in_its_folder() -> None:
+    directory = Path("packs/insurance_agent/grounding/sg_protection_guidance")
+    raw = yaml.safe_load((directory / "sources.yaml").read_text(encoding="utf-8"))
+    corpus = GroundingCorpus.model_validate(raw)
+    listed = {document.file for document in corpus.documents}
+    assert all((directory / name).is_file() for name in listed)
+    assert {path.name for path in directory.glob("*.md")} == listed

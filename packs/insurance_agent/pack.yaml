@@ -1,23 +1,36 @@
 # Insurance and Coverage — domain pack
 #
-# A pack is grounding, a persona, its own answering and advice (ADR 0017). It declares no
+# A pack is grounding + persona + specialised answering + advice (ADR 0017). It declares no
 # document types and no registers: those live in core/documents.yaml, and the fields this pack
 # names are checked against that catalogue when packs load. After editing, run:
 #     python -m packs.build
 # Never edit a generated file by hand.
 
 id: insurance_agent
-version: 0.5.0
+version: 0.5.1
 display_name: Insurance and Coverage
 
-# No grounding corpus. This pack answers only from the user's own policy documents.
-# grounding/mas_fair_dealing/ in this pack is retained as a placeholder: its sources.yaml is
-# empty, and the MAS Fair Dealing Guidelines are a conduct standard for insurers rather than
-# material that answers what a household is covered for. Reopen with real sources and retrieval
-# dates recorded, reviewed by Siew, before setting a corpus here.
+# Public Singapore protection and health insurance guidance, with provenance per source. The
+# values are keys only: the numbers are extracted from the sources and approved by a person with
+# scripts/review_grounding_values.py before any calculator reads them (ADR 0016).
 grounding:
-  corpus: null
-  top_k: 0
+  corpus: sg_protection_guidance
+  top_k: 6
+  values:
+    - key: death_tpd_income_multiple
+      unit: multiple
+      description: Multiple of annual income recommended as death and total permanent disability cover
+    - key: ci_income_multiple
+      unit: multiple
+      description: Multiple of annual income recommended as critical illness cover
+    - key: medishield_life_premium
+      unit: money
+      qualifiers: [age_band]
+      description: MediShield Life annual premium, including GST, by age next birthday
+    - key: dps_sum_assured
+      unit: money
+      qualifiers: [age_band]
+      description: Dependants' Protection Scheme sum assured by age band
 
 persona:
   system: >
