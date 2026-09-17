@@ -202,6 +202,9 @@ class Answering(Strict):
     categories: Categories | None = None
     exclusions: Exclusions | None = None
     max_sentences: int = Field(default=6, ge=1, le=30)
+    # Core document types this pack speaks for; its guardrails, persona and exclusions govern an
+    # answer built on them. The catalogue's own answering ignores it.
+    documents: list[Slug] = Field(default_factory=list)
 
 
 class GroundingDocument(Strict):
@@ -437,6 +440,12 @@ class PackManifest(Strict):
         One catalogue-aware check, run once when packs load, replaces the cross-pack link check:
         a missing name stops the load rather than silently withholding advice at question time.
         """
+        for doc_type in self.answering.documents:
+            if doc_type not in catalog.document_types:
+                raise ValueError(
+                    f"{self.id}: answering.documents names {doc_type!r}, which is not declared "
+                    "in the core catalogue"
+                )
         categories = self.answering.categories
         if categories is not None and not catalog.declares_field(categories.match_field):
             raise ValueError(
