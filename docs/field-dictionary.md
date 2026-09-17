@@ -141,7 +141,7 @@ Notice of Assessment issued by IRAS stating assessed income and tax payable.
 
 ### `identity_card`
 
-National identity card (NRIC or FIN card), front side, printing an identity number, full name and date of birth.
+Front of a national identity card (NRIC or FIN card) printing an identity number, full name and date of birth. Not the card back, which prints only an address, date of issue and postcode.
 
 | Field | Type | Required | Stored in | Meaning |
 |---|---|---|---|---|

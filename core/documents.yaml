@@ -325,7 +325,7 @@ document_types:
   # app lock, and recorded in docs/governance/data-inventory.md. The back of an identity card
   # prints none of these fields and quarantines; there is deliberately no type for it.
   identity_card:
-    description: National identity card (NRIC or FIN card), front side, printing an identity number, full name and date of birth
+    description: Front of a national identity card (NRIC or FIN card) printing an identity number, full name and date of birth. Not the card back, which prints only an address, date of issue and postcode
     subject_field: full_name
     fields:
       - name: id_number

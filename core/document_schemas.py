@@ -240,8 +240,8 @@ class NoticeOfAssessment(BaseModel):
 
 
 class IdentityCard(BaseModel):
-    """National identity card (NRIC or FIN card), front side, printing an identity number, full name
-    and date of birth.
+    """Front of a national identity card (NRIC or FIN card) printing an identity number, full name and
+    date of birth. Not the card back, which prints only an address, date of issue and postcode.
     """
 
     model_config = ConfigDict(extra="forbid")

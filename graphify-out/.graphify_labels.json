@@ -219,6 +219,10 @@
   "217": "NNNN · The decision, as a statement not a question",
   "218": "12. Chunks follow the document's headings, and embeddings use the model's task prompts",
   "219": "page.tsx",
+  "220": "15. A name scopes a question, and a grandparent is not a parent",
   "221": "5. The watched folder is polled for stability, not subscribed to for events",
-  "227": "test_the_debounce_key_separates_two_policies_of_one_person"
+  "222": "NoReranker",
+  "223": "OwnerRequest",
+  "224": "queries.py",
+  "225": "test_generated_files_are_in_sync"
 }

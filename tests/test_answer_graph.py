@@ -629,9 +629,9 @@ def test_the_best_passage_chooses_the_pack_even_when_it_is_outnumbered() -> None
     )
 
 
-def test_a_passage_belonging_to_no_pack_does_not_choose_one() -> None:
-    """The RAG core answers from any document. A chunk no pack speaks for cannot pick the
-    disclaimer, so the pack comes from the best passage a pack speaks for."""
+def test_the_best_passage_decides_and_a_type_no_pack_speaks_for_is_the_cores() -> None:
+    """The best passage decides. A weaker policy passage further down does not get to sign an
+    answer whose best evidence no pack speaks for: the core governs it, unsigned."""
     evidence = [
         Passage(1, DOC, 1, "text", 0.95, "loose.pdf"),
         passage(2, 0.60, "insurance_agent"),
@@ -642,7 +642,7 @@ def test_a_passage_belonging_to_no_pack_does_not_choose_one() -> None:
     )
     answer = build(client, evidence).ask("when?")
 
-    assert "insurance" in answer.disclaimer.lower()
+    assert answer.disclaimer == ""
 
 
 def test_the_floor_that_is_applied_belongs_to_the_passage_that_has_to_clear_it() -> None:
@@ -1137,6 +1137,7 @@ def test_with_no_pack_in_play_the_sentence_limit_is_the_catalogue_s(
     monkeypatch.setattr(answer, "catalog", lambda: patched)
 
     assert "Write at most 3 sentences." in answer.answer_system(None)
+    assert answer.answer_system(None).startswith(answer.CORE_PERSONA), "the core has its own voice"
     limit = pack("insurance_agent").manifest.answering.max_sentences
     assert f"Write at most {limit} sentences." in answer.answer_system(pack("insurance_agent"))
 
@@ -1163,6 +1164,8 @@ def test_a_type_no_pack_speaks_for_is_governed_by_the_core() -> None:
     packs = [pack("insurance_agent"), pack("iras_tax")]
     letter = Passage(1, DOC, 1, "Nothing relevant.", 0.43, "letter.pdf", "", "core", "letter")
     assert _pack_for([letter], packs) is None
+    weaker_policy = Passage(2, DOC, 1, "Policy.", 0.40, "p.pdf", "", "core", "policy_schedule")
+    assert _pack_for([letter, weaker_policy], packs) is None, "the best passage decides, not any"
     strictest = max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
     assert _pack_for([], packs) == strictest, "no evidence at all: the strictest floor stands in"
 

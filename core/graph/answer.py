@@ -178,11 +178,23 @@ ANSWER_SYSTEM = (
 )
 
 
+# The core's own voice, for evidence no pack speaks for (ADR 0017). Not decoration: on 17 September,
+# with the rules alone, the 4B generator returned no sentences for "When was Marcus born?" while
+# the NRIC passage printing the date ranked first. This wording answered that, Rachel's NRIC number
+# and Lucas's date of birth; a near paraphrase lost the NRIC one.
+# ponytail: tuned on three live questions; golden-set rows should hold it once eval covers them.
+CORE_PERSONA = (
+    "You explain a household's own documents plainly and briefly, naming the document and the "
+    "line each point comes from."
+)
+
+
 def answer_system(installed: InstalledPack | None) -> str:
-    """The pack's voice first, the core's rules last: a persona cannot loosen what follows it."""
+    """The voice first, the core's rules last: a persona cannot loosen what follows it."""
     limit = _max_sentences(installed)
     rules = f"{ANSWER_SYSTEM} Write at most {limit} sentences."
-    return f"{installed.manifest.persona.system.strip()}\n\n{rules}" if installed else rules
+    voice = installed.manifest.persona.system.strip() if installed else CORE_PERSONA
+    return f"{voice}\n\n{rules}"
 
 
 _ANSWER_SCHEMA: dict[str, Any] = {
@@ -622,23 +634,18 @@ def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> Instal
     same passage's score against the floor, so the passage that has to clear the bar is now the
     passage whose pack sets it.
 
-    A passage whose document type no enabled pack speaks for does not choose: the core answers
-    everyday questions itself. When passages exist and none is spoken for, this is None and the
-    core governs — the default floor, no disclaimer, no persona, the catalogue's sentence limit.
-    Only with no evidence at all does the strictest enabled pack's floor stand in.
+    The best-scoring passage decides. When no enabled pack speaks for its document type, this is
+    None and the core governs — the default floor, no disclaimer, no persona, the catalogue's
+    sentence limit. A weaker policy passage further down must not sign an answer read from an
+    identity card: on 17 September "When was Marcus born?" came back with the insurance
+    disclaimer because it did. Only with no evidence at all does the strictest pack stand in.
     """
     if not packs:
         return None
     if not passages:
         return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
-
-    def speaker(passage: Passage) -> InstalledPack | None:
-        return next((p for p in packs if passage.doc_type in p.manifest.answering.documents), None)
-
-    spoken = [(passage, owner) for passage in passages if (owner := speaker(passage))]
-    if not spoken:
-        return None
-    return max(spoken, key=lambda pair: pair[0].score)[1]
+    best = max(passages, key=lambda passage: passage.score)
+    return next((p for p in packs if best.doc_type in p.manifest.answering.documents), None)
 
 
 def _unknown_relation(word: str, disclaimer: str = "") -> Abstained:
