@@ -94,6 +94,7 @@ def _conn_returning(rows: list[tuple[Any, ...]]) -> Any:
     conn = MagicMock()
     cursor = conn.cursor.return_value.__enter__.return_value
     cursor.fetchall.return_value = rows
+    cursor.fetchone.return_value = None  # no date of birth on file (`scope.AGE_BASIS`)
     return conn
 
 

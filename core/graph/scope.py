@@ -41,6 +41,7 @@ import logging
 import re
 from collections.abc import Sequence
 from dataclasses import dataclass
+from datetime import date
 from typing import TYPE_CHECKING, Any, Literal
 
 from core.graph.ports import Passage
@@ -271,6 +272,25 @@ def named_in(question: str, people: Sequence[Person]) -> list[Person]:
 
 # One statement, parameterised, per rule 1. Which people the documents behind a set of passages
 # resolve to — confirmed aliases only, so an unreviewed model guess can never scope an answer.
+# A person's relation and date of birth, for the adult rule (ADR 0016 addendum). The date is read
+# from any indexed core `date_of_birth` fact printed under one of their confirmed names — an NRIC,
+# a passport, a birth certificate or a policy schedule.
+# ponytail: two different printed dates take the later one, which errs toward "under 21".
+AGE_BASIS = """
+SELECT p.relation, max(f.value_date)
+  FROM people p
+  LEFT JOIN facts f
+         ON f.key = 'date_of_birth'
+        AND f.value_date IS NOT NULL
+        AND lower(btrim(f.subject)) IN (
+              SELECT lower(btrim(a.alias)) FROM person_aliases a
+               WHERE a.person_id = p.id AND a.confirmed
+              UNION SELECT lower(btrim(p.display_name)))
+        AND EXISTS (SELECT 1 FROM documents d WHERE d.id = f.document_id AND d.status = 'indexed')
+ WHERE p.id = %(id)s
+ GROUP BY p.relation
+"""
+
 DOCUMENT_PEOPLE = """
 SELECT f.document_id, p.id, p.display_name
   FROM facts f
@@ -367,6 +387,8 @@ class Subject:
     decision `apply` makes, so advice never addresses somebody as if they had asked it themselves.
     """
     ambiguous: bool = False
+    relation: str | None = None  # `people.relation` of the one person resolved
+    born: date | None = None  # their date of birth, from a core `date_of_birth` fact, if on file
 
 
 @dataclass(frozen=True, slots=True)
@@ -603,9 +625,18 @@ class HouseholdScope:
             # enough?" does; `_decide` cannot tell the two apart (see `_Decision.fallthrough`), so
             # `whose` checks here rather than guessing the owner.
             return Subject(person_ids=frozenset(), name="", ambiguous=True)
+        relation, born = None, None
+        if len(decision.person_ids) == 1:
+            with self.conn.cursor() as cur:
+                cur.execute(AGE_BASIS, {"id": next(iter(decision.person_ids))})
+                found = cur.fetchone()
+            if found is not None:
+                relation, born = found
         return Subject(
             person_ids=decision.person_ids,
             name=decision.name,
             about=decision.about,
             someone_else=decision.someone_else,
+            relation=relation,
+            born=born,
         )

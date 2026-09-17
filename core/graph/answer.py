@@ -236,6 +236,24 @@ ADVICE_SENTENCES = 3
 CALCULATION_CITATION = "Worked out by Parrot from the inputs above"
 
 NO_OWNER = "Say who you are on the Household page first."
+ADULT_AGE = 21
+
+
+def _minor(subject: Subject, today: date) -> str | None:
+    """Why advice about this person is withheld as not about an adult, or None when it is not."""
+    name = subject.name or "this person"
+    if subject.born is None:
+        if subject.relation == "child":
+            return (
+                f"Advice is given only about adults, and {name}'s date of birth is not on file. "
+                "File their NRIC, passport or birth certificate."
+            )
+        return None
+    before_birthday = (today.month, today.day) < (subject.born.month, subject.born.day)
+    if today.year - subject.born.year - before_birthday < ADULT_AGE:
+        return f"Advice is given only about adults, and {name} is under {ADULT_AGE}."
+    return None
+
 
 WHOSE_REASON = "the question could be about more than one person"
 WHOSE_MISSING = "Name one person, then ask again."
@@ -1126,6 +1144,13 @@ class AnswerGraph:
             return
         person = subject.name or None
 
+        # The owner's consent covers adult members only (ADR 0016 addendum): a member under 21, or
+        # a child whose date of birth is not on file, is withheld before consent is even asked.
+        today = self._today or date.today()
+        if (minor := _minor(subject, today)) is not None:
+            yield AdviceWithheld(installed.id, shape.label, person, [minor], disclaimer)
+            return
+
         consent_id = consents.current(installed.id, advice.consent_version)
         if consent_id is None:
             yield ConsentRequired(
@@ -1138,7 +1163,6 @@ class AnswerGraph:
             )
             return
 
-        today = self._today or date.today()
         result = adviser.calculate(
             installed,
             shape,

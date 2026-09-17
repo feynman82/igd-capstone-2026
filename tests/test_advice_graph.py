@@ -728,3 +728,50 @@ def test_a_calculation_for_the_wrong_person_is_never_shown() -> None:
 
     with pytest.raises(ValueError, match="does not match the question asked"):
         list(graph.stream(ASKED))
+
+
+# ------------------------------------------------------------------------------- the adult rule
+
+
+@pytest.mark.parametrize(
+    ("subject", "why"),
+    [
+        (Subject(frozenset({3}), "Lucas", relation="child", born=date(2019, 6, 14)), "under 21"),
+        (Subject(frozenset({3}), "Lucas", relation="child"), "date of birth is not on file"),
+        (
+            Subject(
+                frozenset({2}),
+                "Rachel",
+                relation="partner",
+                born=TODAY.replace(year=TODAY.year - 20),
+            ),
+            "under 21",
+        ),
+    ],
+)
+def test_advice_about_a_minor_is_withheld_before_consent_is_asked(
+    subject: Subject, why: str
+) -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, adviser, consents, log, _ = build(client, subject=subject)
+
+    got = list(graph.stream(ASKED))
+
+    assert [type(event) for event in got] == [AdviceWithheld]
+    withheld = got[0]
+    assert isinstance(withheld, AdviceWithheld)
+    assert why in withheld.missing[0]
+    assert adviser.calls == [] and consents.asked == [] and log.records == []
+
+
+def test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent() -> None:
+    for subject in (
+        Subject(frozenset({2}), "Rachel", relation="partner", born=date(1989, 2, 17)),
+        Subject(frozenset({2}), "Rachel", relation="partner"),
+        Subject(
+            frozenset({2}), "Rachel", relation="partner", born=TODAY.replace(year=TODAY.year - 21)
+        ),
+    ):
+        client = ScriptedOllama({"intent": "advise"})
+        graph, _, _, _, _ = build(client, subject=subject, consent_id=None)
+        assert [type(event) for event in graph.stream(ASKED)] == [ConsentRequired]
