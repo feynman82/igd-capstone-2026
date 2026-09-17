@@ -4,9 +4,10 @@
 #     uv run python -m corpus.validate corpus/register/<batch>.csv
 #
 # Leave these guide lines in place if you like — the validator skips them.
-# Every column below is a field some installed pack declares. Fill the ones that
+# Every column below is a field core/documents.yaml declares. Fill the ones that
 # apply to the row's doc_type and leave the rest empty.
 #
+# pack_id is always: core
 # tier must be one of: clean, scanned, photo
 # Dates are YYYY-MM-DD. Money is a plain number, no currency symbol, two decimals.
 # Identifiers are copied exactly as printed: no spaces removed, no case changed.
@@ -16,24 +17,36 @@
 #   Anything left out is page 1, so a single-page document leaves this empty.
 #   Fill it AFTER the mail merge, when the page layout exists.
 #
-# Insurance and Coverage (insurance_agent)
+# Document types (core/documents.yaml)
 #   policy_schedule: required = insurer, policy_no, insured, product_name, cover_from, premium_payable
 #   renewal_notice: required = insurer, policy_no, insured, expiry_date, renewal_premium, payment_due_date
 #   claim_letter: required = insurer, policy_no, claim_no, claimant
 #   benefit_illustration: required = insurer, life_assured, sum_assured, annual_premium
 #   policy_anniversary_statement: required = insurer, policy_no, life_assured, statement_date, sum_assured, annual_premium
-# Tax and Reliefs (iras_tax)
 #   payslip: required = employee, employer, pay_period, gross_salary, net_pay
 #   donation_receipt: required = donor, charity, receipt_no, donation_date, donation_amount
 #   cpf_statement: required = member, statement_year, total_contributions
 #   srs_statement: required = account_holder, account_no, statement_year, contributions_ytd
 #   notice_of_assessment: required = taxpayer, assessment_year, assessable_income, tax_payable, payment_due_date
+#   identity_card: required = id_number, full_name, date_of_birth
+#   passport: required = passport_no, full_name, date_of_birth, date_of_expiry
+#   birth_certificate: required = registration_no, child_name, date_of_birth
+#   loan_agreement: required = lender, facility_no, borrower, principal
 #
-doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,maturity_date,premium_payable,sum_insured,excess,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,sum_assured,annual_premium,statement_date,surrender_value,premiums_paid_to_date,employee,employer,pay_period,gross_salary,cpf_employee,net_pay,donor,charity,receipt_no,donation_date,donation_amount,tax_deductible,member,statement_year,total_contributions,ordinary_account_balance,account_holder,account_no,contributions_ytd,taxpayer,assessment_year,assessable_income,tax_payable,field_pages,notes
-b2-0001,payslip,core,2026-07-28,Rachel Ng Hui Shan,clean,,,,,,,,,,,,,,,,,,,,,,,Rachel Ng Hui Shan,Northlight Health Pte Ltd,2026-07,6250.00,1200.00,5050.00,,,,,,,,,,,,,,,,,,,prior month payslip for Rachel
-b2-0002,payslip,core,2026-06-26,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Meridian Systems Pte Ltd,2026-06,9400.00,1200.00,8200.00,,,,,,,,,,,,,,,,,,,prior quarter payslip for Marcus
-b2-0003,policy_schedule,core,2024-10-01,Rachel Ng Hui Shan,clean,Lionhead Life Assurance,LF-2024-883192,Rachel Ng Hui Shan,LifeGuard Term Plan,2024-10-01,2054-09-30,,1420.00,500000.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,term life on Rachel: disambiguates my term life question (ADR 0011)
-b2-0004,policy_schedule,core,2026-02-15,Rachel Ng Hui Shan,clean,Meridian Assurance,PH-2024-912404,Rachel Ng Hui Shan,PrivateCare Hospital and Surgical Plan,2026-03-01,2027-02-28,,1150.00,1000000.00,3500.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Rachel hospital shield plan
-b2-0005,policy_schedule,core,2025-04-10,Tan Mei Ling,clean,Lionhead Life Assurance,ES-2020-119284,Tan Mei Ling,CareShield ElderPlus Plan,2025-04-10,2031-04-09,,890.00,72000.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,elderly mother long-term care policy
-b2-0006,policy_schedule,core,2024-08-01,Lucas Lim Kai En,clean,Meridian Assurance,CH-2024-339102,Lucas Lim Kai En,Junior HealthProtect Plan,2024-08-01,2045-07-31,,640.00,500000.00,500.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,child active health policy
-b2-0007,renewal_notice,core,2026-01-20,Rachel Ng Hui Shan,clean,Meridian Assurance,PH-2024-912404,Rachel Ng Hui Shan,,,2026-02-28,,,,,1150.00,2026-02-14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,renewal notice leading to b2-0004
+doc_id,doc_type,pack_id,issued_date,subject,tier,insurer,policy_no,insured,product_name,cover_from,expiry_date,maturity_date,premium_payable,sum_insured,excess,date_of_birth,renewal_premium,payment_due_date,claim_no,claimant,incident_date,settled_amount,life_assured,sum_assured,annual_premium,statement_date,surrender_value,premiums_paid_to_date,employee,employer,pay_period,gross_salary,cpf_employee,net_pay,donor,charity,receipt_no,donation_date,donation_amount,tax_deductible,member,statement_year,total_contributions,ordinary_account_balance,account_holder,account_no,contributions_ytd,taxpayer,assessment_year,assessable_income,tax_payable,id_number,full_name,passport_no,date_of_expiry,registration_no,child_name,lender,facility_no,borrower,principal,monthly_repayment,agreement_date,field_pages,notes
+b2-0001,payslip,core,2026-07-28,Rachel Ng Hui Shan,clean,,,,,,,,,,,,,,,,,,,,,,,,Rachel Ng Hui Shan,Northlight Health Pte Ltd,2026-07,6250.00,1200.00,5050.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,prior month payslip for Rachel
+b2-0002,payslip,core,2026-06-26,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Meridian Systems Pte Ltd,2026-06,9400.00,1200.00,8200.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,prior quarter payslip for Marcus
+b2-0003,policy_schedule,core,2024-10-01,Rachel Ng Hui Shan,clean,Lionhead Life Assurance,LF-2024-883192,Rachel Ng Hui Shan,LifeGuard Term Plan,2024-10-01,2054-09-30,,1420.00,500000.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,term life on Rachel: disambiguates my term life question (ADR 0011)
+b2-0004,policy_schedule,core,2026-02-15,Rachel Ng Hui Shan,clean,Meridian Assurance,PH-2024-912404,Rachel Ng Hui Shan,PrivateCare Hospital and Surgical Plan,2026-03-01,2027-02-28,,1150.00,1000000.00,3500.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Rachel hospital shield plan
+b2-0005,policy_schedule,core,2025-04-10,Tan Mei Ling,clean,Lionhead Life Assurance,ES-2020-119284,Tan Mei Ling,CareShield ElderPlus Plan,2025-04-10,2031-04-09,,890.00,72000.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,elderly mother long-term care policy
+b2-0006,policy_schedule,core,2024-08-01,Lucas Lim Kai En,clean,Meridian Assurance,CH-2024-339102,Lucas Lim Kai En,Junior HealthProtect Plan,2024-08-01,2045-07-31,,640.00,500000.00,500.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,child active health policy
+b2-0007,renewal_notice,core,2026-01-20,Rachel Ng Hui Shan,clean,Meridian Assurance,PH-2024-912404,Rachel Ng Hui Shan,,,2026-02-28,,,,,,1150.00,2026-02-14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,renewal notice leading to b2-0004
+b2-0008,policy_schedule,core,2026-03-01,Marcus Lim Jun Wei,clean,Meridian Assurance,PH-2022-604188,Marcus Lim Jun Wei,PrivateCare Hospital and Surgical Plan,2026-03-01,2027-02-28,,1860.00,1000000.00,3500.00,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"Marcus hospital shield plan, 4-page contract; issued_date not printed, cover_from used; Annual Policy Claim Limit as sum_insured, Annual Deductible as excess (as b2-0004)"
+b2-0009,policy_schedule,core,2026-01-15,Lim Ah Kow,clean,Lionhead Life Assurance,HS-2023-771904,Lim Ah Kow,Hospital Income Protection Plan,2026-01-15,2027-01-14,,2140.00,,,1958-10-12,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,"hospital income plan on Lim Ah Kow, 3 pages; prints date of birth 12 October 1958; issued_date not printed, cover_from used"
+b2-0010,loan_agreement,core,2021-01-15,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Crescent Bank Limited,HL-2021-994182,Marcus Lim Jun Wei,540000.00,2234.50,2021-01-15,,"housing loan facility letter, joint with Rachel Ng Hui Shan (first named borrower recorded); prints both NRIC numbers, which are not loan_agreement fields"
+b2-0011,loan_agreement,core,2021-04-12,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Crescent Bank Limited,HP-2021-448190,Marcus Lim Jun Wei,65000.00,924.40,2021-04-12,,motor vehicle hire purchase agreement; principal is Principal Amount Financed
+b2-0012,identity_card,core,2017-06-15,Marcus Lim Jun Wei,photo,,,,,,,,,,,1987-05-08,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,S8714289B,MARCUS LIM JUN WEI,,,,,,,,,,,,"marcus-nric-front.jpg; issued_date is the Date of Issue printed on the back; its back (marcus-nric-back.jpg) prints no identity fields and is expected to quarantine, so it has no row"
+b2-0013,identity_card,core,2019-03-20,Rachel Ng Hui Shan,photo,,,,,,,,,,,1989-02-17,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,S8923156F,RACHEL NG HUI SHAN,,,,,,,,,,,,"rachel-nric-front.jpg; issued_date is the Date of Issue printed on the back; its back (rachel-nric-back.jpg) prints no identity fields and is expected to quarantine, so it has no row"
+b2-0014,identity_card,core,2026-09-15,Lim Ah Kow,photo,,,,,,,,,,,1958-10-12,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,S5809142E,LIM AH KOW,,,,,,,,,,,,"low ah kow-nric-front.jpg (file name misspells Lim); senior citizen card; no issue date printed and no back supplied, issued_date is the date the photo reached the inbox"
+b2-0015,identity_card,core,2026-09-15,Tan Mei Ling,photo,,,,,,,,,,,1961-04-25,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,S6134891C,TAN MEI LING,,,,,,,,,,,,"tan mei ling-nric-front.jpg; senior citizen card; no issue date printed and no back supplied, issued_date is the date the photo reached the inbox"
+b2-0016,birth_certificate,core,2019-06-20,Lucas Lim Kai En,photo,,,,,,,,,,,2019-06-14,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,T1942088J,LUCAS LIM KAI EN,,,,,,,,"lucus-birth-cert.jpg (file name misspells Lucas); issued_date is ISSUED ON 20 JUNE 2019; also prints both parents' identity card numbers, not birth_certificate fields"

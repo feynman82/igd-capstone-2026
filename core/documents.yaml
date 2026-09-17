@@ -294,10 +294,8 @@ document_types:
         description: Contributions made so far this year, in SGD
         example: "12400.00"
 
-  # The tax reference number printed on this notice is the taxpayer's NRIC or FIN. It is
-  # deliberately NOT captured: storing a national identifier in `facts` is a governance
-  # decision, not a field-list decision, and it is not needed to answer any question this
-  # pack exists to answer. Raise it with Siew before adding it.
+  # The tax reference printed here is the taxpayer's NRIC or FIN. It is not a field on this
+  # type: identity numbers are captured from identity documents (ADR 0017 decision 6).
   notice_of_assessment:
     description: Notice of Assessment issued by IRAS stating assessed income and tax payable
     subject_field: taxpayer
