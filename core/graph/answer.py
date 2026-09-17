@@ -55,6 +55,7 @@ from core.graph.advice import (
     Calculation,
     ConsentBook,
     Input,
+    Missing,
     passages_for,
 )
 from core.graph.gate import (
@@ -236,6 +237,33 @@ ADVICE_SENTENCES = 3
 CALCULATION_CITATION = "Worked out by Parrot from the inputs above"
 
 NO_OWNER = "Say who you are on the Household page first."
+REVIEW = "review"  # the shape id a coverage review is recorded and checked under
+
+
+def _review_asked(
+    question: str, packs: Sequence[InstalledPack]
+) -> tuple[InstalledPack, AdviceShape] | None:
+    """The first advising pack whose review a question asks for, as a shape the advise branch can
+    carry: the review's id, label and phrases, and every reviewed shape's `never_say`."""
+    for installed in packs:
+        advice = installed.manifest.advice
+        review = advice.review if advice else None
+        if advice is None or review is None:
+            continue
+        if any(mentions(question, phrase) for phrase in review.asked):
+            reviewed = [shape for shape in advice.shapes if shape.id in review.shapes]
+            shape = reviewed[0].model_copy(
+                update={
+                    "id": REVIEW,
+                    "label": review.label,
+                    "asked": review.asked,
+                    "never_say": sorted({p for s in reviewed for p in s.never_say}),
+                }
+            )
+            return installed, shape
+    return None
+
+
 ADULT_AGE = 21
 
 
@@ -872,6 +900,10 @@ class AnswerGraph:
             intent = str(reply.get("intent", "explain"))
         except ModelUnavailable:
             intent = "explain"  # a router that cannot run must not block an explanation
+        if _review_asked(state["question"], self._packs()) is not None:
+            # "What is lacking in my insurance coverage?" is a review however the router reads it:
+            # matched by the pack's own phrases, as a shape is, and costing no extra model call.
+            intent = "advise"
         return {"intent": intent if intent in {"explain", "act", "advise"} else "explain"}
 
     def understand(self, state: State) -> State:
@@ -1085,6 +1117,8 @@ class AnswerGraph:
         within it the longest phrase, which is the more specific question. ADR 0016 rejected a
         model call here: a wrong shape is correct arithmetic on the wrong question.
         """
+        if (review := _review_asked(question, packs)) is not None:
+            return review
         for installed in packs:
             advice = installed.manifest.advice
             if advice is None:
@@ -1098,6 +1132,79 @@ class AnswerGraph:
             if best is not None:
                 return installed, best
         return None
+
+    def _review(
+        self,
+        installed: InstalledPack,
+        adviser: Adviser,
+        subject: Subject,
+        question: str,
+        today: date,
+    ) -> Calculation | Missing:
+        """Every shape the pack's review lists, for one person, as one calculation (ADR 0016
+        addendum). Each shape's verdict and missing facts are code-written rows of one table, and
+        each `holds` category nothing on file is gets its own row; the explanation that follows is
+        the same single model call a shape gets."""
+        advice = installed.manifest.advice
+        assert advice is not None and advice.review is not None
+        review, by_id = advice.review, {shape.id: shape for shape in advice.shapes}
+        rows: list[tuple[str, ...]] = [("Check", "Finding")]
+        inputs: dict[str, Input] = {}
+        figures: list[Any] = []
+        found: list[str] = []
+        missing: list[str] = []
+        short = False
+        for shape_id in review.shapes:
+            result = adviser.calculate(
+                installed,
+                by_id[shape_id],
+                person_ids=subject.person_ids,
+                subject=subject.name,
+                today=today,
+            )
+            if isinstance(result, Calculation):
+                rows.append((result.label, result.verdict_text))
+                found.append(result.verdict_text)
+                inputs.update((item.ref, item) for item in result.inputs if item.ref not in inputs)
+                figures.extend(result.figures)
+                short = short or result.verdict == "short"
+            else:
+                rows.append((result.label, "Not checked yet. Needed: " + " ".join(result.items)))
+                missing.extend(result.items)
+        categories = installed.manifest.answering.categories
+        if self._inventory is not None and categories is not None:
+            on_file = self._inventory.holdings([installed])
+            if self._household is not None:
+                passages = [h.passage() for h in on_file]
+                kept = {
+                    str(p.document_id) for p in self._household.apply(question, passages).passages
+                }
+                on_file = [h for h in on_file if str(h.document_id) in kept]
+            held = {h.category.id for h in on_file if h.category}
+            labels = {rule.id: rule.label for rule in categories.rules}
+            for category in review.holds:
+                line = (
+                    f"A {labels[category]} is on file."
+                    if category in held
+                    else f"No {labels[category]} is on file."
+                )
+                rows.append((labels[category], line))
+                found.append(line)
+        if not inputs:
+            return Missing(installed.id, REVIEW, review.label, subject.name, tuple(missing + found))
+        text = " ".join(found + ([f"Not checked yet: {' '.join(missing)}"] if missing else []))
+        return Calculation(
+            pack_id=installed.id,
+            shape_id=REVIEW,
+            label=review.label,
+            subject=subject.name,
+            person_ids=tuple(sorted(subject.person_ids)),
+            inputs=tuple(inputs.values()),
+            figures=tuple(figures),
+            verdict="short" if short else "meets",
+            verdict_text=text,
+            rows=tuple(rows),
+        )
 
     def _advise(
         self, question: str, packs: Sequence[InstalledPack], thread_id: str
@@ -1163,12 +1270,16 @@ class AnswerGraph:
             )
             return
 
-        result = adviser.calculate(
-            installed,
-            shape,
-            person_ids=subject.person_ids,
-            subject=subject.name,
-            today=today,
+        result = (
+            self._review(installed, adviser, subject, question, today)
+            if shape.id == REVIEW
+            else adviser.calculate(
+                installed,
+                shape,
+                person_ids=subject.person_ids,
+                subject=subject.name,
+                today=today,
+            )
         )
         entry = AdviceRecord(
             thread_id=thread_id,

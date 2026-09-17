@@ -398,7 +398,8 @@ def test_the_explanation_stops_at_three_sentences() -> None:
 
 def test_a_pack_without_advice_still_declines_with_every_port_wired() -> None:
     client = ScriptedOllama({"intent": "advise"})
-    graph, adviser, consents, log, _ = build(client, packs=[pack("insurance_agent")])
+    silent = InstalledPack(pack("insurance_agent").manifest.model_copy(update={"advice": None}))
+    graph, adviser, consents, log, _ = build(client, packs=[silent])
 
     got = list(graph.stream(ASKED))
 
@@ -775,3 +776,49 @@ def test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent() ->
         client = ScriptedOllama({"intent": "advise"})
         graph, _, _, _, _ = build(client, subject=subject, consent_id=None)
         assert [type(event) for event in graph.stream(ASKED)] == [ConsentRequired]
+
+
+# --------------------------------------------------------------------------- the coverage review
+
+
+def reviewing_pack() -> InstalledPack:
+    manifest = advised_pack().manifest
+    assert manifest.advice is not None
+    raw = manifest.model_dump()
+    raw["advice"]["review"] = {
+        "label": "insurance coverage review",
+        "asked": ["lacking in my insurance"],
+        "shapes": ["ci_gap"],
+    }
+    return InstalledPack(PackManifest.model_validate(raw))
+
+
+def test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls() -> None:
+    # The router says "explain"; the review's own phrase still makes it advice.
+    client = ScriptedOllama({"intent": "explain"}, {"sentences": [THE_GAP]})
+    graph, adviser, _, log, retriever = build(client, packs=[reviewing_pack()])
+
+    got = list(graph.stream("What is lacking in my insurance coverage?", thread_id="t-9"))
+
+    assert [type(event) for event in got] == [AdviceCard, Sentence, Finished]
+    card = got[0]
+    assert isinstance(card, AdviceCard)
+    assert card.label == "insurance coverage review"
+    assert card.verdict == "short"
+    assert card.rows == [["Check", "Finding"], ["critical illness cover gap", VERDICT]]
+    assert [call["shape"] for call in adviser.calls] == ["ci_gap"]
+    assert len(client.systems) == 2 and retriever.queries == []
+    assert [(record.shape, record.outcome) for record in log.records] == [("review", "advised")]
+
+
+def test_a_review_with_nothing_calculable_names_everything_missing() -> None:
+    client = ScriptedOllama({"intent": "advise"})
+    graph, _, _, log, _ = build(client, result=MISSING, packs=[reviewing_pack()])
+
+    got = list(graph.stream("What is lacking in my insurance coverage?"))
+
+    assert [type(event) for event in got] == [AdviceWithheld]
+    withheld = got[0]
+    assert isinstance(withheld, AdviceWithheld)
+    assert withheld.missing == list(MISSING.items)
+    assert [record.outcome for record in log.records] == ["withheld"]

@@ -79,6 +79,8 @@ advice:
         - enough death cover
         - death and tpd
         - life cover gap
+        - life cover enough
+        - life insurance enough
       facts:
         - role: income
           doc_types: [payslip]
@@ -109,6 +111,8 @@ advice:
         - enough critical illness
         - critical illness gap
         - enough ci cover
+        - critical illness cover enough
+        - critical illness insurance enough
       facts:
         - role: income
           doc_types: [payslip]
@@ -132,6 +136,24 @@ advice:
           key: ci_income_multiple
           missing: Reviewed guidance on how much critical illness cover to hold.
       never_say: [you must buy, guaranteed]
+
+  # One question, every check (ADR 0016 addendum): each shape's shortfall or met guideline, each
+  # missing fact, and each kind of cover below that nothing on file is.
+  review:
+    label: insurance coverage review
+    asked:
+      - lacking in my insurance
+      - lacking in my coverage
+      - missing in my insurance
+      - gaps in my insurance
+      - gap in my insurance
+      - review my insurance
+      - review my coverage
+      - coverage review
+      - am i underinsured
+      - enough insurance
+    shapes: [death_tpd_cover, ci_cover]
+    holds: [hospital_expense, long_term_care]
 
 # How people ask about insurance, applied by the core without a model. Nothing here is a field:
 # a category is a reading of the printed product name that a person reviewed, and it is never

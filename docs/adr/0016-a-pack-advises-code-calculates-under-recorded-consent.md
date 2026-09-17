@@ -127,3 +127,32 @@ Four facts shaped how:
 - The explanation drops more than a third of its sentences on the golden set.
 - A pack needs a calculation the closed list cannot express.
 - The prototype is shown to anyone outside the team as a service.
+
+## Addendum, 17 September 2026: coverage review and the adult rule
+
+Decided by Christian (Lane A, orchestrator).
+
+**Coverage review.** "What is lacking in my insurance coverage?" asks for every check at once, so a
+pack may declare `Advice.review` (its own contracts commit): a label, `asked` phrases, the `shapes`
+it runs, and `holds`, the category ids whose absence is worth naming.
+
+- A review phrase makes the question advice, whatever the router answered. It is matched without a
+  model, like a shape.
+- Each listed shape is calculated for the one resolved person. The results become one
+  `Calculation`: a row per shape (its code-written verdict, or "Not checked yet" with the pack's own
+  wording for what is missing), and a row per `holds` category saying whether a document on file
+  for that person is one.
+- The verdict is `short` if any shape is short, otherwise `meets`. It is still chosen by code.
+- If no shape could be calculated, the answer is `AdviceWithheld`, naming everything missing.
+- Nothing else changes. The gate, consent, the `advice_records` row (shape `review`) and the two
+  model calls (route, explain) are the same as for a single shape.
+
+**Adult rule.** The owner's consent covers adult members only. Before consent is even asked, advice
+is withheld for a person under 21, or for a `child` whose date of birth is not on file. The date of
+birth is read from any indexed core `date_of_birth` fact under the person's confirmed names (an
+NRIC, passport, birth certificate or policy schedule; ADR 0017). If two printed dates disagree, the
+later one is used, which errs toward withholding.
+
+**Riders.** A rider is its own fact (ADR 0017, `labelled_money`). It is categorised by its own
+printed name, so a critical illness rider counts toward critical illness cover and a hospital cash
+rider does not.

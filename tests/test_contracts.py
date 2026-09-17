@@ -489,3 +489,20 @@ def test_every_pack_speaks_only_for_catalogue_types() -> None:
     spoken = {t for p in installed_packs() for t in p.manifest.answering.documents}
     assert spoken <= set(catalog().documents.document_types)
     assert {"policy_schedule", "payslip"} <= spoken
+
+
+def test_a_review_names_only_declared_shapes_and_categories() -> None:
+    raw = _advised()
+    raw["advice"]["review"] = {"label": "cover review", "asked": ["lacking"], "shapes": ["ci_gap"]}
+    PackManifest.model_validate(raw)
+    raw["advice"]["review"]["shapes"] = ["nope"]
+    with pytest.raises(ValidationError, match="does not declare"):
+        PackManifest.model_validate(raw)
+    raw["advice"]["review"] = {
+        "label": "cover review",
+        "asked": ["lacking"],
+        "shapes": ["ci_gap"],
+        "holds": ["spaceship"],
+    }
+    with pytest.raises(ValueError, match="not category ids"):
+        PackManifest.model_validate(raw).check_against(catalog().documents)
