@@ -219,12 +219,6 @@
   "217": "NNNN · The decision, as a statement not a question",
   "218": "12. Chunks follow the document's headings, and embeddings use the model's task prompts",
   "219": "page.tsx",
-  "220": "17 · A pack is grounding and persona; the core owns documents",
   "221": "5. The watched folder is polled for stability, not subscribed to for events",
-  "222": "1. Record architecture decisions",
-  "223": "4. Local setup can run before the household assistant is ready",
-  "224": "8. Ingestion runs on a Celery worker, and the queue carries a digest rather than the document",
-  "225": "15. A name scopes a question, and a grandparent is not a parent",
-  "226": "test_a_grounding_corpus_travels_inside_its_pack",
   "227": "test_the_debounce_key_separates_two_policies_of_one_person"
 }

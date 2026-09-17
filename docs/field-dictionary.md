@@ -24,6 +24,7 @@ Policy schedule or certificate of insurance setting out cover and premium.
 | `premium_payable` | money | yes | `facts.value_num` | Total premium payable for the period of insurance shown, in SGD |
 | `sum_insured` | money | no | `facts.value_num` | Sum insured or limit of liability where the schedule prints one, in SGD |
 | `excess` | money | no | `facts.value_num` | Amount the policyholder bears per claim, printed as Excess, in SGD |
+| `date_of_birth` | date | no | `facts.value_date` | Date of birth of the insured where the schedule prints one |
 
 ### `renewal_notice`
 
@@ -137,3 +138,47 @@ Notice of Assessment issued by IRAS stating assessed income and tax payable.
 | `assessable_income` | money | yes | `facts.value_num` | Assessable income for the year as stated on the notice, in SGD |
 | `tax_payable` | money | yes | `facts.value_num` | Total tax payable as stated on the notice, in SGD |
 | `payment_due_date` | date | yes | `facts.value_date` | Date the notice requires payment by, as printed |
+
+### `identity_card`
+
+National identity card (NRIC or FIN card), front side, printing an identity number, full name and date of birth.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `id_number` | identifier | yes | `facts.value_text` | Identity card number exactly as printed, not normalised |
+| `full_name` | person | yes | `facts.value_text` | Full name of the card holder as printed on the card |
+| `date_of_birth` | date | yes | `facts.value_date` | Date of birth of the card holder as printed on the card |
+
+### `passport`
+
+Passport data page printing a passport number, the holder's name, date of birth and date of expiry.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `passport_no` | identifier | yes | `facts.value_text` | Passport number exactly as printed on the data page |
+| `full_name` | person | yes | `facts.value_text` | Full name of the passport holder as printed on the data page |
+| `date_of_birth` | date | yes | `facts.value_date` | Date of birth of the passport holder as printed on the data page |
+| `date_of_expiry` | date | yes | `facts.value_date` | Date the passport expires, as printed on the data page |
+
+### `birth_certificate`
+
+Birth certificate issued on registering a child's birth, printing a registration number, the child's name and date of birth.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `registration_no` | identifier | yes | `facts.value_text` | Birth registration or certificate number exactly as printed |
+| `child_name` | person | yes | `facts.value_text` | Name of the child whose birth is registered, as printed |
+| `date_of_birth` | date | yes | `facts.value_date` | Child's date of birth as printed on the certificate |
+
+### `loan_agreement`
+
+Housing loan facility letter or hire purchase agreement from a bank or finance company, setting out the amount lent and the repayments.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `lender` | string | yes | `facts.value_text` | Name of the bank or finance company lending, from the letterhead |
+| `facility_no` | identifier | yes | `facts.value_text` | Loan reference or agreement number exactly as printed |
+| `borrower` | person | yes | `facts.value_text` | Name of the borrower or hirer as printed; the first named where there are two |
+| `principal` | money | yes | `facts.value_num` | Approved facility amount or principal amount financed, in SGD |
+| `monthly_repayment` | money | no | `facts.value_num` | Monthly repayment or instalment as printed, in SGD |
+| `agreement_date` | date | no | `facts.value_date` | Date of the letter or agreement as printed |

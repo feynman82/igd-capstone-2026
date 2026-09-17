@@ -48,6 +48,10 @@ class PolicySchedule(BaseModel):
         ge=0,
         description="Amount the policyholder bears per claim, printed as Excess, in SGD",
     )
+    date_of_birth: date | None = Field(
+        default=None,
+        description="Date of birth of the insured where the schedule prints one",
+    )
 
 
 class RenewalNotice(BaseModel):
@@ -235,6 +239,82 @@ class NoticeOfAssessment(BaseModel):
     payment_due_date: date = Field(description="Date the notice requires payment by, as printed")
 
 
+class IdentityCard(BaseModel):
+    """National identity card (NRIC or FIN card), front side, printing an identity number, full name
+    and date of birth.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    id_number: str = Field(description="Identity card number exactly as printed, not normalised")
+    full_name: str = Field(description="Full name of the card holder as printed on the card")
+    date_of_birth: date = Field(
+        description="Date of birth of the card holder as printed on the card",
+    )
+
+
+class Passport(BaseModel):
+    """Passport data page printing a passport number, the holder's name, date of birth and date of
+    expiry.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    passport_no: str = Field(description="Passport number exactly as printed on the data page")
+    full_name: str = Field(
+        description="Full name of the passport holder as printed on the data page",
+    )
+    date_of_birth: date = Field(
+        description="Date of birth of the passport holder as printed on the data page",
+    )
+    date_of_expiry: date = Field(
+        description="Date the passport expires, as printed on the data page",
+    )
+
+
+class BirthCertificate(BaseModel):
+    """Birth certificate issued on registering a child's birth, printing a registration number, the
+    child's name and date of birth.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    registration_no: str = Field(
+        description="Birth registration or certificate number exactly as printed",
+    )
+    child_name: str = Field(description="Name of the child whose birth is registered, as printed")
+    date_of_birth: date = Field(description="Child's date of birth as printed on the certificate")
+
+
+class LoanAgreement(BaseModel):
+    """Housing loan facility letter or hire purchase agreement from a bank or finance company, setting
+    out the amount lent and the repayments.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    lender: str = Field(
+        description="Name of the bank or finance company lending, from the letterhead",
+    )
+    facility_no: str = Field(description="Loan reference or agreement number exactly as printed")
+    borrower: str = Field(
+        description="Name of the borrower or hirer as printed; the first named where there are two",
+    )
+    principal: Decimal = Field(
+        ge=0,
+        description="Approved facility amount or principal amount financed, in SGD",
+    )
+    monthly_repayment: Decimal | None = Field(
+        default=None,
+        ge=0,
+        description="Monthly repayment or instalment as printed, in SGD",
+    )
+    agreement_date: date | None = Field(
+        default=None,
+        description="Date of the letter or agreement as printed",
+    )
+
+
 # doc_type -> model, used by the ingestion worker to pick a decode constraint.
 MODELS: dict[str, type[BaseModel]] = {
     "policy_schedule": PolicySchedule,
@@ -247,21 +327,30 @@ MODELS: dict[str, type[BaseModel]] = {
     "cpf_statement": CpfStatement,
     "srs_statement": SrsStatement,
     "notice_of_assessment": NoticeOfAssessment,
+    "identity_card": IdentityCard,
+    "passport": Passport,
+    "birth_certificate": BirthCertificate,
+    "loan_agreement": LoanAgreement,
 }
 
 # field name -> the facts column it is stored in, used by the extractor and the scorer.
 FACT_COLUMNS: dict[str, str] = {
     "account_holder": "value_text",
     "account_no": "value_text",
+    "agreement_date": "value_date",
     "annual_premium": "value_num",
     "assessable_income": "value_num",
     "assessment_year": "value_num",
+    "borrower": "value_text",
     "charity": "value_text",
+    "child_name": "value_text",
     "claim_no": "value_text",
     "claimant": "value_text",
     "contributions_ytd": "value_num",
     "cover_from": "value_date",
     "cpf_employee": "value_num",
+    "date_of_birth": "value_date",
+    "date_of_expiry": "value_date",
     "donation_amount": "value_num",
     "donation_date": "value_date",
     "donor": "value_text",
@@ -269,22 +358,30 @@ FACT_COLUMNS: dict[str, str] = {
     "employer": "value_text",
     "excess": "value_num",
     "expiry_date": "value_date",
+    "facility_no": "value_text",
+    "full_name": "value_text",
     "gross_salary": "value_num",
+    "id_number": "value_text",
     "incident_date": "value_date",
     "insured": "value_text",
     "insurer": "value_text",
+    "lender": "value_text",
     "life_assured": "value_text",
     "maturity_date": "value_date",
     "member": "value_text",
+    "monthly_repayment": "value_num",
     "net_pay": "value_num",
     "ordinary_account_balance": "value_num",
+    "passport_no": "value_text",
     "pay_period": "value_text",
     "payment_due_date": "value_date",
     "policy_no": "value_text",
     "premium_payable": "value_num",
     "premiums_paid_to_date": "value_num",
+    "principal": "value_num",
     "product_name": "value_text",
     "receipt_no": "value_text",
+    "registration_no": "value_text",
     "renewal_premium": "value_num",
     "settled_amount": "value_num",
     "statement_date": "value_date",

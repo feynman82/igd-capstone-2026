@@ -163,6 +163,34 @@ Clean A4 official layout with verification QR badge in bottom right.
 
 ---
 
+### 2.8 Rachel Ng Hui Shan — Xinkapow Passport (Data Page)
+
+**Ground truth:** passport number `K8923156Q`; name `RACHEL NG HUI SHAN`; date of birth 1989-02-17; nationality XINKAPOW; date of issue 2023-03-01; date of expiry 2033-02-28.
+```text
+Photorealistic high-resolution scan of the open biographical data page of a passport issued by the fictional REPUBLIC OF XINKAPOW, flat lay on a clean light desk.
+Page Aesthetics:
+- Background: Warm Yellow (#FFC72C) and Sunset Orange (#FF8200) guilloche security patterns with fine micro-printing, matching the Xinkapow identity cards.
+- Header: Bold dark navy typography reading 'REPUBLIC OF XINKAPOW' and 'PASSPORT'.
+- Official Mascot Emblem: The same circular gold security seal as the identity cards, depicting a stylized KFC Mascot (a distinguished smiling silver-bearded elder wearing black-rimmed glasses and a neat black ribbon string tie).
+Data Page Particulars:
+- Type: P
+- Passport No.: K8923156Q
+- Full Name: RACHEL NG HUI SHAN
+- Nationality: XINKAPOW
+- Date of Birth: 17-02-1989
+- Sex: F
+- Place of Birth: XINKAPOW
+- Date of Issue: 01-03-2023
+- Date of Expiry: 28-02-2033
+- Issuing Authority: IMMIGRATION AND CIVIL REGISTRATION AUTHORITY
+Portrait Photo: The same professional Chinese female in her mid 30s as on her identity card, shoulder-length neat black hair, navy collared blouse, pleasant neutral expression.
+Machine Readable Zone: Two lines of OCR-B text along the bottom margin, using only the fictional values above.
+Watermark across page: Distinct semi-transparent diagonal crimson red stamp (-30 degrees angle) reading: 'PROJECT PARROT · SYNTHETIC SPECIMEN · FOR RESEARCH EVALUATION ONLY'.
+Sharp focus, perfectly legible typography, realistic passport paper texture.
+```
+
+---
+
 ## 3. Comprehensive Document Suite: Policy Wordings & Loan Agreements
 
 All multi-page contracts are generated via [`notebooks/generate_lim_documents.py`](../notebooks/generate_lim_documents.py) or [`notebooks/generate_lim_documents.ipynb`](../notebooks/generate_lim_documents.ipynb).
@@ -202,6 +230,22 @@ All multi-page contracts are generated via [`notebooks/generate_lim_documents.py
     2. **Early Termination Penalty Fee:** **1.00% of outstanding loan balance or SGD 500.00 (whichever is higher)** if settled within 12 months.
     3. **Discharge Processing Fee:** Flat **SGD 150.00**.
 
+### 3.5 Marcus's Life Policy Schedule with Riders (`b2-0019.pdf`)
+* **Why:** a schedule that prints several riders, each with its own sum assured (ADR 0017, decision 7). Ids `b2-0012`–`b2-0018` are the identity images.
+* **New policy:** `LF-2026-641205` is not yet in [`corpus/canon.md`](../corpus/canon.md); add its row there before the register entry, or `corpus.validate` will not know it.
+* **Ground Truth (the schedule page, one row per item, each rider's name and amount on the same row):**
+  * **Insurer:** Lionhead Life Assurance
+  * **Policy Number:** `LF-2026-641205`
+  * **Product:** Lionhead ProtectPlus Life Plan
+  * **Name of Insured:** Marcus Lim Jun Wei · **Date of Birth of Insured:** 08 May 1987
+  * **Period of Insurance:** 01 July 2026 to 30 June 2066
+  * **Basic Sum Assured:** SGD 200,000.00
+  * **Critical Illness Rider:** SGD 150,000.00
+  * **Early Critical Illness Rider:** SGD 50,000.00
+  * **Total Permanent Disability Rider:** SGD 300,000.00
+  * **Hospital Cash Rider:** SGD 100.00 per day
+  * **Total Annual Premium:** SGD 2,960.00
+
 ---
 
 ## 4. How to Generate and Drop into `inbox/`
@@ -225,5 +269,8 @@ Once the documents are in [`inbox/`](../inbox/), run `scripts/ask.py` to test Pa
 | **"Can I go for heart stent operation and is it covered under my policies?"** | Explains that under Marcus's PrivateCare plan (`PH-2022-604188`, `b2-0008.pdf`, Clause 4.1 & Table 5), coronary angioplasty with stent insertion is **covered as charged** (subject to $3,500 deductible and 10% co-insurance). |
 | **"If I sell the house within 6 months, do I need to pay any penalty?"** | Explains from `b2-0010.pdf` (Clause 7) that selling within the 36-month lock-in incurs a **1.50% prepayment penalty** on the outstanding loan, plus **SGD 3,000.00 clawback** of legal/valuation subsidies, and requires 3 months' notice. |
 | **"If I sell the car within 6 months, do I need to pay any penalty?"** | Explains from `b2-0011.pdf` (Clause 7) that early settlement incurs a **20% deduction penalty on the Rule of 78 interest rebate**, an early termination fee of **1.00% or SGD 500.00**, and an administrative discharge fee of SGD 150.00. |
+| **"When was Marcus born?"** | **8 May 1987**, citing `marcus-nric-front.jpg`, page 1 (printed `08-05-1987`). |
+| **"What is Rachel's passport number?"** | **`K8923156Q`**, citing the §2.8 passport data page, page 1. Until that image is generated and in `inbox/`, Parrot **abstains**: no passport is on file. |
+| **"What is lacking in my insurance coverage?"** | The coverage review card for Marcus: death/TPD and critical illness cover compared against the published income multiples, the hospital plan on file (`PH-2022-604188`), and **no long-term care plan on file**. Any comparison whose rule value is not yet approved is withheld and named as missing, never estimated. |
 | **"What is my term life premium?"** | Cites Marcus's whole life policy (`LF-2015-330277`, $3,600/yr), correctly disambiguating Marcus from Rachel's term policy (`LF-2024-883192`, $1,420/yr) per ADR 0011. |
 | **"What is Rachel's term life premium?"** | Cites Rachel's LifeGuard Term Plan (`LF-2024-883192`, `b2-0003.pdf`), answering **SGD 1,420.00/year**. |

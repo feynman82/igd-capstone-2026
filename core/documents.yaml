@@ -60,6 +60,11 @@ document_types:
         required: false
         description: Amount the policyholder bears per claim, printed as Excess, in SGD
         example: "750.00"
+      - name: date_of_birth
+        type: date
+        required: false
+        description: Date of birth of the insured where the schedule prints one
+        example: "1958-10-12"
 
   renewal_notice:
     description: Notice issued before expiry inviting the policyholder to renew
@@ -317,6 +322,96 @@ document_types:
         type: date
         description: Date the notice requires payment by, as printed
         example: "2026-06-30"
+
+  # Identity documents are household data (ADR 0017 decision 6): stored on-device, behind the
+  # app lock, and recorded in docs/governance/data-inventory.md. The back of an identity card
+  # prints none of these fields and quarantines; there is deliberately no type for it.
+  identity_card:
+    description: National identity card (NRIC or FIN card), front side, printing an identity number, full name and date of birth
+    subject_field: full_name
+    fields:
+      - name: id_number
+        type: identifier
+        description: Identity card number exactly as printed, not normalised
+        example: S8714289B
+      - name: full_name
+        type: person
+        description: Full name of the card holder as printed on the card
+        example: MARCUS LIM JUN WEI
+      - name: date_of_birth
+        type: date
+        description: Date of birth of the card holder as printed on the card
+        example: "1987-05-08"
+
+  passport:
+    description: Passport data page printing a passport number, the holder's name, date of birth and date of expiry
+    subject_field: full_name
+    fields:
+      - name: passport_no
+        type: identifier
+        description: Passport number exactly as printed on the data page
+        example: K8923156Q
+      - name: full_name
+        type: person
+        description: Full name of the passport holder as printed on the data page
+        example: RACHEL NG HUI SHAN
+      - name: date_of_birth
+        type: date
+        description: Date of birth of the passport holder as printed on the data page
+        example: "1989-02-17"
+      # Not `expiry_date`: the policy_expiry reminder reads that name.
+      - name: date_of_expiry
+        type: date
+        description: Date the passport expires, as printed on the data page
+        example: "2033-02-28"
+
+  birth_certificate:
+    description: Birth certificate issued on registering a child's birth, printing a registration number, the child's name and date of birth
+    subject_field: child_name
+    fields:
+      - name: registration_no
+        type: identifier
+        description: Birth registration or certificate number exactly as printed
+        example: T1942088J
+      - name: child_name
+        type: person
+        description: Name of the child whose birth is registered, as printed
+        example: LUCAS LIM KAI EN
+      - name: date_of_birth
+        type: date
+        description: Child's date of birth as printed on the certificate
+        example: "2019-06-14"
+
+  loan_agreement:
+    description: Housing loan facility letter or hire purchase agreement from a bank or finance company, setting out the amount lent and the repayments
+    subject_field: borrower
+    fields:
+      - name: lender
+        type: string
+        description: Name of the bank or finance company lending, from the letterhead
+        example: Crescent Bank
+      - name: facility_no
+        type: identifier
+        description: Loan reference or agreement number exactly as printed
+        example: HL-2021-994182
+      - name: borrower
+        type: person
+        description: Name of the borrower or hirer as printed; the first named where there are two
+        example: Marcus Lim Jun Wei
+      - name: principal
+        type: money
+        description: Approved facility amount or principal amount financed, in SGD
+        example: "540000.00"
+      - name: monthly_repayment
+        type: money
+        required: false
+        description: Monthly repayment or instalment as printed, in SGD
+        example: "2234.50"
+      - name: agreement_date
+        type: date
+        required: false
+        description: Date of the letter or agreement as printed
+        example: "2021-03-15"
 
 registers:
   reminder:

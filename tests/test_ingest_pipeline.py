@@ -290,6 +290,16 @@ Total Premium Payable     SGD 1,284.00"""
 
 POLICY_PAGES = [ParsedPage(1, POLICY_PAGE)]
 
+# The front of Marcus's identity card, as OCR reads it (docs/synthetic-generation-guide.md §2.1).
+IDENTITY_CARD_PAGES = [
+    ParsedPage(
+        1,
+        "REPUBLIC OF XINKAPOW\nNATIONAL IDENTITY CARD\nIdentity Number: S8714289B\n"
+        "Full Name: MARCUS LIM JUN WEI\nRace: CHINESE\nDate of Birth: 08-05-1987\nSex: M\n"
+        "PROJECT PARROT · SYNTHETIC SPECIMEN · FOR RESEARCH EVALUATION ONLY",
+    )
+]
+
 
 def test_an_iso_date_is_found_on_a_page_that_prints_it_in_words() -> None:
     assert find_page("2026-04-12", POLICY_PAGES) == 1, "the page prints 12 April 2026"
@@ -300,6 +310,10 @@ def test_a_date_printed_in_other_common_notations_is_also_found() -> None:
     pages = [ParsedPage(1, "Cover from 01/09/2019 to 31 Aug 2049, renewed 2019-09-01.")]
     assert find_page("2019-09-01", pages) == 1, "01/09/2019 is the same day"
     assert find_page("2049-08-31", pages) == 1, "31 Aug 2049 is the same day"
+
+
+def test_a_date_of_birth_printed_day_first_with_dashes_is_found() -> None:
+    assert find_page("1987-05-08", IDENTITY_CARD_PAGES) == 1, "the card prints 08-05-1987"
 
 
 def test_a_date_on_no_page_still_has_no_page() -> None:
@@ -336,6 +350,14 @@ def test_the_classifier_may_only_choose_a_catalogue_document_type() -> None:
     enum = client.schemas[0]["properties"]["document_type"]["enum"]
     assert set(enum) == {*catalog().documents.document_types, "unknown"}
     assert not any("." in candidate for candidate in enum)
+
+
+def test_identity_documents_and_loans_are_candidates() -> None:
+    """ADR 0017 decision 6: these were quarantined because no type fitted them."""
+    client = FakeOllama([{"document_type": "identity_card", "confidence": 0.9}])
+    assert classify(client, IDENTITY_CARD_PAGES[0].text).doc_type == "identity_card"  # type: ignore[arg-type]
+    enum = set(client.schemas[0]["properties"]["document_type"]["enum"])
+    assert {"identity_card", "passport", "birth_certificate", "loan_agreement"} <= enum
 
 
 def test_a_pack_qualified_type_is_not_a_candidate() -> None:
@@ -430,6 +452,25 @@ def test_a_reply_that_does_not_satisfy_the_pack_is_a_failure(iras: Any) -> None:
 
     assert not result.ok
     assert result.reason is not None
+
+
+def test_an_identity_card_front_extracts_its_number_name_and_date_of_birth(iras: Any) -> None:
+    reply = {
+        "id_number": "S8714289B",
+        "full_name": "MARCUS LIM JUN WEI",
+        "date_of_birth": "08-05-1987",
+    }
+    client = FakeOllama([reply])
+    result = extract(  # type: ignore[arg-type]
+        client, iras, "identity_card", IDENTITY_CARD_PAGES, confidence=0.9
+    )
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert set(by_key) == {"id_number", "full_name", "date_of_birth"}
+    assert by_key["id_number"].value_text == "S8714289B"
+    assert str(by_key["date_of_birth"].value_date) == "1987-05-08"
+    assert all(fact.page == 1 for fact in result.facts)
+    assert all(fact.subject == "MARCUS LIM JUN WEI" for fact in result.facts)
 
 
 # The system prompt tells the model to "leave it null" for a field that is not printed. A model
@@ -598,6 +639,8 @@ def test_dates_are_not_held_to_an_iso_grammar_while_the_model_writes(insurance: 
         ("01-03-2026", "2026-03-01"),
         ("March 1, 2026", "2026-03-01"),
         ("2026-04-12", "2026-04-12"),
+        ("08-05-1987", "1987-05-08"),  # an identity card's date of birth
+        ("14 JUNE 2019", "2019-06-14"),  # a birth certificate prints the month in capitals
     ],
 )
 def test_a_printed_date_becomes_iso_in_code_not_in_the_model(printed: str, iso: str) -> None:
