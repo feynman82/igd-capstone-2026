@@ -1,4 +1,4 @@
-"""The Alert module: a pack-declared threshold, crossed once, citing the documents behind it.
+"""The Alert module: a declared threshold, crossed once, citing the documents behind it.
 
 Reads `facts`, writes only its own event trail. It never touches `facts`, never touches
 retrieval, and — rule 7 — never imports from `web/` or `api/`.
@@ -6,8 +6,8 @@ retrieval, and — rule 7 — never imports from `web/` or `api/`.
 Three things make an alert worth showing rather than annoying:
 
 - **A threshold somebody declared.** `guardrails` are not the place for it and neither is code:
-  the pack says `metric: srs_contributions_ytd, ceiling: 15300, warn_at: 0.9`, and changing when
-  it fires is a change to that line.
+  core/documents.yaml says `metric: srs_contributions_ytd, ceiling: 15300, warn_at: 0.9`, and
+  changing when it fires is a change to that line.
 - **A debounce.** The manifest says 168 hours. A threshold does not become news again tomorrow
   because a page was re-read, and an alert that repeats daily is an alert people turn off.
 - **Citations.** An alert says a number, so it names the documents that number came from. An
@@ -27,7 +27,7 @@ from decimal import Decimal
 from typing import Any
 
 from core.contracts import AlertConfig
-from core.packs import InstalledPack, installed_packs
+from core.packs import CORE, catalog
 from modules.alert import queries
 
 log = logging.getLogger(__name__)
@@ -192,43 +192,46 @@ def sweep(
     *,
     mark: bool = True,
     debounce_hours: int = DEBOUNCE_HOURS,
-    packs: tuple[InstalledPack, ...] | None = None,
+    configs: tuple[AlertConfig, ...] | None = None,
 ) -> list[Alert]:
-    """Every declared threshold that is crossed, has evidence, and has not just been said."""
+    """Every declared threshold that is crossed, has evidence, and has not just been said.
+
+    `configs` defaults to the core catalogue's `registers.alert`: documents are the core's, so no
+    pack being switched off silences them (ADR 0017). A test hands its own in.
+    """
     now_date = today or date.today()
     now = datetime.now(UTC)
     firing: list[Alert] = []
 
-    for installed in packs if packs is not None else installed_packs():
-        for config in installed.manifest.registers.alert or []:
-            metric = METRICS.get(config.metric)
-            if metric is None:
-                log.warning(
-                    "%s declares the metric %r, which no query in modules/alert/queries.py "
-                    "defines; it cannot fire",
-                    installed.id,
-                    config.metric,
-                )
+    declared = configs if configs is not None else catalog().documents.registers.alert or []
+    for config in declared:
+        metric = METRICS.get(config.metric)
+        if metric is None:
+            log.warning(
+                "the catalogue declares the metric %r, which no query in "
+                "modules/alert/queries.py defines; it cannot fire",
+                config.metric,
+            )
+            continue
+        for measurement in metric(conn, now_date):
+            if not _triggered(config, measurement):
                 continue
-            for measurement in metric(conn, now_date):
-                if not _triggered(config, measurement):
-                    continue
-                if not measurement.citations:
-                    log.info("not alerting on %s: nothing to cite", config.metric)
-                    continue
-                alert = Alert(
-                    pack_id=installed.id,
-                    metric=config.metric,
-                    value=measurement.value,
-                    ceiling=config.ceiling,
-                    warn_at=config.warn_at,
-                    citations=measurement.citations,
-                    subject=measurement.subject,
-                    item=measurement.item,
-                )
-                if _debounced(conn, alert, now, debounce_hours):
-                    continue
-                firing.append(alert)
+            if not measurement.citations:
+                log.info("not alerting on %s: nothing to cite", config.metric)
+                continue
+            alert = Alert(
+                pack_id=CORE,
+                metric=config.metric,
+                value=measurement.value,
+                ceiling=config.ceiling,
+                warn_at=config.warn_at,
+                citations=measurement.citations,
+                subject=measurement.subject,
+                item=measurement.item,
+            )
+            if _debounced(conn, alert, now, debounce_hours):
+                continue
+            firing.append(alert)
 
     if mark and firing:
         with conn.cursor() as cur:

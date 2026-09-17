@@ -39,7 +39,7 @@ def main(argv: list[str] | None = None) -> int:
             stream.reconfigure(encoding="utf-8", errors="replace")
     logging.basicConfig(level=logging.INFO, format="%(message)s")
 
-    from core.registry import enabled_pack_ids, enabled_packs
+    from core.registry import enabled_pack_ids
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.settings import ConfigurationError, Settings
     from modules import alert, reminder
@@ -58,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
             # A pack switched off in the interface is switched off here too. The registry is
             # read once and handed to both modules; neither of them knows it exists.
             enabled = enabled_pack_ids(conn)
-            alerts = alert.sweep(conn, today, mark=not args.dry_run, packs=enabled_packs(conn))
+            alerts = alert.sweep(conn, today, mark=not args.dry_run)
             due = reminder.sweep(conn, today, mark=not args.dry_run, enabled=enabled)
             late = reminder.overdue(conn, today, enabled=enabled)
 

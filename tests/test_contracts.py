@@ -10,9 +10,8 @@ import yaml
 from pydantic import ValidationError
 
 import core.contracts as contracts
-import core.packs as loader
 from core.contracts import GroundingCorpus, ModuleManifest, PackManifest
-from core.packs import InstalledPack, PackUnavailable
+from core.packs import catalog
 
 
 def test_template_pack_validates() -> None:
@@ -56,6 +55,30 @@ def _tax() -> dict[str, Any]:
     with open("packs/iras_tax/pack.yaml", encoding="utf-8") as fh:
         raw: dict[str, Any] = yaml.safe_load(fh)
     return raw
+
+
+def _checked(raw: dict[str, Any]) -> PackManifest:
+    """Validated as a manifest, then against the core catalogue, as `core.packs` loads a pack."""
+    manifest = PackManifest.model_validate(raw)
+    manifest.check_against(catalog().documents)
+    return manifest
+
+
+def test_a_pack_declaring_document_types_is_rejected() -> None:
+    """ADR 0017: documents are the core's. A pack.yaml carrying them does not load."""
+    raw = _insurance()
+    raw["document_types"] = copy.deepcopy(
+        {"policy_schedule": catalog().documents.document_types["policy_schedule"].model_dump()}
+    )
+    with pytest.raises(ValidationError, match="document_types"):
+        PackManifest.model_validate(raw)
+
+
+def test_a_pack_declaring_registers_is_rejected() -> None:
+    raw = _tax()
+    raw["registers"] = {"reminder": [{"key": "filing_deadline", "lead_days": [30]}]}
+    with pytest.raises(ValidationError, match="registers"):
+        PackManifest.model_validate(raw)
 
 
 def test_a_pack_cannot_opt_out_of_verdict_by_code() -> None:
@@ -110,7 +133,6 @@ def _advised() -> dict[str, Any]:
                 "facts": [
                     {
                         "role": "income",
-                        "pack": "iras_tax",
                         "doc_types": ["payslip"],
                         "field": "gross_salary",
                         "per": "month",
@@ -169,12 +191,12 @@ def _fact(raw: dict[str, Any], shape_id: str, role: str) -> dict[str, Any]:
 
 
 def test_an_insurance_manifest_with_advice_validates() -> None:
-    manifest = PackManifest.model_validate(_advised())
+    manifest = _checked(_advised())
     assert manifest.advice is not None
     assert [shape.id for shape in manifest.advice.shapes] == ["ci_gap", "hospital_plans"]
     income, held = manifest.advice.shapes[0].facts
-    assert (income.pack, income.per, income.take) == ("iras_tax", "month", "latest")
-    assert (held.pack, held.category, held.take) == (None, "critical_illness", "sum")
+    assert (income.doc_types, income.per, income.take) == (["payslip"], "month", "latest")
+    assert (held.category, held.take) == ("critical_illness", "sum")
     assert [value.key for value in manifest.grounding.values] == ["ci_multiple"]
     assert manifest.guardrails.verdict_by_code is True
 
@@ -300,8 +322,8 @@ def test_an_inconsistent_advice_block_is_rejected_by_name(
 ) -> None:
     raw = _advised()
     mutate(raw)
-    with pytest.raises(ValidationError, match=names):
-        PackManifest.model_validate(raw)
+    with pytest.raises(ValueError, match=names):
+        _checked(raw)
 
 
 @pytest.mark.parametrize("per", ["once", "month", "year"])
@@ -309,7 +331,7 @@ def test_income_may_be_read_per_month_or_per_year(per: str) -> None:
     """Only income is made annual, so only income may say how often its printed figure recurs."""
     raw = _advised()
     _fact(raw, "ci_gap", "income")["per"] = per
-    manifest = PackManifest.model_validate(raw)
+    manifest = _checked(raw)
     assert manifest.advice is not None
     assert manifest.advice.shapes[0].facts[0].per == per
 
@@ -318,7 +340,7 @@ def test_a_market_comparison_may_compare_a_field_only_its_sources_publish() -> N
     """`annual_premium` is printed on no policy schedule; the market's sources publish it."""
     raw = _advised()
     _market(raw, ["premium_payable", "annual_premium"])
-    manifest = PackManifest.model_validate(raw)
+    manifest = _checked(raw)
     assert manifest.advice is not None
     assert manifest.advice.shapes[-1].compare_fields == ["premium_payable", "annual_premium"]
 
@@ -328,28 +350,31 @@ def test_an_own_comparison_may_not_compare_a_field_only_sources_publish() -> Non
     raw = _advised()
     _market(raw, ["premium_payable"])
     _shape(raw, "hospital_plans")["compare_fields"] = ["premium_payable", "annual_premium"]
-    with pytest.raises(ValidationError, match="compares 'annual_premium', which"):
-        PackManifest.model_validate(raw)
+    with pytest.raises(ValueError, match="compares 'annual_premium', which"):
+        _checked(raw)
 
 
-def _installed(raw: dict[str, Any]) -> InstalledPack:
-    return InstalledPack(PackManifest.model_validate(raw), {}, {})
-
-
-def test_advice_reading_an_uninstalled_pack_is_rejected() -> None:
-    with pytest.raises(PackUnavailable, match=r"ci_gap.*iras_tax"):
-        loader.check_advice_links([_installed(_advised())])
-
-
-def test_advice_reading_an_undeclared_field_of_an_installed_pack_is_rejected() -> None:
+def test_advice_naming_an_undeclared_catalogue_field_is_rejected_against_the_catalogue() -> None:
+    """The manifest alone cannot know the catalogue, so it validates; `check_against` names it."""
     raw = _advised()
     _fact(raw, "ci_gap", "income")["field"] = "not_a_field"
-    with pytest.raises(PackUnavailable, match=r"ci_gap.*not_a_field"):
-        loader.check_advice_links([_installed(raw), _installed(_tax())])
+    manifest = PackManifest.model_validate(raw)
+    with pytest.raises(ValueError, match=r"insurance_agent: advice shape 'ci_gap'.*not_a_field"):
+        manifest.check_against(catalog().documents)
 
 
-def test_advice_reading_a_declared_field_of_an_installed_pack_links() -> None:
-    loader.check_advice_links([_installed(_advised()), _installed(_tax())])
+def test_advice_naming_an_unknown_category_is_rejected_against_the_catalogue() -> None:
+    raw = _advised()
+    _fact(raw, "ci_gap", "held")["category"] = "not_a_category"
+    manifest = PackManifest.model_validate(raw)
+    with pytest.raises(ValueError, match=r"category 'not_a_category'"):
+        manifest.check_against(catalog().documents)
+
+
+def test_advice_reading_a_payslip_field_needs_no_second_pack() -> None:
+    """ADR 0017: `FactInput.pack` is gone; a payslip's gross salary is a core fact."""
+    assert "pack" not in contracts.FactInput.model_fields
+    _checked(_advised())
 
 
 def test_a_module_may_read_grounding_values() -> None:
@@ -392,8 +417,8 @@ def test_categories_must_read_a_field_the_pack_declares() -> None:
             "rules": [{"id": "dental", "label": "dental plan", "printed": ["dental"]}],
         }
     }
-    with pytest.raises(ValidationError, match="not_a_field"):
-        PackManifest.model_validate(raw)
+    with pytest.raises(ValueError, match="not_a_field"):
+        _checked(raw)
 
 
 def test_categories_reading_a_declared_field_validate() -> None:

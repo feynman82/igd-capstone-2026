@@ -578,7 +578,7 @@ def test_packs_lists_what_is_installed_and_what_it_has_read(settings: Settings) 
     assert summary["documents"] == 7
     assert summary["facts"] == 41
     assert summary["never_acts"] is True, "v1 advises; the manifest cannot say otherwise"
-    assert "renewal_notice" in summary["document_types"]
+    assert "document_types" not in summary, "documents are the core's, not a pack's (ADR 0017)"
 
 
 def test_patching_a_pack_switches_it_off(settings: Settings) -> None:
@@ -793,7 +793,7 @@ def test_all_disabled_is_not_the_same_as_empty() -> None:
 
     conn = FakeConn(rows_for(**{"SELECT id, enabled FROM packs": [("iras_tax", False)]}))
 
-    assert registry.enabled_pack_ids(conn) == frozenset()
+    assert registry.enabled_pack_ids(conn) == frozenset({"core"}), "core is never switched off"
 
 
 def test_the_server_still_starts_when_the_database_is_not_running(
@@ -1013,6 +1013,37 @@ def test_one_document_is_shown_even_when_its_pack_is_off(settings: Settings) -> 
 
     assert body["original_name"] == "renewal-notice.pdf"
     assert body["pack_enabled"] is False, "the screen has to be able to say why it looks odd"
+
+
+def test_a_core_document_stays_enabled_when_every_pack_is_off(settings: Settings) -> None:
+    """ADR 0017: disabling insurance_agent switches off its voice, never a household's policy."""
+    conn = FakeConn(
+        rows_for(
+            **{
+                "SELECT id, enabled FROM packs": [("insurance_agent", False), ("iras_tax", False)],
+                "d.quarantine_reason": [document_row(pack_id="core")],
+                "f.document_id = ANY": [fact_row("expiry_date", None, None, date(2026, 11, 30))],
+            }
+        )
+    )
+    body = client_for(settings, conn).get(f"/api/documents/{DOC}").json()
+
+    assert body["pack_enabled"] is True
+    assert body["facts"][0]["key"] == "expiry_date"
+
+
+def test_a_core_reminder_still_reaches_today_when_its_old_pack_is_off(settings: Settings) -> None:
+    conn = FakeConn(
+        rows_for(
+            **{
+                "SELECT id, enabled FROM packs": [("insurance_agent", False), ("iras_tax", True)],
+                "o.last_notified_at": [obligation(pack_id="core")],
+            }
+        )
+    )
+    body = client_for(settings, conn).get(f"/api/today?as_of={TODAY}").json()
+
+    assert [item["pack_id"] for item in body["items"]] == ["core"]
 
 
 # ------------------------------------------------------------------------------ corrections

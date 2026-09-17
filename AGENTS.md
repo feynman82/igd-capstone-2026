@@ -40,9 +40,10 @@ repository. Humans should read it too — it is the shortest description of how 
    is the whole point. `core/contracts.py` also stays behind it: it defines what a pack and a
    module are, and four lanes build against it.
 5. **No new runtime dependency without an ADR** in `docs/adr/`. Dev/test dependencies are fine.
-6. **Sources of truth generate their outputs; never edit the output.** `pack.yaml`
-   generates `packs/*/schemas.py`, `corpus/register/*_columns.csv` and
-   `docs/field-dictionary.md` via `python -m packs.build`. `docs/team-tasks.csv`
+6. **Sources of truth generate their outputs; never edit the output.** `core/documents.yaml`
+   generates `core/document_schemas.py`, `corpus/register/core_columns.csv`,
+   `corpus/register/batch.template.csv` and `docs/field-dictionary.md` via
+   `python -m packs.build`. `docs/team-tasks.csv`
    generates `team/*/tasks.md` via `python scripts/build_team_tasks.py`. Change the
    source and regenerate. A field name — and a task — is written down in exactly one
    place in this repository.

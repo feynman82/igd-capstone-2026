@@ -20,7 +20,7 @@ from core.ingest.chunk import TARGET_CHARS, chunk_pages
 from core.ingest.classify import CLASSIFY_SAMPLE_CHARS, classification_sample, classify
 from core.ingest.extract import extract, find_page
 from core.ingest.parse import ParsedPage, parse
-from core.packs import installed_packs, pack
+from core.packs import CORE, catalog, installed_packs
 from core.runtime.ollama import Generated, ModelUnavailable
 
 PAGE_ONE = """SALARY ADVICE
@@ -248,7 +248,7 @@ def test_reindexing_replaces_chunks_and_leaves_facts_alone(insurance: Any) -> No
             raise AssertionError("nothing failed")
 
     conn = Conn()
-    document = IndexedDocument("doc", "policy.txt", "text/plain", "policy_schedule", insurance.id)
+    document = IndexedDocument("doc", "policy.txt", "text/plain", "policy_schedule", CORE)
     count = reindex_document(conn, FakeOllama([]), document, PAGE_ONE.encode())
 
     assert count == 1
@@ -326,15 +326,21 @@ def test_the_classification_sample_is_bounded() -> None:
     assert len(classification_sample(many)) <= CLASSIFY_SAMPLE_CHARS
 
 
-def test_the_classifier_may_only_choose_an_installed_document_type() -> None:
-    client = FakeOllama([{"document_type": "iras_tax.payslip", "confidence": 0.95}])
+def test_the_classifier_may_only_choose_a_catalogue_document_type() -> None:
+    """ADR 0017: candidates are the catalogue's types, unqualified, and every one is `core`'s."""
+    client = FakeOllama([{"document_type": "payslip", "confidence": 0.95}])
     result = classify(client, PAGE_ONE)  # type: ignore[arg-type]
 
-    assert result.pack_id == "iras_tax"
+    assert result.pack_id == CORE
     assert result.doc_type == "payslip"
     enum = client.schemas[0]["properties"]["document_type"]["enum"]
-    assert "unknown" in enum
-    assert all("." in candidate for candidate in enum if candidate != "unknown")
+    assert set(enum) == {*catalog().documents.document_types, "unknown"}
+    assert not any("." in candidate for candidate in enum)
+
+
+def test_a_pack_qualified_type_is_not_a_candidate() -> None:
+    client = FakeOllama([{"document_type": "iras_tax.payslip", "confidence": 0.95}])
+    assert not classify(client, PAGE_ONE).recognised  # type: ignore[arg-type]
 
 
 def test_a_document_no_pack_recognises_is_not_forced_into_one() -> None:
@@ -346,7 +352,7 @@ def test_a_document_no_pack_recognises_is_not_forced_into_one() -> None:
 
 
 def test_a_low_confidence_classification_is_refused() -> None:
-    client = FakeOllama([{"document_type": "iras_tax.payslip", "confidence": 0.2}])
+    client = FakeOllama([{"document_type": "payslip", "confidence": 0.2}])
     result = classify(client, PAGE_ONE)  # type: ignore[arg-type]
 
     assert not result.recognised
@@ -366,7 +372,7 @@ def test_an_unavailable_model_is_a_classification_failure_not_a_crash() -> None:
 
 @pytest.fixture
 def iras() -> Any:
-    return pack("iras_tax")
+    return catalog()
 
 
 def test_every_extracted_fact_carries_a_page_and_the_right_column(iras: Any) -> None:
@@ -432,7 +438,7 @@ def test_a_reply_that_does_not_satisfy_the_pack_is_a_failure(iras: Any) -> None:
 # the whole document to quarantine — chunks included.
 @pytest.fixture
 def insurance() -> Any:
-    return pack("insurance_agent")
+    return catalog()
 
 
 SCHEDULE_REPLY = {
@@ -491,8 +497,22 @@ def test_the_template_directory_is_not_an_installed_pack() -> None:
 
 
 def test_every_document_type_has_a_generated_model() -> None:
-    for installed in installed_packs():
-        assert set(installed.manifest.document_types) <= set(installed.models)
+    assert set(catalog().documents.document_types) <= set(catalog().models)
+
+
+def test_the_catalogue_holds_every_type_the_packs_used_to_declare() -> None:
+    assert set(catalog().documents.document_types) >= {
+        "policy_schedule",
+        "renewal_notice",
+        "claim_letter",
+        "benefit_illustration",
+        "policy_anniversary_statement",
+        "payslip",
+        "donation_receipt",
+        "cpf_statement",
+        "srs_statement",
+        "notice_of_assessment",
+    }
 
 
 # ------------------------------------------------------- the pack's names, and only those
@@ -507,23 +527,16 @@ def _reply_of_examples(spec: Any) -> dict[str, Any]:
     return {f.name: f.example for f in spec.fields}
 
 
-@pytest.mark.parametrize(
-    ("pack_id", "doc_type"),
-    [
-        (installed.id, doc_type)
-        for installed in installed_packs()
-        for doc_type in installed.manifest.document_types
-    ],
-)
-def test_a_fact_is_stored_under_the_name_the_pack_declares(pack_id: str, doc_type: str) -> None:
+@pytest.mark.parametrize("doc_type", list(catalog().documents.document_types))
+def test_a_fact_is_stored_under_the_name_the_catalogue_declares(doc_type: str) -> None:
     """`FieldSpec.name` is the `facts.key`. Nothing between the manifest and the row renames it.
 
     Regression: iras_tax renamed `amount` to `donation_amount` at 0.2.0, and rows written by
     0.1.0 still carry the old key. That was stale data rather than a lost key, but the reason
     it was hard to tell apart is that no test pinned the two names together. This one does,
-    for every document type of every installed pack.
+    for every document type in the catalogue.
     """
-    installed = pack(pack_id)
+    installed = catalog()
     spec = installed.spec(doc_type)
     declared = {field.name for field in spec.fields}
 
@@ -541,7 +554,7 @@ def test_a_fact_is_stored_under_the_name_the_pack_declares(pack_id: str, doc_typ
 
 def test_a_donation_receipt_stores_donation_amount_and_never_amount() -> None:
     """The named regression, spelled out so a future rename cannot quietly reintroduce it."""
-    installed = pack("iras_tax")
+    installed = catalog()
     spec = installed.spec("donation_receipt")
 
     client = FakeOllama([_reply_of_examples(spec)])

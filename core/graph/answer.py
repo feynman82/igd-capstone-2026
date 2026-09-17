@@ -70,7 +70,7 @@ from core.graph.knowledge import categories_asked, glossary, mentions, reworded
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
 from core.graph.sentences import SentenceScanner
-from core.packs import InstalledPack, installed_packs
+from core.packs import CORE, InstalledPack, catalog, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
@@ -180,7 +180,7 @@ ANSWER_SYSTEM = (
 
 def answer_system(installed: InstalledPack | None) -> str:
     """The pack's voice first, the core's rules last: a persona cannot loosen what follows it."""
-    limit = installed.manifest.answering.max_sentences if installed else 6
+    limit = _max_sentences(installed)
     rules = f"{ANSWER_SYSTEM} Write at most {limit} sentences."
     return f"{installed.manifest.persona.system.strip()}\n\n{rules}" if installed else rules
 
@@ -595,6 +595,12 @@ def _either(labels: list[str]) -> str:
     return named[0] if len(named) == 1 else ", ".join(named[:-1]) + f" or {named[-1]}"
 
 
+def _max_sentences(installed: InstalledPack | None) -> int:
+    """The answering pack's limit when one is in play, else the core catalogue's (ADR 0017)."""
+    answering = installed.manifest.answering if installed else catalog().documents.answering
+    return answering.max_sentences
+
+
 def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> InstalledPack | None:
     """The pack owning the best-scoring passage. Its guardrails govern the answer.
 
@@ -615,12 +621,14 @@ def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> Instal
 
     A passage with no pack is skipped rather than counted: the RAG core answers from any
     document, pack or no pack, and a chunk that belongs to nothing cannot be the one that
-    chooses a disclaimer. When nothing in the evidence names a pack, the caller falls back to
-    the strictest floor rather than the loosest.
+    chooses a disclaimer. A `core` passage is skipped the same way: since ADR 0017 every
+    document is the core's, so only a passage an enabled pack read — a holding — names a pack.
+    When nothing in the evidence names a pack, the caller falls back to the strictest floor
+    rather than the loosest.
     """
     if not packs:
         return None
-    owned = [passage for passage in passages if passage.pack_id]
+    owned = [passage for passage in passages if passage.pack_id not in ("", CORE)]
     if not owned:
         return max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
     winner = max(owned, key=lambda passage: passage.score).pack_id
@@ -998,11 +1006,9 @@ class AnswerGraph:
         in the categories the question named. On 14 September the 4B reader was handed that line and
         still answered "Yes, you have car insurance." — which policy, and until when, is the answer.
         Only identifier and date fields are named, as printed, so nothing here is a judgement."""
-        by_pack = {installed.id: installed for installed in packs}
         out: list[Sentence] = []
         for holding in present:
-            installed = by_pack.get(holding.pack_id)
-            spec = installed.manifest.document_types.get(holding.doc_type) if installed else None
+            spec = catalog().documents.document_types.get(holding.doc_type)
             types = {f.name: f.type for f in spec.fields} if spec else {}
             shown = [
                 f"{name.replace('_', ' ')} {value}"
@@ -1371,7 +1377,7 @@ class AnswerGraph:
         installed = _pack_for(passages or [h.passage() for h in on_file], packs)
         floor = installed.manifest.guardrails.abstain_below if installed else 0.42
         disclaimer = installed.manifest.guardrails.disclaimer.strip() if installed else ""
-        limit = installed.manifest.answering.max_sentences if installed else 6
+        limit = _max_sentences(installed)
         exclusions = installed.manifest.answering.exclusions if installed else None
         quarantined = self._inventory.quarantined() if absence and self._inventory else 0
 

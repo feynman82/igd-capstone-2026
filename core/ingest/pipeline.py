@@ -21,7 +21,7 @@ from core.ingest.classify import classification_sample, classify
 from core.ingest.extract import Extraction, extract
 from core.ingest.obligations import fixed, from_facts
 from core.ingest.parse import ParsedDocument, parse
-from core.packs import PackUnavailable, pack
+from core.packs import CORE, PackUnavailable, catalog
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
@@ -71,18 +71,18 @@ def process(
     classification = classify(client, classification_sample(parsed.pages))
     if not classification.recognised:
         return _quarantine(
-            conn, document_id, parsed, classification.reason or "not recognised by any pack"
+            conn, document_id, parsed, classification.reason or "not a known document type"
         )
     assert classification.pack_id is not None and classification.doc_type is not None
 
     try:
-        installed = pack(classification.pack_id)
+        documents = catalog()
     except PackUnavailable as error:
         return _quarantine(conn, document_id, parsed, str(error))
 
     extraction = extract(
         client,
-        installed,
+        documents,
         classification.doc_type,
         parsed.pages,
         confidence=classification.confidence,
@@ -92,7 +92,7 @@ def process(
         parsed.pages,
         original_name=original_name,
         doc_type=classification.doc_type,
-        title=document_title(installed, classification.doc_type, extraction.facts, original_name),
+        title=document_title(documents, classification.doc_type, extraction.facts, original_name),
     )
     try:
         vectors = client.embed_documents([(chunk.title, chunk.embedding_input) for chunk in chunks])
@@ -104,7 +104,7 @@ def process(
         # is exactly the disagreement this pipeline exists to prevent, so the whole document
         # waits for the second pass.
         return _quarantine(
-            conn, document_id, parsed, extraction.reason or "extraction did not satisfy the pack"
+            conn, document_id, parsed, extraction.reason or "extraction did not satisfy the type"
         )
 
     written = commit_both_lanes(
@@ -114,8 +114,6 @@ def process(
         chunks=chunks,
         vectors=vectors,
         extraction=extraction,
-        installed_id=installed.id,
-        installed_version=installed.version,
         doc_type=classification.doc_type,
     )
     return Outcome(
@@ -123,23 +121,23 @@ def process(
         status="indexed",
         pages=parsed.page_count,
         doc_type=classification.doc_type,
-        pack_id=installed.id,
+        pack_id=CORE,
         chunks=len(chunks),
         facts=written,
         reason=None,
     )
 
 
-def document_title(installed: Any, doc_type: str, facts: Any, original_name: str) -> str:
-    """The document as a person would name it: its `string` fields as read, in the pack's order.
+def document_title(documents: Any, doc_type: str, facts: Any, original_name: str) -> str:
+    """The document as a person would name it: its `string` fields as read, in declared order.
 
     For a policy schedule that is the insurer and the product name — "Meridian Assurance,
     PrivateCare Hospital and Surgical Plan" — which is what a chunk from clause 6 of a contract
     cannot say for itself, and what "do I have a hospitalisation plan?" is really asking about.
-    Which fields name a document is read from the pack's declared types rather than written here,
-    so no field name lives in this module. The filename when nothing was read.
+    Which fields name a document is read from the catalogue's declared types rather than written
+    here, so no field name lives in this module. The filename when nothing was read.
     """
-    spec = installed.manifest.document_types.get(doc_type)
+    spec = documents.documents.document_types.get(doc_type)
     named = [field.name for field in spec.fields if field.type == "string"] if spec else []
     values = {fact.key: fact.value_text for fact in facts if getattr(fact, "value_text", None)}
     parts = [str(values[name]).strip() for name in named if values.get(name)]
@@ -154,10 +152,9 @@ def commit_both_lanes(
     chunks: list[Chunk],
     vectors: list[list[float]],
     extraction: Extraction,
-    installed_id: str,
-    installed_version: str,
     doc_type: str,
 ) -> int:
+    version = catalog().version  # which field list read these facts, so re-extraction is auditable
     with conn.cursor() as cur:
         cur.execute(sql.DELETE_CHUNKS, {"document_id": document_id})
         cur.execute(sql.DELETE_FACTS, {"document_id": document_id})
@@ -180,8 +177,8 @@ def commit_both_lanes(
                 {
                     "document_id": document_id,
                     "page": fact.page,
-                    "pack_id": installed_id,
-                    "pack_version": installed_version,
+                    "pack_id": CORE,
+                    "pack_version": version,
                     "key": fact.key,
                     "subject": fact.subject,
                     "value_text": fact.value_text,
@@ -194,16 +191,15 @@ def commit_both_lanes(
             if row is not None:
                 written_facts.append((int(row[0]), fact))
 
-        installed = pack(installed_id)
-        from_facts(cur, installed, written_facts)
-        fixed(cur, installed)
+        from_facts(cur, written_facts)
+        fixed(cur)
         cur.execute(
             sql.MARK_INDEXED,
             {
                 "document_id": document_id,
                 "pages": parsed.page_count,
                 "doc_type": doc_type,
-                "pack_id": installed_id,
+                "pack_id": CORE,
             },
         )
         cur.execute(

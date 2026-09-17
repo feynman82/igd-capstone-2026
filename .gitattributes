@@ -12,8 +12,8 @@ graphify-out/.graphify_analysis.json              -diff linguist-generated
 graphify-out/GRAPH_REPORT.md                      -diff linguist-generated
 
 # Generated — keep them out of diffs and out of language statistics.
-packs/*/schemas.py                 -diff linguist-generated
-corpus/register/*_columns.csv      -diff linguist-generated
+core/document_schemas.py           -diff linguist-generated
+corpus/register/core_columns.csv    -diff linguist-generated
 docs/field-dictionary.md           -diff linguist-generated
 team/*/tasks.md                    -diff linguist-generated
 

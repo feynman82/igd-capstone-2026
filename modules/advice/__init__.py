@@ -31,7 +31,7 @@ from typing import Any
 from core.contracts import Advice, AdviceShape, Categories, FactInput, RuleInput
 from core.graph.advice import Adviser, Calculation, Figure, Input, Missing
 from core.graph.knowledge import categorise
-from core.packs import InstalledPack, installed_packs
+from core.packs import CORE, InstalledPack, catalog
 from modules.advice import queries
 
 CENT = Decimal("0.01")
@@ -914,13 +914,12 @@ def values_for(conn: Any, installed: InstalledPack, key: str, today: date) -> li
 class ModuleAdviser:
     """The `core.graph.advice.Adviser` port over Postgres.
 
-    `packs` is where a fact read from another pack finds its field types; it defaults to the
-    installed packs. It is a parameter so a test can hand in a fixture pack.
+    Every fact is the core's (ADR 0017), so facts are read with `pack_id = 'core'` and their
+    field types come from the core catalogue.
     """
 
-    def __init__(self, conn: Any, packs: Sequence[InstalledPack] | None = None) -> None:
+    def __init__(self, conn: Any) -> None:
         self._conn = conn
-        self._packs = packs
 
     def calculate(
         self,
@@ -967,24 +966,19 @@ class ModuleAdviser:
             )
         return calculate(basis)
 
-    def _types(self, installed: InstalledPack, pack_id: str) -> dict[tuple[str, str], str]:
-        source: InstalledPack | None = installed
-        if pack_id != installed.id:
-            packs = self._packs if self._packs is not None else installed_packs()
-            source = next((candidate for candidate in packs if candidate.id == pack_id), None)
-        if source is None:
-            return {}
-        return {key: spec.type for key, spec in source.manifest.field_index().items()}
+    @staticmethod
+    def _types() -> dict[tuple[str, str], str]:
+        return {key: spec.type for key, spec in catalog().documents.field_index().items()}
 
     def _facts(
         self, installed: InstalledPack, fact: FactInput, names: Sequence[str]
     ) -> list[FactRow]:
-        pack_id = fact.pack or installed.id
-        types = self._types(installed, pack_id)
-        rows = facts_for(self._conn, pack_id, fact.doc_types, fact.field, names, types)
+        rows = facts_for(self._conn, CORE, fact.doc_types, fact.field, names, self._types())
         if fact.category is None or not rows:
             return rows
-        categories = installed.manifest.answering.categories
+        categories = (
+            installed.manifest.answering.categories or catalog().documents.answering.categories
+        )
         if categories is None:
             return []
         document_ids = list(dict.fromkeys(row.document_id for row in rows))
@@ -995,10 +989,9 @@ class ModuleAdviser:
         self, installed: InstalledPack, shape: AdviceShape, names: Sequence[str]
     ) -> dict[str, list[FactRow]]:
         fact = _fact(shape, "items" if shape.calculator == "compare_own" else "held")
-        pack_id = fact.pack or installed.id
-        types = self._types(installed, pack_id)
+        types = self._types()
         return {
-            field: facts_for(self._conn, pack_id, fact.doc_types, field, names, types)
+            field: facts_for(self._conn, CORE, fact.doc_types, field, names, types)
             for field in shape.compare_fields
         }
 

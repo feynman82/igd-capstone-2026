@@ -24,7 +24,7 @@ from core.ingest import sql
 from core.ingest.chunk import chunk_pages
 from core.ingest.parse import parse
 from core.ingest.pipeline import _vector_literal, document_title
-from core.packs import PackUnavailable, pack
+from core.packs import catalog
 from core.runtime.ollama import ModelUnavailable
 
 log = logging.getLogger(__name__)
@@ -65,13 +65,8 @@ def reindex_document(conn: Any, client: Any, document: IndexedDocument, payload:
         cur.execute(sql.SELECT_FACT_VALUES, {"document_id": document.document_id})
         values = [_Value(key, value_text) for key, value_text in cur.fetchall()]
     title = document.original_name
-    if document.pack_id and document.doc_type:
-        try:
-            installed = pack(document.pack_id)
-        except PackUnavailable:
-            installed = None
-        if installed is not None:
-            title = document_title(installed, document.doc_type, values, document.original_name)
+    if document.doc_type:
+        title = document_title(catalog(), document.doc_type, values, document.original_name)
 
     chunks = chunk_pages(
         parsed.pages, original_name=document.original_name, doc_type=document.doc_type, title=title

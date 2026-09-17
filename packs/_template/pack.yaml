@@ -1,40 +1,13 @@
 # Copy this directory, rename it to your pack id, and fill it in.
 # Then run:  python -m packs.build
 #
-# This YAML is the SINGLE SOURCE OF TRUTH. It generates the Pydantic extraction models and
-# the register column headers the corpus is filled in against. Never edit a generated file.
+# A pack is grounding, a persona, its own answering and advice (ADR 0017). It declares no
+# document types and no registers: those live in core/documents.yaml, and every field this pack
+# names must be declared there. Never edit a generated file.
 
 id: example_pack
-version: 0.1.0
+version: 0.2.0
 display_name: Example Domain
-
-document_types:
-
-  example_document:
-    description: One sentence saying what this kind of document is
-    subject_field: holder          # which field says whose document this is (optional)
-    fields:
-      - name: issuer
-        type: string
-        description: Who produced this document, as printed on it
-        example: Meridian Assurance
-      - name: reference_no
-        type: identifier           # copied exactly, never normalised
-        description: The document reference exactly as printed
-        example: EX-2026-000123
-      - name: holder
-        type: person
-        description: Name of the person this document is about
-        example: Marcus Fernandez
-      - name: effective_date
-        type: date
-        description: The date this document takes effect
-        example: "2026-03-01"
-      - name: amount
-        type: money
-        required: false
-        description: The headline amount on the document, in SGD
-        example: "742.00"
 
 grounding:
   corpus: null                     # null = answer only from the user's own documents
@@ -43,14 +16,6 @@ grounding:
   #   - key: example_cap
   #     unit: money
   #     description: The published yearly cap on this kind of amount
-
-registers:
-  reminder:
-    - key: example_expiry
-      from_field: effective_date
-      lead_days: [60, 30, 7]
-  # alert:   [{ metric: example_total, ceiling: 1000, warn_at: 0.9 }]
-  # tracker: { metrics: [example_total] }
 
 persona:
   system: >
@@ -70,7 +35,7 @@ guardrails:
 #   vocabulary:
 #     everyday word: what the document prints
 #   categories:
-#     match_field: a_string_field_above
+#     match_field: a_string_field_in_core_documents_yaml
 #     noun: documents
 #     rules:
 #       - id: first_kind
@@ -96,9 +61,9 @@ guardrails:
 #       asked: [how much more can i, room left]
 #       facts:
 #         - role: used
-#           doc_types: [example_document]
-#           field: amount
-#           take: sum
+#           doc_types: [srs_statement]     # types declared in core/documents.yaml
+#           field: contributions_ytd
+#           take: latest
 #           missing: The documents showing what has been used so far this year.
 #       rules:
 #         - role: cap

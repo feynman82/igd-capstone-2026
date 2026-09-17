@@ -6,9 +6,9 @@ The register is the ground truth for extraction scoring, so a row that is wrong 
 wrong answer in the evaluation. This is the contract between Lane E and the builders.
 
 The register is **one column per field**, which is the shape `python -m packs.build` writes
-into `corpus/register/<pack>_columns.csv` from `pack.yaml`. Start a batch by copying that
-header; do not invent one. A register in the superseded `field_1_name,field_1_value` shape is
-rejected by name rather than read as empty.
+into `corpus/register/batch.template.csv` from `core/documents.yaml`. Start a batch by copying
+that header; do not invent one. Every row's `pack_id` is `core` (ADR 0017). A register in the
+superseded `field_1_name,field_1_value` shape is rejected by name rather than read as empty.
 
 `field_pages` is the column that makes a golden-set question gradeable: it records which page
 each value is *printed* on, for the fields that are not on page 1. It is the one column that
@@ -27,38 +27,25 @@ from collections.abc import Iterable, Iterator, Sequence
 from datetime import date, datetime
 from pathlib import Path
 
+CORE = "core"
+
 
 def _known_doc_types() -> dict[str, set[str]]:
-    """Derived from the pack manifests, never hardcoded.
+    """Derived from the core catalogue, never hardcoded: `core` -> its document types.
 
-    A register row can only name a document type some installed pack actually owns, so a
-    typo here is caught before the corpus is built rather than at extraction time.
+    A register row can only name a document type `core/documents.yaml` declares, so a typo
+    here is caught before the corpus is built rather than at extraction time.
     """
-    import yaml
-
-    from core.contracts import PackManifest
-
-    out: dict[str, set[str]] = {}
-    for pack_yaml in sorted(Path("packs").glob("*/pack.yaml")):
-        if pack_yaml.parent.name.startswith("_"):
-            continue
-        m = PackManifest.model_validate(yaml.safe_load(pack_yaml.read_text(encoding="utf-8")))
-        out[m.id] = set(m.document_types)
-    return out
+    return {CORE: {doc_type for doc_type, _ in _known_fields()}}
 
 
 def _known_fields() -> dict[tuple[str, str], object]:
     import yaml
 
-    from core.contracts import PackManifest
+    from core.contracts import DocumentCatalog
 
-    out: dict[tuple[str, str], object] = {}
-    for pack_yaml in sorted(Path("packs").glob("*/pack.yaml")):
-        if pack_yaml.parent.name.startswith("_"):
-            continue
-        m = PackManifest.model_validate(yaml.safe_load(pack_yaml.read_text(encoding="utf-8")))
-        out.update(m.field_index())
-    return out
+    raw = Path("core/documents.yaml").read_text(encoding="utf-8")
+    return dict(DocumentCatalog.model_validate(yaml.safe_load(raw)).field_index())
 
 
 TIERS = {"clean", "scanned", "photo"}
@@ -68,7 +55,7 @@ FIXED = {"doc_id", "doc_type", "pack_id", "issued_date", "subject", "tier", "fie
 def _fields(row: dict[str, str], declared: set[str]) -> dict[str, str]:
     """The filled field columns of one row, in the format `packs.build` generates.
 
-    One column per field name, which is the format `corpus/register/<pack>_columns.csv` is
+    One column per field name, which is the format `corpus/register/core_columns.csv` is
     written in and the reason a field name is written down in exactly one place. A column that
     is not a declared field name anywhere is ignored here and caught by the header check, so a
     typo shows up as a named problem rather than as a silently missing fact.
@@ -157,8 +144,8 @@ def validate(path: Path) -> list[str]:
             return [
                 f"{path} is in the superseded field_1_name/field_1_value format. The register "
                 "is one column per field now — start from the header in "
-                "corpus/register/<pack>_columns.csv, which `python -m packs.build` generates "
-                "from pack.yaml so the column names cannot drift from the field names."
+                "corpus/register/batch.template.csv, which `python -m packs.build` generates "
+                "from core/documents.yaml so the column names cannot drift from the field names."
             ]
         if "field_pages" not in header:
             errors.append(
@@ -168,7 +155,7 @@ def validate(path: Path) -> list[str]:
             )
         for name in header:
             if name and name not in FIXED and name not in declared:
-                errors.append(f"column {name!r} is not a field any installed pack declares")
+                errors.append(f"column {name!r} is not a field core/documents.yaml declares")
 
         for n, row in enumerate(reader, start=2):
             doc_id = (row.get("doc_id") or "").strip()
@@ -187,14 +174,15 @@ def validate(path: Path) -> list[str]:
                 errors.append(f"{where}: unknown pack_id {pack!r} (known: {sorted(known)})")
             elif doc_type not in known[pack]:
                 errors.append(
-                    f"{where}: {doc_type!r} is not a document type {pack} owns "
-                    f"(it owns: {sorted(known[pack])})"
+                    f"{where}: {doc_type!r} is not a document type the core catalogue declares "
+                    f"(it declares: {sorted(known[pack])})"
                 )
             else:
                 for name in _fields(row, declared):
                     if (doc_type, name) not in fields:
                         errors.append(
-                            f"{where}: field {name!r} is not declared on {doc_type} in pack.yaml"
+                            f"{where}: field {name!r} is not declared on {doc_type} in "
+                            "core/documents.yaml"
                         )
 
             tier = (row.get("tier") or "").strip()

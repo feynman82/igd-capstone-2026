@@ -158,10 +158,6 @@ function PackCard({ pack }: { pack: PackSummary }) {
             ) : null}
           </div>
 
-          <p className="mt-[var(--s-2)] text-body text-ink-2">
-            {pack.document_types.map((type) => type.replace(/_/g, " ")).join(" · ")}
-          </p>
-
           <p className="mt-[var(--s-2)] flex flex-wrap gap-x-[var(--s-3)] text-meta text-ink-2">
             <span>
               <span className="num">{pack.documents}</span> document
@@ -171,19 +167,6 @@ function PackCard({ pack }: { pack: PackSummary }) {
               <span className="num">{pack.facts}</span> field
               {pack.facts === 1 ? "" : "s"} read
             </span>
-            {pack.reminders > 0 ? (
-              <span>
-                <span className="num">{pack.reminders}</span> reminder
-                {pack.reminders === 1 ? "" : "s"}
-              </span>
-            ) : null}
-            {pack.alerts > 0 ? (
-              <span>
-                <span className="num">{pack.alerts}</span> alert
-                {pack.alerts === 1 ? "" : "s"}
-              </span>
-            ) : null}
-            {pack.tracker ? <span>a tracker</span> : null}
           </p>
         </div>
 

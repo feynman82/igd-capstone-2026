@@ -1,8 +1,8 @@
-"""Decide which pack's document type a captured document is, or decline to.
+"""Decide which of the core catalogue's document types a captured document is, or decline to.
 
-The candidate list is every document type every installed pack declares, qualified by pack id.
-The model is constrained to that list plus `unknown` — it cannot invent a type, and it cannot
-return the name of a pack nobody has installed.
+The candidate list is every document type `core/documents.yaml` declares, unqualified: a document
+is the core's whichever packs are installed (ADR 0017). The model is constrained to that list plus
+`unknown` — it cannot invent a type.
 
 Declining matters more than choosing. A document classified as the wrong type would be
 extracted against the wrong field list and would produce facts that are confidently wrong,
@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 from core.contracts import DocumentTypeSpec
 from core.ingest.parse import ParsedPage
-from core.packs import document_types
+from core.packs import CORE, document_types
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
@@ -79,10 +79,10 @@ def _schema(candidates: list[str]) -> dict[str, object]:
     }
 
 
-def _prompt(candidates: Mapping[str, tuple[str, DocumentTypeSpec]], text: str) -> str:
+def _prompt(candidates: Mapping[str, DocumentTypeSpec], text: str) -> str:
     lines = ["Candidate document types:"]
-    for qualified, (_pack_id, spec) in candidates.items():
-        lines.append(f"- {qualified}: {spec.description}")
+    for doc_type, spec in candidates.items():
+        lines.append(f"- {doc_type}: {spec.description}")
     lines += [
         "",
         "The opening pages of the document are between the markers.",
@@ -99,7 +99,7 @@ def classify(client: Ollama, text: str) -> Classification:
     """Never raises. An unavailable model is a classification failure, so it quarantines."""
     candidates = document_types()
     if not candidates:
-        return Classification(None, None, 0.0, "no packs are installed")
+        return Classification(None, None, 0.0, "the core catalogue declares no document types")
     if not text.strip():
         return Classification(None, None, 0.0, "no text to classify")
 
@@ -117,11 +117,9 @@ def classify(client: Ollama, text: str) -> Classification:
         confidence = 0.0
 
     if chosen == UNKNOWN or chosen not in candidates:
-        return Classification(None, None, confidence, "no installed pack recognises this document")
+        return Classification(None, None, confidence, "no document type recognises this document")
     if confidence < MIN_CONFIDENCE:
         return Classification(
             None, None, confidence, f"classified as {chosen} but only {confidence:.2f} confident"
         )
-    pack_id, _spec = candidates[chosen]
-    doc_type = chosen.split(".", 1)[1]
-    return Classification(pack_id, doc_type, confidence)
+    return Classification(CORE, chosen, confidence)

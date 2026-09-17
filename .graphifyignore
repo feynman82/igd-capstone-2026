@@ -9,8 +9,8 @@ inbox/
 *.png
 
 # Generated — the graph should describe the source of truth, not its outputs.
-packs/*/schemas.py
-corpus/register/*_columns.csv
+core/document_schemas.py
+corpus/register/core_columns.csv
 docs/field-dictionary.md
 
 # Build noise

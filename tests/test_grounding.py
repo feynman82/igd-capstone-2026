@@ -22,7 +22,7 @@ def _installed(corpus: str | None) -> InstalledPack:
     with open(IRAS_MANIFEST, encoding="utf-8") as fh:
         manifest = PackManifest.model_validate(yaml.safe_load(fh))
     grounding = manifest.grounding.model_copy(update={"corpus": corpus})
-    return InstalledPack(manifest.model_copy(update={"grounding": grounding}), {}, {})
+    return InstalledPack(manifest.model_copy(update={"grounding": grounding}))
 
 
 def _document(file: str, **overrides: Any) -> dict[str, Any]:

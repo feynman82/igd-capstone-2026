@@ -306,10 +306,6 @@ class PackSummary(BaseModel):
     enabled: bool
     on_disk: bool  # false when the row outlived the directory
     installed_at: datetime | None = None
-    document_types: list[str] = Field(default_factory=list)
-    reminders: int = 0
-    alerts: int = 0
-    tracker: bool = False
     never_acts: bool = True
     disclaimer: str = ""
     documents: int = 0

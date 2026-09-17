@@ -3,10 +3,10 @@
 
 Every extractable field in the system. A field name is simultaneously the column
 header in the corpus register, the `facts.key` it is stored under, and the attribute
-on the extraction model. Renaming one renames all three, so rename in `pack.yaml`
-and regenerate.
+on the extraction model. Renaming one renames all three, so rename in
+`core/documents.yaml` and regenerate.
 
-## Insurance and Coverage (`insurance_agent` v0.4.0)
+## Core document catalogue (`core/documents.yaml`)
 
 ### `policy_schedule`
 
@@ -77,8 +77,6 @@ Annual statement issued on the anniversary of a life or investment-linked policy
 | `annual_premium` | money | yes | `facts.value_num` | Premium payable each year as printed on the statement, in SGD |
 | `surrender_value` | money | no | `facts.value_num` | Cash or surrender value as at the statement date, in SGD |
 | `premiums_paid_to_date` | money | no | `facts.value_num` | Total premiums paid since inception where the statement prints it, in SGD |
-
-## Tax and Reliefs (`iras_tax` v0.2.0)
 
 ### `payslip`
 

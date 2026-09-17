@@ -1,18 +1,18 @@
-"""Load the installed packs at runtime.
+"""Load the core document catalogue and the installed packs at runtime.
 
-A pack is authored as one YAML file and `python -m packs.build` generates the Pydantic
-extraction models beside it. This module reads both: the manifest for what a document type is
-and what the guardrails say, and the generated `schemas.py` for the model the extractor
-constrains the generator to.
+The core owns documents (ADR 0017): `core/documents.yaml` declares every document type, its
+fields and registers, and `python -m packs.build` generates `core/document_schemas.py` from it —
+the Pydantic models the extractor constrains the generator to. A pack is grounding, persona, its
+own answering and advice, and every core name it uses is checked against the catalogue here.
 
-Nothing here writes to `packs/`. Rule 6 — the YAML generates its outputs and the outputs are
+Nothing here writes a generated file. Rule 6 — the YAML generates its outputs and the outputs are
 never edited — is enforced by `python -m packs.build --check` in `make check`, not by us.
 """
 
 from __future__ import annotations
 
+import hashlib
 import importlib
-from collections.abc import Iterable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -20,20 +20,52 @@ from pathlib import Path
 import yaml
 from pydantic import BaseModel
 
-from core.contracts import DocumentTypeSpec, PackManifest
+from core.contracts import DocumentCatalog, DocumentTypeSpec, PackManifest
 
 PACKS_DIR = Path(__file__).resolve().parents[1] / "packs"
+CATALOG_FILE = Path(__file__).resolve().parent / "documents.yaml"
+
+# The pack_id every document, fact and obligation is written with. Always enabled, never listed
+# as a pack: disabling a pack switches off its voice and advice, never the household's documents.
+CORE = "core"
 
 
 class PackUnavailable(RuntimeError):
-    """A pack's YAML and its generated schemas disagree, or the pack does not exist."""
+    """A pack names what the catalogue does not declare, or the pack does not exist."""
+
+
+@dataclass(frozen=True, slots=True)
+class Catalog:
+    documents: DocumentCatalog
+    models: dict[str, type[BaseModel]]  # doc_type -> generated extraction model
+    fact_columns: dict[str, str]  # field name -> the facts column it lands in
+    version: str  # sha256 of core/documents.yaml, first 12 hex: which field list read a fact
+
+    def spec(self, doc_type: str) -> DocumentTypeSpec:
+        try:
+            return self.documents.document_types[doc_type]
+        except KeyError as error:
+            raise PackUnavailable(f"the core catalogue does not declare {doc_type}") from error
+
+
+@lru_cache(maxsize=1)
+def catalog() -> Catalog:
+    raw = CATALOG_FILE.read_bytes()
+    documents = DocumentCatalog.model_validate(yaml.safe_load(raw))
+    schemas = importlib.import_module("core.document_schemas")
+    models: dict[str, type[BaseModel]] = dict(schemas.MODELS)
+    if missing := set(documents.document_types) - set(models):
+        raise PackUnavailable(
+            f"core/document_schemas.py has no model for {sorted(missing)}. "
+            "Run python -m packs.build."
+        )
+    version = hashlib.sha256(raw).hexdigest()[:12]
+    return Catalog(documents, models, dict(schemas.FACT_COLUMNS), version)
 
 
 @dataclass(frozen=True, slots=True)
 class InstalledPack:
     manifest: PackManifest
-    models: dict[str, type[BaseModel]]  # doc_type -> generated extraction model
-    fact_columns: dict[str, str]  # field name -> the facts column it lands in
 
     @property
     def id(self) -> str:
@@ -43,30 +75,15 @@ class InstalledPack:
     def version(self) -> str:
         return self.manifest.version
 
-    def spec(self, doc_type: str) -> DocumentTypeSpec:
-        try:
-            return self.manifest.document_types[doc_type]
-        except KeyError as error:
-            raise PackUnavailable(f"{self.id} does not declare {doc_type}") from error
-
 
 def _load_one(pack_dir: Path) -> InstalledPack:
     raw = yaml.safe_load((pack_dir / "pack.yaml").read_text(encoding="utf-8"))
     manifest = PackManifest.model_validate(raw)
     try:
-        schemas = importlib.import_module(f"packs.{pack_dir.name}.schemas")
-    except ImportError as error:
-        raise PackUnavailable(
-            f"packs/{pack_dir.name}/schemas.py is missing. Run python -m packs.build."
-        ) from error
-    models: dict[str, type[BaseModel]] = dict(schemas.MODELS)
-    missing = set(manifest.document_types) - set(models)
-    if missing:
-        raise PackUnavailable(
-            f"{manifest.id}: schemas.py has no model for {sorted(missing)}. "
-            "Run python -m packs.build."
-        )
-    return InstalledPack(manifest, models, dict(schemas.FACT_COLUMNS))
+        manifest.check_against(catalog().documents)
+    except ValueError as error:
+        raise PackUnavailable(str(error)) from error
+    return InstalledPack(manifest)
 
 
 @lru_cache(maxsize=1)
@@ -82,33 +99,7 @@ def installed_packs() -> tuple[InstalledPack, ...]:
             continue  # `_template` is a worked example to copy, not an installed pack
         if pack_dir.is_dir() and (pack_dir / "pack.yaml").is_file():
             found.append(_load_one(pack_dir))
-    check_advice_links(found)
     return tuple(found)
-
-
-def check_advice_links(packs: Iterable[InstalledPack]) -> None:
-    """Every fact an advice shape reads from another pack is declared by an installed pack.
-
-    A manifest checks the facts it reads from itself; it cannot see another pack. So a shape
-    reading `iras_tax.payslip.gross_salary` is checked here, once every pack has loaded, and a
-    missing pack stops the load rather than silently withholding advice at question time.
-    """
-    by_id = {installed.id: installed.manifest for installed in packs}
-    for pack_id, manifest in by_id.items():
-        if manifest.advice is None:
-            continue
-        for shape in manifest.advice.shapes:
-            for fact in shape.facts:
-                if fact.pack is None:
-                    continue
-                where = f"{pack_id}: advice shape {shape.id!r}, fact {fact.role!r}"
-                source = by_id.get(fact.pack)
-                if source is None:
-                    raise PackUnavailable(
-                        f"{where} reads pack {fact.pack!r}, which is not installed"
-                    )
-                if reason := source.undeclared(fact.doc_types, fact.field):
-                    raise PackUnavailable(f"{where}: {reason}")
 
 
 def pack(pack_id: str) -> InstalledPack:
@@ -118,14 +109,6 @@ def pack(pack_id: str) -> InstalledPack:
     raise PackUnavailable(f"no installed pack with id {pack_id}")
 
 
-def document_types() -> dict[str, tuple[str, DocumentTypeSpec]]:
-    """`"<pack>.<doc_type>"` -> (pack_id, spec). The classifier's whole candidate list.
-
-    Qualified by pack id because two packs may legitimately both recognise a `renewal_notice`,
-    and a fact has to be attributed to the pack whose field names it used.
-    """
-    return {
-        f"{installed.id}.{doc_type}": (installed.id, spec)
-        for installed in installed_packs()
-        for doc_type, spec in installed.manifest.document_types.items()
-    }
+def document_types() -> dict[str, DocumentTypeSpec]:
+    """doc_type -> spec. The classifier's whole candidate list, from the catalogue alone."""
+    return dict(catalog().documents.document_types)

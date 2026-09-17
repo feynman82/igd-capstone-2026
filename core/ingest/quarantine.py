@@ -37,7 +37,7 @@ from core.ingest.extract import extract
 from core.ingest.parse import ParsedDocument, ParsedPage
 from core.ingest.pipeline import commit_both_lanes, document_title
 from core.ingest.source import index_folder
-from core.packs import PackUnavailable, pack
+from core.packs import PackUnavailable, catalog
 from core.pages import PageUnavailable, RendererUnavailable, page_count, render_page
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -228,32 +228,32 @@ def retry(
     classification = classify(client, classification_sample(read.pages))
     if not classification.recognised:
         return _still_quarantined(
-            conn, document_id, classification.reason or "still not recognised by any pack"
+            conn, document_id, classification.reason or "still not a known document type"
         )
     assert classification.pack_id is not None and classification.doc_type is not None
 
     try:
-        installed = pack(classification.pack_id)
+        documents = catalog()
     except PackUnavailable as error:
         return _still_quarantined(conn, document_id, str(error))
 
     extraction = extract(
         client,
-        installed,
+        documents,
         classification.doc_type,
         read.pages,
         confidence=classification.confidence,
     )
     if not extraction.ok:
         return _still_quarantined(
-            conn, document_id, extraction.reason or "the pack's fields are still not satisfied"
+            conn, document_id, extraction.reason or "the type's fields are still not satisfied"
         )
 
     chunks = chunk_pages(
         read.pages,
         original_name=original_name,
         doc_type=classification.doc_type,
-        title=document_title(installed, classification.doc_type, extraction.facts, original_name),
+        title=document_title(documents, classification.doc_type, extraction.facts, original_name),
     )
     try:
         vectors = client.embed_documents([(chunk.title, chunk.embedding_input) for chunk in chunks])
@@ -267,8 +267,6 @@ def retry(
         chunks=chunks,
         vectors=vectors,
         extraction=extraction,
-        installed_id=installed.id,
-        installed_version=installed.version,
         doc_type=classification.doc_type,
     )
     log.info("recovered %s from the page image: %d cited fact(s)", document_id, written)

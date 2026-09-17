@@ -196,10 +196,6 @@ export type PackSummary = {
   enabled: boolean;
   on_disk: boolean;
   installed_at: string | null;
-  document_types: string[];
-  reminders: number;
-  alerts: number;
-  tracker: boolean;
   never_acts: boolean;
   disclaimer: string;
   documents: number;

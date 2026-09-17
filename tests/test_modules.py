@@ -23,7 +23,7 @@ import pytest
 
 from core.contracts import FACT_COLUMN, AlertConfig
 from core.ingest.sql import INSERT_FACT
-from core.packs import installed_packs
+from core.packs import CORE, catalog
 from core.runtime.settings import Settings
 from modules import alert, reminder
 from modules.reminder import already_said, current_lead
@@ -178,16 +178,6 @@ def test_the_most_urgent_comes_first() -> None:
 # ---------------------------------------------------------------------------- the alert
 
 
-class FakePack:
-    def __init__(self, pack_id: str, configs: list[AlertConfig]) -> None:
-        self.id = pack_id
-        self.manifest = type(
-            "M",
-            (),
-            {"registers": type("R", (), {"alert": configs})()},
-        )()
-
-
 SRS = AlertConfig(metric="srs_contributions_ytd", ceiling=15300, warn_at=0.9)
 
 
@@ -198,7 +188,7 @@ def srs_row(value: str) -> tuple[Any, ...]:
 
 def test_a_threshold_crossing_fires_with_the_document_behind_it() -> None:
     conn = FakeConn([srs_row("14000.00")], [], [])
-    firing = alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),))  # type: ignore[arg-type]
+    firing = alert.sweep(conn, TODAY, configs=(SRS,))  # type: ignore[arg-type]
 
     assert len(firing) == 1
     assert firing[0].citations == ["srs-2026.pdf, page 2"]
@@ -208,14 +198,14 @@ def test_a_threshold_crossing_fires_with_the_document_behind_it() -> None:
 
 def test_below_the_warning_share_nothing_fires() -> None:
     conn = FakeConn([srs_row("5000.00")])
-    assert alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),)) == []  # type: ignore[arg-type]
+    assert alert.sweep(conn, TODAY, configs=(SRS,)) == []  # type: ignore[arg-type]
 
 
 def test_a_recent_firing_is_debounced() -> None:
     just_fired = [(datetime.now(UTC) - timedelta(hours=2), {"value": "14000.00"})]
     conn = FakeConn([srs_row("14000.00")], just_fired)
 
-    assert alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),)) == []  # type: ignore[arg-type]
+    assert alert.sweep(conn, TODAY, configs=(SRS,)) == []  # type: ignore[arg-type]
     assert conn.commits == 0
 
 
@@ -223,7 +213,7 @@ def test_a_firing_older_than_the_debounce_window_fires_again() -> None:
     long_ago = [(datetime.now(UTC) - timedelta(days=30), {"value": "9000.00"})]
     conn = FakeConn([srs_row("14000.00")], long_ago, [])
 
-    firing = alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [SRS]),))  # type: ignore[arg-type]
+    firing = alert.sweep(conn, TODAY, configs=(SRS,))  # type: ignore[arg-type]
     assert len(firing) == 1
 
 
@@ -231,7 +221,7 @@ def test_a_metric_no_query_defines_cannot_fire() -> None:
     invented = AlertConfig(metric="made_up_metric", ceiling=10, warn_at=0.5)
     conn = FakeConn()
 
-    assert alert.sweep(conn, TODAY, packs=(FakePack("iras_tax", [invented]),)) == []  # type: ignore[arg-type]
+    assert alert.sweep(conn, TODAY, configs=(invented,)) == []  # type: ignore[arg-type]
 
 
 def test_the_debounce_key_separates_people() -> None:
@@ -294,14 +284,13 @@ def test_each_policy_lapses_on_its_own() -> None:
     assert lapses[0].citations == ["motor-renewal.pdf, page 2"], "cites the latest expiry"
 
 
-def test_the_real_packs_declare_metrics_that_exist() -> None:
-    """A pack naming a metric nobody implemented is a silent no-op, so it is caught here."""
-    for installed in installed_packs():
-        for config in installed.manifest.registers.alert or []:
-            assert config.metric in alert.METRICS, (
-                f"{installed.id} declares {config.metric}, which modules/alert/queries.py "
-                "does not define"
-            )
+def test_the_catalogue_declares_metrics_that_exist() -> None:
+    """A metric nobody implemented is a silent no-op, so it is caught here."""
+    for config in catalog().documents.registers.alert or []:
+        assert config.metric in alert.METRICS, (
+            f"core/documents.yaml declares {config.metric}, which modules/alert/queries.py "
+            "does not define"
+        )
 
 
 # ---------------------------------------------------- the alert metrics, against Postgres
@@ -344,13 +333,12 @@ def load_register(conn: Any, overrides: dict[tuple[str, str], str] | None = None
     `overrides` replaces one field of one document, keyed by `(doc_id, field)`. Pages are 1:
     batch1 records no `field_pages`, and every one of its documents is a single page.
     """
-    packs = {installed.id: installed for installed in installed_packs()}
+    installed = catalog()
     with REGISTER.open(encoding="utf-8") as handle:
         rows = list(csv.DictReader(line for line in handle if not line.startswith("#")))
 
     with conn.cursor() as cur:
         for row in rows:
-            installed = packs[row["pack_id"]]
             cur.execute(
                 "INSERT INTO documents (sha256, source_channel, original_name, mime, doc_type,"
                 " pack_id, status, synthetic)"
@@ -360,7 +348,7 @@ def load_register(conn: Any, overrides: dict[tuple[str, str], str] | None = None
                     hashlib.sha256(row["doc_id"].encode()).digest(),
                     f"{row['doc_id']}.pdf",
                     row["doc_type"],
-                    installed.id,
+                    CORE,
                 ),
             )
             (document_id,) = cur.fetchone()
@@ -374,8 +362,8 @@ def load_register(conn: Any, overrides: dict[tuple[str, str], str] | None = None
                     {
                         "document_id": document_id,
                         "page": 1,
-                        "pack_id": installed.id,
-                        "pack_version": installed.manifest.version,
+                        "pack_id": CORE,
+                        "pack_version": installed.version,
                         "key": spec.name,
                         "subject": row["subject"],
                         "value_text": raw if column == "value_text" else None,
@@ -469,7 +457,7 @@ def test_every_firing_is_scoped_and_cites_a_page(
 ) -> None:
     load_register(db)
 
-    firing = alert.sweep(db, as_of, mark=False, packs=installed_packs())
+    firing = alert.sweep(db, as_of, mark=False)
 
     assert {(f.metric, f.subject) for f in firing} == expected
     assert len({f.key for f in firing}) == len(firing), "two alerts share a debounce key"

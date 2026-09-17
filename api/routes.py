@@ -173,7 +173,7 @@ def _today_items(conn: Any, on: date) -> list[TodayItem]:
     enabled = registry.enabled_pack_ids(conn)
     items: list[TodayItem] = []
 
-    for firing in alert.sweep(conn, on, mark=False, packs=registry.enabled_packs(conn)):
+    for firing in alert.sweep(conn, on, mark=False):
         items.append(
             TodayItem(
                 id=firing.key,
@@ -1117,7 +1117,6 @@ def _as_person(person: household.Person) -> PersonModel:
 
 def _as_pack_summary(row: registry.RegisteredPack) -> PackSummary:
     manifest = row.manifest
-    registers = manifest.registers if manifest else None
     return PackSummary(
         id=row.id,
         version=row.version,
@@ -1125,10 +1124,6 @@ def _as_pack_summary(row: registry.RegisteredPack) -> PackSummary:
         enabled=row.enabled,
         on_disk=row.on_disk,
         installed_at=row.installed_at,
-        document_types=sorted(manifest.document_types) if manifest else [],
-        reminders=len(registers.reminder or []) if registers else 0,
-        alerts=len(registers.alert or []) if registers else 0,
-        tracker=bool(registers and registers.tracker),
         never_acts=manifest.guardrails.never_acts if manifest else True,
         disclaimer=manifest.guardrails.disclaimer if manifest else "",
         documents=row.documents,

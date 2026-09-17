@@ -19,7 +19,7 @@ from typing import Any, Protocol
 from core.contracts import Category
 from core.graph.knowledge import categorise
 from core.graph.ports import Passage
-from core.packs import InstalledPack
+from core.packs import CORE, InstalledPack, catalog
 
 INVENTORY = """
 SELECT d.id, d.original_name, d.doc_type, d.pack_id,
@@ -39,15 +39,15 @@ QUARANTINED = "SELECT count(*) FROM documents WHERE status = 'quarantined'"
 class Holding:
     document_id: Any
     document_name: str
-    pack_id: str
+    pack_id: str  # the enabled pack whose categories read this document, not the document's own
     doc_type: str
-    title: str  # the document's string fields in the pack's order, as ADR 0012 names a chunk
+    title: str  # the document's string fields in declared order, as ADR 0012 names a chunk
     subject: str | None
     category: Category | None
     printed_name: str  # the value the categories read, exactly as printed
     fact_id: int  # the fact the name was read from: what a citation points at
     page: int
-    details: tuple[tuple[str, str], ...]  # (field, value) in the pack's declared order
+    details: tuple[tuple[str, str], ...]  # (field, value) in the catalogue's declared order
 
     def passage(self) -> Passage:
         lines = "; ".join(f"{name.replace('_', ' ')}: {value}" for name, value in self.details)
@@ -67,24 +67,32 @@ class Holding:
 
 
 def holdings(rows: Sequence[Sequence[Any]], packs: Sequence[InstalledPack]) -> list[Holding]:
-    """Rows of `INVENTORY`, one holding per document that prints the field its pack's categories
-    read. A renewal notice prints no product name, so it is not counted as a second policy."""
-    by_pack = {installed.id: installed for installed in packs}
+    """Rows of `INVENTORY`, one holding per document that prints the field an enabled pack's
+    categories read. A renewal notice prints no product name, so it is not counted as a second
+    policy. Documents are the core's (ADR 0017); the first pack in `packs` order whose
+    `match_field` the document prints categorises it."""
+    types = catalog().documents.document_types
     grouped: dict[Any, list[Sequence[Any]]] = {}
     for found in rows:
         grouped.setdefault(found[0], []).append(found)
 
     out: list[Holding] = []
     for document_id, facts in grouped.items():
-        name, doc_type, pack_id = str(facts[0][1]), str(facts[0][2]), str(facts[0][3])
-        installed = by_pack.get(pack_id)
-        categories = installed.manifest.answering.categories if installed else None
-        if installed is None or categories is None:
-            continue
-        spec = installed.manifest.document_types.get(doc_type)
+        name, doc_type = str(facts[0][1]), str(facts[0][2])
+        spec = types.get(doc_type)
         values = {str(f[5]): (int(f[4]), int(f[6]), f[7]) for f in facts if f[7] is not None}
-        if spec is None or categories.match_field not in values:
+        reading = next(
+            (
+                (installed.id, categories)
+                for installed in packs
+                if (categories := installed.manifest.answering.categories) is not None
+                and categories.match_field in values
+            ),
+            None,
+        )
+        if spec is None or reading is None:
             continue
+        pack_id, categories = reading
         fact_id, page, printed = values[categories.match_field]
         strings = [
             str(values[f.name][2]) for f in spec.fields if f.type == "string" and f.name in values
@@ -130,7 +138,8 @@ class HouseholdInventory:
         if not packs:
             return []
         with self.conn.cursor() as cur:
-            cur.execute(INVENTORY, {"packs": sorted(installed.id for installed in packs)})
+            ids = {CORE, *(installed.id for installed in packs)}
+            cur.execute(INVENTORY, {"packs": sorted(ids)})
             rows = cur.fetchall()
         return holdings(rows, packs)
 

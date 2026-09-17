@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def _installed(pack_id: str = "iras_tax") -> InstalledPack:
     with open(IRAS_MANIFEST, encoding="utf-8") as fh:
         manifest = PackManifest.model_validate(yaml.safe_load(fh))
-    return InstalledPack(manifest.model_copy(update={"id": pack_id}), {}, {})
+    return InstalledPack(manifest.model_copy(update={"id": pack_id}))
 
 
 def _source(pack_id: str = "iras_tax", sha256: bytes = b"\x11" * 32) -> SourceText:

@@ -29,7 +29,7 @@ from typing import Any
 
 from core.contracts import ModuleManifest, PackManifest
 from core.modules import installed_modules
-from core.packs import InstalledPack, installed_packs
+from core.packs import CORE, InstalledPack, installed_packs
 from core.runtime.db import DatabaseUnavailable, connect
 from core.runtime.settings import Settings
 
@@ -205,17 +205,19 @@ def install_best_effort(settings: Settings) -> Installed | None:
 
 
 def enabled_pack_ids(conn: Any) -> frozenset[str] | None:
-    """The packs left switched on, or `None` when nothing has been installed yet.
+    """The packs left switched on, plus `core`, or `None` when nothing has been installed yet.
 
     `None` means "do not filter". See the module docstring for why that is not the same as
-    the empty set, which means "a person has switched everything off".
+    a set holding only `core`, which means "a person has switched every pack off". `core` is
+    always in the set and never a row: every document and fact is the core's (ADR 0017), so
+    every filter on this set keeps the household's documents whatever is switched off.
     """
     with conn.cursor() as cur:
         cur.execute(SELECT_PACK_FLAGS)
         rows = cur.fetchall()
     if not rows:
         return None
-    return frozenset(pack_id for pack_id, enabled in rows if enabled)
+    return frozenset({CORE, *(pack_id for pack_id, enabled in rows if enabled)})
 
 
 def enabled_packs(conn: Any) -> tuple[InstalledPack, ...]:

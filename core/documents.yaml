@@ -1,0 +1,348 @@
+# The household's documents — core catalogue (ADR 0017)
+#
+# This file is the SINGLE SOURCE OF TRUTH for every document type, its fields, the reminders
+# and alerts they register, and the core answering layer. After editing, run:
+#     python -m packs.build
+# which regenerates core/document_schemas.py, corpus/register/core_columns.csv, the batch
+# template and docs/field-dictionary.md. Never edit a generated file by hand.
+#
+# Every ingested document and extracted fact belongs to the core, whichever packs are installed
+# or enabled. A pack adds grounding, a persona, its own answering and advice, and names the
+# fields declared here.
+
+document_types:
+
+  policy_schedule:
+    description: Policy schedule or certificate of insurance setting out cover and premium
+    subject_field: insured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company as printed on the schedule letterhead
+        example: Meridian Assurance
+      - name: policy_no
+        type: identifier
+        description: Policy number exactly as printed, not normalised
+        example: MV-2026-448120
+      - name: insured
+        type: person
+        description: Name of the policyholder as printed against Name of Insured
+        example: Marcus Fernandez
+      - name: product_name
+        type: string
+        description: Product name as printed at the head of the schedule, not a category
+        example: Private Car Insurance Policy
+      - name: cover_from
+        type: date
+        description: First day of the period of insurance, the from date on that line
+        example: "2026-03-01"
+      - name: expiry_date
+        type: date
+        required: false
+        description: Last day of the period of insurance, the to date on that line, when the policy has a fixed expiry
+        example: "2027-02-28"
+      - name: maturity_date
+        type: date
+        required: false
+        description: Date a life policy matures where the contract has a maturity date instead of a fixed expiry
+        example: "2087-05-07"
+      - name: premium_payable
+        type: money
+        description: Total premium payable for the period of insurance shown, in SGD
+        example: "742.00"
+      - name: sum_insured
+        type: money
+        required: false
+        description: Sum insured or limit of liability where the schedule prints one, in SGD
+        example: "250000.00"
+      - name: excess
+        type: money
+        required: false
+        description: Amount the policyholder bears per claim, printed as Excess, in SGD
+        example: "750.00"
+
+  renewal_notice:
+    description: Notice issued before expiry inviting the policyholder to renew
+    subject_field: insured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company issuing the notice, from the letterhead
+        example: Meridian Assurance
+      - name: policy_no
+        type: identifier
+        description: Policy number exactly as printed, not normalised
+        example: MV-2026-448120
+      - name: insured
+        type: person
+        description: Name of the policyholder the notice is addressed to
+        example: Marcus Fernandez
+      - name: expiry_date
+        type: date
+        description: Date the current cover ends, as printed in the expiry sentence
+        example: "2027-02-28"
+      - name: renewal_premium
+        type: money
+        description: Premium quoted for the coming period of insurance, in SGD
+        example: "781.00"
+      - name: payment_due_date
+        type: date
+        description: Date the notice asks payment by, printed as Please pay by
+        example: "2027-02-14"
+
+  claim_letter:
+    description: Letter from an insurer about a claim, including settlement advice
+    subject_field: claimant
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company, from the letterhead
+        example: Meridian Assurance
+      - name: policy_no
+        type: identifier
+        description: Policy the claim was made against, exactly as printed
+        example: HL-2024-771903
+      - name: claim_no
+        type: identifier
+        description: Claim reference exactly as printed in the reference line
+        example: CLM-2026-0033812
+      - name: claimant
+        type: person
+        description: Name of the person the claim relates to, as addressed
+        example: Mdm Fernandez
+      - name: incident_date
+        type: date
+        required: false
+        description: Date of the event being claimed for, where the letter states one
+        example: "2026-03-14"
+      - name: settled_amount
+        type: money
+        required: false
+        description: Amount paid out in SGD, where the letter states a settlement
+        example: "4820.50"
+
+  benefit_illustration:
+    description: Illustration of benefits and values issued with a life or health policy
+    subject_field: life_assured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company, from the illustration header
+        example: Kallang Life
+      - name: policy_no
+        type: identifier
+        required: false
+        description: Policy number if the illustration carries one, exactly as printed
+        example: LF-2023-118844
+      - name: life_assured
+        type: person
+        description: Name of the person covered, as printed on the illustration
+        example: Marcus Fernandez
+      - name: sum_assured
+        type: money
+        description: Headline sum assured as printed, never a projected value, in SGD
+        example: "250000.00"
+      - name: annual_premium
+        type: money
+        description: Premium payable each year as printed, in SGD
+        example: "3180.00"
+
+  policy_anniversary_statement:
+    description: Annual statement issued on the anniversary of a life or investment-linked policy
+    subject_field: life_assured
+    fields:
+      - name: insurer
+        type: string
+        description: Name of the insurance company, from the statement letterhead
+        example: Kallang Life
+      - name: policy_no
+        type: identifier
+        description: Policy number exactly as printed, not normalised
+        example: LF-2023-118844
+      - name: life_assured
+        type: person
+        description: Name of the person covered, as printed on the statement
+        example: Marcus Fernandez
+      - name: statement_date
+        type: date
+        description: Date the annual statement is stated to be for, as printed on the statement
+        example: "2026-06-01"
+      - name: sum_assured
+        type: money
+        description: Sum assured as at the statement date, in SGD
+        example: "250000.00"
+      - name: annual_premium
+        type: money
+        description: Premium payable each year as printed on the statement, in SGD
+        example: "3180.00"
+      - name: surrender_value
+        type: money
+        required: false
+        description: Cash or surrender value as at the statement date, in SGD
+        example: "18740.25"
+      - name: premiums_paid_to_date
+        type: money
+        required: false
+        description: Total premiums paid since inception where the statement prints it, in SGD
+        example: "9540.00"
+
+  payslip:
+    description: Monthly salary advice issued by an employer
+    subject_field: employee
+    fields:
+      - name: employee
+        type: person
+        description: Name of the employee as printed on the payslip
+        example: Marcus Fernandez
+      - name: employer
+        type: string
+        description: Legal name of the employing company as printed
+        example: Harborline Logistics Pte Ltd
+      - name: pay_period
+        type: month
+        description: The month the payslip covers, as YYYY-MM
+        example: "2026-01"
+      - name: gross_salary
+        type: money
+        description: Total pay before any deduction, in SGD
+        example: "8900.00"
+      - name: cpf_employee
+        type: money
+        required: false
+        description: Employee CPF contribution deducted this period, in SGD
+        example: "1780.00"
+      - name: net_pay
+        type: money
+        description: Amount actually paid to the employee, in SGD
+        example: "7120.00"
+
+  donation_receipt:
+    description: Official receipt from a charity for a donation
+    subject_field: donor
+    fields:
+      - name: donor
+        type: person
+        description: Name of the person who made the donation
+        example: Marcus Fernandez
+      - name: charity
+        type: string
+        description: Name of the receiving organisation as printed
+        example: Riverbend Community Fund
+      - name: receipt_no
+        type: identifier
+        description: The receipt reference exactly as printed, not normalised
+        example: R84120933
+      - name: donation_date
+        type: date
+        description: Date the donation was received
+        example: "2026-03-14"
+      - name: donation_amount
+        type: money
+        description: Amount donated as printed on the receipt, in SGD
+        example: "500.00"
+      - name: tax_deductible
+        type: boolean
+        required: false
+        description: Whether the receipt states the donation is tax deductible
+        example: "true"
+
+  cpf_statement:
+    description: Annual or periodic CPF contribution statement
+    subject_field: member
+    fields:
+      - name: member
+        type: person
+        description: Name of the CPF member the statement belongs to
+        example: Marcus Fernandez
+      - name: statement_year
+        type: integer
+        description: The calendar year the statement covers
+        example: "2025"
+      - name: total_contributions
+        type: money
+        description: Total credited for the statement year, employee and employer combined, in SGD
+        example: "21360.00"
+      - name: ordinary_account_balance
+        type: money
+        required: false
+        description: Ordinary Account balance at the statement date, in SGD
+        example: "104220.15"
+
+  srs_statement:
+    description: Supplementary Retirement Scheme account statement
+    subject_field: account_holder
+    fields:
+      - name: account_holder
+        type: person
+        description: Name of the SRS account holder
+        example: Priya Nair
+      - name: account_no
+        type: identifier
+        description: SRS account reference exactly as printed
+        example: SRS-4471-2208
+      - name: statement_year
+        type: integer
+        description: The calendar year the statement covers
+        example: "2026"
+      - name: contributions_ytd
+        type: money
+        description: Contributions made so far this year, in SGD
+        example: "12400.00"
+
+  # The tax reference number printed on this notice is the taxpayer's NRIC or FIN. It is
+  # deliberately NOT captured: storing a national identifier in `facts` is a governance
+  # decision, not a field-list decision, and it is not needed to answer any question this
+  # pack exists to answer. Raise it with Siew before adding it.
+  notice_of_assessment:
+    description: Notice of Assessment issued by IRAS stating assessed income and tax payable
+    subject_field: taxpayer
+    fields:
+      - name: taxpayer
+        type: person
+        description: Name of the taxpayer as printed on the notice
+        example: Marcus Fernandez
+      - name: assessment_year
+        type: integer
+        description: Year of Assessment printed at the head of the notice
+        example: "2026"
+      - name: assessable_income
+        type: money
+        description: Assessable income for the year as stated on the notice, in SGD
+        example: "104500.00"
+      - name: tax_payable
+        type: money
+        description: Total tax payable as stated on the notice, in SGD
+        example: "7318.20"
+      - name: payment_due_date
+        type: date
+        description: Date the notice requires payment by, as printed
+        example: "2026-06-30"
+
+registers:
+  reminder:
+    - key: policy_expiry
+      from_field: expiry_date
+      lead_days: [60, 30, 14, 1]
+    # Both dates are fixed to a single year. ReminderConfig offers only `from_field` or
+    # `on_date` — there is no recurring option — so each will fall silent once its date
+    # passes. Making them recur is a core/contracts.py change, which is its own PR.
+    - key: filing_deadline
+      on_date: 2027-04-18
+      lead_days: [30, 7, 1]
+    - key: srs_contribution_cutoff
+      on_date: 2026-12-31
+      lead_days: [30]
+  alert:
+    - metric: days_uncovered
+      ceiling: 0
+      warn_at: 1.0
+    - metric: srs_contributions_ytd
+      ceiling: 15300
+      warn_at: 0.9
+  tracker:
+    metrics: [donations_ytd, cpf_contributions_ytd, srs_contributions_ytd]
+
+# The everyday layer: applies to every question, whichever packs are enabled. A pack's own
+# answering adds its vocabulary, categories and exclusions on top.
+answering:
+  max_sentences: 6

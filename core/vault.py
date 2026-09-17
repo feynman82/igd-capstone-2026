@@ -17,7 +17,8 @@ path that assembles a different one.
 listing, which is what switching a pack off is supposed to mean. `include_disabled=True`
 shows them again with `pack_enabled` false, so the settings screen can honestly say what
 turning a pack back on would bring back. A document belonging to no pack is never hidden:
-nothing disabled it.
+nothing disabled it. Nor is a document written as `core`, which is every document since ADR 0017:
+`core.registry.enabled_pack_ids` always includes it.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Any
 
-from core.packs import PackUnavailable, pack
+from core.packs import catalog
 
 log = logging.getLogger(__name__)
 
@@ -221,13 +222,14 @@ class VaultPage:
 
 
 def declared_type(pack_id: str | None, doc_type: str | None, key: str) -> str | None:
-    """What the pack says this field is, or None when the pack is gone or does not declare it."""
-    if not pack_id or not doc_type:
+    """What the core catalogue says this field is, or None when it does not declare it.
+
+    `pack_id` is ignored: every document type is the catalogue's (ADR 0017), whichever pack id a
+    row was written under.
+    """
+    if not doc_type:
         return None
-    try:
-        spec = pack(pack_id).manifest.field_index().get((doc_type, key))
-    except PackUnavailable:
-        return None
+    spec = catalog().documents.field_index().get((doc_type, key))
     return spec.type if spec else None
 
 

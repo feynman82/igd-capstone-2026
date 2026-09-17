@@ -187,7 +187,6 @@ GAP_SHAPE: dict[str, Any] = {
     "facts": [
         {
             "role": "income",
-            "pack": "iras_tax",
             "doc_types": ["payslip"],
             "field": "gross_salary",
             "per": "month",
@@ -260,7 +259,7 @@ def advised_pack() -> InstalledPack:
         "product_disclosure": "Where a product is named, only what both sides print is compared.",
         "shapes": [GAP_SHAPE],
     }
-    return InstalledPack(PackManifest.model_validate(raw), {}, {})
+    return InstalledPack(PackManifest.model_validate(raw))
 
 
 def figures_of(result: Calculation) -> dict[str, Decimal]:
@@ -500,9 +499,9 @@ def test_the_category_filter_leaves_a_hospital_cash_plan_out_of_critical_illness
 
     executed = conn.cursor_obj.executed
     assert executed[0][1] == {"ids": [1]}
-    assert executed[1][1]["pack"] == "iras_tax", "a fact read from another pack is read there"
+    assert executed[1][1]["pack"] == "core", "every fact is read as the core's (ADR 0017)"
     assert executed[1][1]["names"] == ["marcus", "marcus lim jun wei"]
-    assert executed[2][1]["pack"] == "insurance_agent"
+    assert executed[2][1]["pack"] == "core"
     assert executed[3][1] == {"ids": ["ci-a", "hc-b"], "match_field": "product_name"}
     assert executed[4][1]["oldest"] == TODAY - timedelta(days=365), "a multiple is a rule"
 

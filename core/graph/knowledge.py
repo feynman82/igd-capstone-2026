@@ -1,6 +1,7 @@
-"""What a pack knows about how people ask, applied without a model.
+"""What the core and the enabled packs know about how people ask, applied without a model.
 
-Three things, all declared in `pack.yaml` under `answering` and all matched as whole words: the
+Three things, all declared under `answering` — in `core/documents.yaml`, which always applies, and
+in each enabled pack's `pack.yaml` (ADR 0017) — and all matched as whole words: the
 words a household says for what its documents print, the categories of document a question is
 about, and the category a document on file falls in. None of it is a field and none of it is
 stored — a category is a reading of a printed name, decided when a question is asked.
@@ -19,7 +20,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from core.contracts import Categories, Category
-from core.packs import InstalledPack
+from core.packs import InstalledPack, catalog
 
 
 def _pattern(phrase: str) -> re.Pattern[str]:
@@ -37,18 +38,18 @@ def mentions(text: str, phrase: str) -> bool:
     return _pattern(phrase).search(text) is not None
 
 
+def _vocabulary(packs: Sequence[InstalledPack]) -> list[tuple[str, str]]:
+    """The catalogue's words and every enabled pack's, unioned; a pack's wording wins a clash."""
+    merged = dict(catalog().documents.answering.vocabulary)
+    for installed in packs:
+        merged.update(installed.manifest.answering.vocabulary)
+    return list(merged.items())
+
+
 def reworded(question: str, packs: Sequence[InstalledPack]) -> str | None:
     """The question with each declared phrase replaced by what the documents print, longest
     phrase first. `None` when nothing matched, so a caller searches nothing twice."""
-    pairs = sorted(
-        (
-            (said, printed)
-            for installed in packs
-            for said, printed in installed.manifest.answering.vocabulary.items()
-        ),
-        key=lambda pair: len(pair[0]),
-        reverse=True,
-    )
+    pairs = sorted(_vocabulary(packs), key=lambda pair: len(pair[0]), reverse=True)
     out = question
     for said, printed in pairs:
         out = _pattern(said).sub(_make_replacer(printed), out)
@@ -57,12 +58,7 @@ def reworded(question: str, packs: Sequence[InstalledPack]) -> str | None:
 
 def glossary(question: str, packs: Sequence[InstalledPack]) -> list[str]:
     """Only the lines the question used, so the prompt grows by what it needs and no more."""
-    return [
-        f"{said} = {printed}"
-        for installed in packs
-        for said, printed in installed.manifest.answering.vocabulary.items()
-        if mentions(question, said)
-    ]
+    return [f"{said} = {p}" for said, p in _vocabulary(packs) if mentions(question, said)]
 
 
 @dataclass(frozen=True, slots=True)

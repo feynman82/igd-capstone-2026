@@ -1,8 +1,8 @@
-"""Extract a pack's declared fields, and attribute every one of them to a page.
+"""Extract a document type's declared fields, and attribute every one of them to a page.
 
 The generated Pydantic model is turned into a JSON schema and handed to Ollama as its decode
-constraint, so the model cannot return a field the pack does not declare, cannot return a
-string where the pack says money, and cannot omit a required field. That is what
+constraint, so the model cannot return a field the catalogue does not declare, cannot return a
+string where the catalogue says money, and cannot omit a required field. That is what
 "schema-constrained" means here: the constraint is applied during decoding, not validated
 afterwards and retried.
 
@@ -25,7 +25,7 @@ from typing import Any
 
 from core.contracts import FACT_COLUMN, DocumentTypeSpec, FieldSpec
 from core.ingest.parse import ParsedPage
-from core.packs import InstalledPack
+from core.packs import Catalog
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
@@ -295,15 +295,15 @@ FULL_CHARS = 24000
 
 def extract(
     client: Ollama,
-    installed: InstalledPack,
+    documents: Catalog,
     doc_type: str,
     pages: list[ParsedPage],
     *,
     confidence: float,
 ) -> Extraction:
     """Never raises. A failure is a reason, and a reason routes the document to quarantine."""
-    spec = installed.spec(doc_type)
-    model_cls = installed.models[doc_type]
+    spec = documents.spec(doc_type)
+    model_cls = documents.models[doc_type]
     schema = decode_schema(model_cls.model_json_schema(), spec.fields)
 
     full_text = "\n\n".join(f"[page {p.page}]\n{p.text}" for p in pages)

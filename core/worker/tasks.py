@@ -155,10 +155,9 @@ def sweep_reminders_now(conn: Any, today: date | None = None) -> str:
 
 
 def sweep_alerts_now(conn: Any, today: date | None = None) -> str:
-    from core.registry import enabled_packs
     from modules import alert
 
-    firing = alert.sweep(conn, today, packs=enabled_packs(conn))
+    firing = alert.sweep(conn, today)
     for item in firing:
         log.info("  ! %s", item.line())
     return f"{len(firing)} alert(s) fired"

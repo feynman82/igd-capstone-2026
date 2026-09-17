@@ -66,7 +66,6 @@ GAP_SHAPE: dict[str, Any] = {
     "facts": [
         {
             "role": "income",
-            "pack": "iras_tax",
             "doc_types": ["payslip"],
             "field": "gross_salary",
             "per": "month",
@@ -127,7 +126,7 @@ def advised_pack() -> InstalledPack:
         "product_disclosure": DISCLOSURE,
         "shapes": [GAP_SHAPE],
     }
-    return InstalledPack(PackManifest.model_validate(raw), {}, {})
+    return InstalledPack(PackManifest.model_validate(raw))
 
 
 INCOME = Input(

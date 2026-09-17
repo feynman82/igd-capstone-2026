@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from typing import Any, ClassVar
 from uuid import UUID, uuid4
 
-from core.graph.inventory import holdings
-from core.packs import pack
+from core.graph.inventory import HouseholdInventory, holdings
+from core.packs import CORE, pack
 
 CAR, NOTICE = uuid4(), uuid4()
 
@@ -20,7 +21,7 @@ def row(
     value: str,
     subject: str = "Marcus Lim Jun Wei",
 ) -> tuple[object, ...]:
-    return (document, name, doc_type, "insurance_agent", fact_id, key, page, value, subject)
+    return (document, name, doc_type, CORE, fact_id, key, page, value, subject)
 
 
 ROWS = [
@@ -43,6 +44,7 @@ ROWS = [
 
 def test_a_policy_on_file_is_named_categorised_and_cited_to_the_page_its_name_is_on() -> None:
     (car,) = holdings(ROWS, [pack("insurance_agent")])
+    assert car.pack_id == "insurance_agent", "the pack whose categories read it, not `core`"
     assert car.title == "MERIDIAN ASSURANCE, Private Car Insurance Policy"
     assert car.category is not None and car.category.id == "motor"
     assert (car.fact_id, car.page, car.subject) == (4, 1, "Marcus Lim Jun Wei")
@@ -57,3 +59,30 @@ def test_a_renewal_notice_is_not_counted_as_a_policy_on_file() -> None:
 
 def test_a_pack_that_declares_no_categories_holds_nothing() -> None:
     assert holdings(ROWS, [pack("iras_tax")]) == []
+
+
+def test_the_inventory_always_reads_core_documents() -> None:
+    """ADR 0017: a document is the core's, so the query includes `core` whatever is enabled."""
+
+    class Cursor:
+        params: ClassVar[dict[str, Any]] = {}
+
+        def execute(self, query: str, params: dict[str, Any]) -> None:
+            Cursor.params = params
+
+        def fetchall(self) -> list[tuple[object, ...]]:
+            return ROWS
+
+        def __enter__(self) -> Cursor:
+            return self
+
+        def __exit__(self, *exc: object) -> None:
+            return None
+
+    class Conn:
+        def cursor(self) -> Cursor:
+            return Cursor()
+
+    (car,) = HouseholdInventory(Conn()).holdings([pack("insurance_agent")])
+    assert Cursor.params["packs"] == [CORE, "insurance_agent"]
+    assert car.document_name == "b1-0001.pdf"

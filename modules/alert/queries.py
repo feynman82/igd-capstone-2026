@@ -34,7 +34,7 @@ SRS_CONTRIBUTIONS_YTD = """
 SELECT f.subject, f.value_num, d.original_name, f.page
   FROM facts f
   JOIN documents d ON d.id = f.document_id
- WHERE f.pack_id = 'iras_tax'
+ WHERE f.pack_id = 'core'
    AND f.key = 'contributions_ytd'
    AND f.value_num IS NOT NULL
    AND EXISTS (
@@ -59,7 +59,7 @@ DONATIONS_YTD = """
 SELECT f.subject, f.value_num, d.original_name, f.page
   FROM facts f
   JOIN documents d ON d.id = f.document_id
- WHERE f.pack_id = 'iras_tax'
+ WHERE f.pack_id = 'core'
    AND f.key = 'donation_amount'
    AND f.value_num IS NOT NULL
    AND EXISTS (
@@ -89,7 +89,7 @@ CPF_CONTRIBUTIONS_YTD = """
 SELECT f.subject, f.value_num, d.original_name, f.page
   FROM facts f
   JOIN documents d ON d.id = f.document_id
- WHERE f.pack_id = 'iras_tax'
+ WHERE f.pack_id = 'core'
    AND f.key = 'cpf_employee'
    AND f.value_num IS NOT NULL
    AND EXISTS (
@@ -117,7 +117,7 @@ SELECT f.subject, p.value_text AS policy_no, f.value_date, d.original_name, f.pa
          ON p.document_id = f.document_id
         AND p.pack_id = f.pack_id
         AND p.key = 'policy_no'
- WHERE f.pack_id = 'insurance_agent'
+ WHERE f.pack_id = 'core'
    AND f.key = 'expiry_date'
    AND f.value_date IS NOT NULL
  ORDER BY f.subject, policy_no, f.value_date DESC, f.id DESC

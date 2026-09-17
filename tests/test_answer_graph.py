@@ -1060,3 +1060,36 @@ def test_a_printed_figure_in_brackets_is_not_taken_for_a_passage_number(
 def test_an_is_written_only_before_a_e_i_or_o() -> None:
     assert _either(["unit-linked plan"]) == "a unit-linked plan"
     assert _either(["investment-linked plan"]) == "an investment-linked plan"
+
+
+# --------------------------------------------------------------- two answering layers (ADR 0017)
+
+
+def test_with_no_pack_in_play_the_sentence_limit_is_the_catalogue_s(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from dataclasses import replace
+
+    import core.graph.answer as answer
+    from core.packs import catalog
+
+    documents = catalog().documents
+    layer = documents.answering.model_copy(update={"max_sentences": 3})
+    patched = replace(catalog(), documents=documents.model_copy(update={"answering": layer}))
+    monkeypatch.setattr(answer, "catalog", lambda: patched)
+
+    assert "Write at most 3 sentences." in answer.answer_system(None)
+    limit = pack("insurance_agent").manifest.answering.max_sentences
+    assert f"Write at most {limit} sentences." in answer.answer_system(pack("insurance_agent"))
+
+
+def test_a_core_passage_does_not_choose_whose_guardrails_govern() -> None:
+    from core.graph.answer import _pack_for
+
+    core_passage = Passage(1, uuid4(), 1, "text", 0.9, "a.pdf", "", pack_id="core")
+    holding = Passage(2, uuid4(), 1, "text", 0.5, "b.pdf", "", pack_id="iras_tax")
+    packs = [pack("insurance_agent"), pack("iras_tax")]
+
+    assert _pack_for([core_passage, holding], packs) == pack("iras_tax")
+    strictest = max(packs, key=lambda p: p.manifest.guardrails.abstain_below)
+    assert _pack_for([core_passage], packs) == strictest
