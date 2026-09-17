@@ -4,6 +4,7 @@
 - **Date:** 2026-09-14
 - **Decider:** Christian (Lane A), after a seven-seat design council. Reviewers: Siew (consent, disclaimer, records), Zee (pack authoring, grounding location), Yew Mun (ports, evaluation)
 - **Supersedes:** ADR 0014, decision 4 (the advice route declines). Amends ADR 0014 on where a grounding corpus lives.
+- **Amended by:** [0017](0017-a-pack-is-grounding-and-persona-the-core-owns-documents.md) (facts are core's: `FactInput.pack` removed)
 
 ## Context
 

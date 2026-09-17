@@ -26,6 +26,7 @@ the difference matters when a supervisor asks.
 | [0014](0014-a-pack-supplies-knowledge-and-the-core-stays-generic.md) | A pack supplies what the core knows about a domain, and the core stays generic | Proposed |
 | [0015](0015-a-name-scopes-and-a-grandparent-is-not-a-parent.md) | A name scopes a question, and a grandparent is not a parent | Accepted |
 | [0016](0016-a-pack-advises-code-calculates-under-recorded-consent.md) | A pack advises: code calculates from cited facts and reviewed rule values, under recorded consent | Proposed |
+| [0017](0017-a-pack-is-grounding-and-persona-the-core-owns-documents.md) | A pack is grounding and persona; the core owns documents | Accepted |
 
 Add a row when you add a record.
 
