@@ -1,7 +1,7 @@
-"""The two contracts the whole platform is built on.
+"""The contracts the whole platform is built on: a module, a pack, and the document catalogue.
 
-Nothing else in the repository may define what a pack or a module is. A change here
-is its own reviewed pull request, made before any code depends on it.
+Nothing else in the repository may define what a pack, a module or a document type is. A change
+here is its own reviewed pull request, made before any code depends on it.
 """
 
 from __future__ import annotations
@@ -46,11 +46,12 @@ class ModuleTrigger(Strict):
     debounce_hours: int = 24  # an alert must not repeat daily
 
 
-# ----------------------------------------------------------------------------- packs
+# ------------------------------------------------------------------------- documents
 #
-# A pack is authored as ONE YAML file. The fields are declared inline, and
-# `python -m packs.build` generates the Pydantic extraction models and the register column
-# headers from it. The YAML is the single source of truth: nothing else may define a field.
+# The core owns documents (ADR 0017). Every document type and its fields are declared once, in
+# `core/documents.yaml`, and `python -m packs.build` generates the Pydantic extraction models and
+# the register column headers from it. That YAML is the single source of truth: nothing else may
+# define a field. A pack is grounding, persona, its own answering and advice; it names core fields.
 
 
 FieldType = Literal[
@@ -64,6 +65,7 @@ FieldType = Literal[
     "month",  # YYYY-MM                        -> str        -> facts.value_text
     "enum",  # one of `values`                -> str        -> facts.value_text
     "boolean",  # true / false                   -> bool       -> facts.value_text
+    "labelled_money",  # printed label -> value_text, amount -> value_num (ADR 0017)
 ]
 
 # Which column of `facts` each type lands in. The extractor and the evaluation both read
@@ -79,6 +81,7 @@ FACT_COLUMN: dict[str, str] = {
     "month": "value_text",
     "enum": "value_text",
     "boolean": "value_text",
+    "labelled_money": "value_num",
 }
 
 
@@ -92,14 +95,15 @@ class FieldSpec(Strict):
     description: str = Field(min_length=8, max_length=200)
     values: list[str] | None = None  # required when type == "enum"
     example: str | None = None  # shown to the extraction model and to the corpus author
+    repeats: bool = False  # one fact row per printed item, e.g. each rider on a schedule
 
 
 class DocumentTypeSpec(Strict):
-    """One kind of document this pack recognises."""
+    """One kind of document the core recognises."""
 
     description: str = Field(min_length=8, max_length=240)
     subject_field: Slug | None = None  # which field says whose document this is
-    fields: list[FieldSpec] = Field(min_length=1, max_length=12)
+    fields: list[FieldSpec] = Field(min_length=1, max_length=16)
 
 
 ValueUnit = Literal["multiple", "money", "percent", "rate", "years", "count"]
@@ -137,7 +141,7 @@ class Grounding(Strict):
 
 class ReminderConfig(Strict):
     key: Slug
-    from_field: Slug | None = None  # a date field on one of this pack's document types
+    from_field: Slug | None = None  # a date field on one of the catalogue's document types
     on_date: _Date | None = None  # or a fixed calendar date, e.g. a filing deadline
     lead_days: list[int] = Field(min_length=1)
 
@@ -188,7 +192,11 @@ class Exclusions(Strict):
 
 
 class Answering(Strict):
-    """What a pack knows about how people ask. Applied by the core without a model."""
+    """How people ask, applied by the core without a model.
+
+    Two layers (ADR 0017): the catalogue's always applies; an enabled pack's adds its vocabulary,
+    categories and exclusions, which name catalogue fields.
+    """
 
     vocabulary: dict[str, str] = Field(default_factory=dict)  # said -> printed
     categories: Categories | None = None
@@ -245,8 +253,8 @@ class Guardrails(Strict):
 # ---------------------------------------------------------------------------- advice
 #
 # A pack declares what it can advise on; it never says how to compute it. Each shape names a
-# calculator from a closed list, the printed facts it reads and the reviewed rule values it needs,
-# so the arithmetic is hand-written code and the model is left only the explaining (ADR 0016).
+# calculator from a closed list, the printed core facts it reads and the reviewed rule values it
+# needs, so the arithmetic is hand-written code and the model only explains (ADR 0016).
 
 AdviceCalculator = Literal[
     "gap", "remaining_room", "keep_or_surrender", "compare_own", "compare_market", "estimate_saving"
@@ -257,10 +265,9 @@ class FactInput(Strict):
     """A printed fact a calculator reads, named by where it is printed rather than what it means."""
 
     role: Slug
-    pack: Slug | None = None  # another installed pack's facts; None means this pack
-    doc_types: list[Slug] = Field(min_length=1)
-    field: Slug
-    category: Slug | None = None  # a category id of this pack's answering.categories
+    doc_types: list[Slug] = Field(min_length=1)  # catalogue document types
+    field: Slug  # a catalogue field
+    category: Slug | None = None  # a category id of this pack's or the catalogue's answering
     take: Literal["latest", "sum", "each"] = "latest"
     per: Literal["once", "month", "year"] = "once"  # a month's figure times 12 gives a year's
     missing: str = Field(min_length=8, max_length=240)
@@ -314,63 +321,72 @@ CALCULATOR_ROLES: dict[str, tuple[frozenset[str], frozenset[str]]] = {
 _COMPARING: frozenset[str] = frozenset({"compare_own", "compare_market"})
 
 
-class PackManifest(Strict):
-    """A domain pack, authored as one YAML file."""
+class DocumentCatalog(Strict):
+    """The core's documents: every type, its fields, the registers and core answering (ADR 0017).
 
-    id: Slug
-    version: SemVer
-    display_name: str = Field(min_length=3, max_length=60)
+    Authored once, as `core/documents.yaml`. Every ingested document and extracted fact is the
+    core's, whichever packs are installed or enabled.
+    """
+
     document_types: dict[Slug, DocumentTypeSpec] = Field(min_length=1)
-    grounding: Grounding = Grounding()
     registers: Registrations = Registrations()
-    persona: Persona
-    guardrails: Guardrails
     answering: Answering = Answering()
-    advice: Advice | None = None  # None: a request for a recommendation gets advice_decline
 
     def field_index(self) -> dict[tuple[str, str], FieldSpec]:
         """(document_type, field_name) -> FieldSpec. Used by the extractor and the scorer."""
         return {(dt, f.name): f for dt, spec in self.document_types.items() for f in spec.fields}
 
     def undeclared(self, doc_types: list[str], field: str) -> str | None:
-        """Why this pack cannot supply `field` from every one of `doc_types`, or None if it can.
-
-        Shared by the manifest's own check and `core.packs.check_advice_links`, so a fact read
-        from another pack is held to exactly the rule a fact read from this one is.
-        """
+        """Why the catalogue cannot supply `field` from every one of `doc_types`, or None."""
         for doc_type in doc_types:
             spec = self.document_types.get(doc_type)
             if spec is None:
-                return f"document type {doc_type!r} is not declared by pack {self.id!r}"
+                return f"document type {doc_type!r} is not declared in the core catalogue"
             if field not in {f.name for f in spec.fields}:
-                return f"field {field!r} is not declared on {self.id}.{doc_type}"
+                return f"field {field!r} is not declared on {doc_type} in the core catalogue"
         return None
 
+    def declares_field(self, field: str) -> bool:
+        """Whether any document type in the catalogue declares `field`."""
+        return any(f.name == field for spec in self.document_types.values() for f in spec.fields)
+
     @model_validator(mode="after")
-    def _categories_read_a_declared_field(self) -> PackManifest:
+    def _categories_read_a_declared_field(self) -> DocumentCatalog:
         categories = self.answering.categories
-        if categories is None:
-            return self
-        declared = {f.name for spec in self.document_types.values() for f in spec.fields}
-        if categories.match_field not in declared:
+        if categories is not None and not self.declares_field(categories.match_field):
             raise ValueError(
                 f"answering.categories.match_field {categories.match_field!r} is not a field on "
-                "any document type in this pack"
+                "any document type in the core catalogue"
             )
         return self
 
+
+class PackManifest(Strict):
+    """A domain pack, authored as one YAML file: grounding, persona, answering and advice.
+
+    A pack declares no document types and no registers; those are the core catalogue's. The core
+    names a pack uses are checked against the catalogue by `check_against` when packs load.
+    """
+
+    id: Slug
+    version: SemVer
+    display_name: str = Field(min_length=3, max_length=60)
+    grounding: Grounding = Grounding()
+    persona: Persona
+    guardrails: Guardrails
+    answering: Answering = Answering()
+    advice: Advice | None = None  # None: a request for a recommendation gets advice_decline
+
     @model_validator(mode="after")
-    def _advice_reads_what_the_pack_declares(self) -> PackManifest:
-        """An advice shape that names a missing role, field, category or key fails at load time.
+    def _advice_is_well_formed(self) -> PackManifest:
+        """An advice shape that names a missing role or key fails at load time.
 
         Caught here it is a message naming the shape; caught at question time it would be a
-        calculator withholding advice for a reason no author could see. Facts read from another
-        pack are checked once every pack is loaded, by `core.packs.check_advice_links`.
+        calculator withholding advice for a reason no author could see. The document types,
+        fields and categories a shape reads are the catalogue's, so `check_against` checks those.
         """
         if self.advice is None:
             return self
-        categories = self.answering.categories
-        category_ids = {rule.id for rule in categories.rules} if categories else set()
         value_keys = {value.key for value in self.grounding.values}
         seen: set[str] = set()
         for shape in self.advice.shapes:
@@ -397,13 +413,6 @@ class PackManifest(Strict):
                     raise ValueError(
                         f"{where} reads {fact.role!r} per {fact.per}, which only income may be"
                     )
-                if fact.pack is None and (reason := self.undeclared(fact.doc_types, fact.field)):
-                    raise ValueError(f"{where}, fact {fact.role!r}: {reason}")
-                if fact.category is not None and fact.category not in category_ids:
-                    raise ValueError(
-                        f"{where}, fact {fact.role!r}: category {fact.category!r} is not a rule "
-                        "id in answering.categories"
-                    )
             for rule in shape.rules:
                 if rule.key not in value_keys:
                     raise ValueError(
@@ -420,11 +429,43 @@ class PackManifest(Strict):
                 raise ValueError(
                     f"{where}: order_by {shape.order_by!r} is not one of compare_fields"
                 )
-            self._compares_what_its_documents_declare(shape, value_keys)
         return self
 
+    def check_against(self, catalog: DocumentCatalog) -> None:
+        """Every core document type, field and category this pack names exists, or ValueError.
+
+        One catalogue-aware check, run once when packs load, replaces the cross-pack link check:
+        a missing name stops the load rather than silently withholding advice at question time.
+        """
+        categories = self.answering.categories
+        if categories is not None and not catalog.declares_field(categories.match_field):
+            raise ValueError(
+                f"{self.id}: answering.categories.match_field {categories.match_field!r} is not "
+                "a field on any document type in the core catalogue"
+            )
+        if self.advice is None:
+            return
+        category_ids = {
+            rule.id
+            for layer in (self.answering, catalog.answering)
+            if layer.categories is not None
+            for rule in layer.categories.rules
+        }
+        value_keys = {value.key for value in self.grounding.values}
+        for shape in self.advice.shapes:
+            where = f"{self.id}: advice shape {shape.id!r}"
+            for fact in shape.facts:
+                if reason := catalog.undeclared(fact.doc_types, fact.field):
+                    raise ValueError(f"{where}, fact {fact.role!r}: {reason}")
+                if fact.category is not None and fact.category not in category_ids:
+                    raise ValueError(
+                        f"{where}, fact {fact.role!r}: category {fact.category!r} is not a rule "
+                        "id in answering.categories"
+                    )
+            self._compares_what_its_documents_declare(shape, value_keys, catalog)
+
     def _compares_what_its_documents_declare(
-        self, shape: AdviceShape, value_keys: set[str]
+        self, shape: AdviceShape, value_keys: set[str], catalog: DocumentCatalog
     ) -> None:
         """A compared field no document type of the shape declares can never be printed.
 
@@ -432,15 +473,17 @@ class PackManifest(Strict):
         it would silently drop out of every table. A field needs declaring on at least one of the
         compared fact's document types, because a shape comparing two document types that print
         different fields legitimately compares the fields only some of them print. A market
-        comparison may also compare a field its sources publish as a value key and no document of
-        this pack prints. Facts read from another pack are left to `core.packs.check_advice_links`.
+        comparison may also compare a field its sources publish as a value key and no document
+        prints. Runs after the fact's document types are known to be in the catalogue.
         """
         role = {"compare_own": "items", "compare_market": "held"}.get(shape.calculator)
         compared = next((f for f in shape.facts if f.role == role), None)
-        if compared is None or compared.pack is not None:
+        if compared is None:
             return
         declared = {
-            f.name for doc_type in compared.doc_types for f in self.document_types[doc_type].fields
+            f.name
+            for doc_type in compared.doc_types
+            for f in catalog.document_types[doc_type].fields
         }
         for field in shape.compare_fields:
             if field in declared:
@@ -448,10 +491,10 @@ class PackManifest(Strict):
             if shape.calculator == "compare_market" and field in value_keys:
                 continue
             published = " or grounding.values" if shape.calculator == "compare_market" else ""
-            where = ", ".join(f"{self.id}.{doc_type}" for doc_type in compared.doc_types)
+            where = ", ".join(compared.doc_types)
             raise ValueError(
-                f"advice shape {shape.id!r} compares {field!r}, which is not declared on "
-                f"{where}{published}"
+                f"{self.id}: advice shape {shape.id!r} compares {field!r}, which is not declared "
+                f"on {where}{published}"
             )
 
 
