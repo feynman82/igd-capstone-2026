@@ -28,6 +28,10 @@
 /corpus/                @strawberries2026 @feynman82 @Yewhoo
 
 /packs/                 @fjzeetr-smuigd @feynman82 @Yewhoo
+# The insurance agent is Christian's since 16 September; Siew reviews its consent and disclaimer.
+/packs/insurance_agent/ @feynman82 @nsiewsiew @Yewhoo
+# Document types and fields are the core's since ADR 0017.
+/core/documents.yaml    @feynman82 @Yewhoo
 /packs/*/grounding/     @fjzeetr-smuigd @nsiewsiew @feynman82 @Yewhoo
 /grounding/             @fjzeetr-smuigd @nsiewsiew @feynman82 @Yewhoo
 /web/                   @fjzeetr-smuigd @feynman82 @Yewhoo

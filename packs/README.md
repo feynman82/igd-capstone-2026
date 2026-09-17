@@ -1,6 +1,11 @@
 # Domain packs — start here
 
-**Owner: Zee.** This is your folder. Nobody else edits it.
+**Owner: Zee**, except `insurance_agent/`, which Christian owns since 16 September.
+
+> **Read ADR 0017 first.** Since 17 September a pack is grounding and persona: its grounding
+> corpus, `persona`, `guardrails`, its own `answering` rules and `advice`. Document types, their
+> fields and registers moved to `core/documents.yaml`, which `python -m packs.build` still
+> generates from. The sections below on document types and fields now describe that file.
 
 You do not need to know how to program to do this work. You need to know what a
 document *is* and what is written on it. That is the actual scarce skill here, and it
@@ -432,8 +437,9 @@ grounding:
 
 Rules for grounding sources:
 
-- **Official issuers only.** IRAS, CPF Board, MAS, MOH, a named regulator. Not a blog,
-  not a comparison site, not a forum answer, however good it looks.
+- **Official issuers only.** IRAS, CPF Board, MAS, MOH, a named regulator, or an industry
+  association for figures it publishes itself (LIA's Protection Gap Study, compareFIRST's
+  premiums). Not a blog, not a seller's page, not a forum answer, however good it looks.
 - **Record the retrieval date.** Rules change by assessment year, and the report has to
   say which year the system was grounded in.
 - **Keep it small.** Twenty well-chosen pages beat two hundred scraped ones. Every

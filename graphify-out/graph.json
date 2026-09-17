@@ -2816,8 +2816,8 @@
       "source_location": "L285",
       "_origin": "ast",
       "id": "core_contracts_adviceshape",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "adviceshape"
     },
     {
@@ -3058,8 +3058,8 @@
       "source_location": "L286",
       "_origin": "ast",
       "id": "core_contracts_rationale_286",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "one kind of advice question, and everything its calculator needs to answer it."
     },
     {
@@ -3366,8 +3366,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_init",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "__init__.py"
     },
     {
@@ -3377,8 +3377,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_init_rationale_1",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "the answer graph.  router, retrieve, rerank, grounding gate, then answer or ab"
     },
     {
@@ -3388,8 +3388,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_advice",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advice.py"
     },
     {
@@ -3399,8 +3399,8 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "core_graph_advice_input",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "input"
     },
     {
@@ -3443,8 +3443,8 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "core_graph_advice_adviser",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "adviser"
     },
     {
@@ -3454,8 +3454,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "core_graph_advice_py_protocol",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "protocol"
     },
     {
@@ -3487,8 +3487,8 @@
       "source_location": "L110",
       "_origin": "ast",
       "id": "core_graph_advice_consentbook",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "consentbook"
     },
     {
@@ -3498,8 +3498,8 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "core_graph_advice_consentbook_current",
-      "community": 233,
-      "community_name": "getReact",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".current()"
     },
     {
@@ -3509,8 +3509,8 @@
       "source_location": "L118",
       "_origin": "ast",
       "id": "core_graph_advice_advicelog",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advicelog"
     },
     {
@@ -3520,8 +3520,8 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "core_graph_advice_advicelog_record",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".record()"
     },
     {
@@ -3531,8 +3531,8 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "core_graph_advice_advicerecord",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advicerecord"
     },
     {
@@ -3575,8 +3575,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_1",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "what a calculator returns, and what the graph needs to ask consent and keep a re"
     },
     {
@@ -3586,8 +3586,8 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_27",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "one fact or rule value a calculation was built on, carrying its own citation."
     },
     {
@@ -3630,8 +3630,8 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_97",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "implemented by `modules/advice/`. `core/` calls this; it never computes a figure"
     },
     {
@@ -3641,8 +3641,8 @@
       "source_location": "L111",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_111",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "implemented by `householdconsents` in `core/advice_consent.py`."
     },
     {
@@ -3652,8 +3652,8 @@
       "source_location": "L114",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_114",
-      "community": 233,
-      "community_name": "getReact",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "the granting row's id, or `none` when the owner has not granted this exact versi"
     },
     {
@@ -3663,8 +3663,8 @@
       "source_location": "L119",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_119",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "implemented by `householdadvicelog` in `core/advice_records.py`."
     },
     {
@@ -3674,8 +3674,8 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "core_graph_advice_rationale_126",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "every advised or withheld answer's full basis, so it can be reconstructed later"
     },
     {
@@ -3707,8 +3707,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_answer",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "answer.py"
     },
     {
@@ -3718,8 +3718,8 @@
       "source_location": "L193",
       "_origin": "ast",
       "id": "core_graph_answer_answer_system",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "answer_system()"
     },
     {
@@ -3729,8 +3729,8 @@
       "source_location": "L243",
       "_origin": "ast",
       "id": "core_graph_answer_review_asked",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "_review_asked()"
     },
     {
@@ -3762,8 +3762,8 @@
       "source_location": "L290",
       "_origin": "ast",
       "id": "core_graph_answer_state",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "state"
     },
     {
@@ -3773,8 +3773,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "typeddict",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "typeddict"
     },
     {
@@ -3806,8 +3806,8 @@
       "source_location": "L352",
       "_origin": "ast",
       "id": "core_graph_answer_reading",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "reading"
     },
     {
@@ -3817,8 +3817,8 @@
       "source_location": "L365",
       "_origin": "ast",
       "id": "core_graph_answer_sentence",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "sentence"
     },
     {
@@ -3828,8 +3828,8 @@
       "source_location": "L378",
       "_origin": "ast",
       "id": "core_graph_answer_abstained",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "abstained"
     },
     {
@@ -3850,8 +3850,8 @@
       "source_location": "L393",
       "_origin": "ast",
       "id": "core_graph_answer_declined",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "declined"
     },
     {
@@ -3861,8 +3861,8 @@
       "source_location": "L407",
       "_origin": "ast",
       "id": "core_graph_answer_finished",
-      "community": 60,
-      "community_name": "State",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "finished"
     },
     {
@@ -3872,8 +3872,8 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "core_graph_answer_consentrequired",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "consentrequired"
     },
     {
@@ -3883,8 +3883,8 @@
       "source_location": "L445",
       "_origin": "ast",
       "id": "core_graph_answer_advicewithheld",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advicewithheld"
     },
     {
@@ -3894,8 +3894,8 @@
       "source_location": "L460",
       "_origin": "ast",
       "id": "core_graph_answer_advicecard",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advicecard"
     },
     {
@@ -3916,8 +3916,8 @@
       "source_location": "L521",
       "_origin": "ast",
       "id": "core_graph_answer_answer_grounded",
-      "community": 233,
-      "community_name": "getReact",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".grounded()"
     },
     {
@@ -3949,8 +3949,8 @@
       "source_location": "L550",
       "_origin": "ast",
       "id": "core_graph_answer_fuse",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "fuse()"
     },
     {
@@ -4004,8 +4004,8 @@
       "source_location": "L646",
       "_origin": "ast",
       "id": "core_graph_answer_either",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "_either()"
     },
     {
@@ -4026,8 +4026,8 @@
       "source_location": "L662",
       "_origin": "ast",
       "id": "core_graph_answer_pack_for",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "_pack_for()"
     },
     {
@@ -4048,8 +4048,8 @@
       "source_location": "L714",
       "_origin": "ast",
       "id": "core_graph_answer_input_citation",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "_input_citation()"
     },
     {
@@ -4103,8 +4103,8 @@
       "source_location": "L841",
       "_origin": "ast",
       "id": "core_graph_answer_as_sentence",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "_as_sentence()"
     },
     {
@@ -4191,8 +4191,8 @@
       "source_location": "L947",
       "_origin": "ast",
       "id": "core_graph_answer_answergraph_retrieve",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": ".retrieve()"
     },
     {
@@ -4235,8 +4235,8 @@
       "source_location": "L1015",
       "_origin": "ast",
       "id": "core_graph_answer_answergraph_on_file",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "._on_file()"
     },
     {
@@ -4246,8 +4246,8 @@
       "source_location": "L1030",
       "_origin": "ast",
       "id": "core_graph_answer_answergraph_absence",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "._absence()"
     },
     {
@@ -4279,8 +4279,8 @@
       "source_location": "L1111",
       "_origin": "ast",
       "id": "core_graph_answer_answergraph_advice_shape",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "._advice_shape()"
     },
     {
@@ -4323,8 +4323,8 @@
       "source_location": "L1430",
       "_origin": "ast",
       "id": "core_graph_answer_answergraph_build",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "._build()"
     },
     {
@@ -4345,8 +4345,8 @@
       "source_location": "L1661",
       "_origin": "ast",
       "id": "core_graph_answer_answergraph_ask",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": ".ask()"
     },
     {
@@ -4356,8 +4356,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_1",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "router \u2192 retrieve \u2192 rerank \u2192 decide \u2192 answer, one verified sentence at a time."
     },
     {
@@ -4367,8 +4367,8 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_194",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "the voice first, the core's rules last: a persona cannot loosen what follows it."
     },
     {
@@ -4378,8 +4378,8 @@
       "source_location": "L246",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_246",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "the first advising pack whose review a question asks for, as a shape the advise"
     },
     {
@@ -4400,8 +4400,8 @@
       "source_location": "L291",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_291",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "what the graph carries. it ends at the evidence; the answer is streamed, not sta"
     },
     {
@@ -4433,8 +4433,8 @@
       "source_location": "L353",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_353",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "evidence gathered, floor cleared, the model is now writing. nothing is claimed y"
     },
     {
@@ -4444,8 +4444,8 @@
       "source_location": "L366",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_366",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "one sentence that has passed the gate, with the citations it passed on.      i"
     },
     {
@@ -4455,8 +4455,8 @@
       "source_location": "L394",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_394",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "a request for a recommendation or a judgement, declined before anything is searc"
     },
     {
@@ -4466,8 +4466,8 @@
       "source_location": "L408",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_408",
-      "community": 60,
-      "community_name": "State",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "everything that is only knowable once the last sentence is in.      `quarantin"
     },
     {
@@ -4477,8 +4477,8 @@
       "source_location": "L429",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_429",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advice was asked for and the owner has not agreed to this pack's current consent"
     },
     {
@@ -4488,8 +4488,8 @@
       "source_location": "L446",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_446",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "advice could not be worked out, and `missing` says what it needs, in the pack's"
     },
     {
@@ -4499,8 +4499,8 @@
       "source_location": "L461",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_461",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "a worked result, every word of it written by code, given before the model says a"
     },
     {
@@ -4510,8 +4510,8 @@
       "source_location": "L522",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_522",
-      "community": 233,
-      "community_name": "getReact",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "answered. asking for consent and naming what is missing are endings, not answers"
     },
     {
@@ -4532,8 +4532,8 @@
       "source_location": "L551",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_551",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "several searches as one list: each passage once, at the best score any phrasing"
     },
     {
@@ -4554,8 +4554,8 @@
       "source_location": "L647",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_647",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "\"a dental plan\", or \"a term life plan or a whole life plan\". \"an\" only before a,"
     },
     {
@@ -4576,8 +4576,8 @@
       "source_location": "L663",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_663",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "the pack that speaks for the best-scoring passage's document type, or none for t"
     },
     {
@@ -4598,8 +4598,8 @@
       "source_location": "L715",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_715",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "a chip built from the `input` itself, never from `passage.cite()`.      `passa"
     },
     {
@@ -4642,8 +4642,8 @@
       "source_location": "L842",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_842",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "\"which age band applies\" -> \"which age band applies.\": a pack's wording and a ca"
     },
     {
@@ -4675,8 +4675,8 @@
       "source_location": "L948",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_948",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "every phrasing of the question, searched and fused. the person's own words alway"
     },
     {
@@ -4708,8 +4708,8 @@
       "source_location": "L1018",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_1018",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "the documents on file, narrowed to the same people the passages were."
     },
     {
@@ -4719,8 +4719,8 @@
       "source_location": "L1037",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_1037",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "\"none of the 5 policies on file is a dental plan.\" written by code, never by the"
     },
     {
@@ -4752,8 +4752,8 @@
       "source_location": "L1114",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_1114",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "the shape a question asks for, matched from the pack's own phrases without a mod"
     },
     {
@@ -4785,8 +4785,8 @@
       "source_location": "L1431",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_1431",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 103,
+      "community_name": "rows_for",
       "norm_label": "routing and evidence. the answering is not a node \u2014 it yields, and a node return"
     },
     {
@@ -4807,8 +4807,8 @@
       "source_location": "L1668",
       "_origin": "ast",
       "id": "core_graph_answer_rationale_1668",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "every event, collected. `scripts/ask.py` and the screen ask the same question of"
     },
     {
@@ -4950,8 +4950,8 @@
       "source_location": "L73",
       "_origin": "ast",
       "id": "core_graph_gate_precheck",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "precheck()"
     },
     {
@@ -5005,8 +5005,8 @@
       "source_location": "L194",
       "_origin": "ast",
       "id": "core_graph_gate_states_a_printed_value",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "states_a_printed_value()"
     },
     {
@@ -5060,8 +5060,8 @@
       "source_location": "L74",
       "_origin": "ast",
       "id": "core_graph_gate_rationale_74",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "is this evidence worth answering from at all? the reason to abstain, or `none`."
     },
     {
@@ -5115,8 +5115,8 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "core_graph_gate_rationale_195",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 40,
+      "community_name": "routes.py",
       "norm_label": "does this sentence state a number or identifier, and is every one printed by wha"
     },
     {
@@ -5148,8 +5148,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_inventory",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "inventory.py"
     },
     {
@@ -5159,8 +5159,8 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "core_graph_inventory_holding",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "holding"
     },
     {
@@ -5170,8 +5170,8 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "core_graph_inventory_holding_passage",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".passage()"
     },
     {
@@ -5181,8 +5181,8 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "core_graph_inventory_holdings",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "holdings()"
     },
     {
@@ -5192,8 +5192,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "core_graph_inventory_py_any",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "any"
     },
     {
@@ -5280,8 +5280,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_inventory_rationale_1",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "the documents on file, read from `facts` rather than searched for.  \"do i have c"
     },
     {
@@ -5291,8 +5291,8 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "core_graph_inventory_rationale_71",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "rows of `inventory`, one holding per document that prints the field an enabled p"
     },
     {
@@ -5489,8 +5489,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_ports",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "ports.py"
     },
     {
@@ -5500,8 +5500,8 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "core_graph_ports_passage",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "passage"
     },
     {
@@ -5511,8 +5511,8 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "core_graph_ports_passage_cite",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".cite()"
     },
     {
@@ -5522,8 +5522,8 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "core_graph_ports_passage_ref",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".ref()"
     },
     {
@@ -5555,8 +5555,8 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "core_graph_ports_retriever_search",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".search()"
     },
     {
@@ -5577,8 +5577,8 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "core_graph_ports_reranker_rerank",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".rerank()"
     },
     {
@@ -5588,8 +5588,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_graph_ports_rationale_1",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "what the graph needs from retrieval, stated as a contract rather than an import."
     },
     {
@@ -5599,8 +5599,8 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "core_graph_ports_rationale_36",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "how a passage names itself: the document and the page, as a person would say it."
     },
     {
@@ -5610,8 +5610,8 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "core_graph_ports_rationale_41",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "unique across kinds: chunk ids, fact ids and guidance ids are three sequences."
     },
     {
@@ -5852,8 +5852,8 @@
       "source_location": "L572",
       "_origin": "ast",
       "id": "core_graph_scope_householdscope_apply",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".apply()"
     },
     {
@@ -5863,8 +5863,8 @@
       "source_location": "L591",
       "_origin": "ast",
       "id": "core_graph_scope_householdscope_whose",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".whose()"
     },
     {
@@ -6039,8 +6039,8 @@
       "source_location": "L592",
       "_origin": "ast",
       "id": "core_graph_scope_rationale_592",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "whose situation a piece of advice is about \u2014 the judgement `apply` makes, withou"
     },
     {
@@ -7733,8 +7733,8 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "core_ingest_dispatch_inline",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "inline"
     },
     {
@@ -7744,8 +7744,8 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "core_ingest_dispatch_inline_call",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": ".__call__()"
     },
     {
@@ -7755,8 +7755,8 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "core_ingest_dispatch_inline_run",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": ".run()"
     },
     {
@@ -7766,8 +7766,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "outcome",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "outcome"
     },
     {
@@ -7843,8 +7843,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "core_ingest_dispatch_rationale_49",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "run the pipeline here and now, and report what it decided."
     },
     {
@@ -8349,8 +8349,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_ingest_parse",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "parse.py"
     },
     {
@@ -8360,8 +8360,8 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "core_ingest_parse_block",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "block"
     },
     {
@@ -8415,8 +8415,8 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "core_ingest_parse_parser",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "parser"
     },
     {
@@ -8426,8 +8426,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "core_ingest_parse_py_protocol",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "protocol"
     },
     {
@@ -8437,8 +8437,8 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "core_ingest_parse_parser_handles",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": ".handles()"
     },
     {
@@ -8448,8 +8448,8 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "core_ingest_parse_parser_parse",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": ".parse()"
     },
     {
@@ -8459,8 +8459,8 @@
       "source_location": "L84",
       "_origin": "ast",
       "id": "core_ingest_parse_plaintextparser",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "plaintextparser"
     },
     {
@@ -8470,8 +8470,8 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "core_ingest_parse_plaintextparser_handles",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": ".handles()"
     },
     {
@@ -8481,8 +8481,8 @@
       "source_location": "L90",
       "_origin": "ast",
       "id": "core_ingest_parse_plaintextparser_parse",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": ".parse()"
     },
     {
@@ -8580,8 +8580,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_ingest_parse_rationale_1",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "turn captured bytes into pages of text, or say why it could not be done.  ever"
     },
     {
@@ -8591,8 +8591,8 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "core_ingest_parse_rationale_44",
-      "community": 151,
-      "community_name": "test_ingest_pipeline.py",
+      "community": 65,
+      "community_name": "parse.py",
       "norm_label": "one thing the parser found on a page, and what kind of thing it is."
     },
     {
@@ -9801,8 +9801,8 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "core_packs_installedpack",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "installedpack"
     },
     {
@@ -9812,8 +9812,8 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "core_packs_installedpack_id",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".id()"
     },
     {
@@ -9823,8 +9823,8 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "core_packs_installedpack_version",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".version()"
     },
     {
@@ -10483,8 +10483,8 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "core_runtime_capture_dispatcher_for",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "dispatcher_for()"
     },
     {
@@ -10538,8 +10538,8 @@
       "source_location": "L126",
       "_origin": "ast",
       "id": "core_runtime_capture_foldercapture_run",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "._run()"
     },
     {
@@ -10604,8 +10604,8 @@
       "source_location": "L190",
       "_origin": "ast",
       "id": "core_runtime_capture_telegramcapture_adapter",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "._adapter()"
     },
     {
@@ -10615,8 +10615,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "core_runtime_capture_py_any",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "any"
     },
     {
@@ -10626,8 +10626,8 @@
       "source_location": "L199",
       "_origin": "ast",
       "id": "core_runtime_capture_telegramcapture_run",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "._run()"
     },
     {
@@ -10637,8 +10637,8 @@
       "source_location": "L212",
       "_origin": "ast",
       "id": "core_runtime_capture_telegramcapture_tick",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "._tick()"
     },
     {
@@ -10648,8 +10648,8 @@
       "source_location": "L226",
       "_origin": "ast",
       "id": "core_runtime_capture_attribution",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "attribution()"
     },
     {
@@ -10681,8 +10681,8 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "core_runtime_capture_rationale_72",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "queue the work when there is somewhere to queue it; otherwise say what we are do"
     },
     {
@@ -10736,8 +10736,8 @@
       "source_location": "L213",
       "_origin": "ast",
       "id": "core_runtime_capture_rationale_213",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "one long poll. a failure waits rather than hammering the api with the same reque"
     },
     {
@@ -10747,8 +10747,8 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "core_runtime_capture_rationale_227",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "whose phone this arrived on, recorded before anything is read off it. see adr 00"
     },
     {
@@ -11110,8 +11110,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_runtime_ollama",
-      "community": 185,
-      "community_name": ".json",
+      "community": 76,
+      "community_name": "DenseRetriever",
       "norm_label": "ollama.py"
     },
     {
@@ -11154,8 +11154,8 @@
       "source_location": "L49",
       "_origin": "ast",
       "id": "core_runtime_ollama_generated",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "generated"
     },
     {
@@ -11187,8 +11187,8 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "core_runtime_ollama_ollama",
-      "community": 185,
-      "community_name": ".json",
+      "community": 69,
+      "community_name": "Ollama",
       "norm_label": "ollama"
     },
     {
@@ -11297,8 +11297,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "core_runtime_ollama_rationale_1",
-      "community": 185,
-      "community_name": ".json",
+      "community": 76,
+      "community_name": "DenseRetriever",
       "norm_label": "the one client that talks to ollama.  everything the platform infers goes thro"
     },
     {
@@ -15092,8 +15092,8 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "modules_reminder_init_already_said",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 124,
+      "community_name": "__init__.py",
       "norm_label": "already_said()"
     },
     {
@@ -15169,8 +15169,8 @@
       "source_location": "L191",
       "_origin": "ast",
       "id": "modules_reminder_init_close",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 124,
+      "community_name": "__init__.py",
       "norm_label": "close()"
     },
     {
@@ -15246,8 +15246,8 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "modules_reminder_init_rationale_78",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 124,
+      "community_name": "__init__.py",
       "norm_label": "true when this exact window has already been mentioned.      the comparison is"
     },
     {
@@ -15290,8 +15290,8 @@
       "source_location": "L192",
       "_origin": "ast",
       "id": "modules_reminder_init_rationale_192",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 124,
+      "community_name": "__init__.py",
       "norm_label": "mark an obligation done or dismissed. both are final; neither deletes anything."
     },
     {
@@ -16888,8 +16888,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_telegram_bot",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "telegram_bot.py"
     },
     {
@@ -16899,8 +16899,8 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "scripts_telegram_bot_main",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "main()"
     },
     {
@@ -16910,8 +16910,8 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "scripts_telegram_bot_loop",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "_loop()"
     },
     {
@@ -16921,8 +16921,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "scripts_telegram_bot_py_path",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "path"
     },
     {
@@ -16932,8 +16932,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "scripts_telegram_bot_rationale_1",
-      "community": 197,
-      "community_name": "Registration",
+      "community": 93,
+      "community_name": "InstalledPack",
       "norm_label": "run the telegram capture adapter on its own, and check that the token works."
     },
     {
@@ -17680,8 +17680,8 @@
       "source_location": "L211",
       "_origin": "ast",
       "id": "tests_test_advice_graph_adviser",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "adviser"
     },
     {
@@ -17724,8 +17724,8 @@
       "source_location": "L231",
       "_origin": "ast",
       "id": "tests_test_advice_graph_consents",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "consents"
     },
     {
@@ -17735,8 +17735,8 @@
       "source_location": "L232",
       "_origin": "ast",
       "id": "tests_test_advice_graph_consents_init",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".__init__()"
     },
     {
@@ -17746,8 +17746,8 @@
       "source_location": "L236",
       "_origin": "ast",
       "id": "tests_test_advice_graph_consents_current",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".current()"
     },
     {
@@ -17757,8 +17757,8 @@
       "source_location": "L241",
       "_origin": "ast",
       "id": "tests_test_advice_graph_log",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "log"
     },
     {
@@ -17768,8 +17768,8 @@
       "source_location": "L242",
       "_origin": "ast",
       "id": "tests_test_advice_graph_log_init",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".__init__()"
     },
     {
@@ -17779,8 +17779,8 @@
       "source_location": "L245",
       "_origin": "ast",
       "id": "tests_test_advice_graph_log_record",
-      "community": 39,
-      "community_name": "ModelUnavailable",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": ".record()"
     },
     {
@@ -17864,7 +17864,7 @@
       "label": "test_a_question_no_shape_asks_for_is_declined()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L409",
+      "source_location": "L410",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_question_no_shape_asks_for_is_declined",
       "community": 200,
@@ -17875,18 +17875,18 @@
       "label": "test_advice_is_declined_when_the_graph_was_given_no_adviser()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L420",
+      "source_location": "L421",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
-      "community": 200,
-      "community_name": "ScriptedOllama",
+      "community": 78,
+      "community_name": "test_answer_graph.py",
       "norm_label": "test_advice_is_declined_when_the_graph_was_given_no_adviser()"
     },
     {
       "label": "test_ask_leads_with_the_verdict_on_the_calculation_path()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L429",
+      "source_location": "L430",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_ask_leads_with_the_verdict_on_the_calculation_path",
       "community": 200,
@@ -17897,7 +17897,7 @@
       "label": "test_ask_maps_consent_and_withheld_to_their_own_flags()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L443",
+      "source_location": "L444",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_ask_maps_consent_and_withheld_to_their_own_flags",
       "community": 200,
@@ -17908,7 +17908,7 @@
       "label": "test_an_ambiguous_subject_asks_whose_and_is_never_calculated()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L461",
+      "source_location": "L462",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_an_ambiguous_subject_asks_whose_and_is_never_calculated",
       "community": 200,
@@ -17919,7 +17919,7 @@
       "label": "test_ask_reads_naturally_for_an_ambiguous_subject()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L480",
+      "source_location": "L481",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_ask_reads_naturally_for_an_ambiguous_subject",
       "community": 200,
@@ -17930,7 +17930,7 @@
       "label": "test_nobody_having_said_who_they_are_withholds_advice()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L494",
+      "source_location": "L495",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_nobody_having_said_who_they_are_withholds_advice",
       "community": 200,
@@ -17941,7 +17941,7 @@
       "label": "test_a_relation_nobody_holds_abstains_as_an_explanation_would()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L506",
+      "source_location": "L507",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_relation_nobody_holds_abstains_as_an_explanation_would",
       "community": 200,
@@ -17952,7 +17952,7 @@
       "label": "test_advice_about_someone_else_is_explained_to_the_asker_about_them()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L519",
+      "source_location": "L520",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_advice_about_someone_else_is_explained_to_the_asker_about_them",
       "community": 200,
@@ -17963,7 +17963,7 @@
       "label": "test_card_chips_are_built_from_each_input_not_from_a_passage()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L538",
+      "source_location": "L539",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_card_chips_are_built_from_each_input_not_from_a_passage",
       "community": 200,
@@ -17974,18 +17974,18 @@
       "label": "test_a_model_that_is_down_still_leaves_the_card_and_finishes()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
-      "community": 60,
-      "community_name": "State",
+      "community": 200,
+      "community_name": "ScriptedOllama",
       "norm_label": "test_a_model_that_is_down_still_leaves_the_card_and_finishes()"
     },
     {
       "label": "test_a_stream_closed_after_the_card_still_records_what_was_shown()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L589",
+      "source_location": "L590",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
       "community": 200,
@@ -17996,7 +17996,7 @@
       "label": "test_a_stream_closed_exactly_at_the_card_still_records_it()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L609",
+      "source_location": "L610",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_stream_closed_exactly_at_the_card_still_records_it",
       "community": 200,
@@ -18007,7 +18007,7 @@
       "label": "test_the_advised_record_is_never_written_twice()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L628",
+      "source_location": "L629",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_the_advised_record_is_never_written_twice",
       "community": 200,
@@ -18018,7 +18018,7 @@
       "label": "test_a_never_say_phrase_is_dropped_even_when_correctly_labelled()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L643",
+      "source_location": "L644",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
       "community": 200,
@@ -18029,7 +18029,7 @@
       "label": "test_a_mislabelled_figure_through_the_graph_is_dropped()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L664",
+      "source_location": "L665",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
       "community": 200,
@@ -18040,7 +18040,7 @@
       "label": "test_a_named_product_carries_its_disclosure_and_its_hash()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L680",
+      "source_location": "L681",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_named_product_carries_its_disclosure_and_its_hash",
       "community": 200,
@@ -18051,7 +18051,7 @@
       "label": "test_no_product_named_gives_no_disclosure_or_hash()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L704",
+      "source_location": "L705",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_no_product_named_gives_no_disclosure_or_hash",
       "community": 200,
@@ -18062,7 +18062,7 @@
       "label": "test_a_calculation_for_the_wrong_person_is_never_shown()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L721",
+      "source_location": "L722",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_calculation_for_the_wrong_person_is_never_shown",
       "community": 200,
@@ -18073,7 +18073,7 @@
       "label": "test_advice_about_a_minor_is_withheld_before_consent_is_asked()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L752",
+      "source_location": "L753",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_advice_about_a_minor_is_withheld_before_consent_is_asked",
       "community": 200,
@@ -18084,7 +18084,7 @@
       "label": "test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L767",
+      "source_location": "L768",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
       "community": 200,
@@ -18095,7 +18095,7 @@
       "label": "reviewing_pack()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L783",
+      "source_location": "L784",
       "_origin": "ast",
       "id": "tests_test_advice_graph_reviewing_pack",
       "community": 200,
@@ -18106,7 +18106,7 @@
       "label": "test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L795",
+      "source_location": "L796",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "community": 200,
@@ -18117,7 +18117,7 @@
       "label": "test_a_review_with_nothing_calculable_names_everything_missing()",
       "file_type": "code",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L813",
+      "source_location": "L814",
       "_origin": "ast",
       "id": "tests_test_advice_graph_test_a_review_with_nothing_calculable_names_everything_missing",
       "community": 200,
@@ -18139,9 +18139,9 @@
       "label": "Fix 1: a consumer that stops reading after the card and one sentence \u2014 a `Genera",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L590",
+      "source_location": "L591",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_590",
+      "id": "tests_test_advice_graph_rationale_591",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "fix 1: a consumer that stops reading after the card and one sentence \u2014 a `genera"
@@ -18150,9 +18150,9 @@
       "label": "C5 fix round 2. Before this fix, `yield AdviceCard(...)` sat *before* the explan",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L610",
+      "source_location": "L611",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_610",
+      "id": "tests_test_advice_graph_rationale_611",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "c5 fix round 2. before this fix, `yield advicecard(...)` sat *before* the explan"
@@ -18161,9 +18161,9 @@
       "label": "The `finally` that writes the advised record runs exactly once per stream, wheth",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L629",
+      "source_location": "L630",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_629",
+      "id": "tests_test_advice_graph_rationale_630",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "the `finally` that writes the advised record runs exactly once per stream, wheth"
@@ -18172,9 +18172,9 @@
       "label": "Fix 2(a). The sentence names the gap figure with its own word (\"gap\") and cites",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L644",
+      "source_location": "L645",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_644",
+      "id": "tests_test_advice_graph_rationale_645",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "fix 2(a). the sentence names the gap figure with its own word (\"gap\") and cites"
@@ -18183,9 +18183,9 @@
       "label": "Fix 2(c). SGD 451,200.00 is the *target*, not a gap: \"short by\" states it withou",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L665",
+      "source_location": "L666",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_665",
+      "id": "tests_test_advice_graph_rationale_666",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "fix 2(c). sgd 451,200.00 is the *target*, not a gap: \"short by\" states it withou"
@@ -18194,9 +18194,9 @@
       "label": "Fix 2(b), and minor 6: `names_product=True` puts the pack's own disclosure on th",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L681",
+      "source_location": "L682",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_681",
+      "id": "tests_test_advice_graph_rationale_682",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "fix 2(b), and minor 6: `names_product=true` puts the pack's own disclosure on th"
@@ -18205,9 +18205,9 @@
       "label": "Fix 2(b): `names_product=False` (the default `CALCULATION` fixture) gives an emp",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L705",
+      "source_location": "L706",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_705",
+      "id": "tests_test_advice_graph_rationale_706",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "fix 2(b): `names_product=false` (the default `calculation` fixture) gives an emp"
@@ -18216,9 +18216,9 @@
       "label": "Minor 4: `_advise` already guarantees a single-person subject before `calculate`",
       "file_type": "rationale",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L722",
+      "source_location": "L723",
       "_origin": "ast",
-      "id": "tests_test_advice_graph_rationale_722",
+      "id": "tests_test_advice_graph_rationale_723",
       "community": 200,
       "community_name": "ScriptedOllama",
       "norm_label": "minor 4: `_advise` already guarantees a single-person subject before `calculate`"
@@ -19110,8 +19110,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_answer_graph",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_answer_graph.py"
     },
     {
@@ -19121,8 +19121,8 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "tests_test_answer_graph_scriptedollama",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "scriptedollama"
     },
     {
@@ -19132,8 +19132,8 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "tests_test_answer_graph_scriptedollama_init",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": ".__init__()"
     },
     {
@@ -19143,8 +19143,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_test_answer_graph_py_any",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "any"
     },
     {
@@ -19154,8 +19154,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_test_answer_graph_py_exception",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "exception"
     },
     {
@@ -19165,8 +19165,8 @@
       "source_location": "L76",
       "_origin": "ast",
       "id": "tests_test_answer_graph_scriptedollama_constrained",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": ".constrained()"
     },
     {
@@ -19176,8 +19176,8 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "tests_test_answer_graph_scriptedollama_constrained_stream",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": ".constrained_stream()"
     },
     {
@@ -19187,8 +19187,8 @@
       "source_location": "L122",
       "_origin": "ast",
       "id": "tests_test_answer_graph_scriptedollama_embed",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": ".embed()"
     },
     {
@@ -19198,8 +19198,8 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "tests_test_answer_graph_scriptedollama_embed_query",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": ".embed_query()"
     },
     {
@@ -19220,8 +19220,8 @@
       "source_location": "L130",
       "_origin": "ast",
       "id": "tests_test_answer_graph_fixedretriever_init",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".__init__()"
     },
     {
@@ -19231,8 +19231,8 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "tests_test_answer_graph_fixedretriever_search",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".search()"
     },
     {
@@ -19253,8 +19253,8 @@
       "source_location": "L138",
       "_origin": "ast",
       "id": "tests_test_answer_graph_passthroughreranker_rerank",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".rerank()"
     },
     {
@@ -19264,8 +19264,8 @@
       "source_location": "L142",
       "_origin": "ast",
       "id": "tests_test_answer_graph_build",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "build()"
     },
     {
@@ -19297,8 +19297,8 @@
       "source_location": "L165",
       "_origin": "ast",
       "id": "tests_test_answer_graph_phrasingretriever_search",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": ".search()"
     },
     {
@@ -19330,8 +19330,8 @@
       "source_location": "L234",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_router_that_cannot_run_still_searches_the_question_as_asked",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_router_that_cannot_run_still_searches_the_question_as_asked()"
     },
     {
@@ -19407,8 +19407,8 @@
       "source_location": "L361",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_weak_evidence_abstains_before_anything_is_written",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 39,
+      "community_name": "ModelUnavailable",
       "norm_label": "test_weak_evidence_abstains_before_anything_is_written()"
     },
     {
@@ -19451,8 +19451,8 @@
       "source_location": "L393",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_grounded_question_is_answered_with_its_source",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_grounded_question_is_answered_with_its_source()"
     },
     {
@@ -19462,8 +19462,8 @@
       "source_location": "L406",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_request_to_act_is_refused_at_the_router",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_request_to_act_is_refused_at_the_router()"
     },
     {
@@ -19473,8 +19473,8 @@
       "source_location": "L415",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_an_ungrounded_answer_abstains_rather_than_being_published",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_an_ungrounded_answer_abstains_rather_than_being_published()"
     },
     {
@@ -19484,8 +19484,8 @@
       "source_location": "L427",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_nothing_retrieved_abstains_and_says_what_is_missing",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_nothing_retrieved_abstains_and_says_what_is_missing()"
     },
     {
@@ -19495,8 +19495,8 @@
       "source_location": "L435",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_model_that_is_not_running_abstains_rather_than_inventing",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_model_that_is_not_running_abstains_rather_than_inventing()"
     },
     {
@@ -19506,8 +19506,8 @@
       "source_location": "L443",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_the_router_failing_still_lets_a_question_be_answered",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_the_router_failing_still_lets_a_question_be_answered()"
     },
     {
@@ -19517,8 +19517,8 @@
       "source_location": "L454",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_passage_number_outside_the_evidence_is_ignored",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_passage_number_outside_the_evidence_is_ignored()"
     },
     {
@@ -19616,8 +19616,8 @@
       "source_location": "L603",
       "_origin": "ast",
       "id": "tests_test_answer_graph_passage",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "passage()"
     },
     {
@@ -19627,8 +19627,8 @@
       "source_location": "L613",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_the_best_passage_chooses_the_pack_even_when_it_is_outnumbered",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_the_best_passage_chooses_the_pack_even_when_it_is_outnumbered()"
     },
     {
@@ -19638,8 +19638,8 @@
       "source_location": "L632",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_the_best_passage_decides_and_a_type_no_pack_speaks_for_is_the_cores",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_the_best_passage_decides_and_a_type_no_pack_speaks_for_is_the_cores()"
     },
     {
@@ -19649,8 +19649,8 @@
       "source_location": "L648",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_the_floor_that_is_applied_belongs_to_the_passage_that_has_to_clear_it",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_the_floor_that_is_applied_belongs_to_the_passage_that_has_to_clear_it()"
     },
     {
@@ -19682,8 +19682,8 @@
       "source_location": "",
       "_origin": "ast",
       "id": "tests_test_answer_graph_py_uuid",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "uuid"
     },
     {
@@ -19858,8 +19858,8 @@
       "source_location": "L937",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_asking_whether_something_can_be_claimed_is_described_as_explain_to_the_router",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_asking_whether_something_can_be_claimed_is_described_as_explain_to_the_router()"
     },
     {
@@ -19935,8 +19935,8 @@
       "source_location": "L1118",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_an_is_written_only_before_a_e_i_or_o",
-      "community": 40,
-      "community_name": "routes.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_an_is_written_only_before_a_e_i_or_o()"
     },
     {
@@ -19968,8 +19968,8 @@
       "source_location": "L1145",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_payslip_is_governed_by_the_tax_pack_not_the_strictest",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_payslip_is_governed_by_the_tax_pack_not_the_strictest()"
     },
     {
@@ -19979,8 +19979,8 @@
       "source_location": "L1161",
       "_origin": "ast",
       "id": "tests_test_answer_graph_test_a_type_no_pack_speaks_for_is_governed_by_the_core",
-      "community": 93,
-      "community_name": "InstalledPack",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "test_a_type_no_pack_speaks_for_is_governed_by_the_core()"
     },
     {
@@ -19990,8 +19990,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_1",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "the grounding gate, and the graph's two ways of not answering.  rule 3 says no c"
     },
     {
@@ -20001,8 +20001,8 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_69",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "returns the replies the test wrote, in order."
     },
     {
@@ -20012,8 +20012,8 @@
       "source_location": "L107",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_107",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "the same scripted reply, in five-character pieces.          deliberately chopped"
     },
     {
@@ -20122,8 +20122,8 @@
       "source_location": "L633",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_633",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "the best passage decides. a weaker policy passage further down does not get to s"
     },
     {
@@ -20133,8 +20133,8 @@
       "source_location": "L649",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_649",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "insurance_agent declares 0.45; iras_tax is looser. a best passage at 0.44 is ins"
     },
     {
@@ -20144,8 +20144,8 @@
       "source_location": "L938",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_938",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "14 september: \"warded for dengue 3 days, can claim?\" was declined as advice beca"
     },
     {
@@ -20166,8 +20166,8 @@
       "source_location": "L1146",
       "_origin": "ast",
       "id": "tests_test_answer_graph_rationale_1146",
-      "community": 78,
-      "community_name": "test_answer_graph.py",
+      "community": 60,
+      "community_name": "State",
       "norm_label": "adr 0017: every chunk is `core`'s, and the type a pack speaks for picks its guar"
     },
     {
@@ -27415,8 +27415,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_modules",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "test_modules.py"
     },
     {
@@ -27624,8 +27624,8 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "tests_test_modules_test_never_notified_is_never_said",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 124,
+      "community_name": "__init__.py",
       "norm_label": "test_never_notified_is_never_said()"
     },
     {
@@ -27756,8 +27756,8 @@
       "source_location": "L220",
       "_origin": "ast",
       "id": "tests_test_modules_test_a_metric_no_query_defines_cannot_fire",
-      "community": 54,
-      "community_name": "__init__.py",
+      "community": 29,
+      "community_name": "test_modules.py",
       "norm_label": "test_a_metric_no_query_defines_cannot_fire()"
     },
     {
@@ -27767,8 +27767,8 @@
       "source_location": "L227",
       "_origin": "ast",
       "id": "tests_test_modules_test_the_debounce_key_separates_people",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "test_the_debounce_key_separates_people()"
     },
     {
@@ -27778,8 +27778,8 @@
       "source_location": "L238",
       "_origin": "ast",
       "id": "tests_test_modules_test_the_debounce_key_separates_two_policies_of_one_person",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 191,
+      "community_name": "gate.py",
       "norm_label": "test_the_debounce_key_separates_two_policies_of_one_person()"
     },
     {
@@ -27789,8 +27789,8 @@
       "source_location": "L252",
       "_origin": "ast",
       "id": "tests_test_modules_test_a_sum_is_per_person_and_cites_only_that_persons_receipts",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "test_a_sum_is_per_person_and_cites_only_that_persons_receipts()"
     },
     {
@@ -27800,8 +27800,8 @@
       "source_location": "L272",
       "_origin": "ast",
       "id": "tests_test_modules_test_each_policy_lapses_on_its_own",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "test_each_policy_lapses_on_its_own()"
     },
     {
@@ -27811,8 +27811,8 @@
       "source_location": "L287",
       "_origin": "ast",
       "id": "tests_test_modules_test_the_catalogue_declares_metrics_that_exist",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "test_the_catalogue_declares_metrics_that_exist()"
     },
     {
@@ -27932,8 +27932,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "tests_test_modules_rationale_1",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "reminder and alert: what fires, once, and with what behind it.  both modules are"
     },
     {
@@ -27965,8 +27965,8 @@
       "source_location": "L239",
       "_origin": "ast",
       "id": "tests_test_modules_rationale_239",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 191,
+      "community_name": "gate.py",
       "norm_label": "two lapsed policies on one person are two alerts, and saying one must not silenc"
     },
     {
@@ -27976,8 +27976,8 @@
       "source_location": "L273",
       "_origin": "ast",
       "id": "tests_test_modules_rationale_273",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "a live travel policy must not make a lapsed motor policy read as covered."
     },
     {
@@ -27987,8 +27987,8 @@
       "source_location": "L288",
       "_origin": "ast",
       "id": "tests_test_modules_rationale_288",
-      "community": 29,
-      "community_name": "test_modules.py",
+      "community": 75,
+      "community_name": "Any",
       "norm_label": "a metric nobody implemented is a silent no-op, so it is caught here."
     },
     {
@@ -38555,8 +38555,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0001_record_architecture_decisions",
-      "community": 215,
-      "community_name": "_Value",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "0001-record-architecture-decisions.md"
     },
     {
@@ -38566,8 +38566,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0001_record_architecture_decisions_1_record_architecture_decisions",
-      "community": 215,
-      "community_name": "_Value",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "1. record architecture decisions"
     },
     {
@@ -38577,8 +38577,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "docs_adr_0001_record_architecture_decisions_context",
-      "community": 215,
-      "community_name": "_Value",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "context"
     },
     {
@@ -38588,8 +38588,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "docs_adr_0001_record_architecture_decisions_decision",
-      "community": 215,
-      "community_name": "_Value",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "decision"
     },
     {
@@ -38599,8 +38599,8 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "docs_adr_0001_record_architecture_decisions_consequences",
-      "community": 215,
-      "community_name": "_Value",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "consequences"
     },
     {
@@ -38753,8 +38753,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0004_local_setup_readiness",
-      "community": 232,
-      "community_name": ".understand",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "0004-local-setup-readiness.md"
     },
     {
@@ -38764,8 +38764,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0004_local_setup_readiness_4_local_setup_can_run_before_the_household_assistant_is_ready",
-      "community": 232,
-      "community_name": ".understand",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "4. local setup can run before the household assistant is ready"
     },
     {
@@ -38775,8 +38775,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "docs_adr_0004_local_setup_readiness_context",
-      "community": 232,
-      "community_name": ".understand",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "context"
     },
     {
@@ -38786,8 +38786,8 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "docs_adr_0004_local_setup_readiness_decision",
-      "community": 232,
-      "community_name": ".understand",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "decision"
     },
     {
@@ -38797,8 +38797,8 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "docs_adr_0004_local_setup_readiness_consequences",
-      "community": 232,
-      "community_name": ".understand",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "consequences"
     },
     {
@@ -38973,8 +38973,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0008_ingestion_runs_on_a_celery_worker",
-      "community": 235,
-      "community_name": "page.tsx",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "0008-ingestion-runs-on-a-celery-worker.md"
     },
     {
@@ -38984,8 +38984,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0008_ingestion_runs_on_a_celery_worker_8_ingestion_runs_on_a_celery_worker_and_the_queue_carries_a_digest_rather_than_the_document",
-      "community": 235,
-      "community_name": "page.tsx",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "8. ingestion runs on a celery worker, and the queue carries a digest rather than the document"
     },
     {
@@ -38995,8 +38995,8 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "docs_adr_0008_ingestion_runs_on_a_celery_worker_context",
-      "community": 235,
-      "community_name": "page.tsx",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "context"
     },
     {
@@ -39006,8 +39006,8 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "docs_adr_0008_ingestion_runs_on_a_celery_worker_decision",
-      "community": 235,
-      "community_name": "page.tsx",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "decision"
     },
     {
@@ -39017,8 +39017,8 @@
       "source_location": "L79",
       "_origin": "ast",
       "id": "docs_adr_0008_ingestion_runs_on_a_celery_worker_consequences",
-      "community": 235,
-      "community_name": "page.tsx",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "consequences"
     },
     {
@@ -39600,8 +39600,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_0017_a_pack_is_grounding_and_persona_the_core_owns_documents_17_a_pack_is_grounding_and_persona_the_core_owns_documents",
-      "community": 211,
-      "community_name": "installed_packs",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "17 \u00b7 a pack is grounding and persona; the core owns documents"
     },
     {
@@ -39611,8 +39611,8 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "docs_adr_0017_a_pack_is_grounding_and_persona_the_core_owns_documents_context",
-      "community": 211,
-      "community_name": "installed_packs",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "context"
     },
     {
@@ -39622,8 +39622,8 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "docs_adr_0017_a_pack_is_grounding_and_persona_the_core_owns_documents_decision",
-      "community": 211,
-      "community_name": "installed_packs",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "decision"
     },
     {
@@ -39633,8 +39633,8 @@
       "source_location": "L56",
       "_origin": "ast",
       "id": "docs_adr_0017_a_pack_is_grounding_and_persona_the_core_owns_documents_alternatives_considered",
-      "community": 211,
-      "community_name": "installed_packs",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "alternatives considered"
     },
     {
@@ -39644,8 +39644,8 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "docs_adr_0017_a_pack_is_grounding_and_persona_the_core_owns_documents_consequences",
-      "community": 211,
-      "community_name": "installed_packs",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "consequences"
     },
     {
@@ -39655,8 +39655,8 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "docs_adr_0017_a_pack_is_grounding_and_persona_the_core_owns_documents_revisit_when",
-      "community": 211,
-      "community_name": "installed_packs",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "revisit when"
     },
     {
@@ -39710,8 +39710,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_template",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "template.md"
     },
     {
@@ -39721,8 +39721,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_adr_template_nnnn_the_decision_as_a_statement_not_a_question",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "nnnn \u00b7 the decision, as a statement not a question"
     },
     {
@@ -39732,8 +39732,8 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "docs_adr_template_context",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "context"
     },
     {
@@ -39743,8 +39743,8 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "docs_adr_template_decision",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "decision"
     },
     {
@@ -39754,8 +39754,8 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "docs_adr_template_alternatives_considered",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "alternatives considered"
     },
     {
@@ -39765,8 +39765,8 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "docs_adr_template_consequences",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "consequences"
     },
     {
@@ -39776,8 +39776,8 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "docs_adr_template_revisit_when",
-      "community": 206,
-      "community_name": "The household, and the word \"my\"",
+      "community": 154,
+      "community_name": "README.md",
       "norm_label": "revisit when"
     },
     {
@@ -40557,8 +40557,8 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "docs_household_and_identity_the_household_and_the_word_my",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "the household, and the word \"my\""
     },
     {
@@ -40568,8 +40568,8 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "docs_household_and_identity_1_the_failure_this_fixes",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "1 \u00b7 the failure this fixes"
     },
     {
@@ -40579,8 +40579,8 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "docs_household_and_identity_2_what_already_existed",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "2 \u00b7 what already existed"
     },
     {
@@ -40590,8 +40590,8 @@
       "source_location": "L66",
       "_origin": "ast",
       "id": "docs_household_and_identity_3_why_a_roster_is_not_a_setup_form",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "3 \u00b7 why a roster is not a setup form"
     },
     {
@@ -40601,8 +40601,8 @@
       "source_location": "L98",
       "_origin": "ast",
       "id": "docs_household_and_identity_4_the_data_model",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "4 \u00b7 the data model"
     },
     {
@@ -40612,8 +40612,8 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "docs_household_and_identity_5_resolving_my_three_buckets_not_two",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "5 \u00b7 resolving \"my\" \u2014 three buckets, not two"
     },
     {
@@ -40623,8 +40623,8 @@
       "source_location": "L161",
       "_origin": "ast",
       "id": "docs_household_and_identity_6_two_safeguards",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "6 \u00b7 two safeguards"
     },
     {
@@ -40634,8 +40634,8 @@
       "source_location": "L177",
       "_origin": "ast",
       "id": "docs_household_and_identity_7_what_this_cost_and_what_it_did_not",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "7 \u00b7 what this cost, and what it did not"
     },
     {
@@ -40645,8 +40645,8 @@
       "source_location": "L195",
       "_origin": "ast",
       "id": "docs_household_and_identity_8_what_it_enables_for_5_and_8",
-      "community": 191,
-      "community_name": "gate.py",
+      "community": 52,
+      "community_name": "0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md",
       "norm_label": "8 \u00b7 what it enables, for \u00a75 and \u00a78"
     },
     {
@@ -41071,7 +41071,7 @@
       "label": "1. What we are building, in one paragraph",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L11",
+      "source_location": "L16",
       "_origin": "ast",
       "id": "packs_readme_1_what_we_are_building_in_one_paragraph",
       "community": 147,
@@ -41082,7 +41082,7 @@
       "label": "2. What a domain pack actually is",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L27",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "packs_readme_2_what_a_domain_pack_actually_is",
       "community": 147,
@@ -41093,7 +41093,7 @@
       "label": "The field types you can use",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L63",
+      "source_location": "L68",
       "_origin": "ast",
       "id": "packs_readme_the_field_types_you_can_use",
       "community": 147,
@@ -41104,7 +41104,7 @@
       "label": "The rules for a field",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L82",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "packs_readme_the_rules_for_a_field",
       "community": 147,
@@ -41115,7 +41115,7 @@
       "label": "3. The one thing that matters most",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L97",
+      "source_location": "L102",
       "_origin": "ast",
       "id": "packs_readme_3_the_one_thing_that_matters_most",
       "community": 147,
@@ -41126,7 +41126,7 @@
       "label": "4. What you do, step by step",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L121",
+      "source_location": "L126",
       "_origin": "ast",
       "id": "packs_readme_4_what_you_do_step_by_step",
       "community": 147,
@@ -41137,7 +41137,7 @@
       "label": "5. How your output lets Desmond continue",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L158",
+      "source_location": "L163",
       "_origin": "ast",
       "id": "packs_readme_5_how_your_output_lets_desmond_continue",
       "community": 147,
@@ -41148,7 +41148,7 @@
       "label": "6. Persona and guardrails",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L206",
+      "source_location": "L211",
       "_origin": "ast",
       "id": "packs_readme_6_persona_and_guardrails",
       "community": 147,
@@ -41159,7 +41159,7 @@
       "label": "6b. Answering: words, categories, exclusions",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L246",
+      "source_location": "L251",
       "_origin": "ast",
       "id": "packs_readme_6b_answering_words_categories_exclusions",
       "community": 147,
@@ -41170,7 +41170,7 @@
       "label": "6c. Advice: when a pack answers \"is it enough?\"",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L295",
+      "source_location": "L300",
       "_origin": "ast",
       "id": "packs_readme_6c_advice_when_a_pack_answers_is_it_enough",
       "community": 147,
@@ -41181,7 +41181,7 @@
       "label": "7. Grounding \u2014 the optional second half",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L413",
+      "source_location": "L418",
       "_origin": "ast",
       "id": "packs_readme_7_grounding_the_optional_second_half",
       "community": 147,
@@ -41192,7 +41192,7 @@
       "label": "What a corpus holds",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L445",
+      "source_location": "L451",
       "_origin": "ast",
       "id": "packs_readme_what_a_corpus_holds",
       "community": 147,
@@ -41203,7 +41203,7 @@
       "label": "The rules for a corpus",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L458",
+      "source_location": "L464",
       "_origin": "ast",
       "id": "packs_readme_the_rules_for_a_corpus",
       "community": 147,
@@ -41214,7 +41214,7 @@
       "label": "Owner",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L475",
+      "source_location": "L481",
       "_origin": "ast",
       "id": "packs_readme_owner",
       "community": 147,
@@ -41225,7 +41225,7 @@
       "label": "8. Starter prompt for Claude Code",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L482",
+      "source_location": "L488",
       "_origin": "ast",
       "id": "packs_readme_8_starter_prompt_for_claude_code",
       "community": 147,
@@ -41236,7 +41236,7 @@
       "label": "If something goes wrong",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L605",
+      "source_location": "L611",
       "_origin": "ast",
       "id": "packs_readme_if_something_goes_wrong",
       "community": 147,
@@ -41247,7 +41247,7 @@
       "label": "9. What \"done\" looks like for a pack",
       "file_type": "document",
       "source_file": "packs/README.md",
-      "source_location": "L616",
+      "source_location": "L622",
       "_origin": "ast",
       "id": "packs_readme_9_what_done_looks_like_for_a_pack",
       "community": 147,
@@ -42116,7 +42116,7 @@
       "label": "Week 1, in order",
       "file_type": "document",
       "source_file": "team/christian/README.md",
-      "source_location": "L16",
+      "source_location": "L18",
       "_origin": "ast",
       "id": "team_christian_readme_week_1_in_order",
       "community": 176,
@@ -42127,7 +42127,7 @@
       "label": "The five things you ship",
       "file_type": "document",
       "source_file": "team/christian/README.md",
-      "source_location": "L30",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "team_christian_readme_the_five_things_you_ship",
       "community": 176,
@@ -42138,7 +42138,7 @@
       "label": "What integration actually means here",
       "file_type": "document",
       "source_file": "team/christian/README.md",
-      "source_location": "L42",
+      "source_location": "L44",
       "_origin": "ast",
       "id": "team_christian_readme_what_integration_actually_means_here",
       "community": 176,
@@ -42149,7 +42149,7 @@
       "label": "Starter prompt for your coding agent",
       "file_type": "document",
       "source_file": "team/christian/README.md",
-      "source_location": "L61",
+      "source_location": "L63",
       "_origin": "ast",
       "id": "team_christian_readme_starter_prompt_for_your_coding_agent",
       "community": 176,
@@ -42160,7 +42160,7 @@
       "label": "Starter prompt: what can I actually pick up?",
       "file_type": "document",
       "source_file": "team/christian/README.md",
-      "source_location": "L85",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "team_christian_readme_starter_prompt_what_can_i_actually_pick_up",
       "community": 176,
@@ -42171,7 +42171,7 @@
       "label": "Also yours",
       "file_type": "document",
       "source_file": "team/christian/README.md",
-      "source_location": "L126",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "team_christian_readme_also_yours",
       "community": 176,
@@ -42281,7 +42281,7 @@
       "label": "W8 \u2014 due 2026-10-27",
       "file_type": "document",
       "source_file": "team/christian/tasks.md",
-      "source_location": "L167",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "team_christian_tasks_w8_due_2026_10_27",
       "community": 2,
@@ -42292,7 +42292,7 @@
       "label": "W9 \u2014 due 2026-10-28",
       "file_type": "document",
       "source_file": "team/christian/tasks.md",
-      "source_location": "L191",
+      "source_location": "L196",
       "_origin": "ast",
       "id": "team_christian_tasks_w9_due_2026_10_28",
       "community": 2,
@@ -42303,7 +42303,7 @@
       "label": "W10 \u2014 due 2026-11-10",
       "file_type": "document",
       "source_file": "team/christian/tasks.md",
-      "source_location": "L220",
+      "source_location": "L225",
       "_origin": "ast",
       "id": "team_christian_tasks_w10_due_2026_11_10",
       "community": 2,
@@ -43040,7 +43040,7 @@
       "label": "Read this first",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L18",
+      "source_location": "L24",
       "_origin": "ast",
       "id": "team_zee_readme_read_this_first",
       "community": 174,
@@ -43051,7 +43051,7 @@
       "label": "The two halves of this lane",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L30",
+      "source_location": "L36",
       "_origin": "ast",
       "id": "team_zee_readme_the_two_halves_of_this_lane",
       "community": 174,
@@ -43062,7 +43062,7 @@
       "label": "Half one \u2014 domain packs (weeks 1 to 7)",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L32",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "team_zee_readme_half_one_domain_packs_weeks_1_to_7",
       "community": 174,
@@ -43073,7 +43073,7 @@
       "label": "Half two \u2014 the interface (weeks 4 to 8)",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L53",
+      "source_location": "L59",
       "_origin": "ast",
       "id": "team_zee_readme_half_two_the_interface_weeks_4_to_8",
       "community": 174,
@@ -43084,7 +43084,7 @@
       "label": "Your Claude Code skills",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L65",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "team_zee_readme_your_claude_code_skills",
       "community": 174,
@@ -43095,7 +43095,7 @@
       "label": "Rules that apply to you specifically",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L76",
+      "source_location": "L82",
       "_origin": "ast",
       "id": "team_zee_readme_rules_that_apply_to_you_specifically",
       "community": 174,
@@ -43106,7 +43106,7 @@
       "label": "What \"done\" looks like",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L97",
+      "source_location": "L104",
       "_origin": "ast",
       "id": "team_zee_readme_what_done_looks_like",
       "community": 174,
@@ -43117,7 +43117,7 @@
       "label": "What you present",
       "file_type": "document",
       "source_file": "team/zee/README.md",
-      "source_location": "L110",
+      "source_location": "L117",
       "_origin": "ast",
       "id": "team_zee_readme_what_you_present",
       "community": 174,
@@ -43216,7 +43216,7 @@
       "label": "W9 \u2014 due 2026-11-03",
       "file_type": "document",
       "source_file": "team/zee/tasks.md",
-      "source_location": "L76",
+      "source_location": "L71",
       "_origin": "ast",
       "id": "team_zee_tasks_w9_due_2026_11_03",
       "community": 11,
@@ -43227,7 +43227,7 @@
       "label": "W10 \u2014 due 2026-11-10",
       "file_type": "document",
       "source_file": "team/zee/tasks.md",
-      "source_location": "L94",
+      "source_location": "L89",
       "_origin": "ast",
       "id": "team_zee_tasks_w10_due_2026_11_10",
       "community": 11,
@@ -54892,7 +54892,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L792",
+      "source_location": "L793",
       "weight": 1.0,
       "source": "tests_test_advice_graph_reviewing_pack",
       "target": "core_contracts_packmanifest"
@@ -61240,7 +61240,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L802",
+      "source_location": "L803",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "target": "core_graph_answer_sentence"
@@ -61251,7 +61251,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L675",
+      "source_location": "L676",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
       "target": "core_graph_answer_sentence"
@@ -61262,7 +61262,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L659",
+      "source_location": "L660",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
       "target": "core_graph_answer_sentence"
@@ -61273,7 +61273,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L600",
+      "source_location": "L601",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
       "target": "core_graph_answer_sentence"
@@ -61295,7 +61295,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L564",
+      "source_location": "L565",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_card_chips_are_built_from_each_input_not_from_a_passage",
       "target": "core_graph_answer_sentence"
@@ -61903,7 +61903,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L514",
+      "source_location": "L515",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_relation_nobody_holds_abstains_as_an_explanation_would",
       "target": "core_graph_answer_abstained"
@@ -61914,7 +61914,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L469",
+      "source_location": "L470",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_ambiguous_subject_asks_whose_and_is_never_calculated",
       "target": "core_graph_answer_abstained"
@@ -62726,7 +62726,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L405",
+      "source_location": "L406",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_pack_without_advice_still_declines_with_every_port_wired",
       "target": "core_graph_answer_declined"
@@ -62737,7 +62737,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L415",
+      "source_location": "L416",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_question_no_shape_asks_for_is_declined",
       "target": "core_graph_answer_declined"
@@ -62748,7 +62748,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L426",
+      "source_location": "L427",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
       "target": "core_graph_answer_declined"
@@ -63190,7 +63190,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L802",
+      "source_location": "L803",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "target": "core_graph_answer_finished"
@@ -63201,7 +63201,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L677",
+      "source_location": "L678",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
       "target": "core_graph_answer_finished"
@@ -63212,7 +63212,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L575",
+      "source_location": "L576",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
       "target": "core_graph_answer_finished"
@@ -63223,7 +63223,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L661",
+      "source_location": "L662",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
       "target": "core_graph_answer_finished"
@@ -63797,7 +63797,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L777",
+      "source_location": "L778",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
       "target": "core_graph_answer_consentrequired"
@@ -64134,7 +64134,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L819",
+      "source_location": "L820",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_review_with_nothing_calculable_names_everything_missing",
       "target": "core_graph_answer_advicewithheld"
@@ -64145,7 +64145,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L760",
+      "source_location": "L761",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_a_minor_is_withheld_before_consent_is_asked",
       "target": "core_graph_answer_advicewithheld"
@@ -64156,7 +64156,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L499",
+      "source_location": "L500",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_nobody_having_said_who_they_are_withholds_advice",
       "target": "core_graph_answer_advicewithheld"
@@ -64493,7 +64493,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L802",
+      "source_location": "L803",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "target": "core_graph_answer_advicecard"
@@ -64504,7 +64504,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L575",
+      "source_location": "L576",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
       "target": "core_graph_answer_advicecard"
@@ -64515,7 +64515,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L690",
+      "source_location": "L691",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_named_product_carries_its_disclosure_and_its_hash",
       "target": "core_graph_answer_advicecard"
@@ -64526,7 +64526,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L598",
+      "source_location": "L599",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
       "target": "core_graph_answer_advicecard"
@@ -64537,7 +64537,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L619",
+      "source_location": "L620",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_exactly_at_the_card_still_records_it",
       "target": "core_graph_answer_advicecard"
@@ -64548,7 +64548,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L545",
+      "source_location": "L546",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_card_chips_are_built_from_each_input_not_from_a_passage",
       "target": "core_graph_answer_advicecard"
@@ -64559,7 +64559,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L712",
+      "source_location": "L713",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_no_product_named_gives_no_disclosure_or_hash",
       "target": "core_graph_answer_advicecard"
@@ -65965,7 +65965,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L422",
+      "source_location": "L423",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
       "target": "core_graph_answer_answergraph",
@@ -71396,7 +71396,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L509",
+      "source_location": "L510",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_relation_nobody_holds_abstains_as_an_explanation_would",
       "target": "core_graph_scope_subject",
@@ -71407,7 +71407,7 @@
       "context": "parameter_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L752",
+      "source_location": "L753",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_a_minor_is_withheld_before_consent_is_asked",
       "target": "core_graph_scope_subject",
@@ -71418,7 +71418,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L521",
+      "source_location": "L522",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_someone_else_is_explained_to_the_asker_about_them",
       "target": "core_graph_scope_subject",
@@ -71429,7 +71429,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L769",
+      "source_location": "L770",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
       "target": "core_graph_scope_subject",
@@ -71440,7 +71440,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L464",
+      "source_location": "L465",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_ambiguous_subject_asks_whose_and_is_never_calculated",
       "target": "core_graph_scope_subject",
@@ -71451,7 +71451,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L482",
+      "source_location": "L483",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_reads_naturally_for_an_ambiguous_subject",
       "target": "core_graph_scope_subject",
@@ -83336,9 +83336,20 @@
       "context": "return_type",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L783",
+      "source_location": "L784",
       "weight": 1.0,
       "source": "tests_test_advice_graph_reviewing_pack",
+      "target": "core_packs_installedpack",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "source_file": "tests/test_advice_graph.py",
+      "source_location": "L401",
+      "weight": 1.0,
+      "source": "tests_test_advice_graph_test_a_pack_without_advice_still_declines_with_every_port_wired",
       "target": "core_packs_installedpack",
       "confidence_score": 1.0
     },
@@ -88019,7 +88030,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L570",
+      "source_location": "L571",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
       "target": "core_runtime_ollama_modelunavailable",
@@ -102784,7 +102795,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L783",
+      "source_location": "L784",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_reviewing_pack",
@@ -102794,7 +102805,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L721",
+      "source_location": "L722",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_calculation_for_the_wrong_person_is_never_shown",
@@ -102814,7 +102825,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L795",
+      "source_location": "L796",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
@@ -102824,7 +102835,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L664",
+      "source_location": "L665",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
@@ -102844,7 +102855,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L569",
+      "source_location": "L570",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
@@ -102854,7 +102865,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L680",
+      "source_location": "L681",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_named_product_carries_its_disclosure_and_its_hash",
@@ -102864,7 +102875,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L643",
+      "source_location": "L644",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
@@ -102884,7 +102895,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L409",
+      "source_location": "L410",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_question_no_shape_asks_for_is_declined",
@@ -102894,7 +102905,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L506",
+      "source_location": "L507",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_relation_nobody_holds_abstains_as_an_explanation_would",
@@ -102904,7 +102915,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L813",
+      "source_location": "L814",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_review_with_nothing_calculable_names_everything_missing",
@@ -102914,7 +102925,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L589",
+      "source_location": "L590",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
@@ -102924,7 +102935,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L609",
+      "source_location": "L610",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_a_stream_closed_exactly_at_the_card_still_records_it",
@@ -102944,7 +102955,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L752",
+      "source_location": "L753",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_advice_about_a_minor_is_withheld_before_consent_is_asked",
@@ -102954,7 +102965,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L519",
+      "source_location": "L520",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_advice_about_someone_else_is_explained_to_the_asker_about_them",
@@ -102964,7 +102975,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L420",
+      "source_location": "L421",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
@@ -102984,7 +102995,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L767",
+      "source_location": "L768",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
@@ -102994,7 +103005,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L461",
+      "source_location": "L462",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_an_ambiguous_subject_asks_whose_and_is_never_calculated",
@@ -103004,7 +103015,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L429",
+      "source_location": "L430",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_ask_leads_with_the_verdict_on_the_calculation_path",
@@ -103014,7 +103025,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L443",
+      "source_location": "L444",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_ask_maps_consent_and_withheld_to_their_own_flags",
@@ -103024,7 +103035,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L480",
+      "source_location": "L481",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_ask_reads_naturally_for_an_ambiguous_subject",
@@ -103034,7 +103045,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L538",
+      "source_location": "L539",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_card_chips_are_built_from_each_input_not_from_a_passage",
@@ -103044,7 +103055,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L704",
+      "source_location": "L705",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_no_product_named_gives_no_disclosure_or_hash",
@@ -103054,7 +103065,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L494",
+      "source_location": "L495",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_nobody_having_said_who_they_are_withholds_advice",
@@ -103064,7 +103075,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L628",
+      "source_location": "L629",
       "weight": 1.0,
       "source": "tests_test_advice_graph",
       "target": "tests_test_advice_graph_test_the_advised_record_is_never_written_twice",
@@ -103161,7 +103172,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L784",
+      "source_location": "L785",
       "weight": 1.0,
       "source": "tests_test_advice_graph_reviewing_pack",
       "target": "tests_test_advice_graph_advised_pack",
@@ -103183,7 +103194,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L423",
+      "source_location": "L424",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
       "target": "tests_test_advice_graph_advised_pack",
@@ -103370,7 +103381,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L769",
+      "source_location": "L770",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
       "target": "tests_test_advice_graph_py_date",
@@ -103536,7 +103547,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L727",
+      "source_location": "L728",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_calculation_for_the_wrong_person_is_never_shown",
       "target": "tests_test_advice_graph_build",
@@ -103558,7 +103569,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L798",
+      "source_location": "L799",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "target": "tests_test_advice_graph_build",
@@ -103569,7 +103580,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L671",
+      "source_location": "L672",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
       "target": "tests_test_advice_graph_build",
@@ -103591,7 +103602,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L571",
+      "source_location": "L572",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
       "target": "tests_test_advice_graph_build",
@@ -103602,7 +103613,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L687",
+      "source_location": "L688",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_named_product_carries_its_disclosure_and_its_hash",
       "target": "tests_test_advice_graph_build",
@@ -103613,7 +103624,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L655",
+      "source_location": "L656",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
       "target": "tests_test_advice_graph_build",
@@ -103624,7 +103635,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L401",
+      "source_location": "L402",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_pack_without_advice_still_declines_with_every_port_wired",
       "target": "tests_test_advice_graph_build",
@@ -103635,7 +103646,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L411",
+      "source_location": "L412",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_question_no_shape_asks_for_is_declined",
       "target": "tests_test_advice_graph_build",
@@ -103646,7 +103657,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L507",
+      "source_location": "L508",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_relation_nobody_holds_abstains_as_an_explanation_would",
       "target": "tests_test_advice_graph_build",
@@ -103657,7 +103668,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L815",
+      "source_location": "L816",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_review_with_nothing_calculable_names_everything_missing",
       "target": "tests_test_advice_graph_build",
@@ -103668,7 +103679,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L595",
+      "source_location": "L596",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
       "target": "tests_test_advice_graph_build",
@@ -103679,7 +103690,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L616",
+      "source_location": "L617",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_exactly_at_the_card_still_records_it",
       "target": "tests_test_advice_graph_build",
@@ -103701,7 +103712,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L756",
+      "source_location": "L757",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_a_minor_is_withheld_before_consent_is_asked",
       "target": "tests_test_advice_graph_build",
@@ -103712,7 +103723,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L523",
+      "source_location": "L524",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_someone_else_is_explained_to_the_asker_about_them",
       "target": "tests_test_advice_graph_build",
@@ -103734,7 +103745,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L776",
+      "source_location": "L777",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
       "target": "tests_test_advice_graph_build",
@@ -103745,7 +103756,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L463",
+      "source_location": "L464",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_ambiguous_subject_asks_whose_and_is_never_calculated",
       "target": "tests_test_advice_graph_build",
@@ -103756,7 +103767,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L431",
+      "source_location": "L432",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_leads_with_the_verdict_on_the_calculation_path",
       "target": "tests_test_advice_graph_build",
@@ -103767,7 +103778,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L444",
+      "source_location": "L445",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_maps_consent_and_withheld_to_their_own_flags",
       "target": "tests_test_advice_graph_build",
@@ -103778,7 +103789,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L481",
+      "source_location": "L482",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_reads_naturally_for_an_ambiguous_subject",
       "target": "tests_test_advice_graph_build",
@@ -103789,7 +103800,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L540",
+      "source_location": "L541",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_card_chips_are_built_from_each_input_not_from_a_passage",
       "target": "tests_test_advice_graph_build",
@@ -103800,7 +103811,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L708",
+      "source_location": "L709",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_no_product_named_gives_no_disclosure_or_hash",
       "target": "tests_test_advice_graph_build",
@@ -103811,7 +103822,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L495",
+      "source_location": "L496",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_nobody_having_said_who_they_are_withholds_advice",
       "target": "tests_test_advice_graph_build",
@@ -103822,7 +103833,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L633",
+      "source_location": "L634",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_the_advised_record_is_never_written_twice",
       "target": "tests_test_advice_graph_build",
@@ -103987,7 +103998,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L410",
+      "source_location": "L411",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_question_no_shape_asks_for_is_declined",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -103998,7 +104009,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L423",
+      "source_location": "L424",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
       "target": "tests_test_answer_graph_passthroughreranker",
@@ -104009,7 +104020,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L423",
+      "source_location": "L424",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
       "target": "tests_test_answer_graph_phrasingretriever",
@@ -104020,7 +104031,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L421",
+      "source_location": "L422",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_is_declined_when_the_graph_was_given_no_adviser",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104031,7 +104042,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L430",
+      "source_location": "L431",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_leads_with_the_verdict_on_the_calculation_path",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104042,7 +104053,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L444",
+      "source_location": "L445",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_maps_consent_and_withheld_to_their_own_flags",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104053,7 +104064,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L462",
+      "source_location": "L463",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_ambiguous_subject_asks_whose_and_is_never_calculated",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104064,7 +104075,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L482",
+      "source_location": "L483",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_ask_reads_naturally_for_an_ambiguous_subject",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104075,7 +104086,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L495",
+      "source_location": "L496",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_nobody_having_said_who_they_are_withholds_advice",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104086,7 +104097,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L508",
+      "source_location": "L509",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_relation_nobody_holds_abstains_as_an_explanation_would",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104097,7 +104108,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L520",
+      "source_location": "L521",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_someone_else_is_explained_to_the_asker_about_them",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104108,7 +104119,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L539",
+      "source_location": "L540",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_card_chips_are_built_from_each_input_not_from_a_passage",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104119,7 +104130,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L570",
+      "source_location": "L571",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_model_that_is_down_still_leaves_the_card_and_finishes",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104129,9 +104140,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L590",
+      "source_location": "L591",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_590",
+      "source": "tests_test_advice_graph_rationale_591",
       "target": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
       "confidence_score": 1.0
     },
@@ -104140,7 +104151,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L594",
+      "source_location": "L595",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_after_the_card_still_records_what_was_shown",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104150,9 +104161,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L610",
+      "source_location": "L611",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_610",
+      "source": "tests_test_advice_graph_rationale_611",
       "target": "tests_test_advice_graph_test_a_stream_closed_exactly_at_the_card_still_records_it",
       "confidence_score": 1.0
     },
@@ -104161,7 +104172,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L615",
+      "source_location": "L616",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_stream_closed_exactly_at_the_card_still_records_it",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104171,9 +104182,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L629",
+      "source_location": "L630",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_629",
+      "source": "tests_test_advice_graph_rationale_630",
       "target": "tests_test_advice_graph_test_the_advised_record_is_never_written_twice",
       "confidence_score": 1.0
     },
@@ -104182,7 +104193,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L632",
+      "source_location": "L633",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_the_advised_record_is_never_written_twice",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104192,9 +104203,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L644",
+      "source_location": "L645",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_644",
+      "source": "tests_test_advice_graph_rationale_645",
       "target": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
       "confidence_score": 1.0
     },
@@ -104203,7 +104214,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L647",
+      "source_location": "L648",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_never_say_phrase_is_dropped_even_when_correctly_labelled",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104213,9 +104224,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L665",
+      "source_location": "L666",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_665",
+      "source": "tests_test_advice_graph_rationale_666",
       "target": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
       "confidence_score": 1.0
     },
@@ -104224,7 +104235,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L667",
+      "source_location": "L668",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_mislabelled_figure_through_the_graph_is_dropped",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104234,9 +104245,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L681",
+      "source_location": "L682",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_681",
+      "source": "tests_test_advice_graph_rationale_682",
       "target": "tests_test_advice_graph_test_a_named_product_carries_its_disclosure_and_its_hash",
       "confidence_score": 1.0
     },
@@ -104245,7 +104256,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L686",
+      "source_location": "L687",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_named_product_carries_its_disclosure_and_its_hash",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104255,9 +104266,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L705",
+      "source_location": "L706",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_705",
+      "source": "tests_test_advice_graph_rationale_706",
       "target": "tests_test_advice_graph_test_no_product_named_gives_no_disclosure_or_hash",
       "confidence_score": 1.0
     },
@@ -104266,7 +104277,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L707",
+      "source_location": "L708",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_no_product_named_gives_no_disclosure_or_hash",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104276,9 +104287,9 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L722",
+      "source_location": "L723",
       "weight": 1.0,
-      "source": "tests_test_advice_graph_rationale_722",
+      "source": "tests_test_advice_graph_rationale_723",
       "target": "tests_test_advice_graph_test_a_calculation_for_the_wrong_person_is_never_shown",
       "confidence_score": 1.0
     },
@@ -104287,7 +104298,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L726",
+      "source_location": "L727",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_calculation_for_the_wrong_person_is_never_shown",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104298,7 +104309,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L755",
+      "source_location": "L756",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_advice_about_a_minor_is_withheld_before_consent_is_asked",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104309,7 +104320,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L775",
+      "source_location": "L776",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_an_adult_member_and_an_adult_without_a_date_of_birth_reach_consent",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104320,7 +104331,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L798",
+      "source_location": "L799",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "target": "tests_test_advice_graph_reviewing_pack",
@@ -104331,7 +104342,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L815",
+      "source_location": "L816",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_review_with_nothing_calculable_names_everything_missing",
       "target": "tests_test_advice_graph_reviewing_pack",
@@ -104342,7 +104353,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L797",
+      "source_location": "L798",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -104353,7 +104364,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "tests/test_advice_graph.py",
-      "source_location": "L814",
+      "source_location": "L815",
       "weight": 1.0,
       "source": "tests_test_advice_graph_test_a_review_with_nothing_calculable_names_everything_missing",
       "target": "tests_test_answer_graph_scriptedollama",
@@ -140341,7 +140352,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L7",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "team_christian_readme",
       "target": "agents",
@@ -140381,7 +140392,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L6",
+      "source_location": "L12",
       "weight": 1.0,
       "source": "team_zee_readme",
       "target": "agents",
@@ -142801,7 +142812,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L51",
+      "source_location": "L53",
       "weight": 1.0,
       "source": "team_christian_readme",
       "target": "docs_adr_0010_main_is_unprotected_by_convention",
@@ -142821,7 +142832,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L92",
+      "source_location": "L99",
       "weight": 1.0,
       "source": "team_zee_readme",
       "target": "docs_adr_0010_main_is_unprotected_by_convention",
@@ -143851,7 +143862,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L132",
+      "source_location": "L134",
       "weight": 1.0,
       "source": "team_christian_readme",
       "target": "docs_demo_run_sheet",
@@ -144531,7 +144542,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L20",
+      "source_location": "L26",
       "weight": 1.0,
       "source": "team_zee_readme",
       "target": "packs_readme",
@@ -144541,7 +144552,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L11",
+      "source_location": "L16",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_1_what_we_are_building_in_one_paragraph",
@@ -144551,7 +144562,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L27",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_2_what_a_domain_pack_actually_is",
@@ -144561,7 +144572,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L97",
+      "source_location": "L102",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_3_the_one_thing_that_matters_most",
@@ -144571,7 +144582,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L121",
+      "source_location": "L126",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_4_what_you_do_step_by_step",
@@ -144581,7 +144592,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L158",
+      "source_location": "L163",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_5_how_your_output_lets_desmond_continue",
@@ -144591,7 +144602,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L206",
+      "source_location": "L211",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_6_persona_and_guardrails",
@@ -144601,7 +144612,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L246",
+      "source_location": "L251",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_6b_answering_words_categories_exclusions",
@@ -144611,7 +144622,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L295",
+      "source_location": "L300",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_6c_advice_when_a_pack_answers_is_it_enough",
@@ -144621,7 +144632,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L413",
+      "source_location": "L418",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_7_grounding_the_optional_second_half",
@@ -144631,7 +144642,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L482",
+      "source_location": "L488",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_8_starter_prompt_for_claude_code",
@@ -144641,7 +144652,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L616",
+      "source_location": "L622",
       "weight": 1.0,
       "source": "packs_readme_domain_packs_start_here",
       "target": "packs_readme_9_what_done_looks_like_for_a_pack",
@@ -144651,7 +144662,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L63",
+      "source_location": "L68",
       "weight": 1.0,
       "source": "packs_readme_2_what_a_domain_pack_actually_is",
       "target": "packs_readme_the_field_types_you_can_use",
@@ -144661,7 +144672,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L82",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "packs_readme_2_what_a_domain_pack_actually_is",
       "target": "packs_readme_the_rules_for_a_field",
@@ -144671,7 +144682,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L475",
+      "source_location": "L481",
       "weight": 1.0,
       "source": "packs_readme_7_grounding_the_optional_second_half",
       "target": "packs_readme_owner",
@@ -144681,7 +144692,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L458",
+      "source_location": "L464",
       "weight": 1.0,
       "source": "packs_readme_7_grounding_the_optional_second_half",
       "target": "packs_readme_the_rules_for_a_corpus",
@@ -144691,7 +144702,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L445",
+      "source_location": "L451",
       "weight": 1.0,
       "source": "packs_readme_7_grounding_the_optional_second_half",
       "target": "packs_readme_what_a_corpus_holds",
@@ -144701,7 +144712,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "packs/README.md",
-      "source_location": "L605",
+      "source_location": "L611",
       "weight": 1.0,
       "source": "packs_readme_8_starter_prompt_for_claude_code",
       "target": "packs_readme_if_something_goes_wrong",
@@ -145231,7 +145242,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L7",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "team_christian_readme",
       "target": "team_readme",
@@ -145401,7 +145412,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L6",
+      "source_location": "L8",
       "weight": 1.0,
       "source": "team_christian_readme",
       "target": "team_christian_tasks",
@@ -145411,7 +145422,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L126",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "team_christian_readme_christian_lane_a_integration_and_product_owner",
       "target": "team_christian_readme_also_yours",
@@ -145421,7 +145432,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L61",
+      "source_location": "L63",
       "weight": 1.0,
       "source": "team_christian_readme_christian_lane_a_integration_and_product_owner",
       "target": "team_christian_readme_starter_prompt_for_your_coding_agent",
@@ -145431,7 +145442,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L85",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "team_christian_readme_christian_lane_a_integration_and_product_owner",
       "target": "team_christian_readme_starter_prompt_what_can_i_actually_pick_up",
@@ -145441,7 +145452,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "team_christian_readme_christian_lane_a_integration_and_product_owner",
       "target": "team_christian_readme_the_five_things_you_ship",
@@ -145451,7 +145462,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L16",
+      "source_location": "L18",
       "weight": 1.0,
       "source": "team_christian_readme_christian_lane_a_integration_and_product_owner",
       "target": "team_christian_readme_week_1_in_order",
@@ -145461,7 +145472,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/README.md",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0,
       "source": "team_christian_readme_christian_lane_a_integration_and_product_owner",
       "target": "team_christian_readme_what_integration_actually_means_here",
@@ -145481,7 +145492,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/tasks.md",
-      "source_location": "L220",
+      "source_location": "L225",
       "weight": 1.0,
       "source": "team_christian_tasks_christian_task_list",
       "target": "team_christian_tasks_w10_due_2026_11_10",
@@ -145561,7 +145572,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/tasks.md",
-      "source_location": "L167",
+      "source_location": "L172",
       "weight": 1.0,
       "source": "team_christian_tasks_christian_task_list",
       "target": "team_christian_tasks_w8_due_2026_10_27",
@@ -145571,7 +145582,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/christian/tasks.md",
-      "source_location": "L191",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "team_christian_tasks_christian_task_list",
       "target": "team_christian_tasks_w9_due_2026_10_28",
@@ -146201,7 +146212,7 @@
       "relation": "references",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L5",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "team_zee_readme",
       "target": "team_zee_tasks",
@@ -146211,7 +146222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L18",
+      "source_location": "L24",
       "weight": 1.0,
       "source": "team_zee_readme_zee_lane_d_domain_packs_and_interface",
       "target": "team_zee_readme_read_this_first",
@@ -146221,7 +146232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L76",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "team_zee_readme_zee_lane_d_domain_packs_and_interface",
       "target": "team_zee_readme_rules_that_apply_to_you_specifically",
@@ -146231,7 +146242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L30",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "team_zee_readme_zee_lane_d_domain_packs_and_interface",
       "target": "team_zee_readme_the_two_halves_of_this_lane",
@@ -146241,7 +146252,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L97",
+      "source_location": "L104",
       "weight": 1.0,
       "source": "team_zee_readme_zee_lane_d_domain_packs_and_interface",
       "target": "team_zee_readme_what_done_looks_like",
@@ -146251,7 +146262,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L110",
+      "source_location": "L117",
       "weight": 1.0,
       "source": "team_zee_readme_zee_lane_d_domain_packs_and_interface",
       "target": "team_zee_readme_what_you_present",
@@ -146261,7 +146272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L65",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "team_zee_readme_zee_lane_d_domain_packs_and_interface",
       "target": "team_zee_readme_your_claude_code_skills",
@@ -146271,7 +146282,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L32",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "team_zee_readme_the_two_halves_of_this_lane",
       "target": "team_zee_readme_half_one_domain_packs_weeks_1_to_7",
@@ -146281,7 +146292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/README.md",
-      "source_location": "L53",
+      "source_location": "L59",
       "weight": 1.0,
       "source": "team_zee_readme_the_two_halves_of_this_lane",
       "target": "team_zee_readme_half_two_the_interface_weeks_4_to_8",
@@ -146301,7 +146312,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/tasks.md",
-      "source_location": "L94",
+      "source_location": "L89",
       "weight": 1.0,
       "source": "team_zee_tasks_zee_task_list",
       "target": "team_zee_tasks_w10_due_2026_11_10",
@@ -146371,7 +146382,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "team/zee/tasks.md",
-      "source_location": "L76",
+      "source_location": "L71",
       "weight": 1.0,
       "source": "team_zee_tasks_zee_task_list",
       "target": "team_zee_tasks_w9_due_2026_11_03",
@@ -146719,5 +146730,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "537dc86020c5b05d1082b9a0f7ef39ad9036591f"
+  "built_at_commit": "325239c802d968d59bd9286b8ccc16488baaf430"
 }

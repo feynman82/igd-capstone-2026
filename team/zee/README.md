@@ -1,6 +1,12 @@
 # Zee — Lane D · Domain packs and interface
 
-**Owner: Zee.** Directories: `packs/` (including each pack's `grounding/`), `web/`.
+**Owner: Zee.** Directories: `packs/` (including each pack's `grounding/`) except
+`packs/insurance_agent/`, which Christian owns since 16 September; and `web/`.
+
+> **Since ADR 0017 (17 September) a pack is grounding and persona.** Document types and their
+> fields live in `core/documents.yaml`, owned by the core. A pack holds its grounding corpus,
+> persona, guardrails, its own answering rules and its advice. Where this brief says a field
+> is yours to name, propose it for `core/documents.yaml` instead.
 
 > **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
 > **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
@@ -84,7 +90,8 @@ The full starter prompt, if you would rather paste one in, is in
    `never_acts` is enforced by the type system — a pack that sets anything else will not
    load. The disclaimer and the persona *are* yours.
 4. **Grounding sources must be official issuers.** IRAS, CPF Board, MAS, MOH, a named
-   regulator. Not a blog, not a comparison site. Record the retrieval date; Siew reviews
+   regulator, or an industry association for figures it publishes itself (LIA, compareFIRST).
+   Not a blog, and never a seller's page. Record the retrieval date; Siew reviews
    provenance with you.
 5. **Stay inside `packs/` (including each pack's `grounding/`) and `web/`.** `CODEOWNERS` puts your name on a PR
    that touches them, so a PR that respects the boundary merges without a fight. It does

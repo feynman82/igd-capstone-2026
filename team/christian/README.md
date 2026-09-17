@@ -1,7 +1,9 @@
 # Christian — Lane A · Integration and product owner
 
 **Owner: Christian.** Directories: `core/contracts.py`, `core/graph/`, `core/adapters/`,
-`core/ingest/`, `modules/`, `db/migrations/`, and the merge queue.
+`core/ingest/`, `core/documents.yaml` (every document type and field, ADR 0017), `modules/`,
+`db/migrations/`, `packs/insurance_agent/` (the insurance advice rework, since 16 September),
+and the merge queue. Siew reviews the insurance consent wording and the data inventory.
 
 > **Your task list:** [`tasks.md`](tasks.md) — generated from `docs/team-tasks.csv`, so tick things off there and regenerate.
 > **Everyone else:** [`team/`](../README.md) · **The rules every agent follows:** [`AGENTS.md`](../../AGENTS.md)
