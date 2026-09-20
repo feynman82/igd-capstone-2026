@@ -27,6 +27,7 @@ the difference matters when a supervisor asks.
 | [0015](0015-a-name-scopes-and-a-grandparent-is-not-a-parent.md) | A name scopes a question, and a grandparent is not a parent | Accepted |
 | [0016](0016-a-pack-advises-code-calculates-under-recorded-consent.md) | A pack advises: code calculates from cited facts and reviewed rule values, under recorded consent | Proposed |
 | [0017](0017-a-pack-is-grounding-and-persona-the-core-owns-documents.md) | A pack is grounding and persona; the core owns documents | Accepted |
+| [0018](0018-the-reranker-runs-in-process-because-ollama-cannot-serve-a-cross-encoder.md) | The reranker runs in-process, because Ollama cannot serve a cross-encoder | Proposed |
 
 Add a row when you add a record.
 

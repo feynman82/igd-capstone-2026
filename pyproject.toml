@@ -10,7 +10,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-eval  = ["ragas>=0.2", "datasets>=3.0", "pandas>=2.2"]
+# ragas 0.4 still imports a Vertex AI chat model that langchain-community removed in 0.4;
+# the pin is what makes `import ragas` succeed. Drop it when ragas catches up.
+eval  = ["ragas>=0.2", "langchain-community<0.4", "datasets>=3.0", "pandas>=2.2"]
 dev   = ["ruff>=0.7", "mypy>=1.13", "pytest>=8.3", "pytest-asyncio>=0.24", "types-PyYAML"]
 
 [tool.ruff]

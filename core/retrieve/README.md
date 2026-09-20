@@ -8,9 +8,20 @@ rank fusion, then reranked with `bge-reranker-v2-m3`, then cut at the pack's sco
 
 ## What belongs here
 
-- `hybrid.py` — the two searches and the RRF fusion (k=60)
-- `rerank.py` — the cross-encoder, 40 candidates down to 6
-- `floor.py` — the score floor the grounding gate reads
+- `hybrid.py` — the two searches and the RRF fusion (k=60). **Landed.** One hand-written
+  query: a dense arm and a full-text arm, each ranked, joined on chunk id, ordered by
+  reciprocal rank. `Passage.score` stays the cosine similarity, because the graph's floor
+  is one; an exact identifier hit (a policy number the chunk prints) is lifted to 0.95.
+- `rerank.py` — the cross-encoder, 40 candidates down to 6. **Landed.** `bge-reranker-v2-m3`
+  in-process with `transformers` (ADR 0018: Ollama cannot serve a cross-encoder), loaded
+  once per process on CUDA, MPS or CPU. It reorders and cuts; `Passage.score` stays the
+  cosine similarity the floor reads.
+- `floor.py` — the score floor the grounding gate reads (today it reads the pack's
+  `guardrails.abstain_below` directly; this file exists when there is something to add)
+
+Fusion decides which candidates are *in*; the reranker decides which six are read. In
+between, `core/graph` re-sorts by score when it fuses several phrasings of one question,
+so a passage only the lexical arm found reaches the reranker at its cosine score.
 
 ## Rules
 

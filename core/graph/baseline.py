@@ -1,8 +1,8 @@
 """A dense-only retriever, so the graph can be run and tested before Lane B's hybrid search.
 
-**This is a stopgap and is meant to be deleted.** `core/retrieve/` is Yew Mun's lane and owns
-hybrid search, RRF fusion, the cross-encoder reranker and the abstain floor — his W3 task. When
-that lands, `scripts/ask.py` imports his `Retriever` instead and this file goes.
+**This is a stopgap.** `core/retrieve/hybrid.py` has replaced it in `scripts/ask.py`, the API
+and the evaluation harness. It stays for two reasons: `NoReranker` is still the reranker until
+W4, and `eval.run --retriever dense` measures a retrieval change against it on the same vault.
 
 It is here rather than in `core/retrieve/` on purpose: two people's agents writing into the same
 directory in the same week is exactly the failure the lane split exists to prevent. It is

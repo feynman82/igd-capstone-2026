@@ -54,6 +54,20 @@ test report, not a number in this table.
 **Not yet agreed.** These are the targets from the proposal, restated so they can be measured
 the same way three times. They stand until DY has signed them off; if a target moves, it
 moves here first, and the result files are not re-scored.
+## Running the harness
+
+```
+make eval-quick        # every set, at most 25 questions each, to /tmp/parrot-eval
+make eval              # every set, all questions, appended under eval/results/
+```
+
+`python -m eval.run` asks PARROT each question exactly as `scripts/ask.py` would, records the
+passages the model was shown, and writes `<date>-<label>.json` with the nine metrics, one line
+per question, and a `not_measured` reason for every number it could not produce. The Ragas
+metrics need a judge: `--judge MODEL` or `PARROT_JUDGE_MODEL`, served by the same local Ollama
+(a larger model than the generator is better — a model marking its own work is generous), and
+`--no-judge` writes the code-scored metrics alone. A result file is never overwritten. See the
+docstring in `eval/run.py` for every flag.
 
 ## Writing questions
 
