@@ -7,7 +7,7 @@
 # Never edit a generated file by hand.
 
 id: insurance_agent
-version: 0.5.1
+version: 0.6.0
 display_name: Insurance and Coverage
 
 # Public Singapore protection and health insurance guidance, with provenance per source. The
@@ -103,6 +103,8 @@ advice:
         - role: multiple
           key: death_tpd_income_multiple
           missing: Reviewed guidance on how much death and TPD cover to hold.
+      # Named by code when this gap is short. A kind of cover, never an insurer's product.
+      closed_by: [term_life, whole_life]
       never_say: [you must buy, guaranteed]
     - id: ci_cover
       calculator: gap
@@ -135,6 +137,7 @@ advice:
         - role: multiple
           key: ci_income_multiple
           missing: Reviewed guidance on how much critical illness cover to hold.
+      closed_by: [critical_illness]
       never_say: [you must buy, guaranteed]
 
   # One question, every check (ADR 0016 addendum): each shape's shortfall or met guideline, each
@@ -152,6 +155,20 @@ advice:
       - coverage review
       - am i underinsured
       - enough insurance
+      # Asking what to get is asking what is missing. The router already reads these as
+      # `advise`; without a phrase here the shape match failed and the question was declined.
+      - what should i get
+      - what should i buy
+      - what do i need
+      - what insurance do i need
+      - recommend insurance
+      - recommend a policy
+      - recommend policies
+      - recommend the type of policies
+      - what policies should i
+      - what cover should i
+      - types of policies i should
+      - should i get more
     shapes: [death_tpd_cover, ci_cover]
     holds: [hospital_expense, long_term_care]
 

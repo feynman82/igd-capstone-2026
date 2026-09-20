@@ -653,6 +653,33 @@ def _either(labels: list[str]) -> str:
     return named[0] if len(named) == 1 else ", ".join(named[:-1]) + f" or {named[-1]}"
 
 
+def _closes(shape: AdviceShape, labels: dict[str, str], held: set[str]) -> str:
+    """Which kinds of cover close a short shape's gap, written by code.
+
+    The pack declares `closed_by` and the verdict is the calculator's, so naming the cover adds
+    no judgement of its own — it states the consequence of arithmetic ADR 0016 already keeps out
+    of the model's hands. It names a *kind* of cover and never a product: the household holds no
+    market data and PARROT holds no licence to sell against it.
+
+    "More" when some is already on file, because that is usually the true shape of a shortfall.
+    On 20 September Marcus held a critical illness plan and was SGD 251,200.00 short of the
+    guideline; "you have no critical illness cover" would have been a false sentence about a
+    policy he can point to.
+    """
+    names = [labels[c] for c in shape.closed_by if c in labels]
+    if not names:
+        return ""
+    owned = [labels[c] for c in shape.closed_by if c in held and c in labels]
+    spare = [label for label in names if label not in owned]
+    if owned and spare:
+        line = f"{_either(owned)} is on file; more cover under it, or {_either(spare)}, closes it."
+    elif owned:
+        line = f"{_either(owned)} is on file; more cover under it closes it."
+    else:
+        line = f"{_either(names)} closes it, and none is on file."
+    return line[:1].upper() + line[1:]
+
+
 def _max_sentences(installed: InstalledPack | None) -> int:
     """The answering pack's limit when one is in play, else the core catalogue's (ADR 0017)."""
     answering = installed.manifest.answering if installed else catalog().documents.answering
@@ -1154,24 +1181,13 @@ class AnswerGraph:
         found: list[str] = []
         missing: list[str] = []
         short = False
-        for shape_id in review.shapes:
-            result = adviser.calculate(
-                installed,
-                by_id[shape_id],
-                person_ids=subject.person_ids,
-                subject=subject.name,
-                today=today,
-            )
-            if isinstance(result, Calculation):
-                rows.append((result.label, result.verdict_text))
-                found.append(result.verdict_text)
-                inputs.update((item.ref, item) for item in result.inputs if item.ref not in inputs)
-                figures.extend(result.figures)
-                short = short or result.verdict == "short"
-            else:
-                rows.append((result.label, "Not checked yet. Needed: " + " ".join(result.items)))
-                missing.extend(result.items)
+        # What the household holds, read once before the shapes run: a short verdict names the
+        # cover that closes it, and the `holds` rows below say what is on file. Both are the same
+        # reading of the same documents, so reading it twice could disagree with itself.
         categories = installed.manifest.answering.categories
+        labels: dict[str, str] = {}
+        held: set[str] = set()
+        on_file: list[Holding] = []
         if self._inventory is not None and categories is not None:
             on_file = self._inventory.holdings([installed])
             if self._household is not None:
@@ -1182,6 +1198,27 @@ class AnswerGraph:
                 on_file = [h for h in on_file if str(h.document_id) in kept]
             held = {h.category.id for h in on_file if h.category}
             labels = {rule.id: rule.label for rule in categories.rules}
+        for shape_id in review.shapes:
+            result = adviser.calculate(
+                installed,
+                by_id[shape_id],
+                person_ids=subject.person_ids,
+                subject=subject.name,
+                today=today,
+            )
+            if isinstance(result, Calculation):
+                finding = result.verdict_text
+                if result.verdict == "short" and (closes := _closes(by_id[shape_id], labels, held)):
+                    finding = f"{finding} {closes}"
+                rows.append((result.label, finding))
+                found.append(finding)
+                inputs.update((item.ref, item) for item in result.inputs if item.ref not in inputs)
+                figures.extend(result.figures)
+                short = short or result.verdict == "short"
+            else:
+                rows.append((result.label, "Not checked yet. Needed: " + " ".join(result.items)))
+                missing.extend(result.items)
+        if self._inventory is not None and categories is not None:
             for category in review.holds:
                 line = (
                     f"A {labels[category]} is on file."

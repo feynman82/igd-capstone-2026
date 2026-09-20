@@ -34,6 +34,7 @@ from core.graph.answer import (
     Declined,
     Finished,
     Sentence,
+    _closes,
     answer_system,
 )
 from core.graph.scope import Subject
@@ -822,3 +823,44 @@ def test_a_review_with_nothing_calculable_names_everything_missing() -> None:
     assert isinstance(withheld, AdviceWithheld)
     assert withheld.missing == list(MISSING.items)
     assert [record.outcome for record in log.records] == ["withheld"]
+
+
+# ------------------------------------------------------- the cover that closes a gap
+
+
+LABELS = {
+    "term_life": "term life plan",
+    "whole_life": "whole life plan",
+    "critical_illness": "critical illness plan",
+}
+
+
+def _shape(*closed_by: str) -> AdviceShape:
+    raw = advised_pack().manifest.advice
+    assert raw is not None
+    return raw.shapes[0].model_copy(update={"closed_by": list(closed_by)})
+
+
+def test_a_gap_with_nothing_on_file_says_none_is_on_file() -> None:
+    line = _closes(_shape("critical_illness"), LABELS, held=set())
+    assert line == "A critical illness plan closes it, and none is on file."
+
+
+def test_a_gap_in_cover_already_held_asks_for_more_of_it_not_for_a_first_policy() -> None:
+    """Marcus held a critical illness plan on 20 September and was SGD 251,200.00 short of the
+    guideline. "You have no critical illness cover" would be false about a policy he can open."""
+    line = _closes(_shape("critical_illness"), LABELS, held={"critical_illness"})
+    assert line == "A critical illness plan is on file; more cover under it closes it."
+
+
+def test_a_gap_closed_by_two_kinds_names_the_one_held_and_the_one_not() -> None:
+    line = _closes(_shape("term_life", "whole_life"), LABELS, held={"whole_life"})
+    assert line == (
+        "A whole life plan is on file; more cover under it, or a term life plan, closes it."
+    )
+
+
+def test_a_shape_that_names_no_cover_adds_no_sentence() -> None:
+    """`closed_by` is optional in the contract, and a shape without it stays as it was."""
+    assert _closes(_shape(), LABELS, held=set()) == ""
+    assert _closes(_shape("critical_illness"), {}, held=set()) == "", "no categories, no sentence"
