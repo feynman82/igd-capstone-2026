@@ -297,6 +297,11 @@ class AdviceShape(Strict):
     estimate: bool = False
     disadvantages: list[str] = Field(default_factory=list)
     never_say: list[Phrase] = Field(default_factory=list)
+    # The kinds of policy that close this shape's gap, as category ids of this pack's or the
+    # catalogue's `answering.categories`. Named by code on a short verdict, never by the model:
+    # which cover closes a shortfall is a consequence of the arithmetic, not a judgement about
+    # a product. It stays a kind of cover — no pack names an insurer's policy to buy.
+    closed_by: list[Slug] = Field(default_factory=list)
 
 
 class Review(Strict):
@@ -486,6 +491,8 @@ class PackManifest(Strict):
                         f"{where}, fact {fact.role!r}: category {fact.category!r} is not a rule "
                         "id in answering.categories"
                     )
+            if unknown := sorted(set(shape.closed_by) - category_ids):
+                raise ValueError(f"{where}: closed_by {unknown}, which are not category ids")
             self._compares_what_its_documents_declare(shape, value_keys, catalog)
         review = self.advice.review
         if review is not None and (unknown := sorted(set(review.holds) - category_ids)):

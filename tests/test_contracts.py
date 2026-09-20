@@ -371,6 +371,16 @@ def test_advice_naming_an_unknown_category_is_rejected_against_the_catalogue() -
         manifest.check_against(catalog().documents)
 
 
+def test_a_shape_closed_by_an_unknown_category_is_rejected() -> None:
+    """`closed_by` names kinds of cover, so a typo would silently print nothing on a short
+    verdict rather than fail — the gap would be stated with no way to close it."""
+    raw = _advised()
+    raw["advice"]["shapes"][0]["closed_by"] = ["spaceship"]
+    manifest = PackManifest.model_validate(raw)
+    with pytest.raises(ValueError, match=r"closed_by \['spaceship'\]"):
+        manifest.check_against(catalog().documents)
+
+
 def test_advice_reading_a_payslip_field_needs_no_second_pack() -> None:
     """ADR 0017: `FactInput.pack` is gone; a payslip's gross salary is a core fact."""
     assert "pack" not in contracts.FactInput.model_fields
