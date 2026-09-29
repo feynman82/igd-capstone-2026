@@ -21,3 +21,19 @@ ungradeable in the one direction that matters.
 Everyone writes 12 questions for their own area by the end of week 3. It is the one task
 that otherwise bottlenecks on a single person, and it forces each lane to state what
 "correct" means for the thing it built.
+
+`answerable/<lane>-generated.jsonl` is a generated draft of that dozen, one file per lane, so
+that nobody starts from an empty file — see "Generating a lane's dozen" in `eval/README.md`.
+Keep it, edit it or replace it; the generator never overwrites a question written by hand.
+Each register row belongs to exactly one lane, so two lanes never ask the same question:
+
+| Lane | Documents |
+|---|---|
+| E · Desmond | every scanned and photographed document, whatever its type |
+| A · Christian | identity cards, passports, birth certificates, loan agreements |
+| B · Yew Mun | policy schedules |
+| D · Zee | renewal notices, claim letters, benefit illustrations, anniversary statements |
+| C · Siew | payslips, CPF, SRS, notices of assessment, donation receipts |
+
+Identity documents exist only as photographs, and ADR 0017 gave them to the core, so they stay
+with the lane that owns the household rather than with the lane that owns degraded scans.

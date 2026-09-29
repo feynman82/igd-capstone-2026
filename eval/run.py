@@ -61,6 +61,12 @@ SELECT string_agg(c.text, E'\\n' ORDER BY c.ordinal)
    AND c.page = %(page)s
 """
 
+INDEXED_DOCUMENTS = """
+SELECT DISTINCT regexp_replace(original_name, '\\.[^.]+$', '') AS doc_id
+  FROM documents
+ WHERE status = 'indexed'
+"""
+
 INDEXED_FACTS = """
 SELECT regexp_replace(d.original_name, '\\.[^.]+$', '') AS doc_id,
        f.key,
@@ -94,6 +100,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         choices=["cross-encoder", "none"],
         default="cross-encoder",
         help="none is the stopgap that keeps retrieval's order",
+    )
+    parser.add_argument(
+        "--score-missing",
+        action="store_true",
+        help="score a question whose document is not in the vault, instead of skipping it",
     )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
@@ -148,6 +159,15 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         with connect(settings) as conn:
+            questions, waiting = _partition(conn, questions, score_missing=args.score_missing)
+            if waiting:
+                print(
+                    f"skipping {len(waiting)} question(s) whose document is not in the vault "
+                    f"(the register runs ahead of the batch; --score-missing includes them)"
+                )
+            if not questions:
+                print("Nothing left to run: no question's document is indexed.")
+                return 2
             graph, recorder = harness.build(
                 conn,
                 settings,
@@ -198,6 +218,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "candidates": args.candidates,
             "keep": args.keep,
             "runtime_numbers_from": runtime_source,
+            "skipped_no_document": waiting,
         },
         "metrics": metrics,
         "not_measured": why,
@@ -252,6 +273,26 @@ def _progress(trace: Any) -> None:
     from eval.score import outcome_of
 
     print(f"  {trace.question.id:<8} {outcome_of(trace.answer):<16} {trace.latency_ms:>6} ms")
+
+
+def _partition(
+    conn: Any, questions: list[Any], *, score_missing: bool
+) -> tuple[list[Any], list[str]]:
+    """The questions worth running, and the ids of those whose document is not in the vault.
+
+    Golden questions are written from the register, which is complete and runs ahead of the
+    mail-merged batch. A question about a document nobody has generated yet is not wrong — it is
+    not yet answerable — and scoring it as a retrieval failure would say the retriever is worse
+    than it is. It is skipped and counted, in the result file as well as on the terminal.
+    An abstention question cites no document and is always runnable.
+    """
+    with conn.cursor() as cur:
+        cur.execute(INDEXED_DOCUMENTS)
+        indexed = {str(row[0]) for row in cur.fetchall()}
+    waiting = [q.id for q in questions if q.must_cite_doc and q.must_cite_doc not in indexed]
+    if score_missing:
+        return questions, []
+    return [q for q in questions if q.id not in set(waiting)], waiting
 
 
 def _page_text(conn: Any, doc_id: str, page: int) -> str:
