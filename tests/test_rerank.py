@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -76,6 +78,69 @@ def test_an_ollama_tag_for_the_reranker_is_refused_with_the_reason(tmp_path: Pat
     assert settings.rerank_model == "BAAI/bge-reranker-v2-m3"
     with pytest.raises(ConfigurationError, match=r"adr/0018"):
         Settings.load(tmp_path, {"PARROT_RERANK_MODEL": "hf.co/gpustack/bge-reranker-v2-m3-GGUF"})
+
+
+class FakeEncoded(dict[str, Any]):
+    def to(self, device: str) -> FakeEncoded:
+        return self
+
+
+class FakeTokenizer:
+    """Tokenises on whitespace, which is enough to decide what reached the limit."""
+
+    def __call__(self, questions: list[str], passages: list[str], **kwargs: Any) -> FakeEncoded:
+        import torch
+
+        cap = int(kwargs["max_length"])
+        lengths = [
+            min(len((q + " " + p).split()), cap) for q, p in zip(questions, passages, strict=True)
+        ]
+        width = max(lengths)
+        mask = torch.zeros(len(lengths), width, dtype=torch.long)
+        for row, length in enumerate(lengths):
+            mask[row, :length] = 1
+        return FakeEncoded(attention_mask=mask)
+
+
+class FakeModel:
+    def __call__(self, **encoded: Any) -> Any:
+        import torch
+
+        rows = int(encoded["attention_mask"].shape[0])
+        return type("Out", (), {"logits": torch.zeros(rows, 1)})()
+
+
+@pytest.fixture
+def no_weights(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The gate must pass on a machine that has never downloaded the model."""
+    monkeypatch.setattr(rerank, "load", lambda name: (FakeTokenizer(), FakeModel(), "cpu"))
+    monkeypatch.setattr(rerank, "_warned", False)
+
+
+def test_a_truncated_passage_is_said_out_loud(
+    no_weights: None, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A passage cut at the cap is scored on its first part only. That is how a quiet recall
+    loss starts, so it is logged rather than discovered by bisecting an evaluation run."""
+    monkeypatch.setattr(rerank, "MAX_LENGTH", 16)
+    long_enough = " ".join(["clause"] * 400)
+    with caplog.at_level(logging.WARNING, logger="core.retrieve.rerank"):
+        scores = rerank.score_pairs(rerank.DEFAULT_MODEL, "what is the excess", [long_enough])
+    assert len(scores) == 1  # it still scores; it just says what it did
+    assert "reached the 16-token limit" in caplog.text
+    # Once per process, so a forty-passage run does not print forty lines.
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger="core.retrieve.rerank"):
+        rerank.score_pairs(rerank.DEFAULT_MODEL, "what is the excess", [long_enough])
+    assert not caplog.text
+
+
+def test_a_passage_within_the_limit_says_nothing(
+    no_weights: None, caplog: pytest.LogCaptureFixture
+) -> None:
+    with caplog.at_level(logging.WARNING, logger="core.retrieve.rerank"):
+        rerank.score_pairs(rerank.DEFAULT_MODEL, "what is the excess", ["Excess: SGD 750.00"])
+    assert not caplog.text
 
 
 LIVE = os.environ.get("PARROT_LIVE_TESTS") == "1"

@@ -29,7 +29,15 @@ from core.runtime.ollama import ModelUnavailable
 log = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "BAAI/bge-reranker-v2-m3"
-MAX_LENGTH = 512  # tokens per question+passage pair; a chunk is well under this
+# Tokens per question+passage pair. The model itself takes 8192; the cap exists to bound the
+# cost of forty pairs, not for the model's sake. Measured on this corpus on 29 September: every
+# chunk is under 300 tokens, padding is dynamic, and 512 against 1024 made no difference at all
+# (0.27s for forty either way) because the batch is padded to its longest member, not to the cap.
+# A cap only costs something when a passage actually reaches it, and then it is buying silence:
+# the reranker would score the first half of a dense policy page and never see the table at the
+# end. 1024 is three times the largest chunk the corpus has produced, and `score_pairs` says so
+# out loud when anything reaches it.
+MAX_LENGTH = 1024
 BATCH = 16
 
 _lock = threading.Lock()
@@ -84,6 +92,7 @@ def score_pairs(model_name: str, question: str, texts: list[str]) -> list[float]
 
     tokenizer, model, device = load(model_name)
     scores: list[float] = []
+    truncated = 0
     with torch.no_grad():
         for start in range(0, len(texts), BATCH):
             batch = texts[start : start + BATCH]
@@ -95,9 +104,33 @@ def score_pairs(model_name: str, question: str, texts: list[str]) -> list[float]
                 max_length=MAX_LENGTH,
                 return_tensors="pt",
             ).to(device)
+            truncated += int((encoded["attention_mask"].sum(dim=1) >= MAX_LENGTH).sum())
             logits = model(**encoded).logits.view(-1).float().cpu()
             scores.extend(float(value) for value in logits.tolist())
+    if truncated:
+        _warn_once(truncated, len(texts))
     return scores
+
+
+_warned = False
+
+
+def _warn_once(truncated: int, total: int) -> None:
+    """Say it, once per process. A passage cut at the cap is scored on its first part only, and
+    the end of a schedule is where the table is — so this is the shape a quiet recall loss takes,
+    and it should never be discovered by bisecting an evaluation run."""
+    global _warned
+    if _warned:
+        return
+    _warned = True
+    log.warning(
+        "reranker: %d of %d passages reached the %d-token limit and were scored on their first "
+        "part only. Raise MAX_LENGTH in core/retrieve/rerank.py or chunk smaller; the model "
+        "itself takes 8192.",
+        truncated,
+        total,
+        MAX_LENGTH,
+    )
 
 
 def passage_text(passage: Passage) -> str:
