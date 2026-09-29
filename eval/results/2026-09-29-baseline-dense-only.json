@@ -1,8 +1,8 @@
 {
   "run": {
-    "date": "2026-09-29T10:46:53+00:00",
+    "date": "2026-09-29T11:11:21+00:00",
     "label": "baseline-dense-only",
-    "git_sha": "14eec2f",
+    "git_sha": "3a3b417",
     "corpus_manifest_sha": "85125383437d5222",
     "sets": [
       "A",
@@ -78,9 +78,9 @@
   "metrics": {
     "context_recall": 0.8947,
     "context_precision": 0.8675,
-    "faithfulness": 0.7731,
-    "answer_relevancy": 0.753,
-    "abstention_rate": 0.56,
+    "faithfulness": 0.8186,
+    "answer_relevancy": 0.7654,
+    "abstention_rate": 0.76,
     "extraction_f1": 0.898,
     "obligation_precision": null,
     "alert_fpr": null,
@@ -97,15 +97,22 @@
       "B": 25,
       "C": 0
     },
-    "answered_rate_a": 0.9474,
+    "answered_rate_a": 0.8947,
     "fact_accuracy": 0.8421,
     "citation_hit": 1.0,
     "page_shown": 1.0,
-    "abstention_precision": 0.9333,
-    "said_not_on_file_b": 0.2,
+    "abstention_precision": 0.9048,
+    "abstention_b": {
+      "at_the_gate": 9,
+      "said_nothing_of_its_own": 8,
+      "declined_in_prose": 2,
+      "claimed": 6
+    },
+    "abstention_rate_by_flag": 0.56,
+    "said_not_on_file_b": 0.08,
     "refusal_rate_c": null,
     "held_back_rate_c": null,
-    "median_latency_ms": 2823,
+    "median_latency_ms": 2837,
     "extraction_by_doc_type": {
       "policy_schedule": {
         "tp": 44,
@@ -124,7 +131,7 @@
       "lane": "retrieval",
       "kind": "fact",
       "outcome": "answered",
-      "says_not_on_file": true,
+      "says_not_on_file": false,
       "correct": false,
       "cited": true,
       "shown": true,
@@ -146,12 +153,10 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 2495,
+      "latency_ms": 2498,
       "answer": "None of the 6 policies on file is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0003.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1]",
       "context_recall": 1.0,
-      "context_precision": 0.9999999999,
-      "faithfulness": 0.0,
-      "answer_relevancy": 0.5422040785760273
+      "context_precision": 0.9999999999
     },
     {
       "id": "a-b02",
@@ -176,7 +181,7 @@
       "citations": [
         "b1-0001.pdf, page 1"
       ],
-      "latency_ms": 4482,
+      "latency_ms": 4579,
       "answer": "The premium on policy MV-2026-448120 is SGD 1,284.00,. [b1-0001.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -210,7 +215,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 2518,
+      "latency_ms": 2639,
       "answer": "None of the 5 policies on file for Marcus Lim is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.7499999999625
@@ -238,7 +243,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 2464,
+      "latency_ms": 2529,
       "answer": "On file for Marcus Lim: Meridian Assurance, HomeShelter Contents Policy (policy no HM-2024-559013; cover from 2026-02-01; expiry date 2027-01-31). [b1-0002.pdf, page 1] Your home contents policy is insured for S$40,000.00. [b1-0002.pdf, page 1]",
       "context_recall": 0.0,
       "context_precision": 0.9999999999,
@@ -268,7 +273,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 2934,
+      "latency_ms": 2967,
       "answer": "Meridian Assurance issued policy HM-2024-559013. [b1-0002.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -298,7 +303,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 2499,
+      "latency_ms": 2487,
       "answer": "On file for Marcus Lim Jun Wei: Meridian Assurance, HomeShelter Contents Policy (policy no HM-2024-559013; cover from 2026-02-01; expiry date 2027-01-31). [b1-0002.pdf, page 1] Cover under the HomeShelter Contents Policy started on 1 February 2026. [b1-0002.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -323,7 +328,7 @@
       "citations": [
         "b1-0003.pdf, page 1"
       ],
-      "latency_ms": 4601,
+      "latency_ms": 4578,
       "answer": "On file for Marcus Lim Jun Wei: Lionhead Life Assurance, Hospital Income Protection Plan (policy no HS-2023-771904; cover from 2026-01-15; expiry date 2027-01-14). [b1-0003.pdf, page 1] The annual premium for Lim Ah Kow's Hospital Income Protection Plan is S$2,140.00, as per the policy schedule (b1-0003.pdf, page 1). [b1-0003.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -353,7 +358,7 @@
       "citations": [
         "b1-0003.pdf, page 1"
       ],
-      "latency_ms": 2823,
+      "latency_ms": 2837,
       "answer": "Policy HS-2023-771904 runs out on 14 January 2027. [b1-0003.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -383,7 +388,7 @@
       "citations": [
         "b1-0031.pdf, page 1"
       ],
-      "latency_ms": 2451,
+      "latency_ms": 2478,
       "answer": "On file for Marcus Lim Jun Wei: Lionhead Life Assurance, Participating Whole Life Insurance (policy no LF-2015-330277; cover from 2015-06-01). [b1-0031.pdf, page 1] The whole life plan matures on 07 May 2087. [b1-0031.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.99999999995,
@@ -413,7 +418,7 @@
       "citations": [
         "b1-0031.pdf, page 1"
       ],
-      "latency_ms": 3886,
+      "latency_ms": 3949,
       "answer": "On file for Marcus Lim Jun Wei: Lionhead Life Assurance, Participating Whole Life Insurance (policy no LF-2015-330277; cover from 2015-06-01). [b1-0031.pdf, page 1] The sum assured on the Heritage Whole Life Plan is SGD 300,000.00. [b1-0031.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.6999999999766667,
@@ -443,7 +448,7 @@
       "citations": [
         "b1-0032.pdf, page 1"
       ],
-      "latency_ms": 3598,
+      "latency_ms": 3701,
       "answer": "On file for Marcus Lim: MERIDIAN ASSURANCE, PrivateCare Hospital and Surgical Plan (policy no PH-2022-604188; cover from 2026-03-01; expiry date 2027-02-28). [b1-0032.pdf, page 1] The excess on your hospital and surgical plan is SGD 3,500.00 as per the deductible clause in the policy schedule. [b1-0032.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.4499999999775,
@@ -473,7 +478,7 @@
       "citations": [
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 3330,
+      "latency_ms": 3394,
       "answer": "On file for Marcus Lim Jun Wei: LIONHEAD LIFE ASSURANCE, 30-Year Term Critical Illness Insurance (policy no CI-2019-215736; cover from 2019-09-01; expiry date 2049-08-31). [b1-0033.pdf, page 1] The critical illness plan CI-2019-215736 is in force until 31 August 2049. [b1-0033.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -503,7 +508,7 @@
       "citations": [
         "b1-0001.pdf, page 1"
       ],
-      "latency_ms": 2742,
+      "latency_ms": 2759,
       "answer": "The product is Comprehensive Cover,. [b1-0001.pdf, page 1]",
       "context_recall": 0.0,
       "context_precision": 0.9999999999,
@@ -533,7 +538,7 @@
       "citations": [
         "b1-0001.pdf, page 1"
       ],
-      "latency_ms": 4489,
+      "latency_ms": 4533,
       "answer": "The sum insured under policy MV-2026-448120 is SGD 62,000.00. [b1-0001.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.7499999999625,
@@ -593,7 +598,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 2451,
+      "latency_ms": 2536,
       "answer": "On file for Marcus Lim Jun Wei: Meridian Assurance, HomeShelter Contents Policy (policy no HM-2024-559013; cover from 2026-02-01; expiry date 2027-01-31). [b1-0002.pdf, page 1] The insured on the HomeShelter Contents Policy is Marcus Lim Jun Wei. [b1-0002.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.7499999999625,
@@ -623,7 +628,7 @@
       "citations": [
         "b1-0003.pdf, page 1"
       ],
-      "latency_ms": 4312,
+      "latency_ms": 4408,
       "answer": "The excess on policy HS-2023-771904 is S$1,500.00 from clause COVERAGE DETAILS in document. [b1-0003.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -653,7 +658,7 @@
       "citations": [
         "b1-0031.pdf, page 1"
       ],
-      "latency_ms": 4048,
+      "latency_ms": 4183,
       "answer": "On file for Marcus Lim Jun Wei: Lionhead Life Assurance, Participating Whole Life Insurance (policy no LF-2015-330277; cover from 2015-06-01). [b1-0031.pdf, page 1] The premium on the Heritage Whole Life Plan is SGD 3,600.00,. [b1-0031.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.249999999975,
@@ -683,7 +688,7 @@
       "citations": [
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 3222,
+      "latency_ms": 3305,
       "answer": "The sum insured under policy CI-2019-215736 is SGD 200,000.00. [b1-0033.pdf, page 1]",
       "context_recall": 1.0,
       "context_precision": 0.9999999999,
@@ -696,7 +701,7 @@
       "lane": "retrieval",
       "kind": "abstain",
       "outcome": "answered",
-      "says_not_on_file": true,
+      "says_not_on_file": false,
       "correct": null,
       "cited": null,
       "shown": null,
@@ -717,7 +722,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 1084,
+      "latency_ms": 1114,
       "answer": "None of the 5 policies on file for Marcus Lim is a travel policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1]"
     },
     {
@@ -741,7 +746,7 @@
         "document:30"
       ],
       "citations": [],
-      "latency_ms": 3185,
+      "latency_ms": 3308,
       "answer": "I can't answer that from your documents: nothing in the answer could be traced to a document."
     },
     {
@@ -771,7 +776,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 2681,
+      "latency_ms": 2762,
       "answer": "None of the 5 policies on file for Marcus Lim is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1] You did not make a claim on the car last year as the policy period was from 12 April 2026 to 11 April 2027 and no claim is recorded in the documents. [b1-0001.pdf, page 1]"
     },
     {
@@ -802,7 +807,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 3469,
+      "latency_ms": 3520,
       "answer": "None of the 6 policies on file is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0003.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1]"
     },
     {
@@ -826,7 +831,7 @@
         "document:48"
       ],
       "citations": [],
-      "latency_ms": 1058,
+      "latency_ms": 1057,
       "answer": "I can't answer that from your documents: the closest document is not close enough (best match 0.25, this pack answers above 0.45)."
     },
     {
@@ -857,7 +862,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 2180,
+      "latency_ms": 2211,
       "answer": "None of the 6 policies on file is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0003.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1] The named driver on the car policy is Marcus Lim Jun Wei. [b1-0001.pdf, page 1]"
     },
     {
@@ -883,7 +888,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 1832,
+      "latency_ms": 1840,
       "answer": "On file for Marcus Lim Jun Wei: Meridian Assurance, HomeShelter Contents Policy (policy no HM-2024-559013; cover from 2026-02-01; expiry date 2027-01-31). [b1-0002.pdf, page 1]"
     },
     {
@@ -910,7 +915,7 @@
         "b1-0003.pdf, page 1",
         "b1-0032.pdf, page 1"
       ],
-      "latency_ms": 2599,
+      "latency_ms": 2665,
       "answer": "On file for Lim Ah Kow: Lionhead Life Assurance, Hospital Income Protection Plan (policy no HS-2023-771904; cover from 2026-01-15; expiry date 2027-01-14). [b1-0003.pdf, page 1] On file for Marcus Lim Jun Wei: MERIDIAN ASSURANCE, PrivateCare Hospital and Surgical Plan (policy no PH-2022-604188; cover from 2026-03-01; expiry date 2027-02-28). [b1-0032.pdf, page 1] The excess on Marcus's hospital income plan is SGD 1,500.00. [b1-0003.pdf, page 1]"
     },
     {
@@ -936,7 +941,7 @@
       "citations": [
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 2879,
+      "latency_ms": 2939,
       "answer": "On file for Marcus Lim: LIONHEAD LIFE ASSURANCE, 30-Year Term Critical Illness Insurance (policy no CI-2019-215736; cover from 2019-09-01; expiry date 2049-08-31). [b1-0033.pdf, page 1]"
     },
     {
@@ -960,7 +965,7 @@
         "document:28"
       ],
       "citations": [],
-      "latency_ms": 3617,
+      "latency_ms": 3713,
       "answer": "I can't answer that from your documents: nothing in the answer could be traced to a document."
     },
     {
@@ -984,7 +989,7 @@
         "document:44"
       ],
       "citations": [],
-      "latency_ms": 2987,
+      "latency_ms": 3012,
       "answer": "I can't answer that from your documents: nothing in the answer could be traced to a document."
     },
     {
@@ -993,7 +998,7 @@
       "lane": "retrieval",
       "kind": "abstain",
       "outcome": "answered",
-      "says_not_on_file": true,
+      "says_not_on_file": false,
       "correct": null,
       "cited": null,
       "shown": null,
@@ -1014,7 +1019,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 1117,
+      "latency_ms": 1133,
       "answer": "None of the 5 policies on file for Marcus Lim is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1]"
     },
     {
@@ -1045,7 +1050,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 2330,
+      "latency_ms": 2357,
       "answer": "None of the 6 policies on file is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0003.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1] The chassis number of the insured vehicle is not listed in the provided passages. [b1-0001.pdf, page 1]"
     },
     {
@@ -1069,7 +1074,7 @@
         "document:54"
       ],
       "citations": [],
-      "latency_ms": 1403,
+      "latency_ms": 1419,
       "answer": "I can't answer that from your documents: the closest document is not close enough (best match 0.40, this pack answers above 0.45)."
     },
     {
@@ -1078,7 +1083,7 @@
       "lane": "retrieval",
       "kind": "abstain",
       "outcome": "answered",
-      "says_not_on_file": true,
+      "says_not_on_file": false,
       "correct": null,
       "cited": null,
       "shown": null,
@@ -1100,7 +1105,7 @@
         "b1-0032.pdf, page 1",
         "b1-0033.pdf, page 1"
       ],
-      "latency_ms": 1107,
+      "latency_ms": 1120,
       "answer": "None of the 6 policies on file is a car or motor policy. [b1-0001.pdf, page 1; b1-0002.pdf, page 1; b1-0003.pdf, page 1; b1-0031.pdf, page 1; b1-0032.pdf, page 1; b1-0033.pdf, page 1]"
     },
     {
@@ -1126,7 +1131,7 @@
       "citations": [
         "b1-0032.pdf, page 1"
       ],
-      "latency_ms": 5963,
+      "latency_ms": 6002,
       "answer": "On file for Marcus Lim: MERIDIAN ASSURANCE, PrivateCare Hospital and Surgical Plan (policy no PH-2022-604188; cover from 2026-03-01; expiry date 2027-02-28). [b1-0032.pdf, page 1] Your policy inception date is 01 March 2022, and your hospital claim from March 2026 is within the policy period. [b1-0032.pdf, page 1] Your deductible is SGD 3,500.00 and co-insurance rate is 10% up to SGD 3,000.00 annual cap. [b1-0032.pdf, page 1] You must submit the claim form within 30 days of discharge with hospital bills and discharge summary. [b1-0032.pdf, page 1] Your policy is on file with insurer MERIDIAN ASSURANCE, policy no: PH-2022-604188, insured: Marcus Lim Jun Wei, cover from: 2026-03-01, expiry date: 2027-02-28. [b1-0032.pdf, page 1]"
     },
     {
@@ -1150,7 +1155,7 @@
         "document:41"
       ],
       "citations": [],
-      "latency_ms": 1395,
+      "latency_ms": 1414,
       "answer": "I can't answer that from your documents: the closest document is not close enough (best match 0.26, this pack answers above 0.45)."
     },
     {
@@ -1174,7 +1179,7 @@
         "document:47"
       ],
       "citations": [],
-      "latency_ms": 1064,
+      "latency_ms": 1070,
       "answer": "I can't answer that from your documents: the closest document is not close enough (best match 0.31, this pack answers above 0.45)."
     },
     {
@@ -1198,7 +1203,7 @@
         "document:56"
       ],
       "citations": [],
-      "latency_ms": 1117,
+      "latency_ms": 1113,
       "answer": "I can't answer that from your documents: the closest document is not close enough (best match 0.22, this pack answers above 0.45)."
     },
     {
@@ -1225,7 +1230,7 @@
         "b1-0031.pdf, page 1",
         "b1-0031.pdf, page 2"
       ],
-      "latency_ms": 5759,
+      "latency_ms": 5903,
       "answer": "On file for Marcus Lim Jun Wei: Lionhead Life Assurance, Participating Whole Life Insurance (policy no LF-2015-330277; cover from 2015-06-01). [b1-0031.pdf, page 1] The reversionary bonus is not guaranteed and depends on fund performance, as per Participating Fund Bonus Clause. [b1-0031.pdf, page 1] The surrender value at policy year 30 includes accumulated bonuses, but the exact reversionary bonus amount is not itemized. [b1-0031.pdf, page 2] The policy was issued on 01 June 2015 and is for the whole of life, with maturity on 07 May 2087,. [b1-0031.pdf, page 1] The Sum Assured is SGD 300,000.00, as defined. [b1-0031.pdf, page 1] The policy is on file with Lionhead Life Assurance, policy no. LF-2015-330277,. [b1-0031.pdf, page 1]"
     },
     {
@@ -1252,7 +1257,7 @@
         "b1-0003.pdf, page 1",
         "b1-0032.pdf, page 1"
       ],
-      "latency_ms": 3192,
+      "latency_ms": 3306,
       "answer": "On file for Lim Ah Kow: Lionhead Life Assurance, Hospital Income Protection Plan (policy no HS-2023-771904; cover from 2026-01-15; expiry date 2027-01-14). [b1-0003.pdf, page 1] On file for Marcus Lim Jun Wei: MERIDIAN ASSURANCE, PrivateCare Hospital and Surgical Plan (policy no PH-2022-604188; cover from 2026-03-01; expiry date 2027-02-28). [b1-0032.pdf, page 1]"
     },
     {
@@ -1276,7 +1281,7 @@
         "document:47"
       ],
       "citations": [],
-      "latency_ms": 1079,
+      "latency_ms": 1108,
       "answer": "I can't answer that from your documents: Parrot does not know who your daughter is yet. When a document names them, say who they are on the Household page, and questions about your daughter will be answered from their documents."
     },
     {
@@ -1302,7 +1307,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 2905,
+      "latency_ms": 2951,
       "answer": "On file for Marcus Lim Jun Wei: Meridian Assurance, HomeShelter Contents Policy (policy no HM-2024-559013; cover from 2026-02-01; expiry date 2027-01-31). [b1-0002.pdf, page 1]"
     },
     {
@@ -1328,7 +1333,7 @@
       "citations": [
         "b1-0032.pdf, page 1"
       ],
-      "latency_ms": 2825,
+      "latency_ms": 2925,
       "answer": "You have used SGD 3,500.00 of the SGD 3,500.00 deductible this policy year, as per the deductible clause and policy schedule. [b1-0032.pdf, page 1]"
     },
     {
@@ -1354,7 +1359,7 @@
       "citations": [
         "b1-0002.pdf, page 1"
       ],
-      "latency_ms": 5462,
+      "latency_ms": 5661,
       "answer": "On file for Marcus Lim: Meridian Assurance, HomeShelter Contents Policy (policy no HM-2024-559013; cover from 2026-02-01; expiry date 2027-01-31). [b1-0002.pdf, page 1] You have a HomeShelter Contents Policy for 2027,. [b1-0002.pdf, page 1] The policy is scheduled from 1 February 2026 to 31 January 2027,. [b1-0002.pdf, page 1] The policy number is HM-2024-559013,. [b1-0002.pdf, page 1] The premium is S$268.00,. [b1-0002.pdf, page 1] The sum insured is S$40,000.00,. [b1-0002.pdf, page 1] The policy is in effect for the 2027 period,. [b1-0002.pdf, page 1]"
     }
   ]

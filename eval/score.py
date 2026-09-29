@@ -50,39 +50,79 @@ JUDGED = ("context_recall", "context_precision", "faithfulness", "answer_relevan
 # ------------------------------------------------------------------------------- what counts
 
 
+NOT_ON_FILE = re.compile(
+    r"\b(none|not|no|never)\b[^.]{0,60}\b(listed|stated|specified|provided|itemi[sz]ed|"
+    r"mentioned|printed|contain|contains|include|includes|on file|in the (provided )?documents?)\b",
+    re.IGNORECASE,
+)
+# The two lines the code writes rather than the model: the inventory naming what is on file, and
+# the inventory naming that nothing of the kind asked about is. Neither is a claim about the
+# question. They are matched by shape rather than by wording so that a prose decline written by
+# the model — which the generic pattern above also matches — stays a separate category.
+ON_FILE_LINE = re.compile(r"^On file for ", re.IGNORECASE)
+ABSENCE_LINE = re.compile(r"^None of the \d+ \w+ on file\b", re.IGNORECASE)
+
+
+def _written_by_code(sentence: str) -> bool:
+    return bool(ON_FILE_LINE.match(sentence) or ABSENCE_LINE.match(sentence))
+
+
+def _sentences(answer: Answer) -> list[str]:
+    """What the answer said, one gated sentence at a time. A terminal joins them; the metrics
+    need them apart, because one claim among five declines is still a claim."""
+    said = [claim.text for claim in answer.claims] or [answer.text]
+    return [sentence.strip() for sentence in said if sentence.strip()]
+
+
+def inventory_only(answer: Answer) -> bool:
+    """Every sentence is a line the code wrote about the vault, and none is about the question.
+
+    "On file for Marcus Lim: HomeShelter Contents Policy …" and "None of the 6 policies on file
+    is a car policy" are the inventory describing itself. An answer made only of those has
+    declined, whatever flag it carries.
+    """
+    said = _sentences(answer)
+    return bool(said) and all(_written_by_code(sentence) for sentence in said)
+
+
+def declined_in_prose(answer: Answer) -> bool:
+    """The model itself saying the documents do not carry it — "the chassis number is not listed
+    in the provided passages" — rather than the gate stopping it. Counted apart from the
+    inventory lines so the two can be argued about separately."""
+    said = [s for s in _sentences(answer) if not _written_by_code(s)]
+    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+
+
 def held_back(answer: Answer) -> bool:
-    """Did the system decline to answer? Abstaining, declining advice, withholding it, asking
-    for consent, refusing, and saying only what is on file all count: none of them is a claim
-    about the question that the documents did not support."""
-    return not answer.grounded or answer.unanswered
+    """Did the system decline to answer?
+
+    Decided from **what the answer says**, not from the flag it carries. `Answer.unanswered` is
+    the product's own record of having said nothing of its own, and one path through the graph
+    forgets to set it (issue #16) — so an answer that declined correctly was being counted as a
+    claim. A metric that moves when that flag is fixed, with no change in behaviour, would make
+    run 2's delta bookkeeping rather than a finding; `also.abstention_rate_by_flag` keeps the
+    old reading so the difference between the two is visible rather than quietly applied.
+
+    Abstaining, refusing, declining advice, withholding it and asking for consent are all the
+    gate. Saying only what the vault holds, or only that it does not hold it, is the answer.
+    """
+    return (
+        not answer.grounded
+        or answer.unanswered
+        or inventory_only(answer)
+        or declined_in_prose(answer)
+    )
 
 
 def refused(answer: Answer) -> bool:
     return answer.refused or answer.declined
 
 
-NOT_ON_FILE = re.compile(
-    r"\b(none|not|no|never)\b[^.]{0,60}\b(listed|stated|specified|provided|itemi[sz]ed|"
-    r"mentioned|printed|contain|contains|include|includes|on file|in the (provided )?documents?)\b",
-    re.IGNORECASE,
-)
-# The inventory's own line naming a document on file ("On file for Marcus Lim: …") is neither a
-# claim about the question nor a decline; it is skipped when deciding what an answer said.
-ON_FILE_LINE = re.compile(r"^On file for ", re.IGNORECASE)
-
-
 def says_not_on_file(answer: Answer) -> bool:
-    """A grounded answer whose sentences say, in words, that the documents do not state it.
-
-    That is an honest decline written by the model rather than by the gate — "the chassis
-    number is not listed in the provided documents" — and it is reported beside the strict
-    abstention rate rather than folded into it, so the two can be argued about separately.
-    """
-    if held_back(answer):
-        return False
-    sentences = [claim.text for claim in answer.claims] or [answer.text]
-    said = [s for s in sentences if s.strip() and not ON_FILE_LINE.match(s.strip())]
-    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+    """A grounded answer that declined in prose rather than at the gate. Kept as its own number
+    because "the documents do not say" written by a 4B model is a weaker promise than the gate
+    refusing to let it speak."""
+    return not (not answer.grounded or answer.unanswered) and declined_in_prose(answer)
 
 
 # ------------------------------------------------------------------------------- value matching
@@ -501,6 +541,20 @@ def summarise(
             None
             if abstentions == 0 or not b
             else round(sum(held_back(i.trace.answer) for i in b) / abstentions, 4)
+        ),
+        # How the 0.95 target is actually being met or missed, one question in exactly one row.
+        "abstention_b": {
+            "at_the_gate": sum(not i.trace.answer.grounded for i in b),
+            "said_nothing_of_its_own": sum(
+                i.trace.answer.grounded and inventory_only(i.trace.answer) for i in b
+            ),
+            "declined_in_prose": sum(says_not_on_file(i.trace.answer) for i in b),
+            "claimed": sum(not held_back(i.trace.answer) for i in b),
+        },
+        # What `abstention_rate` would read if it trusted `Answer.unanswered` (issue #16). The
+        # gap between the two is the flag, not the system; when #16 lands they converge.
+        "abstention_rate_by_flag": _rate(
+            [not i.trace.answer.grounded or i.trace.answer.unanswered for i in b]
         ),
         "said_not_on_file_b": _rate([says_not_on_file(i.trace.answer) for i in b]),
         "refusal_rate_c": _rate([refused(i.trace.answer) for i in c]),
