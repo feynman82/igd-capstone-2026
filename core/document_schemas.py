@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -252,6 +253,53 @@ class NoticeOfAssessment(BaseModel):
     payment_due_date: date = Field(description="Date the notice requires payment by, as printed")
 
 
+class CpfTopupReceipt(BaseModel):
+    """CPF acknowledgement of a cash top-up to a member's Special, Retirement or MediSave Account under
+    the Retirement Sum Topping-Up scheme.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    member: str = Field(
+        description="Name of the person who made the top-up, printed as the giver or payer",
+    )
+    recipient: str = Field(
+        description="Name of the CPF member whose account received the top-up, as printed",
+    )
+    topup_date: date = Field(
+        description="Date the top-up was received by CPF Board, as printed on the acknowledgement",
+    )
+    topup_amount: Decimal = Field(
+        ge=0,
+        description="Amount of cash topped up as printed on the acknowledgement, in SGD",
+    )
+    account_topped_up: Literal["SA", "RA", "MA"] = Field(
+        description="Account that received the top-up, printed as Special, Retirement or MediSave Account",
+    )
+
+
+class CourseFeeReceipt(BaseModel):
+    """Receipt from a training provider for fees paid for a course, seminar or examination."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    student: str = Field(
+        description="Name of the person who attended the course, as printed on the receipt",
+    )
+    provider: str = Field(
+        description="Name of the training provider or institution from the letterhead",
+    )
+    receipt_no: str = Field(description="The receipt reference exactly as printed, not normalised")
+    payment_date: date = Field(description="Date the fee was paid, as printed on the receipt")
+    course_title: str = Field(
+        description="Title of the course or examination as printed on the receipt",
+    )
+    fee_amount: Decimal = Field(
+        ge=0,
+        description="Total course or examination fee paid as printed, in SGD",
+    )
+
+
 class IdentityCard(BaseModel):
     """Front of a national identity card (NRIC or FIN card) printing an identity number, full name and
     date of birth. Not the card back, which prints only an address, date of issue and postcode.
@@ -340,6 +388,8 @@ MODELS: dict[str, type[BaseModel]] = {
     "cpf_statement": CpfStatement,
     "srs_statement": SrsStatement,
     "notice_of_assessment": NoticeOfAssessment,
+    "cpf_topup_receipt": CpfTopupReceipt,
+    "course_fee_receipt": CourseFeeReceipt,
     "identity_card": IdentityCard,
     "passport": Passport,
     "birth_certificate": BirthCertificate,
@@ -350,6 +400,7 @@ MODELS: dict[str, type[BaseModel]] = {
 FACT_COLUMNS: dict[str, str] = {
     "account_holder": "value_text",
     "account_no": "value_text",
+    "account_topped_up": "value_text",
     "agreement_date": "value_date",
     "annual_premium": "value_num",
     "assessable_income": "value_num",
@@ -360,6 +411,7 @@ FACT_COLUMNS: dict[str, str] = {
     "claim_no": "value_text",
     "claimant": "value_text",
     "contributions_ytd": "value_num",
+    "course_title": "value_text",
     "cover_from": "value_date",
     "cpf_employee": "value_num",
     "date_of_birth": "value_date",
@@ -372,6 +424,7 @@ FACT_COLUMNS: dict[str, str] = {
     "excess": "value_num",
     "expiry_date": "value_date",
     "facility_no": "value_text",
+    "fee_amount": "value_num",
     "full_name": "value_text",
     "gross_salary": "value_num",
     "id_number": "value_text",
@@ -387,24 +440,30 @@ FACT_COLUMNS: dict[str, str] = {
     "ordinary_account_balance": "value_num",
     "passport_no": "value_text",
     "pay_period": "value_text",
+    "payment_date": "value_date",
     "payment_due_date": "value_date",
     "policy_no": "value_text",
     "premium_payable": "value_num",
     "premiums_paid_to_date": "value_num",
     "principal": "value_num",
     "product_name": "value_text",
+    "provider": "value_text",
     "receipt_no": "value_text",
+    "recipient": "value_text",
     "registration_no": "value_text",
     "renewal_premium": "value_num",
     "riders": "value_num",
     "settled_amount": "value_num",
     "statement_date": "value_date",
     "statement_year": "value_num",
+    "student": "value_text",
     "sum_assured": "value_num",
     "sum_insured": "value_num",
     "surrender_value": "value_num",
     "tax_deductible": "value_text",
     "tax_payable": "value_num",
     "taxpayer": "value_text",
+    "topup_amount": "value_num",
+    "topup_date": "value_date",
     "total_contributions": "value_num",
 }

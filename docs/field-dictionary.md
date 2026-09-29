@@ -140,6 +140,31 @@ Notice of Assessment issued by IRAS stating assessed income and tax payable.
 | `tax_payable` | money | yes | `facts.value_num` | Total tax payable as stated on the notice, in SGD |
 | `payment_due_date` | date | yes | `facts.value_date` | Date the notice requires payment by, as printed |
 
+### `cpf_topup_receipt`
+
+CPF acknowledgement of a cash top-up to a member's Special, Retirement or MediSave Account under the Retirement Sum Topping-Up scheme.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `member` | person | yes | `facts.value_text` | Name of the person who made the top-up, printed as the giver or payer |
+| `recipient` | person | yes | `facts.value_text` | Name of the CPF member whose account received the top-up, as printed |
+| `topup_date` | date | yes | `facts.value_date` | Date the top-up was received by CPF Board, as printed on the acknowledgement |
+| `topup_amount` | money | yes | `facts.value_num` | Amount of cash topped up as printed on the acknowledgement, in SGD |
+| `account_topped_up` | enum | yes | `facts.value_text` | Account that received the top-up, printed as Special, Retirement or MediSave Account |
+
+### `course_fee_receipt`
+
+Receipt from a training provider for fees paid for a course, seminar or examination.
+
+| Field | Type | Required | Stored in | Meaning |
+|---|---|---|---|---|
+| `student` | person | yes | `facts.value_text` | Name of the person who attended the course, as printed on the receipt |
+| `provider` | string | yes | `facts.value_text` | Name of the training provider or institution from the letterhead |
+| `receipt_no` | identifier | yes | `facts.value_text` | The receipt reference exactly as printed, not normalised |
+| `payment_date` | date | yes | `facts.value_date` | Date the fee was paid, as printed on the receipt |
+| `course_title` | string | yes | `facts.value_text` | Title of the course or examination as printed on the receipt |
+| `fee_amount` | money | yes | `facts.value_num` | Total course or examination fee paid as printed, in SGD |
+
 ### `identity_card`
 
 Front of a national identity card (NRIC or FIN card) printing an identity number, full name and date of birth. Not the card back, which prints only an address, date of issue and postcode.
