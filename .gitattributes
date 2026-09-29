@@ -27,3 +27,5 @@ team/*/tasks.md                    -diff linguist-generated
 # Grounding text is hashed to decide whether a source changed (core/grounding/corpus.py). A checkout
 # that turned LF into CRLF would look like new text and re-stage every value for review.
 packs/*/grounding/**/*.md          text eol=lf
+*.jpg  binary
+*.pdf  binary
