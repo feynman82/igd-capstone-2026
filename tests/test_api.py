@@ -1983,7 +1983,10 @@ def advising(monkeypatch: pytest.MonkeyPatch) -> InstalledPack:
     from core import registry
     from core.packs import pack
 
-    installed = (_padded(advised_pack()), pack("iras_tax"))
+    # iras_tax advises too since 0.4.0; its advice is removed so it stays the pack that does not.
+    tax = pack("iras_tax")
+    silent = replace(tax, manifest=tax.manifest.model_copy(update={"advice": None}))
+    installed = (_padded(advised_pack()), silent)
     monkeypatch.setattr(registry, "installed_packs", lambda: installed)
     monkeypatch.setattr(routes, "installed_packs", lambda: installed)
     return installed[0]

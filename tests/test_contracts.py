@@ -470,7 +470,7 @@ def test_every_grounding_corpus_declares_its_provenance(sources: Path) -> None:
 
 def test_a_grounding_corpus_travels_inside_its_pack() -> None:
     """A downloaded pack carries its sources, so no corpus is left at the repository root."""
-    assert {p.parent.name for p in _CORPORA} >= {"iras_reliefs_ya2026", "sg_protection_guidance"}
+    assert {p.parent.name for p in _CORPORA} >= {"iras_tax_ya2025_ya2027", "sg_protection_guidance"}
     assert not list(Path("grounding").glob("*/sources.yaml"))
     for pack_yaml in sorted(Path("packs").glob("*/pack.yaml")):
         raw = yaml.safe_load(pack_yaml.read_text(encoding="utf-8"))
