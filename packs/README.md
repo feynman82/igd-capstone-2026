@@ -424,14 +424,14 @@ That is what a pack's `grounding/` folder is for: a small, curated set of offici
 guidance, each source recorded with where it came from and when it was retrieved. It lives
 **inside the pack**, at `packs/<pack_id>/grounding/<corpus_id>/`, so a pack someone
 downloads carries its sources with it. See the two `sources.yaml` files already there, in
-`packs/iras_tax/grounding/iras_reliefs_ya2026/` and
+`packs/iras_tax/grounding/iras_tax_ya2025_ya2027/` and
 `packs/insurance_agent/grounding/sg_protection_guidance/`.
 
 In your pack, you point at it by its id, never by a path:
 
 ```yaml
 grounding:
-  corpus: iras_reliefs_ya2026     # or: null, to answer only from the user's documents
+  corpus: iras_tax_ya2025_ya2027  # or: null, to answer only from the user's documents
   top_k: 6
 ```
 
@@ -470,8 +470,10 @@ packs/<pack_id>/grounding/<corpus_id>/
    keeps the repository small, makes diffs readable, and avoids redistributing a third
    party's file. Keep the original only where the licence plainly allows it.
 3. **Version by what the guidance applies to, not by when you downloaded it.** Tax relief
-   rules change by Year of Assessment, so the corpus id carries it: `iras_reliefs_ya2026`.
-   When YA2027 guidance appears it is a new corpus, not an edit to this one.
+   rules change by Year of Assessment, so the corpus id carries the years it covers:
+   `iras_tax_ya2025_ya2027`. A pack points at one corpus, so each source's `applies_to`
+   names the year it is for. When YA2028 guidance appears it is a new corpus, not an edit
+   to this one.
 4. **Never paraphrase a rule into the corpus.** Index what the publisher wrote. If you find
    yourself summarising, you have moved from grounding into authorship, and the assistant
    will cite your summary as if it were the source.

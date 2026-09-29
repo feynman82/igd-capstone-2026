@@ -327,6 +327,65 @@ document_types:
         description: Date the notice requires payment by, as printed
         example: "2026-06-30"
 
+  # CPF cash top-up relief is claimed by whoever makes the top-up, so the subject is the member
+  # who paid, not the account topped up. Both are printed on the acknowledgement.
+  cpf_topup_receipt:
+    description: CPF acknowledgement of a cash top-up to a member's Special, Retirement or MediSave Account under the Retirement Sum Topping-Up scheme
+    subject_field: member
+    fields:
+      - name: member
+        type: person
+        description: Name of the person who made the top-up, printed as the giver or payer
+        example: Marcus Fernandez
+      - name: recipient
+        type: person
+        description: Name of the CPF member whose account received the top-up, as printed
+        example: Rosa Fernandez
+      - name: topup_date
+        type: date
+        description: Date the top-up was received by CPF Board, as printed on the acknowledgement
+        example: "2026-11-20"
+      - name: topup_amount
+        type: money
+        description: Amount of cash topped up as printed on the acknowledgement, in SGD
+        example: "8000.00"
+      - name: account_topped_up
+        type: enum
+        values: [SA, RA, MA]
+        description: Account that received the top-up, printed as Special, Retirement or MediSave Account
+        example: RA
+
+  # Course Fees Relief lapses from YA2026, so this type grounds YA2025 answers only; kept because
+  # a household still holds these receipts and asks about them.
+  course_fee_receipt:
+    description: Receipt from a training provider for fees paid for a course, seminar or examination
+    subject_field: student
+    fields:
+      - name: student
+        type: person
+        description: Name of the person who attended the course, as printed on the receipt
+        example: Priya Nair
+      - name: provider
+        type: string
+        description: Name of the training provider or institution from the letterhead
+        example: Northshore Institute of Management
+      - name: receipt_no
+        type: identifier
+        description: The receipt reference exactly as printed, not normalised
+        example: NIM-R-2025-00418
+      - name: payment_date
+        type: date
+        description: Date the fee was paid, as printed on the receipt
+        example: "2025-04-07"
+      - name: course_title
+        type: string
+        description: Title of the course or examination as printed on the receipt
+        example: Graduate Diploma in Financial Management
+      - name: fee_amount
+        type: money
+        description: Total course or examination fee paid as printed, in SGD
+        example: "4200.00"
+
   # Identity documents are household data (ADR 0017 decision 6): stored on-device, behind the
   # app lock, and recorded in docs/governance/data-inventory.md. The back of an identity card
   # prints none of these fields and quarantines; there is deliberately no type for it.

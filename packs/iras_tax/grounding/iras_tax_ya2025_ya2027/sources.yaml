@@ -1,0 +1,43 @@
+# Provenance for every file indexed in this corpus. Required before the corpus is used.
+# One corpus for Years of Assessment 2025 to 2027: each document's `applies_to` names its year.
+corpus_id: iras_tax_ya2025_ya2027
+applies_to: Singapore individual income tax, Years of Assessment 2025 to 2027
+maintained_by: Zee
+reviewed_by: Siew
+reviewed_on: null                 # set the date Siew signs off
+
+documents: []
+
+# To capture, verbatim, as one .md per page with a `<!-- source: -->` and `<!-- retrieved: -->`
+# header like packs/insurance_agent/grounding/sg_protection_guidance/. Blocked on 2026-09-29:
+# the session's network policy refused www.iras.gov.sg. Confirm each URL when it is fetched,
+# because IRAS moves pages. Each entry, once captured, takes this form:
+#
+# - file: iras-personal-reliefs-overview.md
+#   title: Personal Reliefs and Tax Rebates
+#   publisher: Inland Revenue Authority of Singapore
+#   publisher_kind: regulator
+#   url: https://www.iras.gov.sg/taxes/individual-income-tax/employees/deductions-for-individuals/personal-reliefs-and-tax-rebates
+#   published: null
+#   retrieved: 2026-09-29
+#   applies_to: YA2025 to YA2027 list of personal reliefs
+#   review_by: 2027-09-29
+#   reviewed_by: null
+#   reviewed_on: null
+#   note: Site navigation cut.
+#
+# Reliefs overview and caps
+#   - Personal Reliefs and Tax Rebates (overview)
+#   - Personal Income Tax Relief Cap ($80,000)
+#   - Course Fees Relief (YA2025 only; lapses from YA2026)
+#   - Parent Relief / Handicapped Parent Relief
+# SRS and CPF top-up relief
+#   - Supplementary Retirement Scheme (SRS) relief, with the contribution caps
+#   - CPF Cash Top-up Relief
+# Donations
+#   - Tax deductions for donations (250% for qualifying IPC donations)
+# Rates, rebates, the Notice of Assessment and paying
+#   - Individual Income Tax rates (resident bands; source of the `tax_rate` values)
+#   - Personal Income Tax Rebate for the years that have one
+#   - Understanding my Notice of Assessment
+#   - Paying tax, including GIRO and the payment due date

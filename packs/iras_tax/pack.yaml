@@ -1,35 +1,166 @@
 # Tax and Reliefs (Singapore) — domain pack
 #
-# A pack is grounding, a persona, its own answering and advice (ADR 0017). It declares no
+# A pack is grounding + persona + specialised answering + advice (ADR 0017). It declares no
 # document types and no registers: those live in core/documents.yaml, and the fields this pack
 # names are checked against that catalogue when packs load. After editing, run:
 #     python -m packs.build
 # Never edit a generated file by hand.
 
 id: iras_tax
-version: 0.3.0
+version: 0.4.0
 display_name: Tax and Reliefs
 
-# The corpus has no documents yet (packs/iras_tax/grounding/iras_reliefs_ya2026/sources.yaml),
-# so nothing is cited from it until one is recorded and reviewed.
+# Published IRAS guidance for Years of Assessment 2025 to 2027, one corpus, each source recording
+# the year it applies to. The values are keys only: the numbers are extracted from the sources and
+# approved by a person with scripts/review_grounding_values.py before any calculator reads them
+# (ADR 0016). A year is recorded on an approved value as its effective dates, not as an
+# `assessment_year` qualifier: a qualifier whose values differ is one the calculator cannot match
+# to the household, so two approved years would leave every figure asking which year applies.
 grounding:
-  corpus: iras_reliefs_ya2026
+  corpus: iras_tax_ya2025_ya2027
   top_k: 8
+  values:
+    - key: srs_contribution_cap
+      unit: money
+      description: Maximum SRS contribution a year for a Singapore Citizen or Permanent Resident, in SGD
+    - key: tax_rate
+      unit: rate
+      qualifiers: [band_lower, band_upper]
+      description: Resident individual income tax rate on each band of chargeable income, in percent
 
 persona:
   system: >
-    You explain what the user's own tax documents say, and how published IRAS guidance
-    applies to the figures in them. You never state a relief amount or eligibility rule
-    that is not in the grounding corpus, and you never estimate a tax liability.
+    You are the household's tax specialist for Singapore individual income tax. You explain what
+    the household's own tax documents say and how published IRAS guidance applies to them, naming
+    the document and the IRAS page each point comes from, and when a calculation has been done you
+    explain it without changing its figures or its verdict.
 
 guardrails:
   must_cite: true
   abstain_below: 0.42
   never_acts: true
+  verdict_by_code: true
   disclaimer: >
-    Informational analysis of your own documents and published IRAS guidance.
-    This is not tax advice. Verify against IRAS before filing.
+    Based on your own tax documents and published IRAS guidance. Parrot is not a tax agent and
+    does not file or pay on your behalf; confirm reliefs and amounts on myTax Portal or with IRAS
+    before you file.
+  advice_decline: >
+    I can explain what your tax documents and IRAS guidance say. For Parrot to calculate your SRS
+    room or an estimated tax saving, turn on tax advice in Household settings.
 
-# The core document types this pack speaks for: its guardrails and persona govern answers on them.
+# Advice (ADR 0016). Code calculates every figure and chooses the verdict from the household's own
+# cited facts and published values a person approved; the model only explains. Consent is the
+# owner's and covers adult household members.
+#
+# Donations and CPF cash top-ups are explained from the grounding and not calculated. A donation
+# is deducted at a multiple of the amount given, which `estimate_saving` has no input for, and a
+# top-up cap is per year while a fact input cannot yet be limited to one year's receipts. Both are
+# contract changes, proposed in packs/iras_tax/CONTRACT_REQUESTS.md.
+advice:
+  consent_version: 1.0.0
+  consent_text: >
+    I ask Parrot to calculate personalised tax guidance for my household from our own documents
+    and from published IRAS guidance. I understand that Parrot is not a tax agent and does not
+    replace IRAS or one, that its figures are estimates only as complete as the documents on
+    file, and that I should confirm any relief or amount on myTax Portal before I file.
+  disclaimer: >
+    An estimate from your household's documents and published IRAS rates, not a tax computation.
+    It uses the income on your latest Notice of Assessment and ignores reliefs, rebates and
+    income that no document on file shows, so your actual tax may differ.
+  product_disclosure: >
+    Where a scheme or institution is named, it is named because IRAS guidance or a document on
+    file names it. Parrot is not paid by any bank, charity or SRS operator.
+  shapes:
+    - id: srs_room
+      calculator: remaining_room
+      label: SRS contribution room this year
+      asked:
+        - srs room
+        - srs cap
+        - srs limit
+        - srs contribution left
+        - how much more srs
+        - how much more can i put in srs
+        - how much can i put in srs
+        - how much can i contribute to srs
+        - top up my srs
+        - srs top up
+      facts:
+        - role: used
+          doc_types: [srs_statement]
+          field: contributions_ytd
+          missing: Your SRS statement for this year, so contributions so far are known.
+      rules:
+        - role: cap
+          key: srs_contribution_cap
+          missing: Reviewed IRAS guidance on the SRS contribution cap.
+      never_say: [you must contribute, guaranteed, tax free]
+    - id: srs_saving
+      calculator: estimate_saving
+      label: estimated tax saving from SRS contributions
+      estimate: true
+      asked:
+        - srs tax saving
+        - srs save tax
+        - srs saves tax
+        - save tax with srs
+        - tax saving from srs
+        - tax savings from srs
+        - how much tax srs
+        - how much tax does srs save
+        - how much tax will srs save
+      facts:
+        - role: income
+          doc_types: [notice_of_assessment]
+          field: assessable_income
+          missing: Your latest Notice of Assessment, so your income band is known.
+        - role: amount
+          doc_types: [srs_statement]
+          field: contributions_ytd
+          missing: Your SRS statement for this year, so contributions so far are known.
+      rules:
+        - role: rate
+          key: tax_rate
+          missing: Reviewed IRAS resident tax rates for your income band.
+      never_say: [you must contribute, guaranteed, tax free]
+
+  # One question, every check (ADR 0016 addendum): each shape's room or estimate and each missing
+  # fact, on one card.
+  review:
+    label: tax relief check
+    asked:
+      - reduce my tax
+      - lower my tax
+      - pay less tax
+      - save on tax
+      - save on my tax
+      - save tax this year
+      - cut my tax
+      - tax relief check
+      - review my tax
+      - review my reliefs
+      - reliefs am i missing
+      - reliefs i am missing
+      - what reliefs can i
+      - what reliefs should i
+    shapes: [srs_room, srs_saving]
+
+# How people ask about tax, applied by the core without a model. Nothing here is a field.
 answering:
-  documents: [payslip, donation_receipt, cpf_statement, srs_statement, notice_of_assessment]
+  # The core document types this pack speaks for: its guardrails and persona govern them.
+  documents:
+    - payslip
+    - donation_receipt
+    - cpf_statement
+    - srs_statement
+    - notice_of_assessment
+    - cpf_topup_receipt
+    - course_fee_receipt
+  max_sentences: 6
+  vocabulary:
+    noa: notice of assessment
+    tax bill: notice of assessment
+    income tax bill: notice of assessment
+    rstu: retirement sum topping-up
+    cash top up: cash top-up
+    ipc: institution of a public character
