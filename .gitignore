@@ -7,7 +7,10 @@ __pycache__/
 .pytest_cache/
 node_modules/
 web/.next/
-inbox/
+
+# inbox/ IS committed, so the team shares the same drop of synthetic specimens (PDFs, ID-card
+# and certificate images). Like corpus/batches/, everything in it is invented canon and carries
+# a SYNTHETIC marking. A real document never goes here: it goes to corpus/holdout/ below.
 
 # corpus/batches/ IS committed. Synthetic batches travel through git so Lane E can hand a
 # batch over by pushing it, rather than by a USB stick at the weekly session. Everything in
