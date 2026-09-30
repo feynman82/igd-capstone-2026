@@ -194,6 +194,10 @@ def test_the_owner_is_found_by_any_of_their_names(conn: Any) -> None:
 def test_an_unconfirmed_alias_resolves_to_nobody(conn: Any) -> None:
     """The sentence that makes a wrong model guess cost a tap instead of a wrong answer."""
     person = household.add_person(conn, "Rachel Ng", "partner")
+    # A count, not a total. The transaction rolls back what this test writes, but it cannot roll
+    # back what was already committed: a vault with documents ingested in it has unconfirmed
+    # aliases of its own, and this assertion used to fail the moment anybody ran the real thing.
+    before = household.pending_count(conn)
     with conn.cursor() as cur:
         cur.execute(
             household.INSERT_ALIAS,
@@ -207,9 +211,10 @@ def test_an_unconfirmed_alias_resolves_to_nobody(conn: Any) -> None:
             },
         )
     assert household.resolve(conn, "R. NG HUI SHAN") is None
-    assert household.pending_count(conn) == 1
+    assert household.pending_count(conn) == before + 1
 
-    pending = household.pending(conn)
+    pending = [item for item in household.pending(conn) if item.alias == "R. NG HUI SHAN"]
+    assert len(pending) == 1
     household.confirm(conn, pending[0].id, person.id)
     resolved = household.resolve(conn, "R. NG HUI SHAN")
     assert resolved is not None and resolved.id == person.id
