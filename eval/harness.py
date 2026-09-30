@@ -111,6 +111,7 @@ def build(
     keep: int = 6,
     retriever: RetrieverName = "hybrid",
     reranker: RerankerName = "cross-encoder",
+    rerank_floor: float | None = None,
 ) -> tuple[AnswerGraph, Recorder]:
     """The graph `scripts/ask.py` builds, with the recorder in the seam. Kept in step with that
     script by hand. `retriever="dense"` and `reranker="none"` are the stopgaps in
@@ -123,7 +124,7 @@ def build(
     from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids, enabled_packs
     from core.retrieve.hybrid import HybridRetriever
-    from core.retrieve.rerank import CrossEncoderReranker
+    from core.retrieve.rerank import RELEVANCE_FLOOR, CrossEncoderReranker
     from core.runtime.ollama import Ollama
     from modules.advice import ModuleAdviser
 
@@ -137,7 +138,12 @@ def build(
     )
     retriever_rec = RecordingRetriever(retriever_impl)
     reranker_impl: Reranker = (
-        NoReranker() if reranker == "none" else CrossEncoderReranker(settings.rerank_model)
+        NoReranker()
+        if reranker == "none"
+        else CrossEncoderReranker(
+            settings.rerank_model,
+            RELEVANCE_FLOOR if rerank_floor is None else rerank_floor,
+        )
     )
     reranker_rec = RecordingReranker(reranker_impl)
     graph = AnswerGraph(
