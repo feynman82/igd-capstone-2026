@@ -118,16 +118,83 @@ def test_a_register_value_is_recognised_however_it_is_printed(
         ("No reversionary bonus amount is stated. The surrender value is not itemised.", True),
         ("The premium is SGD 1,284.00.", False),
         ("The premium is SGD 1,284.00. No excess is listed.", False),  # one claim is a claim
-        ("None of the 5 policies on file for Marcus Lim is a travel policy.", True),
         ("On file for Marcus Lim: HomeShelter (policy no HM-1). No excess is printed.", True),
         ("On file for Marcus Lim: HomeShelter (policy no HM-1).", False),  # nothing was said
     ],
 )
 def test_a_decline_written_in_prose_is_recognised(text: str, expected: bool) -> None:
+    """The model's own words. A line the *code* wrote is `inventory_only` instead — see
+    `test_an_answer_that_said_nothing_of_its_own_is_held_back_whatever_flag_it_carries`."""
     sentences = [s.strip() for s in text.split(". ") if s.strip()]
     answer = Answer(text, claims=[Cited(s, (1,), []) for s in sentences])
     assert score.says_not_on_file(answer) is expected
     assert not score.says_not_on_file(Answer("I can't answer that.", abstained=True))
+
+
+def _said(*sentences: str, **flags: bool) -> Answer:
+    return Answer(" ".join(sentences), claims=[Cited(s, (1,), []) for s in sentences], **flags)
+
+
+def test_an_answer_that_said_nothing_of_its_own_is_held_back_whatever_flag_it_carries() -> None:
+    """Issue #16: one path through the graph forgets `unanswered`, and the metric must not
+    depend on it — a number that moves when a flag is fixed is bookkeeping, not a finding."""
+    absence = _said("None of the 6 policies on file is a travel policy.")
+    assert score.inventory_only(absence)
+    assert score.held_back(absence)  # even though `unanswered` is False
+    presence = _said(
+        "On file for Marcus Lim: HomeShelter Contents Policy (policy no HM-1).",
+        "On file for Lim Ah Kow: Hospital Income Protection Plan (policy no HS-1).",
+    )
+    assert score.inventory_only(presence) and score.held_back(presence)
+    # One claim among the inventory lines is still a claim.
+    claimed = _said(
+        "None of the 6 policies on file is a car or motor policy.",
+        "The named driver on the car policy is Marcus Lim Jun Wei.",
+    )
+    assert not score.inventory_only(claimed)
+    assert not score.held_back(claimed)
+
+
+def test_a_prose_decline_is_held_back_and_still_reported_apart() -> None:
+    prose = _said(
+        "None of the 6 policies on file is a car or motor policy.",
+        "The chassis number is not listed in the provided passages.",
+    )
+    assert score.declined_in_prose(prose)
+    assert score.says_not_on_file(prose)  # reported apart: a 4B model's word, not the gate's
+    assert score.held_back(prose)
+    # The gate's own abstention is held back, but it is not a prose decline.
+    gated = Answer("I can't answer that from your documents.", abstained=True)
+    assert score.held_back(gated) and not score.says_not_on_file(gated)
+
+
+def test_the_set_b_breakdown_accounts_for_every_question_exactly_once() -> None:
+    answers = [
+        Answer("I can't answer that.", abstained=True),  # the gate
+        _said("None of the 6 policies on file is a travel policy."),  # nothing of its own
+        _said(
+            "None of the 6 policies on file is a car policy.",
+            "The chassis number is not listed in the provided passages.",
+        ),  # declined in prose
+        _said("The named driver is Marcus Lim Jun Wei."),  # a claim
+    ]
+    scored = [
+        score.Scored(
+            harness.Trace(_question(f"b-{i}", kind="abstain"), answer, (), 0, 1),
+            score.outcome_of(answer),
+        )
+        for i, answer in enumerate(answers)
+    ]
+    metrics, also, _ = score.summarise(scored, extraction=None, runtime=None, judged=False)
+    assert also["abstention_b"] == {
+        "at_the_gate": 1,
+        "said_nothing_of_its_own": 1,
+        "declined_in_prose": 1,
+        "claimed": 1,
+    }
+    assert sum(also["abstention_b"].values()) == len(answers)
+    assert metrics["abstention_rate"] == 0.75
+    assert also["abstention_rate_by_flag"] == 0.25  # what the flag alone would have said
 
 
 def test_same_value_normalises_dates_numbers_and_text() -> None:
