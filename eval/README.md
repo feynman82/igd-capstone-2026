@@ -91,12 +91,46 @@ absent from `field_pages` is on page 1. It is not free text and it is not a gues
 a citation can be graded without a person opening the document. An `abstain` question has
 neither `must_cite_doc` nor `must_cite_page`, because there is nothing correct to cite.
 
+### Generating a lane's dozen
+
+```
+uv run python -m eval.generate --lane packs           # 12 to eval/sets/answerable/packs-generated.jsonl
+uv run python -m eval.generate --all-lanes            # every lane's dozen
+uv run python -m eval.generate --lane packs --all --dry-run
+```
+
+The register already holds the answer to every printed field, so the fact questions are
+generated from it rather than copied by hand. Each field is asked twice — once naming the
+printed reference (`policy MV-2026-448120`), once naming the document as a person would
+(`the Private Car Insurance Policy`) — because the identifier and the paraphrase measure
+different halves of the retriever. Two questions are never written: one that prints its own
+answer, and one whose wording names two documents. `eval/phrasings.py` holds the wordings and
+the lane each document type belongs to; a lane that wants better wordings edits that file and
+regenerates.
+
+A generated file is a **draft for its lane to keep, edit or replace** — it exists so that no
+lane starts from an empty file — and it never repeats a question a person has already written
+by hand. The passage questions, the module questions and the adversarial ones are still a
+person's job.
+
 ## Ground truth comes free
 
 Every document was authored *from* a register row, so `corpus/register/*.csv` already
 contains the correct answer for every extractable field. Set A
 questions about dates and amounts are generated from it rather than written by hand; only
 the passage-level questions need a person.
+
+## The register runs ahead of the batch
+
+Questions are written from the register, which is complete, and the documents are mail-merged
+from it later. A question whose document does not exist yet is not wrong — it is not yet
+answerable — so `eval.run` skips it, says how many it skipped, and records their ids in the
+result file under `run.skipped_no_document`. Scoring them would report the retriever as worse
+than it is. `--score-missing` includes them, which is the honest way to see how much of the set
+the corpus can currently support.
+
+When a batch is mail-merged and its `field_pages` pass is done, regenerate: `must_cite_page`
+comes from that column, and a field the column does not name is taken to be on page 1.
 
 ## The honesty check
 
