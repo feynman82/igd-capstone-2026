@@ -10,6 +10,28 @@
 
 ---
 
+## Definitions
+
+**System Developer** refers to the party that designs, builds, tests and maintains the system
+so that it meets what users need. Their main tasks are:
+
+- Gathering requirements: working with stakeholders to learn what the system must do
+  (functional requirements) and how well it must do it (non-functional requirements).
+- Analysis and design: planning the architecture, data structures, interfaces and workflows,
+  often using diagrams such as UML or flowcharts.
+- Building: writing code and connecting the parts together.
+- Testing: checking that the system works correctly and meets the requirements through unit,
+  integration and user acceptance testing.
+- Deployment: releasing the system to users and setting up its environment.
+- Documentation: writing technical documents and user guides.
+- Maintenance: fixing bugs, making improvements and adapting the system as needs change.
+- Communication: working with designers, clients, testers and other developers throughout the
+  project.
+
+**System**: *not yet defined.*
+
+---
+
 ## Clause A. Authority and Consent for Submissions on Behalf of Another Adult
 
 1. **Authority to Act.** Where an adult (“Submitting Party”) completes, signs, submits, or
@@ -82,8 +104,18 @@ do yet, that the clause relies on.
 ## Not yet written
 
 These terms need more than Clause A:
-- **Definitions.** "System" and "System Developer" are used but not yet defined. Who the System
-  Developer is for a copy running on a household's own computer is a question for Siew.
+- **Definitions.** "System Developer" was defined by Siew on 2026-10-01 (above). "System" is
+  not yet defined. Two points are open:
+  1. The definition describes the role by what it does, but does not name who holds it. In
+     this project that is presumably the PARROT team, the five people in `team/README.md`.
+     Should the terms name them?
+  2. The definition includes "deployment" and "setting up its environment". On a copy that
+     runs on a household's own computer, the household runs the installer
+     (`FIRST-RUN.md`, `START.cmd`). Does that make the household its own deployer for these
+     terms?
+  The data inventory supports clauses 6 and 7. At inference and at rest, household data stays
+  on the household's own computer (`data-inventory.md` §3), so the System Developer never
+  receives it.
 - The purpose statement (§6 question 5d).
 - Retention and erasure (from `retention-and-erasure.md` when it exists).
 - The advise-only boundary (`never_acts`, `core/contracts.py`).
