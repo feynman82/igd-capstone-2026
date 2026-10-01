@@ -54,6 +54,55 @@ test report, not a number in this table.
 **Not yet agreed.** These are the targets from the proposal, restated so they can be measured
 the same way three times. They stand until DY has signed them off; if a target moves, it
 moves here first, and the result files are not re-scored.
+
+## How much of a delta is a delta
+
+A three-run report presents movement, so it needs a stated threshold below which movement means
+nothing. Otherwise the first delta table is an invitation to narrate noise.
+
+**Measured, not assumed.** One configuration was run twice an hour apart during run 1, with
+nothing changed between the two:
+
+| Metric | First | Second | Moved |
+|---|---|---|---|
+| `context_recall` | 0.8947 | 0.8947 | **nothing** |
+| `context_precision` | 0.8675 | 0.8675 | **nothing** |
+| `extraction_f1` | 0.8980 | 0.8980 | **nothing** |
+| `faithfulness` | 0.773 | 0.819 | +0.046 |
+| `answer_relevancy` | 0.753 | 0.765 | +0.012 |
+
+The committed figures are the second run. The first is not committed, because a baseline should be
+one measurement rather than the better of two — but it is what the noise floor below is measured
+from, and `eval/results/2026-09-29-baseline-dense-only.md` records it.
+
+So:
+
+- **A change under about 0.05 in `faithfulness` or `answer_relevancy` is noise.** Both are a
+  local model reading evidence and scoring it, twice, and getting a slightly different opinion.
+  Run 2's faithfulness gain of +0.157 is three times that floor, which is why it is reported as
+  real; its relevancy gain of +0.003 is reported as nothing.
+- **A change in `context_recall`, `context_precision` or `extraction_f1` is real at any size.**
+  These read the database and the register. Nothing samples, so nothing drifts: if they move, the
+  vault or the corpus moved.
+- The same holds for `abstention_rate`, `obligation_precision` and `alert_fpr` — no judge, no
+  sampling — with the arithmetic caveat below.
+
+**Granularity is the other noise, and it is exact rather than measured.** These are small sets, so
+one question is a visible step: on Set B's 25 questions one question is 0.04, on Set C's 15 it is
+0.067, and on the Set A questions a run can currently score (39 of 72 in run 2, the rest skipped
+for want of a document) it is 0.026. A metric that moves by one question has moved by one
+question, whatever the third decimal place suggests — and during run 1 exactly one Set A question
+flipped between answering and holding back across the two runs.
+
+**A rate over one or two events is not a rate.** `alert_fpr` in week 7 was 1.000 because one alert
+fired and it was wrong: the only values available were 0.000 and 1.000. Report that kind of number
+as a found defect and say how many events it divides by.
+
+**What this does not cover.** The judge model is not pinned in `core/runtime/settings.py`, so a
+change of judge moves metrics 1–4 as surely as a change of retrieval and is not inside this noise
+floor at all. Every result file records which judge it used; two runs under different judges are
+not comparable, whatever the delta.
+
 ## Running the harness
 
 ```
