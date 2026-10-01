@@ -31,12 +31,14 @@ This document records it.
 
 > **Decision (Siew, 2026-10-01).** The exclusion for individuals acting in a personal or
 > domestic capacity is not relied on, so PARROT is treated as within the PDPA. The basis for
-> holding a household member's data is **deemed consent** (PDPA 2012, s 15). When a member
-> submits their own documents and information, they are deemed to consent to it being held for
-> the purpose they submitted it for.
+> holding a household member's data is **deemed consent**: *Personal Data Protection Act 2012,
+> Part 4 (Collection, Use and Disclosure of Personal Data), section 15 (Deemed consent)*. When a
+> member submits their own documents and information, they are deemed to consent to it being
+> held for the purpose they submitted it for.
 >
-> *Citation to be completed:* the subsection and its exact wording are still to be quoted from
-> the Act.
+> *Still to do:* quote the operative subsection verbatim from Singapore Statutes Online, with
+> the revised-edition date. It is not paraphrased here because it has not yet been read from
+> the source.
 
 Advice is the one place the system asks for more than deemed consent. An advice answer needs
 an **explicit, recorded** grant in `advice_consents` (S4), checked in the same transaction as
