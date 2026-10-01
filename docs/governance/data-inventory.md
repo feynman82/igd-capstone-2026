@@ -332,6 +332,10 @@ These are carried from the first draft unless marked new.
    - **5d.** Purpose. Deemed consent covers the purpose the data was submitted for. Is
      "answering questions about the household's documents" one purpose, or are reminders,
      alerts and advice separate ones? Advice already has explicit consent (S4).
+     **Decided (Siew, 2026-10-01): one purpose statement that names all four uses.** These
+     are answering, reminders, alerts, and advice under separate consent. The statement is
+     Clause B of `terms-of-use.md`. Deemed consent therefore covers reminders and alerts, which
+     run without being asked, as long as the person filing has accepted the terms.
 6. *(new)* **NRIC numbers.** The PDPC published advisory guidelines on NRIC and other national
    identification numbers in 2018. They have **not been read**. Check whether they bear on a
    household tool, or only on organisations collecting from customers.
