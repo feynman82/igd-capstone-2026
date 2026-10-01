@@ -248,7 +248,7 @@ These are carried from the first draft unless marked new.
      driver in a claim. They submitted nothing, so deemed consent by their own conduct cannot
      apply. Is there another basis, or should their data be minimised?
 
-     **Definition (drafted at Siew's request, 2026-10-01; for Siew to confirm).** A **third
+     **Definition (drafted at Siew's request and agreed by Siew, 2026-10-01).** A **third
      party** is an individual whose personal data appears on a document submitted to PARROT
      and who is **neither**:
      - (a) the Submitting Party; **nor**
