@@ -212,10 +212,11 @@ These are carried from the first draft unless marked new.
      representation. That includes a disagreement between the two about authority, consent or
      the accuracy of what was submitted.
      *What this depends on:*
-     1. **No terms of use exist.** `grep` finds no terms of use, licence agreement or
-        liability text for PARROT in the repository. Neither the unlock screen nor the
+     1. **The clause is written; the terms are not yet presented.** Clause A of
+        `terms-of-use.md` (Siew, 2026-10-01) is the contractual text. In it the Submitting
+        Party represents and warrants their authority. Neither the unlock screen nor the
         household setup screen (`web/app/unlock/`, `web/app/(app)/household/`) presents any
-        terms. Until such terms exist and are accepted, the clause has nothing to live in.
+        terms yet.
      2. **Acceptance has to be recorded.** No table records that terms were accepted, by whom,
         or which version. `advice_consents` (S4) does this for advice, by version and wording
         hash, and could serve as the model. Adding a table would be a migration, so it is for

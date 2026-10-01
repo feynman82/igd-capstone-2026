@@ -13,6 +13,7 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `imda-genai-nine-dimensions.md` | IMDA GenAI (2024) | Siew | W8 |
 | `autonomy-statement.md` | IMDA Agentic AI (Jan 2026), dimensions 1 and 2 | Siew with Christian | W8 |
 | `synthetic-data-case.md` | Why synthetic data, what it proves and what it does not | Siew with Desmond | W6 |
+| `terms-of-use.md` | PDPA s 15 deemed consent — the contractual basis for one adult filing for another | Siew | — |
 
 ## The autonomy statement in one line
 
@@ -21,7 +22,7 @@ module is specified and deliberately not built, and every pack manifest enforces
 boundary with `never_acts: true` — a machine-checked flag, not a sentence in a policy
 document.
 
-## The rule that governs all eight
+## The rule that governs all of them
 
 Ground every claim in a file in this repository or in a cited instrument. Where the
 evidence cannot be found, write `unverified` and raise it — an artefact that asserts
