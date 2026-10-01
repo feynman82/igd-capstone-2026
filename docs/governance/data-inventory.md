@@ -262,9 +262,9 @@ These are carried from the first draft unless marked new.
        by someone outside the household is a third party.
      - **Organisations are not third parties.** An insurer, bank, employer or charity has no
        personal data of its own. An **individual acting for one** is a third party: the
-       insurance agent named on a policy, with their licence number. Whether the PDPA's
-       treatment of business contact information takes such a person out of scope has **not
-       been read**, and is a question for Siew.
+       insurance agent named on a policy, with their licence number. Their business contact
+       information is outside the data protection rules. See "Business contact information"
+       below.
      - **Undecided is not household.** A name a document printed that nobody has yet assigned
        to a person (an unconfirmed `person_aliases` row, source `model`) is treated as a third
        party until a person decides otherwise. This matches the code, where an unconfirmed
@@ -287,8 +287,33 @@ These are carried from the first draft unless marked new.
      capture a third party's details (`core/documents.yaml`), so they arrive only because a
      page prints them.
 
-     *Still open:* the **basis** for holding a third party's data, or a decision to minimise it.
-     The definition says who they are, not why PARROT may hold their data.
+     **Business contact information (Siew, 2026-10-01).** The personal data protection rules in
+     Parts 3 to 6, 6A and 6B of the PDPA do not apply to business contact information. Business
+     contact information is an individual's name, business title, business telephone number,
+     business address, business email or fax, or any other similar information about the
+     individual that is not provided by the individual solely for personal purposes.
+     *Citation to complete:* the section numbers of the exclusion and of the definition, quoted
+     from the Act.
+
+     Applied to the third parties above:
+
+     | Third party | Business contact information? |
+     |---|---|
+     | Insurance agent: name and business contact details | **Yes. Outside Parts 3 to 6B.** |
+     | Insurance agent: licence number | **For Siew.** It is not one of the listed items. Is it "other similar information"? |
+     | Policy beneficiary | No. Named in a personal capacity. |
+     | Joint borrower outside the household | No. Personal capacity. |
+     | Ex-landlord | **For Siew.** Probably a personal capacity, since letting one's own home is not obviously a business. Ask whether it changes if the landlord lets property as a business. |
+     | The other driver in a claim | No. Personal capacity. |
+     | Former employer | An organisation is not a third party at all. A sole-proprietor employer's business details would be business contact information. |
+
+     The test is **the capacity in which the details were given**, not the person. The same
+     agent's home address, printed on a document, would not be business contact information.
+
+     *Still open:* the **basis** for holding the data of third parties who are not covered by
+     the business contact exclusion (beneficiaries, joint borrowers, the other driver), or a
+     decision to minimise it. The definition says who they are, not why PARROT may hold their
+     data.
    - **5d.** Purpose. Deemed consent covers the purpose the data was submitted for. Is
      "answering questions about the household's documents" one purpose, or are reminders,
      alerts and advice separate ones? Advice already has explicit consent (S4).
