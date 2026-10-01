@@ -210,11 +210,10 @@ These are carried from the first draft unless marked new.
    - **5b.** Children (`birth_certificate`, `relation = 'child'`). **Decided (Siew,
      2026-10-01):** for a child **under 13**, consent is given by a parent or guardian. In
      PARROT that is the parent who files the child's document.
-     *Source:* the 13-year threshold is PDPC guidance, not the text of the Act, which sets no
-     age. The guidance is believed to be the Advisory Guidelines on the PDPA for Selected
-     Topics (data activities relating to minors) and the 2024 Advisory Guidelines on the use
-     of personal data of children in digital environments. The exact title, chapter and date
-     are **to be confirmed** before the chapter cites them.
+     *Source:* the PDPC's advisory guidelines on minors, confirmed by Siew on 2026-10-01. The
+     13-year threshold is PDPC guidance, not the text of the Act, which sets no age. The
+     chapter number and the guidelines' revision date are still to be added when the
+     reference list is compiled.
      *Still open:* 1. Children aged **13 to 17**: may they consent for themselves, or does the
      parent's filing still stand? 2. The evidence. Nothing records which parent filed a
      child's document, or that it was filed as a parent (gap 7, folder capture). The child's
