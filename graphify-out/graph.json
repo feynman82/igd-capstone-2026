@@ -31985,7 +31985,7 @@
       "node_kind": "heading",
       "norm_label": "clause a. authority and consent for submissions on behalf of another adult",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L35"
+      "source_location": "L36"
     },
     {
       "id": "docs_governance_terms_of_use_definitions",
@@ -32009,7 +32009,7 @@
       "node_kind": "heading",
       "norm_label": "for review",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L124"
+      "source_location": "L123"
     },
     {
       "id": "docs_governance_terms_of_use_not_yet_written",
@@ -32021,7 +32021,7 @@
       "node_kind": "heading",
       "norm_label": "not yet written",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L104"
+      "source_location": "L105"
     },
     {
       "id": "docs_governance_terms_of_use_status_against_the_code",
@@ -32033,7 +32033,7 @@
       "node_kind": "heading",
       "norm_label": "status against the code",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L92"
+      "source_location": "L93"
     },
     {
       "id": "docs_governance_terms_of_use_terms_of_use",
@@ -141335,7 +141335,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L104",
+      "source_location": "L105",
       "weight": 1.0
     },
     {
@@ -141346,7 +141346,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L124",
+      "source_location": "L123",
       "weight": 1.0
     },
     {
@@ -141368,7 +141368,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L35",
+      "source_location": "L36",
       "weight": 1.0
     },
     {
@@ -141379,7 +141379,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L92",
+      "source_location": "L93",
       "weight": 1.0
     },
     {
@@ -175151,7 +175151,7 @@
       "confidence_score": 0.95,
       "context": "advice_consents",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -192965,5 +192965,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "b80d3a089d0e5993fad19cff618da91078d2e7a3"
+  "built_at_commit": "84cfb3fc6f3f5a8ca429b94c2bbda2f67f2080b2"
 }

@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-01)
 
 ## Corpus Check
-- 314 files · ~721,522 words
+- 314 files · ~721,513 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 34 file(s) not represented in the graph (top: (none) 11, .jsonl 7, .csv 5)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b80d3a08`
+- Built from commit: `84cfb3fc`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
