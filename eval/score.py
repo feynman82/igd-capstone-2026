@@ -14,7 +14,7 @@ import asyncio
 import logging
 import re
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -268,25 +268,41 @@ class F1:
         }
 
 
-def extraction_f1(register: Sequence[Mapping[str, str]], facts: Iterable[FactRow]) -> dict[str, F1]:
-    """Field extraction scored against the register, overall and by document type.
+def _outcomes(
+    register: Sequence[Mapping[str, str]],
+    facts: Iterable[FactRow],
+    indexed: Collection[str] | None = None,
+) -> Iterator[tuple[str, str, str, tuple[int, int, int]]]:
+    """`(doc_id, doc_type, field, (tp, fp, fn))` for every register cell that was scorable.
 
     The register is the ground truth because every document was authored from it. For each
     document on file and each field the register fills, an extracted value that matches is a
     hit, a missing one is a miss, and a wrong one is both a false claim and a miss. A value the
     extractor produced for a field the register leaves empty is a false claim: the document does
-    not print it. Documents the register knows but the vault has not indexed are not scored, so
-    a half-ingested batch reports on what was ingested rather than on what was not.
+    not print it. A field neither side filled is not an outcome at all and is not counted.
+
+    Documents the register knows but the vault has not indexed are not scored, so a
+    half-ingested batch reports on what was ingested rather than on what was not. The same
+    applies to a quarantined document: nothing extracted it, so counting its fields as misses
+    would score the quarantine rather than the extractor.
+
+    `indexed` closes the hole in that reasoning. Without it, "has no facts" and "is not in the
+    vault" are the same thing to this function, so a document that *was* indexed and that the
+    extractor wrote nothing at all for drops out of the metric instead of scoring zero — the one
+    failure that matters most would be the one failure that cannot be seen. Pass the doc ids the
+    vault has indexed and such a document is counted as a miss on every field the register
+    fills. No run has yet contained one; the metric should not depend on that staying true.
     """
     extracted: dict[str, dict[str, str | None]] = defaultdict(dict)
     for fact in facts:
         extracted[fact.doc_id][fact.key] = fact.value
-    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
+    in_vault = set(extracted) | set(indexed or ())
     for row in register:
         doc_id = row.get("doc_id", "")
-        if doc_id not in extracted:
+        if doc_id not in in_vault:
             continue
-        found = extracted[doc_id]
+        found = extracted.get(doc_id, {})  # `.get`, so a factless document is not inserted
+        doc_type = row.get("doc_type") or "unknown"
         for key, value in row.items():
             if key in REGISTER_META or key is None:
                 continue
@@ -303,10 +319,94 @@ def extraction_f1(register: Sequence[Mapping[str, str]], facts: Iterable[FactRow
                 outcome = (0, 1, 0)
             else:
                 continue
-            for bucket in ("all", row.get("doc_type") or "unknown"):
-                for index, amount in enumerate(outcome):
-                    counts[bucket][index] += amount
-    return {bucket: F1(*totals) for bucket, totals in sorted(counts.items())}
+            yield doc_id, doc_type, key, outcome
+
+
+def _totals(counted: Iterable[tuple[str, tuple[int, int, int]]]) -> dict[str, F1]:
+    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
+    for bucket, outcome in counted:
+        for index, amount in enumerate(outcome):
+            counts[bucket][index] += amount
+    return {bucket: F1(*numbers) for bucket, numbers in sorted(counts.items())}
+
+
+def extraction_f1(
+    register: Sequence[Mapping[str, str]],
+    facts: Iterable[FactRow],
+    indexed: Collection[str] | None = None,
+) -> dict[str, F1]:
+    """Metric 6, micro-averaged over every scored field: `all`, then one entry per document type.
+
+    `_outcomes` explains what counts as a hit, a miss and a false claim, and what `indexed` is for.
+    """
+    return _totals(
+        (bucket, outcome)
+        for _, doc_type, _, outcome in _outcomes(register, facts, indexed)
+        for bucket in ("all", doc_type)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class TypeScore:
+    """One document type's extraction score, and the fields it is made of.
+
+    `documents` is how many indexed documents of the type were scored, which is the number that
+    says whether an F1 of 0.76 is a finding or a sample of two. `fields` is the same arithmetic
+    per register column, because "this type is weak" is not actionable and "this field is never
+    extracted" is: the lane that owns extraction can go to one field on one template.
+    """
+
+    doc_type: str
+    documents: int
+    overall: F1
+    fields: dict[str, F1]
+
+    @property
+    def weakest(self) -> list[tuple[str, F1]]:
+        """The fields holding the type's score down, worst first, best excluded."""
+        below = [(key, f1) for key, f1 in self.fields.items() if (f1.f1 or 0.0) < 1.0]
+        return sorted(below, key=lambda pair: (pair[1].f1 or 0.0, pair[0]))
+
+
+def extraction_by_type(
+    register: Sequence[Mapping[str, str]],
+    facts: Iterable[FactRow],
+    indexed: Collection[str] | None = None,
+) -> list[TypeScore]:
+    """Every scored document type, worst F1 first — the week 6 table, in order of what to fix."""
+    outcomes = list(_outcomes(register, facts, indexed))
+    documents: dict[str, set[str]] = defaultdict(set)
+    per_type: dict[str, list[tuple[str, tuple[int, int, int]]]] = defaultdict(list)
+    for doc_id, doc_type, key, outcome in outcomes:
+        documents[doc_type].add(doc_id)
+        per_type[doc_type].append((key, outcome))
+    scores = [
+        TypeScore(
+            doc_type=doc_type,
+            documents=len(documents[doc_type]),
+            overall=next(iter(_totals((("one", o) for _, o in counted)).values())),
+            fields=_totals(counted),
+        )
+        for doc_type, counted in per_type.items()
+    ]
+    return sorted(scores, key=lambda s: (s.overall.f1 or 0.0, -s.documents, s.doc_type))
+
+
+def unjoined(register: Sequence[Mapping[str, str]], facts: Iterable[FactRow]) -> dict[str, int]:
+    """Documents the extractor wrote facts for that no register row claims, and how many each.
+
+    `corpus/README.md` makes the file name the register id, so a document ingested under any
+    other name — a specimen dropped into `inbox/` and named for what it is — has no ground truth
+    and cannot be scored either way. Its facts are neither hits nor misses; they are invisible.
+    That is not an extraction failure and it is not nothing: it is a rename away from being
+    measurable, so the report names the documents rather than quietly leaving them out.
+    """
+    known = {row.get("doc_id", "") for row in register}
+    counted: dict[str, int] = defaultdict(int)
+    for fact in facts:
+        if fact.doc_id not in known:
+            counted[fact.doc_id] += 1
+    return dict(sorted(counted.items()))
 
 
 # ------------------------------------------------------------------------------- the judge

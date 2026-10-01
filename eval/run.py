@@ -25,7 +25,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -167,7 +167,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         with connect(settings) as conn:
-            questions, waiting = _partition(conn, questions, score_missing=args.score_missing)
+            indexed = _indexed(conn)
+            questions, waiting = _partition(questions, indexed, score_missing=args.score_missing)
             if waiting:
                 print(
                     f"skipping {len(waiting)} question(s) whose document is not in the vault "
@@ -205,7 +206,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         judge = score.RagasJudge(judge_model, settings.generation_url, Ollama(settings).embed)
         score.judge_sync(scored, judge, references)
 
-    extraction = score.extraction_f1(read_registers(ROOT), facts)
+    extraction = score.extraction_f1(read_registers(ROOT), facts, indexed)
     runtime, runtime_source = _runtime_numbers(ROOT / "eval" / "results", settings.context_tokens)
     metrics, also, why = score.summarise(
         scored, extraction=extraction, runtime=runtime, judged=bool(judge_model)
@@ -288,7 +289,7 @@ def _progress(trace: Any) -> None:
 
 
 def _partition(
-    conn: Any, questions: list[Any], *, score_missing: bool
+    questions: list[Any], indexed: Collection[str], *, score_missing: bool
 ) -> tuple[list[Any], list[str]]:
     """The questions worth running, and the ids of those whose document is not in the vault.
 
@@ -298,13 +299,17 @@ def _partition(
     than it is. It is skipped and counted, in the result file as well as on the terminal.
     An abstention question cites no document and is always runnable.
     """
-    with conn.cursor() as cur:
-        cur.execute(INDEXED_DOCUMENTS)
-        indexed = {str(row[0]) for row in cur.fetchall()}
     waiting = [q.id for q in questions if q.must_cite_doc and q.must_cite_doc not in indexed]
     if score_missing:
         return questions, []
     return [q for q in questions if q.id not in set(waiting)], waiting
+
+
+def _indexed(conn: Any) -> set[str]:
+    """The register ids the vault has indexed, by document file stem."""
+    with conn.cursor() as cur:
+        cur.execute(INDEXED_DOCUMENTS)
+        return {str(row[0]) for row in cur.fetchall()}
 
 
 def _page_text(conn: Any, doc_id: str, page: int) -> str:
