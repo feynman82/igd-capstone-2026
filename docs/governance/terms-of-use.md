@@ -12,8 +12,9 @@
 
 ## Definitions
 
-**System Developer** refers to the party that designs, builds, tests and maintains the system
-so that it meets what users need. Their main tasks are:
+**System Developer** refers to the PARROT team. *(The team's members are listed in
+`team/README.md`.)* The System Developer is the party that designs, builds, tests and maintains
+the system so that it meets what users need. Their main tasks are:
 
 - Gathering requirements: working with stakeholders to learn what the system must do
   (functional requirements) and how well it must do it (non-functional requirements).
@@ -105,11 +106,9 @@ do yet, that the clause relies on.
 
 These terms need more than Clause A:
 - **Definitions.** "System Developer" was defined by Siew on 2026-10-01 (above). "System" is
-  not yet defined. Two points are open:
-  1. The definition describes the role by what it does, but does not name who holds it. In
-     this project that is presumably the PARROT team, the five people in `team/README.md`.
-     Should the terms name them?
-  2. The definition includes "deployment" and "setting up its environment". On a copy that
+  not yet defined. Siew decided on 2026-10-01 that the System Developer is the PARROT team.
+  One point is still open:
+  - The definition includes "deployment" and "setting up its environment". On a copy that
      runs on a household's own computer, the household runs the installer
      (`FIRST-RUN.md`, `START.cmd`). Does that make the household its own deployer for these
      terms?
