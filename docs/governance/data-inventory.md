@@ -27,6 +27,33 @@ This document records it.
 | **People printed on a page but in no field** | Whatever the page says is chunked and embedded, including values no field names. Examples are the parents' ID numbers on a birth certificate and the address on the back of an identity card. | `core/ingest/chunk.py` → `chunks.text` in `0001_init.sql` |
 | **Team members (holdout only)** | The 40-document real holdout. It is kept out of git by `.gitignore` (`corpus/holdout/`). The consent protocol that must govern it, `consent-and-redaction.md`, **does not exist yet**. | `.gitignore`; `docs/governance/README.md` |
 
+### Lawful basis: deemed consent
+
+> **Decision (Siew, 2026-10-01).** The exclusion for individuals acting in a personal or
+> domestic capacity is not relied on, so PARROT is treated as within the PDPA. The basis for
+> holding a household member's data is **deemed consent** (PDPA 2012, s 15). When a member
+> submits their own documents and information, they are deemed to consent to it being held for
+> the purpose they submitted it for.
+>
+> *Citation to be completed:* the subsection and its exact wording are still to be quoted from
+> the Act.
+
+Advice is the one place the system asks for more than deemed consent. An advice answer needs
+an **explicit, recorded** grant in `advice_consents` (S4), checked in the same transaction as
+the answer (`core/advice_records.py`; ADR 0016).
+
+Deemed consent rests on knowing **who submitted** a document. Here is what the code holds as
+evidence of that:
+
+| Route | Submitter recorded? | Evidence |
+|---|---|---|
+| Telegram, from a chat mapped to a person | **Yes.** The chat id → person mapping is stamped on the document as `document_attribution.source = 'telegram'`. | `core/adapters/telegram.py` (`_capture`, `self._attribute`); `0002_household.sql` |
+| Telegram, from an unmapped chat | No. The document is filed with no attribution. | `core/adapters/telegram.py` ("attribution is a nicety; capture is not") |
+| Folder | **No.** The sender passed in is the folder path, and `documents` has no sender column. Only `source_channel = 'folder'` is kept. | `core/adapters/folder.py` (`receive(..., str(self._settings.root), ...)`); `core/ingest/register.py` (`INSERT INTO documents`) |
+| A person attributes it on a screen | Yes, as `document_attribution.source = 'user'`. This records who the document is *about*, not who submitted it. | `0002_household.sql` |
+
+The cases deemed consent does not obviously reach are listed in §6, questions 5a to 5d.
+
 Everything committed under `corpus/batches/` and `inbox/` is synthetic and is marked as such
 (`.gitignore` comments; `documents.synthetic` in `0001_init.sql`). This inventory is about the data
 a household would put into the running system.
@@ -159,6 +186,8 @@ wording in a policy.
 5. **`inbox/` is tracked by git.** Separating the household's working inbox from the committed
    specimens would remove the risk of publishing a real document.
 6. **Health information can enter through page text** with no field or purpose behind it (D8).
+7. **Folder capture records no submitter** (§1, "Lawful basis"). Deemed consent is argued from
+   who submitted a document. For the main capture route, the code keeps no evidence of that.
 
 ## 6. Open questions for Siew
 
@@ -171,11 +200,19 @@ These are carried from the first draft unless marked new.
 3. The lock is a screen lock, not encryption, and `web/lib/lock.ts` says so. Is that sufficient
    for identity numbers, which ADR 0017 calls the most sensitive data in the vault?
 4. ~~Should the screens bind to loopback only?~~ **Closed.** They do since `3a624c5`.
-5. *(new)* **Which law applies to a household using its own copy?** The PDPA 2012 excludes
-   individuals acting in a personal or domestic capacity (s 4(1)(a)). This has **not been read
-   for this document**. Whether that exclusion puts the household's own use outside the Act,
-   leaving PDPA to govern only the team's holdout collection, decides the framing of the whole
-   chapter. Read the section and the PDPC's guidance on it before writing the retention policy.
+5. ~~Which law applies to a household using its own copy?~~ **Decided 2026-10-01:** the PDPA
+   applies, and the lawful basis is deemed consent (§1). The decision leaves these cases open:
+   - **5a.** A member who submits *another* member's document, for example the owner filing a
+     partner's passport. The person who acted is not the data subject. Does deemed consent cover
+     this, or does it need the subject's own act?
+   - **5b.** Children (`birth_certificate`, `relation = 'child'`). Can a child be deemed to
+     consent, or does a parent consent on the child's behalf? What is the evidence of that?
+   - **5c.** Third parties printed on a document (§1, row 3), such as a landlord or the other
+     driver in a claim. They submitted nothing, so deemed consent by their own conduct cannot
+     apply. Is there another basis, or should their data be minimised?
+   - **5d.** Purpose. Deemed consent covers the purpose the data was submitted for. Is
+     "answering questions about the household's documents" one purpose, or are reminders,
+     alerts and advice separate ones? Advice already has explicit consent (S4).
 6. *(new)* **NRIC numbers.** The PDPC published advisory guidelines on NRIC and other national
    identification numbers in 2018. They have **not been read**. Check whether they bear on a
    household tool, or only on organisations collecting from customers.
