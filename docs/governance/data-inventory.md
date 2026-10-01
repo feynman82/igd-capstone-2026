@@ -207,8 +207,19 @@ These are carried from the first draft unless marked new.
    - **5a.** A member who submits *another* member's document, for example the owner filing a
      partner's passport. The person who acted is not the data subject. Does deemed consent cover
      this, or does it need the subject's own act?
-   - **5b.** Children (`birth_certificate`, `relation = 'child'`). Can a child be deemed to
-     consent, or does a parent consent on the child's behalf? What is the evidence of that?
+   - **5b.** Children (`birth_certificate`, `relation = 'child'`). **Decided (Siew,
+     2026-10-01):** for a child **under 13**, consent is given by a parent or guardian. In
+     PARROT that is the parent who files the child's document.
+     *Source:* the 13-year threshold is PDPC guidance, not the text of the Act, which sets no
+     age. The guidance is believed to be the Advisory Guidelines on the PDPA for Selected
+     Topics (data activities relating to minors) and the 2024 Advisory Guidelines on the use
+     of personal data of children in digital environments. The exact title, chapter and date
+     are **to be confirmed** before the chapter cites them.
+     *Still open:* 1. Children aged **13 to 17**: may they consent for themselves, or does the
+     parent's filing still stand? 2. The evidence. Nothing records which parent filed a
+     child's document, or that it was filed as a parent (gap 7, folder capture). The child's
+     date of birth is held (`birth_certificate.date_of_birth`, D4), so the age at filing could
+     be computed, but no code does it.
    - **5c.** Third parties printed on a document (§1, row 3), such as a landlord or the other
      driver in a claim. They submitted nothing, so deemed consent by their own conduct cannot
      apply. Is there another basis, or should their data be minimised?
