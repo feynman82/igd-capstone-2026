@@ -366,7 +366,11 @@ def test_the_code_scored_metrics_come_out_as_arithmetic_says(tmp_path: Path) -> 
     assert metrics["abstention_rate"] == 0.5
     assert metrics["extraction_f1"] == pytest.approx(0.9474, abs=1e-4)
     assert metrics["context_recall"] is None and "judge" in why["context_recall"]
-    assert metrics["obligation_precision"] is None and "W7" in why["obligation_precision"]
+    # Metrics 7 and 8 are measured from the vault by `eval.modules`, not from the traces, so a
+    # summarise without them says so rather than reporting a number it did not compute.
+    assert metrics["obligation_precision"] is None
+    assert "not measured in this run" in why["obligation_precision"]
+    assert metrics["alert_fpr"] is None and "not measured in this run" in why["alert_fpr"]
     assert also["fact_accuracy"] == pytest.approx(2 / 3, abs=1e-4)
     assert also["citation_hit"] == 0.5
     assert also["page_shown"] == pytest.approx(2 / 3, abs=1e-4)

@@ -102,6 +102,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="none is the stopgap that keeps retrieval's order",
     )
     parser.add_argument(
+        "--no-modules",
+        action="store_true",
+        help="skip metrics 7 and 8 (obligation precision, alert FPR); they read the vault only",
+    )
+    parser.add_argument(
         "--score-missing",
         action="store_true",
         help="score a question whose document is not in the vault, instead of skipping it",
@@ -126,6 +131,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     from core.runtime.ollama import ModelUnavailable, Ollama
     from core.runtime.settings import ConfigurationError, Settings
     from eval import harness, score
+    from eval import modules as eval_modules
     from eval.sets_io import MalformedQuestion, load_set, read_registers, subset
 
     try:
@@ -194,6 +200,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if q.set == "A"
             }
             facts = _facts(conn)
+            # Metrics 7 and 8, from the same connection: no judge, no golden question, and both
+            # sweeps marked `mark=False` so measuring never consumes a lead window or a debounce.
+            module_metrics = (
+                None
+                if args.no_modules
+                else eval_modules.measure(conn, read_registers(ROOT), date.today())
+            )
     except DatabaseUnavailable as error:
         print(error)
         return 2
@@ -209,7 +222,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     extraction = score.extraction_f1(read_registers(ROOT), facts, indexed)
     runtime, runtime_source = _runtime_numbers(ROOT / "eval" / "results", settings.context_tokens)
     metrics, also, why = score.summarise(
-        scored, extraction=extraction, runtime=runtime, judged=bool(judge_model)
+        scored,
+        extraction=extraction,
+        runtime=runtime,
+        judged=bool(judge_model),
+        modules=module_metrics,
     )
     result = {
         "run": {
@@ -228,6 +245,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "rerank_floor": (
                 None if args.reranker == "none" else args.rerank_floor or RELEVANCE_FLOOR
             ),
+            # Both module metrics are date-dependent — a lead window and a lapse are gaps against
+            # a day — so the day they were measured for is part of the run, not an aside.
+            "modules_as_of": None if module_metrics is None else module_metrics.as_of.isoformat(),
             "candidates": args.candidates,
             "keep": args.keep,
             "runtime_numbers_from": runtime_source,
