@@ -214,8 +214,12 @@ These are carried from the first draft unless marked new.
      13-year threshold is PDPC guidance, not the text of the Act, which sets no age. The
      chapter number and the guidelines' revision date are still to be added when the
      reference list is compiled.
-     *Still open:* 1. Children aged **13 to 17**: may they consent for themselves, or does the
-     parent's filing still stand? 2. The evidence. Nothing records which parent filed a
+     **Decided (Siew, 2026-10-01):** children aged **13 to 17** cannot consent for themselves
+     in PARROT. A parent must file the document. So the rule is that **every child under 18
+     needs a parent's filing.** This is a decision for PARROT. It may be stricter than the PDPC
+     guidance requires for 13- to 17-year-olds. When the guidelines are cited, state that this
+     is a deliberate choice, so it does not read as a misquotation of them.
+     *Still open:* the evidence. Nothing records which parent filed a
      child's document, or that it was filed as a parent (gap 7, folder capture). The child's
      date of birth is held (`birth_certificate.date_of_birth`, D4), so the age at filing could
      be computed, but no code does it.
