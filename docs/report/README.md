@@ -56,6 +56,7 @@ one carries the argument, not the build log, and each names the decision record 
 | Document | Feeds | What it argues |
 |---|---|---|
 | [`docs/household-and-identity.md`](../household-and-identity.md) | §3, §4, §5, §6, §8 | Why "what is **my** premium?" is the one question citation cannot make safe, and what had to be built so that it could be. Carries the data model, the three-bucket resolution rule, the abstention design, and two limitations stated plainly. Decision: [ADR 0011](../adr/0011-the-household-is-people-and-aliases-and-the-owner-is-one-of-them.md). |
+| [`05-evaluation-and-results.md`](05-evaluation-and-results.md) | §5, and the retrieval half of §3 | **Draft — run 3 is missing and the gaps are marked ⟨run 3⟩.** That restraint is not a by-product of accuracy: every retrieval and generation metric improved while abstention got worse, because better retrieval supplies plausible evidence for unanswerable questions. Carries the delta table with run 3's column empty, the rejected relevance floor, extraction by document type, the two module metrics, and nine limitations. Decisions: [ADR 0018](../adr/0018-the-reranker-runs-in-process-because-ollama-cannot-serve-a-cross-encoder.md), [ADR 0019](../adr/0019-the-reranker-drops-what-does-not-answer-the-question.md). |
 
 **Do not start the body before week 8.** Sections 5 and 7 cannot be written truthfully
 until the evaluation has run three times, and a report drafted early becomes a document
