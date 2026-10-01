@@ -247,6 +247,45 @@ These are carried from the first draft unless marked new.
    - **5c.** Third parties printed on a document (§1, row 3), such as a landlord or the other
      driver in a claim. They submitted nothing, so deemed consent by their own conduct cannot
      apply. Is there another basis, or should their data be minimised?
+
+     **Definition (drafted at Siew's request, 2026-10-01; for Siew to confirm).** A **third
+     party** is an individual whose personal data appears on a document submitted to PARROT
+     and who is **neither**:
+     - (a) the Submitting Party; **nor**
+     - (b) a member of the household, meaning a person on the roster in `people` with
+       `external = false` (the owner, or a `partner`, `child`, `parent` or `other` the owner
+       has added).
+
+     Three rules follow from it:
+     - **It is about the person, not the role.** A joint borrower or a policy beneficiary who
+       is the owner's partner is a household member, not a third party. The same role filled
+       by someone outside the household is a third party.
+     - **Organisations are not third parties.** An insurer, bank, employer or charity has no
+       personal data of its own. An **individual acting for one** is a third party: the
+       insurance agent named on a policy, with their licence number. Whether the PDPA's
+       treatment of business contact information takes such a person out of scope has **not
+       been read**, and is a question for Siew.
+     - **Undecided is not household.** A name a document printed that nobody has yet assigned
+       to a person (an unconfirmed `person_aliases` row, source `model`) is treated as a third
+       party until a person decides otherwise. This matches the code, where an unconfirmed
+       alias scopes nothing (`core/household.py`, `resolve_owner_aliases`).
+
+     Third parties already in the corpus and the schema:
+
+     | Third party | Where printed | Evidence |
+     |---|---|---|
+     | Policy beneficiary | Policy documents | `inbox/DOCUMENT_TEMPLATE.md` ("Beneficiary: [Full Name]") |
+     | Insurance agent: name and licence number | Policy documents | `inbox/DOCUMENT_TEMPLATE.md` ("Agent", "Agent License No") |
+     | Joint borrower, when outside the household | Housing loan facility letter | `corpus/templates/housing_loan_facility_letter.html` |
+     | Former employer, ex-landlord, the other driver in a claim | Payslip, tenancy agreement, claim letter | `db/migrations/0002_household.sql` (comment on `people.external`) |
+
+     In the code, a third party who has been decided on is `people.external = true`. Their
+     data rests in `chunks.text`, and their name in `person_aliases`. No field is declared to
+     capture a third party's details (`core/documents.yaml`), so they arrive only because a
+     page prints them.
+
+     *Still open:* the **basis** for holding a third party's data, or a decision to minimise it.
+     The definition says who they are, not why PARROT may hold their data.
    - **5d.** Purpose. Deemed consent covers the purpose the data was submitted for. Is
      "answering questions about the household's documents" one purpose, or are reminders,
      alerts and advice separate ones? Advice already has explicit consent (S4).
