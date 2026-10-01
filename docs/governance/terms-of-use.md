@@ -33,7 +33,7 @@ the system so that it meets what users need. Their main tasks are:
 users and sets up its environment. *(Siew, 2026-10-01: the System Developer and the System
 Deployer are the same party.)*
 
-**System**: *not yet defined.*
+**System** refers to PARROT.
 
 ---
 
@@ -109,8 +109,8 @@ do yet, that the clause relies on.
 ## Not yet written
 
 These terms need more than Clause A:
-- **Definitions.** "System Developer" was defined by Siew on 2026-10-01 (above). "System" is
-  not yet defined. Siew decided on 2026-10-01 that the System Developer is the PARROT team.
+- **Definitions.** Siew defined "System", "System Developer" and "System Deployer" on
+  2026-10-01 (above). Siew decided on 2026-10-01 that the System Developer is the PARROT team.
   Siew also decided that the System Deployer is the PARROT team. A note against the code:
   today the household runs the installer itself (`FIRST-RUN.md`, `START.cmd`). The terms
   should say whether the team sets up each household's copy or supplies the installer that
