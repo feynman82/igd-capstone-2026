@@ -5,7 +5,7 @@
 >
 > These terms are the contractual basis for decision 5a in `data-inventory.md` §6: one adult
 > filing another adult's document. Clause A is Siew's text, reproduced **verbatim**. Do not
-> edit its wording without her. Notes about the clause sit outside it, under "Status against
+> edit its wording without Siew. Notes about the clause sit outside it, under "Status against
 > the code".
 
 ---
@@ -28,6 +28,10 @@ the system so that it meets what users need. Their main tasks are:
 - Maintenance: fixing bugs, making improvements and adapting the system as needs change.
 - Communication: working with designers, clients, testers and other developers throughout the
   project.
+
+**System Deployer** refers to the PARROT team. The System Deployer releases the system to
+users and sets up its environment. *(Siew, 2026-10-01: the System Developer and the System
+Deployer are the same party.)*
 
 **System**: *not yet defined.*
 
@@ -107,11 +111,10 @@ do yet, that the clause relies on.
 These terms need more than Clause A:
 - **Definitions.** "System Developer" was defined by Siew on 2026-10-01 (above). "System" is
   not yet defined. Siew decided on 2026-10-01 that the System Developer is the PARROT team.
-  One point is still open:
-  - The definition includes "deployment" and "setting up its environment". On a copy that
-     runs on a household's own computer, the household runs the installer
-     (`FIRST-RUN.md`, `START.cmd`). Does that make the household its own deployer for these
-     terms?
+  Siew also decided that the System Deployer is the PARROT team. A note against the code:
+  today the household runs the installer itself (`FIRST-RUN.md`, `START.cmd`). The terms
+  should say whether the team sets up each household's copy or supplies the installer that
+  does, so this definition matches what actually happens.
   The data inventory supports clauses 6 and 7. At inference and at rest, household data stays
   on the household's own computer (`data-inventory.md` §3), so the System Developer never
   receives it.
