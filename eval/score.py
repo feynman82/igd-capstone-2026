@@ -595,6 +595,7 @@ def summarise(
     extraction: Mapping[str, F1] | None,
     runtime: Mapping[str, float | None] | None,
     judged: bool,
+    modules: Any | None = None,
 ) -> tuple[dict[str, float | None], dict[str, Any], dict[str, str]]:
     """The nine metrics, the extras worth keeping beside them, and a reason for every null."""
     by_set: dict[str, list[Scored]] = defaultdict(list)
@@ -619,8 +620,24 @@ def summarise(
     if metrics["extraction_f1"] is None:
         why["extraction_f1"] = "no indexed document has a register row to score against"
 
-    why["obligation_precision"] = "module questions arrive in W7; not measured by this harness"
-    why["alert_fpr"] = "module questions arrive in W7; not measured by this harness"
+    # Metrics 7 and 8 need no judge and no golden question: the register is the ground truth, as
+    # it is for extraction. `eval.modules` measures them from the vault; see its docstring for
+    # what each one asks. They are reported here *and* apart, in eval/results/w7-module-metrics.md.
+    if modules is not None:
+        metrics["obligation_precision"] = modules.precision
+        metrics["alert_fpr"] = modules.fpr
+    if metrics["obligation_precision"] is None:
+        why["obligation_precision"] = (
+            "no obligation in the vault came from a document"
+            if modules is not None
+            else "the module metrics were not measured in this run"
+        )
+    if metrics["alert_fpr"] is None:
+        why["alert_fpr"] = (
+            "no alert fired, so a false-positive rate is unmeasured rather than 0.0"
+            if modules is not None
+            else "the module metrics were not measured in this run"
+        )
 
     for key in ("decode_tok_s", "peak_vram_gb"):
         metrics[key] = (runtime or {}).get(key)
@@ -664,6 +681,8 @@ def summarise(
             k: v.as_dict() for k, v in (extraction or {}).items() if k != "all"
         },
     }
+    if modules is not None:
+        also["modules"] = modules.as_dict()
     return metrics, also, why
 
 

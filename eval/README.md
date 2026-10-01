@@ -69,6 +69,35 @@ metrics need a judge: `--judge MODEL` or `PARROT_JUDGE_MODEL`, served by the sam
 `--no-judge` writes the code-scored metrics alone. A result file is never overwritten. See the
 docstring in `eval/run.py` for every flag.
 
+## The module metrics
+
+```
+uv run python -m eval.modules              # writes eval/results/w7-module-metrics.md
+uv run python -m eval.modules --as-of 2026-12-31
+```
+
+Metrics 7 and 8 need no judge and no golden question — the register is the ground truth, as it is
+for extraction — so `eval.run` fills them from the vault on every run and `eval.modules` writes
+the table apart from the RAG metrics. Both sweeps run with `mark=False`: measuring must never
+consume a lead window or a debounce, or the next real sweep goes quiet.
+
+Three decisions worth knowing, because they change what the numbers mean:
+
+- **Obligation precision is over the obligations a document produced.** A calendar deadline from
+  `core/documents.yaml` has no document, so it is checked against the catalogue and counted
+  separately rather than scored against a register that cannot speak for it.
+- **Precision is not completeness.** An obligation can only exist for a fact the extractor wrote,
+  so the report prints how many the register supports beside how many exist. The gap is extraction
+  recall, not reminder logic.
+- **The alert rate recomputes each metric from the register rather than reusing
+  `modules/alert/queries.py`.** A metric checked by the query that produced it is not checked. The
+  *threshold* rule is imported from the module, because what counts as crossing is a declaration
+  and two copies of it would only measure their own drift.
+
+Both numbers are dated — a lead window and a lapse are gaps against a day — so a result file
+records `modules_as_of`, and a rate over one fired alert is a found defect rather than a measured
+rate. `--no-modules` skips them.
+
 ## Extraction F1 by document type
 
 ```
