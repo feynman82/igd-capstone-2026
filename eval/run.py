@@ -106,6 +106,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="score a question whose document is not in the vault, instead of skipping it",
     )
+    parser.add_argument(
+        "--rerank-floor",
+        type=float,
+        default=None,
+        help="relevance a passage must reach to be read (default: the calibrated one, ADR 0019)",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -115,6 +121,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.ERROR)
 
+    from core.retrieve.rerank import RELEVANCE_FLOOR
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import ModelUnavailable, Ollama
     from core.runtime.settings import ConfigurationError, Settings
@@ -154,6 +161,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"{len(questions)} questions ({_counts(questions)}); "
         f"retrieval {args.retriever}, reranker {args.reranker}"
+        + (f" (floor {args.rerank_floor or RELEVANCE_FLOOR})" if args.reranker != "none" else "")
     )
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
 
@@ -175,6 +183,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 keep=args.keep,
                 retriever=args.retriever,
                 reranker=args.reranker,
+                rerank_floor=args.rerank_floor,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
@@ -215,6 +224,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             "judge": judge_model or None,
             "retriever": args.retriever,
             "reranker": args.reranker,
+            "rerank_floor": (
+                None if args.reranker == "none" else args.rerank_floor or RELEVANCE_FLOOR
+            ),
             "candidates": args.candidates,
             "keep": args.keep,
             "runtime_numbers_from": runtime_source,

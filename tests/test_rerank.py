@@ -53,6 +53,36 @@ def test_reorders_by_the_cross_encoder_and_keeps_retrievals_score(
     assert scored == [("q", ["weak match 0.2", "the answer 0.9", "nearby 0.5", "noise 0.1"])]
 
 
+def test_a_passage_the_cross_encoder_finds_irrelevant_is_dropped(
+    scored: list[tuple[str, list[str]]],
+) -> None:
+    """How the cross-encoder's opinion reaches abstention: fewer passages, and `gate.precheck`
+    abstains on an empty list. See ADR 0019."""
+    from core.retrieve.rerank import relevance
+
+    # The fake scorer reads the trailing number as a logit, so pick logits either side of a floor
+    # passed explicitly — the default is off (ADR 0019).
+    floor = relevance(-4.0)
+    assert relevance(-6.0) < floor < relevance(2.0)
+    passages = [_passage(1, "the answer 2.0", 0.41), _passage(2, "junk -6.0", 0.95)]
+    kept = CrossEncoderReranker("any", floor).rerank("q", passages, keep=6)
+    assert [p.chunk_id for p in kept] == [1]  # retrieval loved the junk; the reader did not
+
+    # Nothing relevant at all: an empty list, which is what makes the gate abstain.
+    assert (
+        CrossEncoderReranker("any", floor).rerank("q", [_passage(3, "junk -9", 0.99)], keep=6) == []
+    )
+
+
+def test_the_floor_is_off_by_default(scored: list[tuple[str, list[str]]]) -> None:
+    """Measured and rejected: every setting traded more answerable questions than hard negatives.
+    Pinned at zero so switching it on has to argue with ADR 0019's numbers."""
+    assert rerank.RELEVANCE_FLOOR == 0.0
+    # Off means nothing is dropped, however poor the passage.
+    junk = [_passage(1, "junk -9.0", 0.2)]
+    assert CrossEncoderReranker("any").rerank("q", junk, keep=6) == junk
+
+
 def test_ties_keep_retrievals_order_and_edges_cost_no_model_call(
     scored: list[tuple[str, list[str]]],
 ) -> None:
@@ -60,9 +90,11 @@ def test_ties_keep_retrievals_order_and_edges_cost_no_model_call(
     assert [p.chunk_id for p in CrossEncoderReranker("any").rerank("q", passages, keep=5)] == [1, 2]
     assert CrossEncoderReranker("any").rerank("q", [], keep=6) == []
     assert CrossEncoderReranker("any").rerank("q", passages, keep=0) == []
-    only = [_passage(9, "solo 0.1", 0.3)]
+    # A single passage is scored rather than waved through: since ADR 0019 it can be dropped, and
+    # one junk passage carried an answer over the floor before it was.
+    only = [_passage(9, "solo 4.0", 0.3)]
     assert CrossEncoderReranker("any").rerank("q", only, keep=6) == only
-    assert len(scored) == 1  # the one real rerank; not the empty, zero or single cases
+    assert len(scored) == 2  # the two real reranks; not the empty list or keep=0
 
 
 def test_the_reader_sees_the_context_prefix_before_the_chunk() -> None:

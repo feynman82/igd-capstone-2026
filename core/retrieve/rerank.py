@@ -19,6 +19,7 @@ be per graph.
 from __future__ import annotations
 
 import logging
+import math
 import threading
 from dataclasses import dataclass
 from typing import Any
@@ -39,6 +40,23 @@ DEFAULT_MODEL = "BAAI/bge-reranker-v2-m3"
 # out loud when anything reaches it.
 MAX_LENGTH = 1024
 BATCH = 16
+
+# The relevance a passage must reach to be worth reading, as a probability rather than a logit.
+#
+# Zero: off. The mechanism stays because the knob and the measurement are worth having, but the
+# experiment it was built for failed. Measured on the full golden sets on 30 September, hybrid
+# retrieval and this reranker, one variable:
+#
+#     floor    abstention (B)   faithfulness   recall   answered (A)   abstention precision
+#     0.0            0.52          0.967        0.897       0.974              0.929
+#     0.002          0.56          0.936        0.872       0.897              0.778
+#     0.02           0.64          0.809        0.821       0.872              0.762
+#
+# Every setting is a bad trade. Even 0.002 — below Set B's tenth percentile, which should have
+# been a pure junk filter — buys one hard negative and costs two answerable questions. The reason
+# is not calibration: the hard negatives that get answered are the ones where a genuinely relevant
+# page exists, and a cross-encoder is built to score those highly. See ADR 0019.
+RELEVANCE_FLOOR = 0.0
 
 _lock = threading.Lock()
 _loaded: dict[str, tuple[Any, Any, str]] = {}  # model id -> (tokenizer, model, device)
@@ -138,18 +156,40 @@ def passage_text(passage: Passage) -> str:
     return f"{passage.context_prefix}\n{passage.text}" if passage.context_prefix else passage.text
 
 
+def relevance(logit: float) -> float:
+    """The cross-encoder's score as a probability. The model emits a logit; a floor is easier to
+    argue about, and to write in a record, on a 0-to-1 scale."""
+    return 1.0 / (1.0 + math.exp(-logit))
+
+
 @dataclass(frozen=True, slots=True)
 class CrossEncoderReranker:
-    """Implements `core.graph.ports.Reranker`. Reorders by the cross-encoder's score and keeps
-    `keep`; every passage comes back with the score retrieval gave it."""
+    """Implements `core.graph.ports.Reranker`. Reorders by the cross-encoder's score, drops what
+    is not relevant at all, and keeps `keep`. Every passage comes back with the score retrieval
+    gave it — `Passage.score` stays a cosine similarity, because the graph's own floor reads one.
+
+    `floor` is off by default. It exists because dropping passages is how the cross-encoder's
+    opinion *could* reach the abstention decision — `gate.precheck` abstains on an empty list, so
+    no port or contract has to change for it to be heard — and because measuring that needed a
+    knob. It was measured, and at every setting it trades more answerable questions than hard
+    negatives; the numbers and the reason are above and in ADR 0019. Kept so the next attempt
+    starts from an apparatus rather than from scratch.
+    """
 
     model_name: str = DEFAULT_MODEL
+    floor: float = RELEVANCE_FLOOR
 
     def rerank(self, question: str, passages: list[Passage], *, keep: int) -> list[Passage]:
         if keep <= 0 or not passages:
             return []
-        if len(passages) == 1:
-            return list(passages)
         scores = score_pairs(self.model_name, question, [passage_text(p) for p in passages])
         order = sorted(range(len(passages)), key=lambda i: (-scores[i], i))
-        return [passages[i] for i in order[:keep]]
+        kept = [i for i in order if relevance(scores[i]) >= self.floor]
+        if len(kept) < len(order):
+            log.info(
+                "reranker: %d of %d passages below the %.3f relevance floor",
+                len(order) - len(kept),
+                len(order),
+                self.floor,
+            )
+        return [passages[i] for i in kept[:keep]]
