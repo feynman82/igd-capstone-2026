@@ -268,7 +268,10 @@ These are carried from the first draft unless marked new.
      - **Undecided is not household.** A name a document printed that nobody has yet assigned
        to a person (an unconfirmed `person_aliases` row, source `model`) is treated as a third
        party until a person decides otherwise. This matches the code, where an unconfirmed
-       alias scopes nothing (`core/household.py`, `resolve_owner_aliases`).
+       alias scopes nothing. `core/household.py` builds each person's aliases with
+       `FILTER (... AND a.confirmed)`, and its comment says "nothing unconfirmed scopes
+       anything". The function `resolve_owner_aliases` that the 0002 migration's comment names
+       is not in that file today.
 
      Third parties already in the corpus and the schema:
 
