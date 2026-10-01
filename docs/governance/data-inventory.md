@@ -280,7 +280,10 @@ These are carried from the first draft unless marked new.
      | Policy beneficiary | Policy documents | `inbox/DOCUMENT_TEMPLATE.md` ("Beneficiary: [Full Name]") |
      | Insurance agent: name and licence number | Policy documents | `inbox/DOCUMENT_TEMPLATE.md` ("Agent", "Agent License No") |
      | Joint borrower, when outside the household | Housing loan facility letter | `corpus/templates/housing_loan_facility_letter.html` |
-     | Former employer, ex-landlord, the other driver in a claim | Payslip, tenancy agreement, claim letter | `db/migrations/0002_household.sql` (comment on `people.external`) |
+     | The other driver in a claim | Claim letter (page text only; no field) | `core/documents.yaml` (`claim_letter`); `core/household.py` (`CLASSIFY_SYSTEM`: "another driver") |
+     | A doctor | Claim letters and hospital-plan documents (page text only) | `core/household.py` (`CLASSIFY_SYSTEM`: "a doctor") |
+     | Domestic helper, nanny, driver or tenant working for or living with the household | Any document that prints them | `core/graph/scope.py` (these words resolve to "outside", not to a relation) |
+     | Landlord, ex-landlord | **No PARROT document type.** There is no tenancy agreement in `core/documents.yaml`. They appear only as examples in code comments and prompts, so a landlord's data would enter only from page text on a document filed for another reason. | `db/migrations/0002_household.sql` (comment on `people.external`); `core/household.py` (`CLASSIFY_SYSTEM`) |
 
      In the code, a third party who has been decided on is `people.external = true`. Their
      data rests in `chunks.text`, and their name in `person_aliases`. No field is declared to
@@ -303,7 +306,9 @@ These are carried from the first draft unless marked new.
      | Insurance agent: licence number | **Yes (Siew, 2026-10-01).** Treated as "other similar information": it is printed in the agent's business capacity and exists only because of their role. No document in the corpus fills it in yet; it is a placeholder in `inbox/DOCUMENT_TEMPLATE.md`. |
      | Policy beneficiary | No. Named in a personal capacity. |
      | Joint borrower outside the household | No. Personal capacity. |
-     | Ex-landlord | **For Siew.** Probably a personal capacity, since letting one's own home is not obviously a business. Ask whether it changes if the landlord lets property as a business. |
+     | Landlord, ex-landlord | Not decided. No document type reads tenancy agreements (row above), so this is not needed for v1. |
+     | A doctor | **Proposed, for Siew: yes**, for their name and clinic details, which are given in their professional capacity. |
+     | Domestic helper, tenant | No. Personal capacity. |
      | The other driver in a claim | No. Personal capacity. |
      | Former employer | An organisation is not a third party at all. A sole-proprietor employer's business details would be business contact information. |
 
