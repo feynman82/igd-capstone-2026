@@ -25,7 +25,7 @@ baseline, and it is meant to miss.
 | 3 | Faithfulness | `faithfulness` | ≥ 0.90 | RAG core | Set A | Ragas `faithfulness`. Of the sentences in the answer, the fraction the cited passages actually support. The gate should make this near 1.0 by construction; a drop is a gate bug, not a model mood. |
 | 4 | Answer relevancy | `answer_relevancy` | ≥ 0.80 | RAG core | Set A | Ragas `answer_relevancy`. Whether the answer addresses the question asked rather than a neighbouring one. |
 | 5 | Abstention rate | `abstention_rate` | ≥ 0.95 | Grounding gate | Set B | Not a Ragas metric. Fraction of Set B questions for which the response `kind` is `abstention`. This is the headline number. |
-| 6 | Field extraction F1 | `extraction_f1` | ≥ 0.90 | Extraction | Register | Not a Ragas metric. For every `(doc_id, field)` the register fills, compare the `facts` row the extractor wrote. Exact match after type normalisation (dates to ISO, amounts to two decimals). Micro-averaged F1 across all fields; also reported per `doc_type` in week 6. |
+| 6 | Field extraction F1 | `extraction_f1` | ≥ 0.90 | Extraction | Register | Not a Ragas metric. For every `(doc_id, field)` the register fills, compare the `facts` row the extractor wrote. Exact match after type normalisation (dates to ISO, amounts to two decimals). Micro-averaged F1 across all fields, and per `doc_type` and per field in `eval/results/w6-extraction-by-doc-type.md`. |
 | 7 | Obligation precision | `obligation_precision` | ≥ 0.95 | Reminder module | Register | Not a Ragas metric. Of the `obligations` rows the reminder module raised, the fraction whose due date and subject match a register row. A reminder about a date that is not printed anywhere is a false obligation. |
 | 8 | Alert false-positive rate | `alert_fpr` | ≤ 0.05 | Alert module | Register | Not a Ragas metric. Of the alerts the alert module fired, the fraction where no register value crosses the configured threshold. Reported apart from the RAG metrics: an alert module can be perfect on a system that retrieves badly, and vice versa. |
 | 9 | Decode throughput and peak VRAM | `decode_tok_s`, `peak_vram_gb` | Measured and reported | Runtime | `scripts/bench_runtime.py` | Not a quality metric and has no target: it is the number that says whether the other eight were achieved on the hardware we claim. Median with run-to-run spread, from `eval/results/w1-hardware.md`. |
@@ -68,6 +68,28 @@ metrics need a judge: `--judge MODEL` or `PARROT_JUDGE_MODEL`, served by the sam
 (a larger model than the generator is better — a model marking its own work is generous), and
 `--no-judge` writes the code-scored metrics alone. A result file is never overwritten. See the
 docstring in `eval/run.py` for every flag.
+
+## Extraction F1 by document type
+
+```
+uv run python -m eval.report        # writes eval/results/w6-extraction-by-doc-type.md
+uv run python -m eval.report --out -
+```
+
+Metric 6 is one micro-averaged number and a single number cannot say what to fix. `eval.report`
+writes the same arithmetic split per document type, worst first, and — for the types under
+target — per register field, so the lane that owns extraction is pointed at one field on one
+template. It needs the vault and the register only: no generation, no judge, no retrieval, so it
+runs in seconds and can be re-run after any ingest. A re-run rewrites every number and **keeps
+the paragraph under "How to read it"**, because the numbers are the vault's and the reading of
+them is a person's.
+
+Two things the table deliberately does not do. A register row whose document is not in the vault
+is absent rather than scored 0 — there is nothing to extract from yet. A document that *is*
+indexed and produced no facts at all is scored as a miss on every field, because "the extractor
+wrote nothing" must not be the one failure the metric cannot see. Facts from a document no
+register row claims are counted and named, not scored: without a register row there is no ground
+truth, so they are neither hits nor misses.
 
 ## Writing questions
 
