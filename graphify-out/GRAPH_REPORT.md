@@ -1,25 +1,25 @@
 # Graph Report - igd-capstone-2026  (2026-10-01)
 
 ## Corpus Check
-- 314 files · ~721,279 words
+- 314 files · ~721,522 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 34 file(s) not represented in the graph (top: (none) 11, .jsonl 7, .csv 5)
 
 ## Summary
-- 4718 nodes · 11634 edges · 214 communities (172 shown, 42 thin omitted)
+- 4719 nodes · 11635 edges · 202 communities (163 shown, 39 thin omitted)
 - Extraction: 91% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 1070 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `006be0bc`
+- Built from commit: `b80d3a08`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - Ollama
-- test_hybrid.py
+- harness.py
 - ScriptedOllama
-- AnswerGraph
+- test_answer_graph.py
 - validate
 - advice/__init__.py
 - Provenance register for corpus sg_protection_guidance
@@ -27,7 +27,7 @@
 - api.ts
 - test_ingest_pipeline.py
 - test_grounding_index.py
-- tasks.py
+- test_worker_queue.py
 - FolderAdapter
 - test_telegram_capture.py
 - FakeConn
@@ -39,7 +39,7 @@
 - ingest/extract.py
 - test_grounding_values.py
 - report.py
-- Passage
+- AdviceRecord
 - State
 - SentenceScanner
 - household.py
@@ -52,22 +52,22 @@
 - _pages_from
 - test_eval_generate.py
 - TelegramAdapter
-- connect
+- pytest
 - Any
-- Overdue
+- reminder/__init__.py
 - test_api.py
 - alert/__init__.py
 - retrieve.py
 - sse
-- AdviceShape
-- test_startup.py
+- InstalledPack
+- main
 - eval/modules.py
-- test_gate.py
-- pipeline.py
+- answer.py
+- ingest/quarantine.py
 - build_router
-- scope_passages
+- HouseholdScope
 - compilerOptions
-- Asks
+- knowledge.py
 - installed_packs
 - test_grounding.py
 - packs.py
@@ -75,19 +75,20 @@
 - run.py
 - ADR 0014: A pack supplies what the core knows about a domain, and the core stays generic
 - build.py
-- Any
+- pack
+- ingest/reindex.py
 - values.py
 - FakeCursor
 - lock.ts
-- ingest/quarantine.py
+- _checked
 - routes.py
 - PARROT Interface Design Pack
 - export-design-preview.cjs
 - The Four Surfaces
-- InstalledPack
+- test_knowledge.py
 - advice-consent.tsx
 - devDependencies
-- ConfigurationError
+- test_the_inventory_always_reads_core_documents
 - Hybrid Retrieval: Dense Plus Full-Text
 - scope.py
 - ADR 0011: The household is people and aliases, and the owner is one of them
@@ -99,13 +100,13 @@
 - extract_values
 - Two-stage quarantine with a vision-language second pass
 - Any
-- Ollama
+- paperbrain/ollama.py
 - packs/page.tsx
 - main
 - ADR 0016: A pack advises; code calculates from cited facts and reviewed rule values, under recorded consent
 - Any
 - components.json
-- _answer_events
+- _advised
 - test_tax_pack.py
 - contracts.py
 - document-detail.tsx
@@ -115,8 +116,8 @@
 - Lane C - Governance and assurance
 - test_contracts.py
 - Core Document Catalogue (ADR 0017)
-- ModuleManifest
-- TypeSpec
+- Ollama
+- phrasings.py
 - The five-lane split (five people, nine weeks, three builders)
 - Data inventory: identity data, DOBs and loans
 - test_rerank.py
@@ -131,16 +132,16 @@
 - paperbrain/extract.py
 - §5 · Evaluation and results
 - tokens/page.tsx
-- test_advice_core.py
+- test_income_may_be_read_per_month_or_per_year
 - Integration review
-- advice_consent.py
+- generate_lim_documents.py
 - FakeCursor
 - capture.py
-- test_answer_graph.py
+- ModelUnavailable
 - _as_consent
 - The deliberately naive retrieval baseline
 - Running the evaluation harness
-- mentions
+- test_an_unscoped_result_is_not_empty_for_the_owner
 - The case for synthetic evaluation data
 - Domain pack
 - Filling the corpus register
@@ -158,19 +159,18 @@
 - PrivateCare Policy Wording Template
 - alert module manifest
 - dependencies
-- test_registration.py
+- test_each_policy_lapses_on_its_own
 - app/layout.tsx
 - The Grounding Gate
 - Authoring a domain pack
 - ADR 0008 - Ingestion runs on a Celery worker
-- FakeCursor
 - DesignPreview evaluation harness
 - typing
-- main
+- supervise
 - Adversarial testing from week 7
 - Writing an ADR
 - Every Fact Row Cites Its Source
-- _as_response
+- HouseholdInventory
 - Cursor
 - Any
 - PARROT evaluation harness
@@ -178,38 +178,28 @@
 - The autonomy statement
 - test_a_client_that_leaves_after_the_card_commits_one_record
 - _as_module_summary
-- test_a_document_still_in_the_inbox_is_not_forgotten
 - ADR index (0001-0018, with status)
 - Page one as plain Label: value lines
 - Project skills
 - pull_request_template.md
-- _today_items
-- test_ask_stream_hands_its_events_to_answering_so_its_teardown_can_close_them
+- _answer_events
+- test_both_ask_endpoints_hand_the_graph_the_same_advice_ports
 - The synthetic-to-real gap
 - filesystem
-- ._review
 - test_reindexing_replaces_chunks_and_leaves_facts_alone
-- sweep
-- paperbrain/chunk.py
-- AdviceRecord
-- unprinted_numbers
 - One Database
 - eslint.config.mjs
 - scripts
-- HouseholdConsents
 - Lane E - Corpus and adversarial testing
 - Due
 - Alert
 - setup.sh
 - session-start.sh
 - package.json
-- usable
 - postcss.config.mjs
 - Lane C - Governance and assurance
 - parrot
-- FakeGraph
 - quiet_engine
-- Calculation
 
 ## God Nodes (most connected - your core abstractions)
 1. `Settings` - 189 edges
@@ -258,39 +248,39 @@
 - **Module manifests sharing the reads/writes/runs/surfaces contract** — modules__template_module_module_template, modules_advice_module_advice, modules_alert_module_alert, modules_reminder_module_reminder [INFERRED 0.95]
 - **The 9x/4x protection rule of thumb and the published sources a person approved it from** — packs_insurance_agent_grounding_sg_protection_guidance_moneysense_bfpg_faq_protection_rule_of_thumb, packs_insurance_agent_grounding_sg_protection_guidance_moneysense_bfpg_faq_consumer_faqs, packs_insurance_agent_grounding_sg_protection_guidance_moneysense_bfpg_starting_a_family_starting_a_family_guide, packs_insurance_agent_grounding_sg_protection_guidance_moneysense_basic_financial_planning_basic_financial_planning_guide, packs_insurance_agent_grounding_sg_protection_guidance_lia_protection_gap_study_protection_gap_study_2022, packs_insurance_agent_pack_death_tpd_income_multiple, packs_insurance_agent_pack_ci_income_multiple [INFERRED 0.95]
 
-## Communities (214 total, 42 thin omitted)
+## Communities (202 total, 39 thin omitted)
 
 ### Community 0 - "Ollama"
-Cohesion: 0.08
-Nodes (13): Generated, ModelUnavailable, Ollama, uses_task_prompts(), ingest(), register(), retry_one(), retry_quarantine() (+5 more)
+Cohesion: 0.06
+Nodes (30): recovery_rate(), bytes_for(), digest_of_document(), SourceMissing, connect(), DatabaseUnavailable, Ollama, uses_task_prompts() (+22 more)
 
-### Community 1 - "test_hybrid.py"
-Cohesion: 0.09
-Nodes (16): hybrid_score(), HybridRetriever, identifiers(), prints(), FakeConn, FakeCursor, FakeOllama, _row() (+8 more)
+### Community 1 - "harness.py"
+Cohesion: 0.05
+Nodes (27): HouseholdConsents, HouseholdAdviceLog, DenseRetriever, NoReranker, enabled_pack_ids(), enabled_packs(), hybrid_score(), HybridRetriever (+19 more)
 
 ### Community 2 - "ScriptedOllama"
-Cohesion: 0.07
-Nodes (42): AdviceCard, AdviceWithheld, ConsentRequired, Finished, Sentence, Subject, advised_pack(), build() (+34 more)
+Cohesion: 0.05
+Nodes (58): AdviceCard, AdviceWithheld, _closes(), ConsentRequired, Declined, Finished, Sentence, Subject (+50 more)
 
-### Community 3 - "AnswerGraph"
-Cohesion: 0.08
-Nodes (36): AnswerGraph, Declined, Holding, Scoped, test_advice_is_declined_when_the_graph_was_given_no_adviser(), FakeInventory, FixedRetriever, holding() (+28 more)
+### Community 3 - "test_answer_graph.py"
+Cohesion: 0.06
+Nodes (54): AnswerGraph, _pack_for(), Refused, Holding, Passage, scope_to(), Scoped, build() (+46 more)
 
 ### Community 4 - "validate"
 Cohesion: 0.09
 Nodes (24): _as_date(), _fields(), _known_doc_types(), _known_fields(), main(), _pages(), validate(), _wide_format() (+16 more)
 
 ### Community 5 - "advice/__init__.py"
-Cohesion: 0.08
-Nodes (42): Figure, Input, _Value, _ambiguous(), _amount(), _band(), _band_label(), Basis (+34 more)
+Cohesion: 0.06
+Nodes (50): Calculation, Figure, Input, Missing, _ambiguous(), _amount(), _band(), _band_label() (+42 more)
 
 ### Community 6 - "Provenance register for corpus sg_protection_guidance"
 Cohesion: 0.05
 Nodes (59): CareShield Life (CPF Board), CareShield Life monthly payouts on severe disability and the ADL claim criteria, Dependants Protection Scheme (CPF Board), CPF news release: higher DPS sum assured and premium rates from 1 April 2021, DPS sum assured $70,000 (age 21-60) and $55,000 (age 60-65) from 1 April 2021, MediShield Life (CPF Board), Critical illness protection gap (74%, S$579 billion, PGS 2022), LIA Media Release: Protection Gap Study 2022 (+51 more)
 
 ### Community 7 - "test_advice_module.py"
-Cohesion: 0.14
-Nodes (47): Missing, calculate(), assert_nothing_negative(), basis(), fact(), figures_of(), _gap_basis(), _held() (+39 more)
+Cohesion: 0.07
+Nodes (64): calculate(), advised_pack(), assert_nothing_negative(), basis(), db(), _document(), fact(), _facts_tuple() (+56 more)
 
 ### Community 8 - "api.ts"
 Cohesion: 0.05
@@ -298,31 +288,31 @@ Nodes (46): dynamic, HouseholdPage(), metadata, runtime, AppLayout(), dynamic, i
 
 ### Community 9 - "test_ingest_pipeline.py"
 Cohesion: 0.09
-Nodes (34): extract(), FakeOllama, insurance(), iras(), _page_of_examples(), _reply_of_examples(), test_a_date_that_cannot_be_read_still_quarantines(), test_a_document_is_titled_by_the_string_fields_its_pack_declares() (+26 more)
+Nodes (33): classify(), extract(), FakeOllama, insurance(), iras(), _page_of_examples(), _reply_of_examples(), test_a_date_that_cannot_be_read_still_quarantines() (+25 more)
 
 ### Community 10 - "test_grounding_index.py"
-Cohesion: 0.09
-Nodes (27): GroundingDocument, SourceText, index_pack(), IndexReport, _upsert_source(), ExtractedValue, _Connected, _extracted() (+19 more)
+Cohesion: 0.10
+Nodes (25): index_pack(), IndexReport, _upsert_source(), ExtractedValue, _Connected, _extracted(), FakeConn, _installed() (+17 more)
 
-### Community 11 - "tasks.py"
-Cohesion: 0.07
-Nodes (26): sha256(), Queued, recovery_rate(), bytes_for(), digest_of_document(), index_folder(), SourceMissing, sender() (+18 more)
+### Community 11 - "test_worker_queue.py"
+Cohesion: 0.06
+Nodes (27): CaptureAdapter, sha256(), Queued, register_document(), index_folder(), conn(), database_url(), test_a_document_must_arrive_with_a_name() (+19 more)
 
 ### Community 12 - "FolderAdapter"
-Cohesion: 0.07
-Nodes (21): CaptureAdapter, IngestJob, sniff_mime(), FolderAdapter, _Pending, _Registered, Registrar, FakeRegistrar (+13 more)
+Cohesion: 0.09
+Nodes (20): sniff_mime(), FolderAdapter, FolderSettings, _Pending, _Registered, FolderCapture, FakeRegistrar, _settle() (+12 more)
 
 ### Community 13 - "test_telegram_capture.py"
-Cohesion: 0.08
-Nodes (25): TelegramSettings, TelegramUnavailable, build(), FakeRegistrar, FakeTelegram, photo_update(), test_a_chat_outside_the_allow_list_is_ignored(), test_a_conflict_names_the_webhook_rather_than_saying_nothing() (+17 more)
+Cohesion: 0.10
+Nodes (22): build(), FakeRegistrar, FakeTelegram, photo_update(), test_a_chat_outside_the_allow_list_is_ignored(), test_a_conflict_names_the_webhook_rather_than_saying_nothing(), test_a_document_keeps_the_name_it_was_sent_under(), test_a_malformed_allow_list_is_a_configuration_error_not_an_empty_one() (+14 more)
 
 ### Community 14 - "FakeConn"
 Cohesion: 0.09
-Nodes (29): document_row(), fact_row(), FakeConn, obligation(), open_obligation(), overdue_row(), rows_for(), stored_fact() (+21 more)
+Nodes (30): document_row(), fact_row(), FakeConn, obligation(), open_obligation(), overdue_row(), rows_for(), stored_fact() (+22 more)
 
 ### Community 15 - "._advise"
-Cohesion: 0.07
-Nodes (11): Abstained, _advice_basis(), answer_system(), _as_sentence(), _citations(), _distinct(), _input_citation(), _max_sentences() (+3 more)
+Cohesion: 0.06
+Nodes (14): Abstained, _advice_basis(), answer_system(), _as_sentence(), _citations(), _distinct(), _either(), _input_citation() (+6 more)
 
 ### Community 16 - "bench_runtime.py"
 Cohesion: 0.08
@@ -337,12 +327,12 @@ Cohesion: 0.06
 Nodes (75): boot(), bundledBlob(), cdnScriptFor(), collectProps(), compileAttr(), compileTemplate(), contentKey(), createComponentFactory() (+67 more)
 
 ### Community 19 - "worker.py"
-Cohesion: 0.10
-Nodes (12): lifespan(), install_best_effort(), Installed, application(), find_browser_executable(), generate_documents(), _beat_needs_its_own_process(), celery_argv() (+4 more)
+Cohesion: 0.15
+Nodes (9): install(), install_best_effort(), Installed, _beat_needs_its_own_process(), celery_argv(), main(), _run(), _start_beat() (+1 more)
 
 ### Community 20 - "ingest/extract.py"
 Cohesion: 0.09
-Nodes (18): _coerce(), _date_renderings(), decode_schema(), _drop_format(), ExtractedFact, Extraction, find_page(), _normalise() (+10 more)
+Nodes (21): FieldSpec, _coerce(), _date_renderings(), decode_schema(), _drop_format(), ExtractedFact, Extraction, find_page() (+13 more)
 
 ### Community 21 - "test_grounding_values.py"
 Cohesion: 0.14
@@ -350,151 +340,159 @@ Nodes (28): parse_value(), _dropped(), _log_values(), _run(), test_a_money_value
 
 ### Community 22 - "report.py"
 Cohesion: 0.13
-Nodes (12): _cell(), collect(), main(), _overall(), _paragraph(), Provenance, render(), _row() (+4 more)
+Nodes (13): _cell(), collect(), main(), _overall(), _paragraph(), Provenance, render(), _row() (+5 more)
 
-### Community 23 - "Passage"
-Cohesion: 0.05
-Nodes (25): AdviceLog, Adviser, ConsentBook, _advice_prompt(), fuse(), _minor(), _numbered(), DenseRetriever (+17 more)
+### Community 23 - "AdviceRecord"
+Cohesion: 0.06
+Nodes (10): AdviceLog, AdviceRecord, ConsentBook, _advice_prompt(), _minor(), Reranker, Retriever, RecordingReranker (+2 more)
 
 ### Community 24 - "State"
-Cohesion: 0.18
-Nodes (3): _asked(), _conversation(), State
+Cohesion: 0.15
+Nodes (4): _asked(), _conversation(), fuse(), State
 
 ### Community 25 - "SentenceScanner"
-Cohesion: 0.06
-Nodes (19): SentenceScanner, _as_printed(), page_pixels(), photographed(), _register_row(), scanned(), test_a_scan_keeps_the_schedule_table_and_its_page(), drip() (+11 more)
+Cohesion: 0.10
+Nodes (13): SentenceScanner, drip(), test_a_backslash_before_a_quote_is_handled(), test_a_brace_inside_a_sentence_does_not_end_it(), test_a_sentence_is_released_before_the_rest_has_been_written(), test_a_sentence_that_is_not_an_object_is_skipped_rather_than_crashing(), test_a_truncated_stream_keeps_the_sentences_that_did_arrive(), test_an_answer_with_no_sentences_yields_nothing_and_keeps_its_missing() (+5 more)
 
 ### Community 26 - "household.py"
-Cohesion: 0.10
-Nodes (20): add_person(), attribute(), classify_prompt(), confirm(), dismiss(), link_telegram(), owner(), owner_aliases() (+12 more)
+Cohesion: 0.09
+Nodes (21): add_person(), attribute(), classify_prompt(), confirm(), dismiss(), link_telegram(), owner(), owner_aliases() (+13 more)
 
 ### Community 27 - "ParsedPage"
 Cohesion: 0.14
 Nodes (15): chunk_pages(), _clean(), _lines(), _page_chunks(), _pieces(), classification_sample(), ParsedPage, _policy_page() (+7 more)
 
 ### Community 28 - "test_lifecycle.py"
-Cohesion: 0.13
+Cohesion: 0.12
 Nodes (19): Lifecycle, _client(), _eventually(), _launcher(), Screens, _supervise(), test_a_browser_cannot_reach_the_engine_directly_even_with_the_header(), test_a_request_without_the_intent_header_is_refused() (+11 more)
 
 ### Community 29 - "score.py"
-Cohesion: 0.08
-Nodes (28): Answer, Trace, cites(), declined_in_prose(), doc_stem(), grade(), held_back(), inventory_only() (+20 more)
+Cohesion: 0.06
+Nodes (30): Trace, _as_date(), _as_number(), cites(), _contains(), declined_in_prose(), doc_stem(), grade() (+22 more)
 
 ### Community 30 - "test_household.py"
 Cohesion: 0.08
-Nodes (27): is_first_person(), relation_asked(), _household_scope(), test_a_grandparent_nobody_holds_is_an_unknown_relation_not_the_fathers_policy(), test_a_grandparent_recorded_under_that_name_is_who_the_question_means(), test_a_name_that_is_not_exactly_one_person_scopes_nothing(), test_a_named_household_member_wins_over_the_pronoun(), test_a_person_nobody_has_confirmed_is_not_named() (+19 more)
+Nodes (25): is_first_person(), relation_asked(), _household_scope(), test_a_grandparent_nobody_holds_is_an_unknown_relation_not_the_fathers_policy(), test_a_grandparent_recorded_under_that_name_is_who_the_question_means(), test_a_name_that_is_not_exactly_one_person_scopes_nothing(), test_a_named_household_member_wins_over_the_pronoun(), test_a_person_nobody_has_confirmed_is_not_named() (+17 more)
 
 ### Community 31 - ".load"
-Cohesion: 0.13
-Nodes (21): _folder(), _ollama_answering(), test_a_database_that_does_not_answer_fails_in_seconds(), test_a_model_that_cannot_load_is_recorded_rather_than_raised(), test_an_embedding_model_without_task_prompts_is_sent_the_text_alone(), test_an_explicit_url_still_wins_over_the_port_variable(), test_busy_port_does_not_open_browser(), test_database_version_extension_and_tables_are_required() (+13 more)
+Cohesion: 0.10
+Nodes (25): ModelWarmth, warm_models(), _folder(), local_url(), read_env(), _ollama_answering(), test_a_database_that_does_not_answer_fails_in_seconds(), test_a_model_that_cannot_load_is_recorded_rather_than_raised() (+17 more)
 
 ### Community 32 - "test_pages.py"
-Cohesion: 0.09
-Nodes (19): page_count(), PageUnavailable, _pdfium(), render_page(), RendererUnavailable, _size(), test_a_damaged_pdf_is_a_sentence_not_a_traceback(), test_a_file_that_is_not_a_document_says_which_kind_it_is() (+11 more)
+Cohesion: 0.08
+Nodes (20): page_images(), page_count(), PageUnavailable, _pdfium(), render_page(), RendererUnavailable, _size(), test_a_damaged_pdf_is_a_sentence_not_a_traceback() (+12 more)
 
 ### Community 33 - "_pages_from"
 Cohesion: 0.14
 Nodes (11): Block, DoclingParser, _kind(), _pages_from(), _table_text(), _cell(), _on_page(), test_a_table_is_kept_as_label_and_value_lines_in_reading_order() (+3 more)
 
 ### Community 34 - "test_eval_generate.py"
-Cohesion: 0.08
-Nodes (23): _ambiguous(), choose(), Generated, hand_written(), main(), on_file(), pool(), write_lane() (+15 more)
+Cohesion: 0.06
+Nodes (28): _ambiguous(), choose(), Generated, hand_written(), main(), on_file(), pool(), write_lane() (+20 more)
 
 ### Community 35 - "TelegramAdapter"
-Cohesion: 0.13
-Nodes (5): _attachment(), _pixels(), _status_reason(), TelegramAdapter, _write_local_copy()
+Cohesion: 0.10
+Nodes (7): IngestJob, _attachment(), _pixels(), _status_reason(), TelegramAdapter, _write_local_copy(), Registrar
 
-### Community 36 - "connect"
-Cohesion: 0.13
-Nodes (14): enabled_pack_ids(), enabled_packs(), connect(), DatabaseUnavailable, _run_alerts(), _run_reminders(), sweep_alerts_now(), sweep_reminders_now() (+6 more)
+### Community 36 - "pytest"
+Cohesion: 0.14
+Nodes (6): _as_printed(), page_pixels(), photographed(), _register_row(), scanned(), test_a_scan_keeps_the_schedule_table_and_its_page()
 
 ### Community 37 - "Any"
 Cohesion: 0.14
 Nodes (10): by_subject(), db(), FakeCursor, load_register(), test_a_deductible_receipt_counts_in_its_own_year_only(), test_a_lapsed_policy_is_not_masked_by_another_that_still_runs(), test_cpf_is_this_years_payslips_per_employee(), test_donations_are_this_years_deductible_receipts_per_donor() (+2 more)
 
-### Community 38 - "Overdue"
-Cohesion: 0.12
-Nodes (7): close(), current_lead(), next_window(), Overdue, snooze(), UnknownObligation, test_the_tightest_entered_window_is_the_current_one()
+### Community 38 - "reminder/__init__.py"
+Cohesion: 0.11
+Nodes (8): already_said(), current_lead(), next_window(), Overdue, snooze(), UnknownObligation, test_never_notified_is_never_said(), test_the_tightest_entered_window_is_the_current_one()
 
 ### Community 39 - "test_api.py"
-Cohesion: 0.07
-Nodes (29): Cited, advising(), client(), conn(), FakeGraph, graph(), _padded(), streaming() (+21 more)
+Cohesion: 0.08
+Nodes (26): Answer, Asks, advising(), client(), conn(), FakeGraph, graph(), _padded() (+18 more)
 
 ### Community 40 - "alert/__init__.py"
 Cohesion: 0.19
 Nodes (10): cpf_contributions_ytd(), days_uncovered(), _debounced(), donations_ytd(), Measurement, _per_subject(), srs_contributions_ytd(), _totals() (+2 more)
 
 ### Community 41 - "retrieve.py"
-Cohesion: 0.18
-Nodes (10): Connection, load_matrix(), pack(), unpack(), _fts_query(), fuse(), hydrate(), keyword_search() (+2 more)
+Cohesion: 0.16
+Nodes (11): Connection, load_matrix(), pack(), stats(), unpack(), _fts_query(), fuse(), hydrate() (+3 more)
 
 ### Community 42 - "sse"
 Cohesion: 0.10
 Nodes (22): Citation, Reading, a_citation(), advice_card(), rule_citation(), sse(), StreamingGraph, test_a_citation_says_whether_it_is_a_page_or_a_document_on_file() (+14 more)
 
-### Community 43 - "AdviceShape"
-Cohesion: 0.09
-Nodes (16): AdviceShape, FactInput, _review_asked(), categorise(), _fact(), fact_row(), FactRow, facts_for() (+8 more)
+### Community 43 - "InstalledPack"
+Cohesion: 0.08
+Nodes (15): AdviceShape, FactInput, _review_asked(), Inventory, InstalledPack, fact_row(), FactRow, facts_for() (+7 more)
 
-### Community 44 - "test_startup.py"
-Cohesion: 0.13
-Nodes (13): start_web(), main(), report_hardware(), startup_gaps(), prepare_checkout(), test_check_only_never_launches_even_when_ready(), test_incomplete_checkout_never_launches_a_process(), test_launch_preserves_paths_and_loopback_and_exit_code() (+5 more)
+### Community 44 - "main"
+Cohesion: 0.07
+Nodes (25): _kill_tree(), main(), open_browser(), port_answers(), start_web(), start_worker(), stop_web(), stop_worker() (+17 more)
 
 ### Community 45 - "eval/modules.py"
 Cohesion: 0.05
-Nodes (41): alert_fpr(), AlertVerdict, _day(), main(), _mark(), measure(), Measured, ModuleMetrics (+33 more)
+Nodes (39): alert_fpr(), AlertVerdict, _day(), _mark(), measure(), Measured, ModuleMetrics, _number() (+31 more)
 
-### Community 46 - "test_gate.py"
-Cohesion: 0.13
-Nodes (24): check_advice(), Claim, test_a_claim_citing_the_same_document_twice_says_it_once(), test_a_grounded_claim_renders_its_document_and_page(), test_a_number_copied_from_the_passage_is_kept_however_it_is_formatted(), test_a_number_no_cited_passage_printed_is_dropped(), test_a_page_and_a_document_on_file_with_the_same_id_are_different_citations(), test_a_sentence_left_with_no_word_or_figure_is_empty() (+16 more)
+### Community 46 - "answer.py"
+Cohesion: 0.05
+Nodes (51): Adviser, _kind_of(), passages_for(), _without_one_round_of_passage_numbers(), _without_passage_numbers(), check(), check_advice(), check_content() (+43 more)
 
-### Community 47 - "pipeline.py"
+### Community 47 - "ingest/quarantine.py"
 Cohesion: 0.06
-Nodes (21): Chunk, fixed(), from_facts(), _label(), parse(), ParsedDocument, Parser, PlainTextParser (+13 more)
+Nodes (22): Chunk, parse(), ParsedDocument, Parser, PlainTextParser, commit_both_lanes(), document_title(), Outcome (+14 more)
 
 ### Community 48 - "build_router"
-Cohesion: 0.08
-Nodes (29): CorrectionResponse, ForgottenDocument, HouseholdResponse, ObligationChanged, PendingName, RetryAccepted, build_router(), add_person() (+21 more)
+Cohesion: 0.09
+Nodes (27): CorrectionResponse, ForgottenDocument, HouseholdResponse, ObligationChanged, PendingName, RetryAccepted, TodayResponse, VaultResponse (+19 more)
 
-### Community 49 - "scope_passages"
-Cohesion: 0.20
-Nodes (9): scope_passages(), scope_to(), _conn_returning(), _passage(), test_a_document_naming_the_owner_and_somebody_else_is_kept(), test_a_document_with_no_subject_belongs_to_everybody(), test_another_persons_documents_are_set_aside(), test_my_dads_question_is_scoped_to_the_parent_and_an_unknown_relation_says_so() (+1 more)
+### Community 49 - "HouseholdScope"
+Cohesion: 0.17
+Nodes (11): HouseholdScope, scope_passages(), _conn_returning(), _passage(), test_a_document_naming_the_owner_and_somebody_else_is_kept(), test_a_document_with_no_subject_belongs_to_everybody(), test_a_household_with_no_owner_scopes_nothing(), test_another_persons_documents_are_set_aside() (+3 more)
 
 ### Community 50 - "compilerOptions"
 Cohesion: 0.11
 Nodes (18): compilerOptions, allowJs, esModuleInterop, incremental, isolatedModules, jsx, lib, module (+10 more)
 
+### Community 51 - "knowledge.py"
+Cohesion: 0.22
+Nodes (10): Categories, Category, Asked, categories_asked(), categorise(), mentions(), _pattern(), _categories() (+2 more)
+
 ### Community 52 - "installed_packs"
-Cohesion: 0.12
-Nodes (12): installed_packs(), enabled_module_ids(), install(), _pack_row(), packs(), RegisteredPack, set_pack_enabled(), UnknownModule (+4 more)
+Cohesion: 0.11
+Nodes (16): installed_modules(), installed_packs(), enabled_module_ids(), _module_row(), modules(), _pack_row(), packs(), RegisteredModule (+8 more)
 
 ### Community 53 - "test_grounding.py"
-Cohesion: 0.17
-Nodes (12): GroundingCorpus, corpus_dir(), CorpusInvalid, load_corpus(), _document(), _installed(), test_a_missing_recorded_file_is_refused(), test_a_pack_with_no_corpus_gives_none_and_empty() (+4 more)
+Cohesion: 0.16
+Nodes (14): GroundingCorpus, GroundingDocument, corpus_dir(), CorpusInvalid, load_corpus(), SourceText, _document(), _installed() (+6 more)
 
 ### Community 54 - "packs.py"
 Cohesion: 0.14
-Nodes (9): DocumentTypeSpec, Classification, classify(), _prompt(), _schema(), Catalog, document_types(), _load_one() (+1 more)
+Nodes (8): DocumentTypeSpec, Classification, _prompt(), _schema(), Catalog, document_types(), _load_one(), PackUnavailable
 
 ### Community 55 - "cli.py"
-Cohesion: 0.17
-Nodes (13): build_parser(), _client(), cmd_add(), cmd_docs(), cmd_doctor(), cmd_init(), cmd_search(), cmd_stats() (+5 more)
+Cohesion: 0.20
+Nodes (14): build_parser(), _client(), cmd_add(), cmd_ask(), cmd_docs(), cmd_doctor(), cmd_ingest(), cmd_init() (+6 more)
 
 ### Community 56 - "run.py"
-Cohesion: 0.13
-Nodes (16): _chosen(), _corpus_sha(), _counts(), _facts(), _Formatter, _git_sha(), _indexed(), main() (+8 more)
+Cohesion: 0.12
+Nodes (18): _chosen(), _corpus_sha(), _counts(), _facts(), _Formatter, _git_sha(), _indexed(), main() (+10 more)
 
 ### Community 57 - "ADR 0014: A pack supplies what the core knows about a domain, and the core stays generic"
 Cohesion: 0.15
 Nodes (17): Code-written absence sentence: 'None of the N policies on file is a dental plan.', ADR 0014: A pack supplies what the core knows about a domain, and the core stays generic, The advise route intent returns the pack's advice_decline, answering.categories: ordered whole-word rules over one printed field, Category filter applied before the keep-6 cut, answering.exclusions: headings under which a cover claim is not believed, Gate checks beyond citation: printed numbers, exclusion-only claims, sentence cap, grounding_sources and grounding_chunks (create-only migration) (+9 more)
 
 ### Community 58 - "build.py"
-Cohesion: 0.11
+Cohesion: 0.09
 Nodes (13): DocumentCatalog, _class_name(), _docstring(), _field_line(), _header(), load(), load_catalog(), main() (+5 more)
 
-### Community 59 - "Any"
-Cohesion: 0.10
-Nodes (17): advised_pack(), db(), _document(), _facts_tuple(), FakeConn, FakeCursor, _source(), _sum_insured() (+9 more)
+### Community 59 - "pack"
+Cohesion: 0.20
+Nodes (9): holdings(), pack(), test_every_gap_the_review_runs_names_the_cover_that_closes_it(), test_the_persona_is_voice_and_the_decline_refuses_a_recommendation(), row(), test_a_pack_that_declares_no_categories_holds_nothing(), test_a_policy_on_file_is_named_categorised_and_cited_to_the_page_its_name_is_on(), test_a_renewal_notice_is_not_counted_as_a_policy_on_file() (+1 more)
+
+### Community 60 - "ingest/reindex.py"
+Cohesion: 0.21
+Nodes (6): _vector_literal(), indexed(), IndexedDocument, reindex_document(), ReindexFailed, _Value
 
 ### Community 61 - "values.py"
 Cohesion: 0.08
@@ -504,13 +502,13 @@ Nodes (21): _check(), collapse(), _cuts_a_number(), _groups(), _is_heading(), nu
 Cohesion: 0.07
 Nodes (45): dynamic, GET(), grant(), POST(), runtime, ALLOWED, Context, DELETE() (+37 more)
 
-### Community 64 - "ingest/quarantine.py"
-Cohesion: 0.16
-Nodes (10): blocked_reasons(), forget(), page_images(), QuarantinedDocument, queue(), Recovery, retry(), _still_quarantined() (+2 more)
+### Community 64 - "_checked"
+Cohesion: 0.20
+Nodes (7): _checked(), _market(), _market_compares_an_undeclared_field(), test_a_market_comparison_may_compare_a_field_only_its_sources_publish(), test_an_insurance_manifest_with_advice_validates(), test_an_own_comparison_may_not_compare_a_field_only_sources_publish(), test_categories_must_read_a_field_the_pack_declares()
 
 ### Community 65 - "routes.py"
-Cohesion: 0.09
-Nodes (33): AbstentionEvent, AdviceCardEvent, AdviceFigure, AdviceWithheldEvent, AskRequest, CloseRequest, ConfirmNameRequest, ConsentRequest (+25 more)
+Cohesion: 0.08
+Nodes (33): AbstentionEvent, AdviceCardEvent, AdviceFigure, AdviceWithheldEvent, AskRequest, Claim, CloseRequest, ConfirmNameRequest (+25 more)
 
 ### Community 66 - "PARROT Interface Design Pack"
 Cohesion: 0.09
@@ -524,9 +522,9 @@ Nodes (17): bundle(), classes, css, cssFile, domId, fs, ids, licences (+9 more)
 Cohesion: 0.13
 Nodes (14): The FastAPI Application, The API Surface, apply, Auto-Redirect to Today Once Ready, check, draw, Five Readiness Rows in Plain Words, poll (+6 more)
 
-### Community 69 - "InstalledPack"
-Cohesion: 0.05
-Nodes (31): _Answering, holdings(), HouseholdInventory, Inventory, Asked, categories_asked(), glossary(), _make_replacer() (+23 more)
+### Community 69 - "test_knowledge.py"
+Cohesion: 0.17
+Nodes (9): glossary(), _make_replacer(), reworded(), _vocabulary(), test_a_question_names_the_categories_it_is_about(), test_a_word_inside_another_word_is_not_a_match(), test_the_longest_phrase_wins(), test_the_understanding_step_is_told_only_the_words_the_question_used() (+1 more)
 
 ### Community 70 - "advice-consent.tsx"
 Cohesion: 0.24
@@ -536,37 +534,33 @@ Nodes (13): ConsentPrompt(), agree(), settle(), AdviceConsentSection(), fetchCon
 Cohesion: 0.18
 Nodes (11): devDependencies, eslint, eslint-config-next, @eslint/eslintrc, postcss, tailwindcss, @tailwindcss/postcss, @types/node (+3 more)
 
-### Community 72 - "ConfigurationError"
-Cohesion: 0.06
-Nodes (16): _chat_ids(), ConfigurationError, _flag(), local_url(), _port(), _positive(), read_env(), main() (+8 more)
-
 ### Community 73 - "Hybrid Retrieval: Dense Plus Full-Text"
 Cohesion: 0.18
 Nodes (5): bge-reranker-v2-m3 Cross-Encoder, 40 Down to 6, Hybrid Retrieval: Dense Plus Full-Text, Reciprocal Rank Fusion, k=60, The Household's Eleven Policies, The Validator Is the Handover Gate
 
 ### Community 74 - "scope.py"
-Cohesion: 0.20
-Nodes (9): _decide(), _Decision, _name_word_owners(), named_in(), _names(), _names_a_member_impersonally(), _own_name_words(), Person (+1 more)
+Cohesion: 0.21
+Nodes (8): _decide(), _Decision, _name_word_owners(), named_in(), _names(), _names_a_member_impersonally(), _own_name_words(), Person
 
 ### Community 75 - "ADR 0011: The household is people and aliases, and the owner is one of them"
 Cohesion: 0.17
 Nodes (11): ADR 0011: The household is people and aliases, and the owner is one of them, facts.subject keeps the unnormalised printed string, db/migrations/0002_household.sql (additive, four CREATE TABLEs), people table (display name, relation, is_owner), person_aliases (every printed string resolving to a person), Telegram chat_id maps to a person, Possessive relations scope the question, before the cut to six, Naming exactly one person scopes to them (whole name, or a 3+ letter possessive unique to them) (+3 more)
 
 ### Community 76 - "FakeConn"
-Cohesion: 0.18
-Nodes (12): current(), status(), FakeConn, _no_owner(), _owned(), test_a_withdrawal_after_a_grant_gives_none(), test_an_older_version_gives_status_outdated(), test_current_is_none_when_the_latest_grant_is_a_different_version() (+4 more)
+Cohesion: 0.08
+Nodes (19): current(), grant(), _latest(), NoOwner, _record(), status(), withdraw(), FakeConn (+11 more)
 
 ### Community 77 - "test_modules.py"
 Cohesion: 0.15
-Nodes (18): AlertConfig, already_said(), sweep(), FakeConn, obligation_row(), test_a_dry_run_records_nothing(), test_a_metric_no_query_defines_cannot_fire(), test_a_sum_is_per_person_and_cites_only_that_persons_receipts() (+10 more)
+Nodes (21): AlertConfig, sweep(), sweep(), FakeConn, obligation_row(), srs_row(), test_a_dry_run_records_nothing(), test_a_firing_older_than_the_debounce_window_fires_again() (+13 more)
 
 ### Community 78 - "item-row.tsx"
 Cohesion: 0.16
 Nodes (13): SourceChip(), stripTrailingPage(), ADR-0016, countdown(), detail(), figure(), ItemRow(), longDate() (+5 more)
 
 ### Community 79 - "test_eval_harness.py"
-Cohesion: 0.17
-Nodes (14): reference_for(), Expected, load_set(), MalformedQuestion, Question, subset(), _question(), test_a_fact_question_needs_a_value_and_a_page() (+6 more)
+Cohesion: 0.08
+Nodes (26): Cited, Recorder, trace_all(), reference_for(), Expected, load_set(), MalformedQuestion, Question (+18 more)
 
 ### Community 80 - "preview.tsx"
 Cohesion: 0.10
@@ -574,19 +568,19 @@ Nodes (16): metadata, answers, DesignPreview(), Direction, directions, Item, ite
 
 ### Community 81 - "extract_values"
 Cohesion: 0.18
-Nodes (12): extract_values(), _long_text(), _reply(), ScriptedClient, _source(), test_a_json_reply_with_no_usable_values_is_no_values_for_that_section_only(), test_a_long_text_is_sent_in_more_than_one_call(), test_a_model_that_is_down_raises() (+4 more)
+Nodes (13): extract_values(), Generated, _long_text(), _reply(), ScriptedClient, _source(), test_a_json_reply_with_no_usable_values_is_no_values_for_that_section_only(), test_a_long_text_is_sent_in_more_than_one_call() (+5 more)
 
 ### Community 82 - "Two-stage quarantine with a vision-language second pass"
 Cohesion: 0.12
 Nodes (11): Capture adapters behind one receive() interface, Ingestion worker with idempotent upsert, Two-stage quarantine with a vision-language second pass, Batch 4: the deliberately hard documents, Task: review every quarantined document and label the failure, Task: sign off the capture-to-database path against the data inventory, PaperBrain handled failure modes, The pb command line (+3 more)
 
 ### Community 83 - "Any"
-Cohesion: 0.11
+Cohesion: 0.12
 Nodes (3): ConsentCursor, Fails, FakeCursor
 
-### Community 84 - "Ollama"
-Cohesion: 0.16
-Nodes (6): answer(), build_context(), format_sources(), cmd_ask(), Ollama, Hit
+### Community 84 - "paperbrain/ollama.py"
+Cohesion: 0.29
+Nodes (4): answer(), build_context(), format_sources(), Hit
 
 ### Community 85 - "packs/page.tsx"
 Cohesion: 0.06
@@ -594,39 +588,39 @@ Nodes (29): ADR-0017, next, dynamic, metadata, PacksPage(), runtime, DocumentPag
 
 ### Community 86 - "main"
 Cohesion: 0.14
-Nodes (12): approve(), pending(), PendingValue, _block(), main(), test_approve_passes_only_the_ids_and_the_pending_condition(), test_list_block_shows_id_pack_key_value_source_and_an_indented_passage(), test_pending_reads_every_column_of_a_value_and_its_source() (+4 more)
+Nodes (11): approve(), pending(), PendingValue, reject(), _block(), main(), test_list_block_shows_id_pack_key_value_source_and_an_indented_passage(), test_review_cli_approve_and_reject_together_is_a_parser_error() (+3 more)
 
 ### Community 87 - "ADR 0016: A pack advises; code calculates from cited facts and reviewed rule values, under recorded consent"
 Cohesion: 0.16
 Nodes (18): ADR 0016: A pack advises; code calculates from cited facts and reviewed rule values, under recorded consent, modules/advice/ calculators returning a Calculation or a Missing, advice_consents, append-only (granted or withdrawn, version, wording hash, channel), Advice graph flow: shape match, subject resolution, consent, AdviceCard, explain, advice_records keeps each answer's full basis, PackManifest.advice shapes (gap, remaining_room, keep_or_surrender, compare_own, compare_market, estimate_saving), Advice.review: one question runs every shape at once, A grounding corpus lives at packs/<pack>/grounding/<corpus_id>/ (+10 more)
 
 ### Community 88 - "Any"
-Cohesion: 0.18
-Nodes (17): _compare_without_an_ordering(), _compares_an_undeclared_field(), _drop_held(), _drop_rules(), _duplicate_shape(), _fact(), _field_not_on_every_doc_type(), _held_per_month() (+9 more)
+Cohesion: 0.26
+Nodes (14): _compare_without_an_ordering(), _compares_an_undeclared_field(), _drop_held(), _drop_rules(), _duplicate_shape(), _fact(), _field_not_on_every_doc_type(), _held_per_month() (+6 more)
 
 ### Community 89 - "components.json"
 Cohesion: 0.11
 Nodes (17): aliases, components, hooks, lib, ui, utils, iconLibrary, rsc (+9 more)
 
-### Community 90 - "_answer_events"
+### Community 90 - "_advised"
 Cohesion: 0.20
-Nodes (5): ErrorEvent, _answer_events(), connection(), _settings(), _sse()
+Nodes (6): _advised(), test_a_review_names_only_declared_shapes_and_categories(), test_a_shape_closed_by_an_unknown_category_is_rejected(), test_advice_naming_an_undeclared_catalogue_field_is_rejected_against_the_catalogue(), test_advice_naming_an_unknown_category_is_rejected_against_the_catalogue(), test_advice_reading_a_payslip_field_needs_no_second_pack()
 
 ### Community 91 - "test_tax_pack.py"
 Cohesion: 0.20
 Nodes (11): _basis(), _latest(), _matched(), _published(), _register(), _shape(), test_a_tax_question_reaches_the_tax_shape_and_insurance_keeps_its_own(), test_no_saving_is_estimated_without_a_notice_of_assessment() (+3 more)
 
 ### Community 92 - "contracts.py"
-Cohesion: 0.11
-Nodes (17): Advice, Answering, Categories, Category, Exclusions, FieldSpec, Grounding, Guardrails (+9 more)
+Cohesion: 0.07
+Nodes (22): Advice, Answering, Exclusions, Grounding, Guardrails, ModuleManifest, ModuleTrigger, Persona (+14 more)
 
 ### Community 93 - "document-detail.tsx"
 Cohesion: 0.24
 Nodes (9): SourcePanel(), DocumentDetail(), when(), Field(), format(), isNumeric(), CorrectionResponse, pageImage() (+1 more)
 
 ### Community 94 - "test_eval_report.py"
-Cohesion: 0.12
-Nodes (19): extraction_by_type(), extraction_f1(), FactRow, _outcomes(), _totals(), unjoined(), test_extraction_f1_scores_only_indexed_documents_against_the_register(), _rendered() (+11 more)
+Cohesion: 0.13
+Nodes (18): extraction_by_type(), extraction_f1(), FactRow, _outcomes(), _totals(), test_extraction_f1_scores_only_indexed_documents_against_the_register(), _rendered(), _scores() (+10 more)
 
 ### Community 95 - "The Lim Household, Tampines"
 Cohesion: 0.15
@@ -641,20 +635,16 @@ Cohesion: 0.13
 Nodes (9): Data inventory and flow map, ISO/IEC 22989 to 5338 stage-to-process map, Lane C - Governance and assurance, Model card, Retention and erasure policy, Siew's generated task list, Golden Set B - hard negatives (25), The nine metrics and their targets (+1 more)
 
 ### Community 98 - "test_contracts.py"
-Cohesion: 0.08
-Nodes (27): PackManifest, _advised(), _checked(), _insurance(), _tax(), test_a_grounding_corpus_is_named_by_id_not_by_path(), test_a_grounding_corpus_travels_inside_its_pack(), test_a_market_comparison_may_compare_a_field_only_its_sources_publish() (+19 more)
+Cohesion: 0.15
+Nodes (14): PackManifest, _insurance(), _tax(), test_a_grounding_corpus_is_named_by_id_not_by_path(), test_a_module_may_read_grounding_values(), test_a_pack_cannot_opt_out_of_never_acts(), test_a_pack_cannot_opt_out_of_verdict_by_code(), test_a_pack_declaring_document_types_is_rejected() (+6 more)
 
 ### Community 99 - "Core Document Catalogue (ADR 0017)"
 Cohesion: 0.10
 Nodes (11): Generated Files Committed Alongside Their Source, benefit_illustration Document Type, birth_certificate Document Type, claim_letter Document Type, cpf_statement Document Type, Core Document Catalogue (ADR 0017), donation_receipt Document Type, identity_card Document Type (+3 more)
 
-### Community 100 - "ModuleManifest"
-Cohesion: 0.14
-Nodes (11): ModuleManifest, installed_modules(), InstalledModule, manifest(), ModuleUnavailable, _module_row(), modules(), RegisteredModule (+3 more)
-
-### Community 101 - "TypeSpec"
-Cohesion: 0.27
-Nodes (3): _keys(), _spec(), TypeSpec
+### Community 101 - "phrasings.py"
+Cohesion: 0.20
+Nodes (4): _keys(), LaneSpec, _spec(), TypeSpec
 
 ### Community 102 - "The five-lane split (five people, nine weeks, three builders)"
 Cohesion: 0.09
@@ -665,7 +655,7 @@ Cohesion: 0.17
 Nodes (7): Data inventory: identity data, DOBs and loans, Telegram capture route and delete-at-source, What crosses a boundary, Governance artefact set, The final ILP report, db service (pgvector/pgvector:pg17), redis service (redis:7-alpine)
 
 ### Community 104 - "test_rerank.py"
-Cohesion: 0.07
+Cohesion: 0.06
 Nodes (22): CrossEncoderReranker, device_name(), load(), passage_text(), relevance(), score_pairs(), _warn_once(), FakeEncoded (+14 more)
 
 ### Community 105 - "Roadmap phase 3 - reminders"
@@ -681,8 +671,8 @@ Cohesion: 0.18
 Nodes (5): python -m corpus.validate, The document register as ground truth, The household canon (the Lims of Tampines), Task: spot-check 20 register rows against the extractor, Golden Set A - answerable (60)
 
 ### Community 108 - "ingest.py"
-Cohesion: 0.29
-Nodes (8): cmd_ingest(), discover(), embed_chunks(), guess_date(), guess_type(), ingest_file(), IngestResult, sha256()
+Cohesion: 0.19
+Nodes (10): Chunk, chunk_pages(), clean(), _split_page(), discover(), guess_date(), guess_type(), ingest_file() (+2 more)
 
 ### Community 109 - "Tax and Reliefs — contract changes this pack needs"
 Cohesion: 0.40
@@ -712,29 +702,25 @@ Nodes (12): 5.10 What run 3 must add, 5.1 The claim, 5.2 What was measured, 5.3 
 Cohesion: 0.05
 Nodes (34): lucide-react, react, dynamic, runtime, Motion(), ROWS, INKS, metadata (+26 more)
 
-### Community 116 - "test_advice_core.py"
-Cohesion: 0.23
-Nodes (11): _kind_of(), passages_for(), check_content(), _says(), _calculation(), test_check_content_keeps_a_sentence_stating_a_facts_value(), test_check_content_keeps_a_sentence_stating_a_figure(), test_check_content_keeps_a_sentence_stating_a_rules_value() (+3 more)
+### Community 116 - "test_income_may_be_read_per_month_or_per_year"
+Cohesion: 0.25
+Nodes (4): test_a_grounding_corpus_travels_inside_its_pack(), test_an_inconsistent_advice_block_is_rejected_by_name(), test_every_grounding_corpus_declares_its_provenance(), test_income_may_be_read_per_month_or_per_year()
 
 ### Community 117 - "Integration review"
 Cohesion: 0.29
 Nodes (6): How to give the feedback, Integration review, Never, Read first, Reviewing a pull request, The weekly pass — ninety minutes, protected
 
-### Community 118 - "advice_consent.py"
-Cohesion: 0.21
-Nodes (7): grant(), _latest(), NoOwner, _record(), withdraw(), test_grant_inserts_the_owner_and_the_wording_hash(), test_withdraw_inserts_a_withdrawn_row()
-
 ### Community 121 - "capture.py"
 Cohesion: 0.06
-Nodes (13): FolderSettings, Dispatcher, Inline, Send, Intake, Registration, attribution(), broker_available() (+5 more)
+Nodes (16): TelegramSettings, TelegramUnavailable, Dispatcher, Inline, Send, Intake, Registration, attribution() (+8 more)
 
-### Community 122 - "test_answer_graph.py"
-Cohesion: 0.06
-Nodes (35): _either(), _pack_for(), _without_one_round_of_passage_numbers(), _without_passage_numbers(), check(), Verdict, build(), events() (+27 more)
+### Community 122 - "ModelUnavailable"
+Cohesion: 0.13
+Nodes (6): ModelUnavailable, test_a_model_that_dies_before_any_sentence_abstains(), constrained_stream(), constrained_stream(), extract(), down()
 
 ### Community 123 - "_as_consent"
-Cohesion: 0.15
-Nodes (9): AdviceConsent, _as_consent(), advice_consents(), record_consent(), Clause A. Authority and Consent for Submissions on Behalf of Another Adult, For review, Not yet written, Status against the code (+1 more)
+Cohesion: 0.14
+Nodes (10): AdviceConsent, _as_consent(), advice_consents(), record_consent(), Clause A. Authority and Consent for Submissions on Behalf of Another Adult, Definitions, For review, Not yet written (+2 more)
 
 ### Community 124 - "The deliberately naive retrieval baseline"
 Cohesion: 0.17
@@ -743,10 +729,6 @@ Nodes (8): Task: benchmark the workstation and publish the numbers, Week 1 hardw
 ### Community 125 - "Running the evaluation harness"
 Cohesion: 0.18
 Nodes (10): Commands, Done, Never overwrite a result, One variable per run, Read first, Reporting a change, Running the evaluation harness, Staying in lane (+2 more)
-
-### Community 127 - "mentions"
-Cohesion: 0.13
-Nodes (9): _as_date(), _as_number(), _contains(), mentions(), same_value(), value_forms(), test_a_decline_written_in_prose_is_recognised(), test_a_register_value_is_recognised_however_it_is_printed() (+1 more)
 
 ### Community 128 - "The case for synthetic evaluation data"
 Cohesion: 0.18
@@ -789,15 +771,15 @@ Cohesion: 0.06
 Nodes (41): ai, @ai-sdk/react, dynamic, lastQuestion(), ParrotEvent, parseRecord(), POST(), priorTurns() (+33 more)
 
 ### Community 143 - "create_app"
-Cohesion: 0.19
-Nodes (7): create_app(), checks(), ready(), setup(), system_status(), ModelWarmth, warm_models()
+Cohesion: 0.15
+Nodes (6): create_app(), checks(), lifespan(), ready(), setup(), system_status()
 
 ### Community 144 - "Settings"
-Cohesion: 0.11
-Nodes (36): Settings, client_for(), consent(), ConsentConn, pack_row(), settings(), test_a_core_reminder_still_reaches_today_when_its_old_pack_is_off(), test_a_corrected_field_stops_being_flagged() (+28 more)
+Cohesion: 0.09
+Nodes (40): Settings, client_for(), consent(), ConsentConn, filed_document(), inbox(), pack_row(), settings() (+32 more)
 
 ### Community 145 - "schedule.py"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (8): build(), beat_schedule(), cron_expressions(), crontab_from(), manifest(), test_alert_is_swept_nightly_even_though_its_manifest_says_fact_write(), test_both_sweeps_are_scheduled_and_named_after_registered_tasks(), test_the_reminder_cron_is_read_from_its_manifest_not_written_twice()
 
 ### Community 146 - "PrivateCare Policy Wording Template"
@@ -811,10 +793,6 @@ Nodes (6): Days without recorded cover tile, alert_fpr, obligation_precision, Mo
 ### Community 148 - "dependencies"
 Cohesion: 0.18
 Nodes (11): dependencies, ai, @ai-sdk/react, class-variance-authority, clsx, lucide-react, next, next-themes (+3 more)
-
-### Community 149 - "test_registration.py"
-Cohesion: 0.29
-Nodes (8): register_document(), conn(), database_url(), test_a_document_must_arrive_with_a_name(), test_a_new_document_is_inserted(), test_an_empty_payload_is_refused(), test_different_bytes_are_different_documents(), test_the_same_bytes_update_in_place_and_do_not_insert_a_second_row()
 
 ### Community 150 - "app/layout.tsx"
 Cohesion: 0.20
@@ -837,12 +815,8 @@ Cohesion: 0.25
 Nodes (6): Starting Parrot, 3 of 5 ready, Parrot Startup Skeleton Screen, Civic Register direction, DesignPreview evaluation harness, Kitchen Table direction, The Reading Desk direction
 
 ### Community 156 - "typing"
-Cohesion: 0.06
-Nodes (3): render(), reject(), LaneSpec
-
-### Community 157 - "main"
-Cohesion: 0.10
-Nodes (13): _kill_tree(), main(), open_browser(), parse_args(), port_answers(), stop_web(), stop_worker(), supervise() (+5 more)
+Cohesion: 0.05
+Nodes (9): render(), _chat_ids(), ConfigurationError, _flag(), _port(), _positive(), documents_in(), main() (+1 more)
 
 ### Community 158 - "Adversarial testing from week 7"
 Cohesion: 0.25
@@ -852,13 +826,17 @@ Nodes (8): The demonstration run sheet and backup recording, Task: code freeze a
 Cohesion: 0.29
 Nodes (6): Format, Read first, Rules, What does not, What earns an ADR, Writing an ADR
 
-### Community 162 - "_as_response"
-Cohesion: 0.29
-Nodes (3): AskResponse, Claim, _as_response()
+### Community 162 - "HouseholdInventory"
+Cohesion: 0.15
+Nodes (7): AskResponse, _as_response(), ask(), ask_stream(), _graph_for(), _history(), HouseholdInventory
+
+### Community 163 - "Cursor"
+Cohesion: 0.25
+Nodes (3): Cursor, cursor(), cursor()
 
 ### Community 164 - "Any"
-Cohesion: 0.20
-Nodes (5): place(), conn(), test_a_household_with_no_owner_scopes_nothing(), test_a_member_can_be_placed_but_the_owner_cannot(), test_one_name_cannot_belong_to_two_people()
+Cohesion: 0.29
+Nodes (4): resolve(), conn(), test_one_name_cannot_belong_to_two_people(), test_the_owner_is_found_by_any_of_their_names()
 
 ### Community 165 - "PARROT evaluation harness"
 Cohesion: 0.38
@@ -880,10 +858,6 @@ Nodes (5): next_kind(), test_a_client_that_leaves_after_the_card_commits_one_rec
 Cohesion: 0.20
 Nodes (8): ModuleSummary, PacksResponse, PackSummary, _as_module_summary(), _as_pack_summary(), packs(), set_module(), set_pack()
 
-### Community 171 - "test_a_document_still_in_the_inbox_is_not_forgotten"
-Cohesion: 0.22
-Nodes (5): filed_document(), inbox(), test_a_document_still_in_the_inbox_is_not_forgotten(), test_a_document_whose_file_left_the_inbox_is_409_not_500(), test_a_page_that_does_not_exist_is_a_404_that_says_so()
-
 ### Community 172 - "ADR index (0001-0018, with status)"
 Cohesion: 0.09
 Nodes (25): ADR 0001 - Record architecture decisions, ADR 0002 - One PostgreSQL instance for everything, Reciprocal rank fusion of dense and lexical, ADR 0003 - PaperBrain informs the pattern, not the module, PaperBrain prototype, ADR 0004 - Local setup can run before the assistant is ready, ADR 0006 - pypdfium2 renders the quarantine page images, ADR 0009 - next-themes and lucide-react are the only two web dependencies beyond the stack (+17 more)
@@ -896,13 +870,13 @@ Nodes (4): Changing them, Project skills, Slash commands, Using them
 Cohesion: 0.40
 Nodes (4): Checks, Evaluation, Lane, What this changes
 
-### Community 176 - "_today_items"
-Cohesion: 0.17
-Nodes (8): Source, TodayItem, TodayResponse, _as_source(), today(), _cite(), _link(), _today_items()
+### Community 176 - "_answer_events"
+Cohesion: 0.11
+Nodes (10): Source, TodayItem, _answer_events(), _as_source(), _cite(), connection(), _link(), _settings() (+2 more)
 
-### Community 177 - "test_ask_stream_hands_its_events_to_answering_so_its_teardown_can_close_them"
-Cohesion: 0.22
-Nodes (3): ClosingSpy, test_ask_stream_hands_its_events_to_answering_so_its_teardown_can_close_them(), spying()
+### Community 177 - "test_both_ask_endpoints_hand_the_graph_the_same_advice_ports"
+Cohesion: 0.12
+Nodes (6): ClosingSpy, streaming(), test_ask_stream_hands_its_events_to_answering_so_its_teardown_can_close_them(), spying(), test_both_ask_endpoints_hand_the_graph_the_same_advice_ports(), ask()
 
 ### Community 179 - "The synthetic-to-real gap"
 Cohesion: 0.40
@@ -911,22 +885,6 @@ Nodes (4): The 40-document redacted holdout, Consent and redaction protocol, Tas
 ### Community 180 - "filesystem"
 Cohesion: 0.50
 Nodes (3): npx, filesystem, @modelcontextprotocol/server-filesystem
-
-### Community 181 - "._review"
-Cohesion: 0.24
-Nodes (6): _closes(), _shape(), test_a_gap_closed_by_two_kinds_names_the_one_held_and_the_one_not(), test_a_gap_in_cover_already_held_asks_for_more_of_it_not_for_a_first_policy(), test_a_gap_with_nothing_on_file_says_none_is_on_file(), test_a_shape_that_names_no_cover_adds_no_sentence()
-
-### Community 183 - "sweep"
-Cohesion: 0.36
-Nodes (6): sweep(), srs_row(), test_a_firing_older_than_the_debounce_window_fires_again(), test_a_recent_firing_is_debounced(), test_a_threshold_crossing_fires_with_the_document_behind_it(), test_below_the_warning_share_nothing_fires()
-
-### Community 184 - "paperbrain/chunk.py"
-Cohesion: 0.36
-Nodes (4): Chunk, chunk_pages(), clean(), _split_page()
-
-### Community 186 - "unprinted_numbers"
-Cohesion: 0.29
-Nodes (5): _normal(), unprinted_numbers(), test_a_date_on_file_may_be_written_the_way_a_person_says_it(), test_a_leading_zero_does_not_make_a_printed_date_unprinted(), test_a_policy_number_is_kept_only_when_it_is_printed_whole()
 
 ### Community 188 - "eslint.config.mjs"
 Cohesion: 0.33
@@ -943,10 +901,6 @@ Nodes (3): Alert, test_the_debounce_key_separates_people(), test_the_debounce_ke
 ### Community 204 - "package.json"
 Cohesion: 0.11
 Nodes (16): class-variance-authority, clsx, eslint, eslint-config-next, postcss, react-dom, tailwind-merge, tailwindcss (+8 more)
-
-### Community 213 - "Calculation"
-Cohesion: 0.18
-Nodes (6): Calculation, Adviser, _dual_cited_calculation(), _gap_shared_value_calculation(), _meets_calculation(), _shared_value_calculation()
 
 ## Ambiguous Edges - Review These
 - `Provenance register for corpus sg_protection_guidance` → `Lane A - Christian, integration and product`  [AMBIGUOUS]
@@ -969,9 +923,9 @@ Nodes (6): Calculation, Adviser, _dual_cited_calculation(), _gap_shared_value_ca
   README.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **382 isolated node(s):** `Clause A. Authority and Consent for Submissions on Behalf of Another Adult`, `Not yet written`, `For review`, `Action`, `Stage` (+377 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1714 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **42 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **383 isolated node(s):** `Definitions`, `Clause A. Authority and Consent for Submissions on Behalf of Another Adult`, `Not yet written`, `For review`, `Action` (+378 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1715 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **39 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
