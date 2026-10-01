@@ -205,8 +205,28 @@ These are carried from the first draft unless marked new.
 5. ~~Which law applies to a household using its own copy?~~ **Decided 2026-10-01:** the PDPA
    applies, and the lawful basis is deemed consent (§1). The decision leaves these cases open:
    - **5a.** A member who submits *another* member's document, for example the owner filing a
-     partner's passport. The person who acted is not the data subject. Does deemed consent cover
-     this, or does it need the subject's own act?
+     partner's passport. **Decided (Siew, 2026-10-01): yes, covered.** The terms of use must
+     say so expressly. When one adult completes or submits a document on behalf of another
+     adult, that act is deemed to be the other adult's consent and authorisation. The system
+     developer is not liable for any loss, damage, claim or dispute arising from that
+     representation. That includes a disagreement between the two about authority, consent or
+     the accuracy of what was submitted.
+     *What this depends on:*
+     1. **No terms of use exist.** `grep` finds no terms of use, licence agreement or
+        liability text for PARROT in the repository. Neither the unlock screen nor the
+        household setup screen (`web/app/unlock/`, `web/app/(app)/household/`) presents any
+        terms. Until such terms exist and are accepted, the clause has nothing to live in.
+     2. **Acceptance has to be recorded.** No table records that terms were accepted, by whom,
+        or which version. `advice_consents` (S4) does this for advice, by version and wording
+        hash, and could serve as the model. Adding a table would be a migration, so it is for
+        Christian (rule 4).
+     3. **For legal review before the chapter relies on it.** First, whether a term agreed
+        between the submitting adult and the developer can create consent for the other adult,
+        who is not a party to the terms. The common alternative is for the submitter to
+        *represent and warrant* that they hold the other adult's consent or authority. Second,
+        whether the liability exclusion holds against a consumer, and whether it can limit
+        obligations the PDPA itself places on whoever holds the data. Neither point has been
+        read for this document.
    - **5b.** Children (`birth_certificate`, `relation = 'child'`). **Decided (Siew,
      2026-10-01):** for a child **under 13**, consent is given by a parent or guardian. In
      PARROT that is the parent who files the child's document.
