@@ -310,10 +310,20 @@ These are carried from the first draft unless marked new.
      The test is **the capacity in which the details were given**, not the person. The same
      agent's home address, printed on a document, would not be business contact information.
 
-     *Still open:* the **basis** for holding the data of third parties who are not covered by
-     the business contact exclusion (beneficiaries, joint borrowers, the other driver), or a
-     decision to minimise it. The definition says who they are, not why PARROT may hold their
-     data.
+     **Legal basis for third parties (Siew, 2026-10-01).** For third parties not covered by the
+     business contact exclusion (beneficiaries, joint borrowers, the other driver), the basis
+     for holding their data is **their consent, or a contractual agreement**.
+     *How it works in practice, still open:* a third party never uses PARROT, so PARROT cannot
+     ask them. Either route runs through the Submitting Party:
+     - **Consent:** the Submitting Party obtains it. That would need a term in which the
+       Submitting Party warrants they have it. Clause A of `terms-of-use.md` does not cover
+       this: it covers an adult *on whose behalf* a document is submitted, and a beneficiary
+       or the other driver is not someone the household acts for.
+     - **Contractual agreement:** which contract? The terms of use bind only the household and
+       the PARROT team. A contract between the household and the third party, such as the loan
+       agreement itself, would have to permit this use.
+     Nothing in the code records either for a third party (S1 to S4 hold nothing about
+     consent, except advice consent).
    - **5d.** Purpose. Deemed consent covers the purpose the data was submitted for. Is
      "answering questions about the household's documents" one purpose, or are reminders,
      alerts and advice separate ones? Advice already has explicit consent (S4).
