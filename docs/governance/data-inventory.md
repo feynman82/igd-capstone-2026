@@ -300,7 +300,7 @@ These are carried from the first draft unless marked new.
      | Third party | Business contact information? |
      |---|---|
      | Insurance agent: name and business contact details | **Yes. Outside Parts 3 to 6B.** |
-     | Insurance agent: licence number | **For Siew.** It is not one of the listed items. Is it "other similar information"? |
+     | Insurance agent: licence number | **Yes (Siew, 2026-10-01).** Treated as "other similar information": it is printed in the agent's business capacity and exists only because of their role. No document in the corpus fills it in yet; it is a placeholder in `inbox/DOCUMENT_TEMPLATE.md`. |
      | Policy beneficiary | No. Named in a personal capacity. |
      | Joint borrower outside the household | No. Personal capacity. |
      | Ex-landlord | **For Siew.** Probably a personal capacity, since letting one's own home is not obviously a business. Ask whether it changes if the landlord lets property as a business. |
