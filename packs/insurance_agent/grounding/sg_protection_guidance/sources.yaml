@@ -253,3 +253,52 @@ documents:
   reviewed_on: 2026-09-17
   note: Whole PDF kept. The HTML release page (raw/lia-pgs-2022-release.html) only links to the PDFs and
     gives the date 08 Sep 2023.
+- file: moneysense-financial-advisory-process.md
+  title: Financial advisory process
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://www.moneysense.gov.sg/financial-advisory-process/
+  published: 2026-09-14
+  retrieved: 2026-10-02
+  applies_to: The FA process in order (first meeting, Financial Needs Analysis, recommendation and
+    basis, documents, review)
+  review_by: 2027-10-02
+  reviewed_by: Christian
+  reviewed_on: 2026-10-02
+  note: The "On this page" list, the infographic alt text and images, "Related articles" and the
+    footer were cut. Footer reads "© 2026 Government of Singapore", as for the other MoneySense pages.
+    No values are declared from it; it grounds the order a coverage review is explained in.
+- file: moneysense-what-to-ask-life-insurance.md
+  title: What to ask before buying life insurance
+  publisher: MoneySense
+  publisher_kind: government
+  url: https://www.moneysense.gov.sg/what-to-ask-before-buying-life-insurance/
+  published: 2026-09-28
+  retrieved: 2026-10-02
+  applies_to: Checks before acting on a recommendation (suitability, budget, over-insurance,
+    switching costs, premiums)
+  review_by: 2027-10-02
+  reviewed_by: Christian
+  reviewed_on: 2026-10-02
+  note: The "On this page" list, "Related articles" and the footer were cut. Footer reads "© 2026
+    Government of Singapore". No values are declared from it.
+- file: mas-faa-n16-recommendations.md
+  title: Notice on Recommendations on Investment Products (Notice No. FAA-N16)
+  publisher: Monetary Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.mas.gov.sg/-/media/mas/regulations-and-financial-stability/regulations-guidance-and-licensing/financial-advisers/notices/notice-on-recommendations-on-investment-products.pdf
+  published: 2025-12-29
+  retrieved: 2026-10-02
+  applies_to: What a licensed adviser collects, analyses and explains before recommending a life policy
+    (paras 8-34)
+  review_by: 2027-10-02
+  reviewed_by: Christian
+  reviewed_on: 2026-10-02
+  note: 'Excerpt of the clean published notice (57 pages), linked from https://www.mas.gov.sg/regulation/notices/notice-faa-n16
+    ("Last Revised Date: 29 December 2025"). Kept: title, issue date, paras 8-10 (with footnote 1),
+    11-12, 14 and 28-34. Cut: definitions, selected-client paras 10A-10E, 11A, 13, the Customer Knowledge
+    Assessment and Customer Account Review, 34A onward and the risk warning statements. Running page
+    headers removed; extraction keeps the PDF line breaks. The PDF prints no copyright line; MAS Terms
+    of Use apply and reuse beyond this private prototype is to be confirmed. The MAS site served curl a
+    maintenance page, so the PDF link was read from the notice page in a browser. The tracked-changes
+    copy (faa-n16---tracked.pdf) was not used because extraction loses which text is struck through.'

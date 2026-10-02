@@ -169,8 +169,53 @@ advice:
       - what cover should i
       - types of policies i should
       - should i get more
+      # Optimising cover is reviewing it: the router reads these as `advise`, and on 2 October
+      # every one was declined because no phrase matched. Both spellings; each names insurance,
+      # so "optimise my tax reliefs" stays the tax pack's.
+      - optimise my coverage
+      - optimize my coverage
+      - optimise my personal coverage
+      - optimize my personal coverage
+      - optimise my cover
+      - optimize my cover
+      - optimise my insurance
+      - optimize my insurance
+      - optimise my protection
+      - optimize my protection
+      - improve my coverage
+      - improve my insurance
     shapes: [death_tpd_cover, ci_cover]
     holds: [hospital_expense, long_term_care]
+    # The order a MAS-licensed adviser works through a needs analysis, quoted from the corpus:
+    # what is collected, how it is analysed, the basis given, the check on existing cover, and
+    # the review after. The explanation follows it and cites it; a quote its source stops
+    # printing is not cited.
+    explained_by:
+      - file: moneysense-financial-advisory-process.md
+        quote: >-
+          Your FA representative will gather information about your financial situation, goals,
+          and needs. This fact-finding process is called an FNA - it is the foundation for any
+          recommendation they make.
+      - file: mas-faa-n16-recommendations.md
+        quote: >-
+          for any recommendation made in respect of life policies, the number of dependants of the
+          client and the extent and duration of financial support required for each of the
+          dependants.
+      - file: mas-faa-n16-recommendations.md
+        quote: >-
+          Section 36 of the Act requires a financial adviser to analyse the information provided by
+          the client and identify the product that is suitable for the client based on the
+          information obtained from the client.
+      - file: moneysense-financial-advisory-process.md
+        quote: Your FA representative must have a clear and reasonable basis for any recommendation.
+      - file: moneysense-what-to-ask-life-insurance.md
+        quote: >-
+          Does it supplement or complement the financial products (insurance and investment
+          products) you already have? Will you be over-insured or exposed to more investment risks?
+      - file: moneysense-financial-advisory-process.md
+        quote: >-
+          A good FA representative will check in with you from time to time to review your policy or
+          investment portfolio and see whether it continues to meet your needs.
 
 # How people ask about insurance, applied by the core without a model. Nothing here is a field:
 # a category is a reading of the printed product name that a person reviewed, and it is never

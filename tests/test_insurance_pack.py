@@ -63,6 +63,12 @@ def test_the_persona_is_voice_and_the_decline_refuses_a_recommendation() -> None
         "what policies should i be looking at",
         "should i get more cover?",
         "What is lacking in my insurance?",  # the wording that already worked
+        "how can I optimise my personal coverage",  # declined on 2 October, both spellings
+        "How can I optimize my personal coverage?",
+        "help me optimise my insurance coverage",
+        "optimize my cover",
+        "how do I optimise my protection",
+        "how can I improve my coverage",
     ],
 )
 def test_asking_what_to_get_reaches_the_coverage_review(question: str) -> None:
@@ -75,6 +81,26 @@ def test_asking_what_to_get_reaches_the_coverage_review(question: str) -> None:
     advice = pack("insurance_agent").manifest.advice
     assert advice is not None and advice.review is not None
     assert any(mentions(question, phrase) for phrase in advice.review.asked), question
+
+
+def test_optimising_something_other_than_insurance_is_not_a_coverage_review() -> None:
+    advice = pack("insurance_agent").manifest.advice
+    assert advice is not None and advice.review is not None
+    for question in ("how can I optimise my tax reliefs", "optimize my CPF top-ups"):
+        assert not any(mentions(question, phrase) for phrase in advice.review.asked), question
+
+
+def test_every_step_the_review_is_explained_by_is_printed_in_a_reviewed_source() -> None:
+    """A quote the source stops printing is silently not cited; this is where that is caught."""
+    from datetime import date
+
+    from core.graph.answer import _guidance
+
+    installed = pack("insurance_agent")
+    advice = installed.manifest.advice
+    assert advice is not None and advice.review is not None
+    cited = _guidance(installed, date(2026, 10, 2))
+    assert len(cited) == len(advice.review.explained_by) >= 1
 
 
 def test_every_gap_the_review_runs_names_the_cover_that_closes_it() -> None:
