@@ -307,8 +307,8 @@ These are carried from the first draft unless marked new.
      | Policy beneficiary | No. Named in a personal capacity. |
      | Joint borrower outside the household | No. Personal capacity. |
      | Landlord, ex-landlord | Not decided. No document type reads tenancy agreements (row above), so this is not needed for v1. |
-     | A doctor | **Proposed, for Siew: yes**, for their name and clinic details, which are given in their professional capacity. |
-     | Domestic helper, tenant | No. Personal capacity. |
+     | A doctor | **Yes (Siew, 2026-10-02).** Their name and clinic details are given in their professional capacity. |
+     | Domestic helper, nanny, driver, tenant | No. **Outside the household (Siew, 2026-10-02)**, so a third party held in a personal capacity. This matches the code: these words resolve to "outside", not to a relation (`core/graph/scope.py`). |
      | The other driver in a claim | No. Personal capacity. |
      | Former employer | An organisation is not a third party at all. A sole-proprietor employer's business details would be business contact information. |
 
