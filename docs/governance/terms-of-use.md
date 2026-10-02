@@ -12,11 +12,13 @@
 
 ## Definitions
 
-- **System** refers to PARROT.
-- **System Developer** refers to the PARROT team, the party that designs, builds, tests and
-  maintains the System. *(The team's members are listed in `team/README.md`.)*
-- **System Deployer** refers to the PARROT team, the party that releases the System to users
-  and sets up its environment.
+1. **“System”** means PARROT.
+2. **“System Developer”** means the PARROT team, being the party that designs, builds, tests and
+   maintains the System. *(The team's members are listed in `team/README.md`.)*
+3. **“System Deployer”** means the PARROT team, being the party that releases the System to
+   users and sets up its environment.
+4. **“User”** means any individual who submits any document, information or instruction
+   through the System, including a Submitting Party.
 
 ---
 
@@ -77,27 +79,33 @@
 
 ---
 
-## Clause B. Purpose
+## Clause B. Purpose of Collection, Use and Retention
 
 > *Drafted at Siew's request on 2026-10-01 (decision 5d: one purpose statement that names all
-> four uses). The wording is for Siew to approve.*
+> four uses), and restyled to match Clause A on 2026-10-02. The wording is for Siew to
+> approve.*
 
-1. **Purpose.** The System holds the documents and information you submit, and the personal
-   data in them, for one purpose: to help your household understand and keep track of its own
-   documents. It does this in four ways:
-   - (a) **Answering**: answering questions you ask about your documents, citing the page each
-     answer comes from;
-   - (b) **Reminders**: reminding you, without being asked, of dates your documents contain,
-     such as a renewal or a payment due date;
-   - (c) **Alerts**: alerting you, without being asked, when a figure in your documents nears
-     a limit, such as tax relief used against its cap; and
-   - (d) **Advice**: calculating and explaining advice, such as a gap in insurance cover,
-     **only** for a person who has separately given and not withdrawn their consent to
-     advice.
-2. **Advises, never acts.** The System does not pay, book, renew, file or otherwise act on your
-   behalf. It informs and advises only.
-3. **No other purpose.** The System does not use your documents or information for any purpose
-   not listed in paragraph 1.
+1. **Purpose.** Any document, information or personal data submitted by a User through the
+   System shall be collected, used and retained solely for the purpose of assisting the User’s
+   household to understand and keep track of its own documents (the “Purpose”).
+
+2. **Permitted Uses.** In furtherance of the Purpose, the System may:
+   - (a) answer questions asked by the User concerning the User’s documents, citing the page
+     of the document from which each answer is drawn;
+   - (b) remind the User, without request, of dates contained in the User’s documents,
+     including renewal dates and payment due dates;
+   - (c) alert the User, without request, where a figure contained in the User’s documents
+     approaches an applicable limit, including tax relief utilised against its cap; or
+   - (d) calculate and explain advice, including any shortfall in insurance cover, provided
+     that such advice shall be given only in respect of an individual who has separately
+     given, and has not withdrawn, consent to receive advice.
+
+3. **No Action on Behalf of the User.** The System shall not make any payment, booking,
+   renewal, filing or other transaction on behalf of the User. The System provides information
+   and advice only.
+
+4. **No Other Use.** The System shall not collect, use or retain any document, information or
+   personal data for any purpose other than the Purpose and the uses set out in paragraph 2.
 
 ---
 
@@ -111,13 +119,13 @@ do yet, that the clause relies on.
 | A screen that presents these terms before anything is submitted | **Missing.** Neither the unlock screen nor household setup shows any terms. | `web/app/unlock/`, `web/app/(app)/household/` | Zee (`web/`) |
 | A record of acceptance: who accepted, which version, and when | **Missing.** No table holds it. `advice_consents` records advice consent by version and wording hash, and could be the model. A new table needs a migration (AGENTS.md rule 4). | `db/migrations/0003_advice.sql` | Christian |
 | Knowing who the Submitting Party was for a given document | **Partly.** Telegram from a mapped chat is recorded. Folder capture is not. | `data-inventory.md` §1, "Lawful basis"; gap 7 | Christian |
-| Clause B (a) Answering cites a page | **Enforced.** A fact without a document and a page cannot be written, and the answer gate drops a factual sentence with no supporting chunk. | `db/migrations/0001_init.sql` (`facts.document_id`, `facts.page` `NOT NULL`); `core/graph/answer.py` | — |
-| Clause B (b) Reminders | **Built.** Runs daily at 07:00 and shows on Today. | `modules/reminder/module.yaml` (`cron: "0 7 * * *"`, `surfaces: [today, notification]`) | — |
-| Clause B (c) Alerts | **Built, as a nightly sweep.** The trigger on a new document (`fact_write`) is not built yet. Repeats are held back for 168 hours. | `modules/alert/module.yaml`; `core/worker/schedule.py` docstring; ADR 0008 | — |
-| Clause B (b), (c) "without being asked": how a notification reaches the person beyond the Today screen | **`unverified`.** `grep` finds no delivery code for the `notification` surface. | `core/contracts.py` (`surfaces`) | Christian |
-| Clause B (d) Advice only under consent | **Enforced.** Consent is checked in the same transaction as the advice record. | `core/advice_consent.py`; `core/advice_records.py`; ADR 0016 | — |
-| Clause B 2: never acts | **Enforced by type.** A pack that sets anything else will not load. | `core/contracts.py` (`never_acts: Literal[True]`) | — |
-| Clause B 3: no other purpose | **Policy.** Nothing in the code uses documents for anything outside (a) to (d). This should be re-checked whenever a module is added. | `modules/` (reminder, alert, advice); `core/graph/` | — |
+| Clause B 2(a) Answering cites a page | **Enforced.** A fact without a document and a page cannot be written, and the answer gate drops a factual sentence with no supporting chunk. | `db/migrations/0001_init.sql` (`facts.document_id`, `facts.page` `NOT NULL`); `core/graph/answer.py` | — |
+| Clause B 2(b) Reminders | **Built.** Runs daily at 07:00 and shows on Today. | `modules/reminder/module.yaml` (`cron: "0 7 * * *"`, `surfaces: [today, notification]`) | — |
+| Clause B 2(c) Alerts | **Built, as a nightly sweep.** The trigger on a new document (`fact_write`) is not built yet. Repeats are held back for 168 hours. | `modules/alert/module.yaml`; `core/worker/schedule.py` docstring; ADR 0008 | — |
+| Clause B 2(b), 2(c) "without request": how a notification reaches the person beyond the Today screen | **`unverified`.** `grep` finds no delivery code for the `notification` surface. | `core/contracts.py` (`surfaces`) | Christian |
+| Clause B 2(d) Advice only under consent | **Enforced.** Consent is checked in the same transaction as the advice record. | `core/advice_consent.py`; `core/advice_records.py`; ADR 0016 | — |
+| Clause B 3: no action on behalf of the User | **Enforced by type.** A pack that sets anything else will not load. | `core/contracts.py` (`never_acts: Literal[True]`) | — |
+| Clause B 4: no other use | **Policy.** Nothing in the code uses documents for anything outside 2(a) to 2(d). This should be re-checked whenever a module is added. | `modules/` (reminder, alert, advice); `core/graph/` | — |
 | A minor is never a Represented Party under this clause | **Policy, not code.** The clause speaks of adults. A child's document is filed by a parent under decision 5b. Nothing stops an adult's filing being recorded against a person with `relation = 'child'`, or the reverse. | `data-inventory.md` §6, 5b | — |
 
 ## Not yet written
