@@ -12,28 +12,11 @@
 
 ## Definitions
 
-**System Developer** refers to the PARROT team. *(The team's members are listed in
-`team/README.md`.)* The System Developer is the party that designs, builds, tests and maintains
-the system so that it meets what users need. Their main tasks are:
-
-- Gathering requirements: working with stakeholders to learn what the system must do
-  (functional requirements) and how well it must do it (non-functional requirements).
-- Analysis and design: planning the architecture, data structures, interfaces and workflows,
-  often using diagrams such as UML or flowcharts.
-- Building: writing code and connecting the parts together.
-- Testing: checking that the system works correctly and meets the requirements through unit,
-  integration and user acceptance testing.
-- Deployment: releasing the system to users and setting up its environment.
-- Documentation: writing technical documents and user guides.
-- Maintenance: fixing bugs, making improvements and adapting the system as needs change.
-- Communication: working with designers, clients, testers and other developers throughout the
-  project.
-
-**System Deployer** refers to the PARROT team. The System Deployer releases the system to
-users and sets up its environment. *(Siew, 2026-10-01: the System Developer and the System
-Deployer are the same party.)*
-
-**System** refers to PARROT.
+- **System** refers to PARROT.
+- **System Developer** refers to the PARROT team, the party that designs, builds, tests and
+  maintains the System.
+- **System Deployer** refers to the PARROT team, the party that releases the System to users
+  and sets up its environment.
 
 ---
 
@@ -141,8 +124,7 @@ do yet, that the clause relies on.
 
 These terms need more than Clauses A and B:
 - **Definitions.** Siew defined "System", "System Developer" and "System Deployer" on
-  2026-10-01 (above). Siew decided on 2026-10-01 that the System Developer is the PARROT team.
-  Siew also decided that the System Deployer is the PARROT team. A note against the code:
+  2026-10-01. On 2026-10-02 they were cut back to one line each, at Siew's request. A note against the code:
   today the household runs the installer itself (`FIRST-RUN.md`, `START.cmd`). The terms
   should say whether the team sets up each household's copy or supplies the installer that
   does, so this definition matches what actually happens.
