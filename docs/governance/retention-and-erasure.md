@@ -68,6 +68,36 @@ the User, not implied away**:
 | **Erase a person** | A household member or third party, their aliases and chat mapping, and the records about them. Their documents are erased too, if the User chooses. | **Proposed.** Not possible today. |
 | **Reset Workspace** | Everything in Part A1 at once. PARROT is returned to its state before first use. | **Proposed.** Not built. |
 
+### A4. Deleting a document: only on instruction, confirmed, and complete within 72 hours
+
+> **Decided (Siew, 2026-10-02).**
+
+1. **Only on the User's instruction.** PARROT never deletes a document unless the User has told
+   it to. No document is deleted automatically: not on expiry, not on lapse, and not by any
+   scheduled job.
+2. **Confirmed before it happens.** When the User asks to delete a document, PARROT asks them
+   to confirm before deleting anything. The confirmation tells them that the document will be
+   completely erased from PARROT within **72 hours (3 days)**.
+3. **Complete within 72 hours.** Within 72 hours of the User confirming, the document and
+   everything derived from it is erased from everything PARROT controls (A2). That includes the
+   file in the watched folder and the copies listed in B2.
+
+**Suggested confirmation wording** (drafted for Siew to approve; the screen is Zee's):
+
+> **Delete "{file name}"?**
+> This document and everything PARROT has read from it will be completely erased from PARROT
+> within 72 hours (3 days). It cannot be recovered.
+> PARROT cannot erase copies held outside it: a photo sent through Telegram, or a backup of
+> this computer.
+> **[Cancel]  [Delete]**
+
+The last sentence of the wording is there because of A2. "Completely erased from PARROT" is
+true only if the User is also told what PARROT cannot reach.
+
+**What happens during the 72 hours** is still to be decided (Decision 5 below). The proposal is
+that the document stops being used in answers, reminders and alerts **as soon as the User
+confirms**, and that the 72 hours is only the time allowed to finish the physical erasure.
+
 ---
 
 ## Part B. What the code does today
@@ -119,11 +149,16 @@ The governance chapter must say so plainly. Claiming the PDPA erasure point on t
 Each item is code or schema, so none of it is Siew's to build. Rule 1 (hand-written SQL in
 named statements) and rule 4 (migrations reviewed separately) apply.
 
-1. **Erase a document**, for any status. One transaction that deletes the `documents` row
-   (cascade does the rest), deletes or redacts that document's `traces` and `advice_records`
-   (A1 decides which), and removes the file from the watched folder. Removing the file is what
-   stops the watcher reading it again. Today's refusal while the file is still in the inbox
-   exists for exactly this reason.
+1. **Erase a document**, for any status, **only on the User's confirmed instruction (A4)**.
+   One transaction that deletes the `documents` row (cascade does the rest), deletes or
+   redacts that document's `traces` and `advice_records` (A1 decides which), and removes the
+   file from the watched folder. Removing the file is what stops the watcher reading it again.
+   Today's refusal while the file is still in the inbox exists for exactly this reason.
+   **Everything must be complete within 72 hours of the confirmation.** That includes
+   whatever is needed for Postgres to stop holding the deleted rows (B3), if Christian
+   confirms that it does. A record of when each erasure was confirmed and when it finished
+   would let Siew's sign-off show the 72 hours being met. It must not record what the
+   document contained.
 2. **Erase a person.** This needs `advice_records.consent_id` to allow deletion (today it has
    no `ON DELETE`, so the database would refuse). That is an `ALTER`, which needs its own
    migration PR (rule 4).
@@ -131,8 +166,11 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    lock verifier. Then a check that the database is empty, which Siew's sign-off can cite.
 4. **A test for each**, using corpus fixtures with known ground truth (AGENTS.md, definition of
    done). Without a test, this policy can only point at intent.
-5. **Say what is out of reach.** The erase and reset screens must name Telegram, git history
-   and the household's own backups (A2). That is a screen, so it is Zee's work in `web/`.
+5. **The confirmation screen (A4).** Ask before deleting, state the 72 hours, and name what
+   is out of reach (Telegram, the household's own backups). The erase and reset screens must
+   also name git history (A2). Screens are Zee's work in `web/`.
+6. **No automatic deletion (A4).** No scheduled job may delete a document. This is a rule for
+   any future module, and worth a test.
 
 ---
 
@@ -141,7 +179,14 @@ named statements) and rule 4 (migrations reviewed separately) apply.
 1. **Advice records (S5):** option (a) erased with the document and person, or option (b) a
    fixed audit period, and if so, how long?
 2. **The proposed rules in A1:** confirm, change, or set fixed periods instead of "until
-   erased or reset".
-3. **Lapsed documents:** keep until erased (proposed), or erase automatically some time after
-   expiry? An automatic rule would be a new scheduled job.
+   erased or reset". *(For documents, settled by A4: kept until the User instructs deletion.)*
+3. ~~**Lapsed documents:** keep until erased, or erase automatically?~~ **Decided
+   2026-10-02 (A4):** never deleted automatically.
 4. **Section 25:** quote the operative wording into "Basis" once it can be read from the Act.
+5. **During the 72 hours:** does the document stop being used as soon as the User confirms
+   (proposed), or only once the erasure is complete?
+6. **Persons and Reset Workspace:** do the same rules apply (confirmation, 72 hours, only on
+   instruction)?
+7. **Advice records and the 72 hours.** "Completely erased from PARROT within 72 hours" rules
+   out option (b) in Decision 1 for anything the advice record copied from the document. Under
+   (b), the record could be kept only with those values redacted within the 72 hours.
