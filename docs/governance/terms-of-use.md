@@ -14,7 +14,7 @@
 
 - **System** refers to PARROT.
 - **System Developer** refers to the PARROT team, the party that designs, builds, tests and
-  maintains the System.
+  maintains the System. *(The team's members are listed in `team/README.md`.)*
 - **System Deployer** refers to the PARROT team, the party that releases the System to users
   and sets up its environment.
 
