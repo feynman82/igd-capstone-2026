@@ -31534,19 +31534,19 @@
       "node_kind": "heading",
       "norm_label": "clause a. authority and consent for submissions on behalf of another adult",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L23"
+      "source_location": "L25"
     },
     {
-      "id": "docs_governance_terms_of_use_clause_b_purpose",
-      "label": "Clause B. Purpose",
+      "id": "docs_governance_terms_of_use_clause_b_purpose_of_collection_use_and_retention",
+      "label": "Clause B. Purpose of Collection, Use and Retention",
       "_origin": "ast",
       "community": 123,
       "community_name": "_as_consent",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "clause b. purpose",
+      "norm_label": "clause b. purpose of collection, use and retention",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L80"
+      "source_location": "L82"
     },
     {
       "id": "docs_governance_terms_of_use_definitions",
@@ -31570,7 +31570,7 @@
       "node_kind": "heading",
       "norm_label": "for review",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L138"
+      "source_location": "L146"
     },
     {
       "id": "docs_governance_terms_of_use_not_yet_written",
@@ -31582,7 +31582,7 @@
       "node_kind": "heading",
       "norm_label": "not yet written",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L123"
+      "source_location": "L131"
     },
     {
       "id": "docs_governance_terms_of_use_status_against_the_code",
@@ -31594,7 +31594,7 @@
       "node_kind": "heading",
       "norm_label": "status against the code",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L104"
+      "source_location": "L112"
     },
     {
       "id": "docs_governance_terms_of_use_terms_of_use",
@@ -141347,18 +141347,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L104",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_governance_terms_of_use_terms_of_use",
-      "target": "docs_governance_terms_of_use_not_yet_written",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L123",
+      "source_location": "L112",
       "weight": 1.0
     },
     {
@@ -141374,13 +141363,24 @@
     },
     {
       "source": "docs_governance_terms_of_use_terms_of_use",
+      "target": "docs_governance_terms_of_use_not_yet_written",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/governance/terms-of-use.md",
+      "source_location": "L131",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_governance_terms_of_use_terms_of_use",
       "target": "docs_governance_terms_of_use_for_review",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L138",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -141391,18 +141391,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L23",
+      "source_location": "L25",
       "weight": 1.0
     },
     {
       "source": "docs_governance_terms_of_use_terms_of_use",
-      "target": "docs_governance_terms_of_use_clause_b_purpose",
+      "target": "docs_governance_terms_of_use_clause_b_purpose_of_collection_use_and_retention",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L80",
+      "source_location": "L82",
       "weight": 1.0
     },
     {
@@ -175174,7 +175174,7 @@
       "confidence_score": 0.95,
       "context": "advice_consents",
       "source_file": "docs/governance/terms-of-use.md",
-      "source_location": "L112",
+      "source_location": "L120",
       "weight": 1.0
     },
     {
@@ -192988,5 +192988,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "fb5639ddcb8398ce6e188c9daa1766ed8f7e5fb2"
+  "built_at_commit": "bf7cf6d1228ef2f54dc545950039d4fc362154ed"
 }

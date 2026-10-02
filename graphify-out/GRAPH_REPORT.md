@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-02)
 
 ## Corpus Check
-- 314 files · ~722,865 words
+- 314 files · ~722,959 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 34 file(s) not represented in the graph (top: (none) 11, .jsonl 7, .csv 5)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `fb5639dd`
+- Built from commit: `bf7cf6d1`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -728,7 +728,7 @@ Nodes (4): Generated, ModelUnavailable, constrained_stream(), constrained_stream
 
 ### Community 123 - "_as_consent"
 Cohesion: 0.13
-Nodes (11): AdviceConsent, _as_consent(), advice_consents(), record_consent(), Clause A. Authority and Consent for Submissions on Behalf of Another Adult, Clause B. Purpose, Definitions, For review (+3 more)
+Nodes (11): AdviceConsent, _as_consent(), advice_consents(), record_consent(), Clause A. Authority and Consent for Submissions on Behalf of Another Adult, Clause B. Purpose of Collection, Use and Retention, Definitions, For review (+3 more)
 
 ### Community 124 - "The deliberately naive retrieval baseline"
 Cohesion: 0.17
@@ -927,7 +927,7 @@ Nodes (33): class-variance-authority, clsx, eslint, eslint-config-next, postcss,
   README.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **384 isolated node(s):** `Definitions`, `Clause A. Authority and Consent for Submissions on Behalf of Another Adult`, `Clause B. Purpose`, `Not yet written`, `For review` (+379 more)
+- **384 isolated node(s):** `Definitions`, `Clause A. Authority and Consent for Submissions on Behalf of Another Adult`, `Clause B. Purpose of Collection, Use and Retention`, `Not yet written`, `For review` (+379 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1716 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **34 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
