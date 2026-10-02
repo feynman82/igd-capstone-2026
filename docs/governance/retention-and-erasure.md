@@ -94,9 +94,9 @@ the User, not implied away**:
 The last sentence of the wording is there because of A2. "Completely erased from PARROT" is
 true only if the User is also told what PARROT cannot reach.
 
-**What happens during the 72 hours** is still to be decided (Decision 5 below). The proposal is
-that the document stops being used in answers, reminders and alerts **as soon as the User
-confirms**, and that the 72 hours is only the time allowed to finish the physical erasure.
+4. **Withdrawn at once.** *(Decided, Siew, 2026-10-02.)* As soon as the User confirms, the
+   document stops being used in answers, reminders, alerts and advice. The 72 hours is only
+   the time allowed to finish erasing it.
 
 ---
 
@@ -158,7 +158,9 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    whatever is needed for Postgres to stop holding the deleted rows (B3), if Christian
    confirms that it does. A record of when each erasure was confirmed and when it finished
    would let Siew's sign-off show the 72 hours being met. It must not record what the
-   document contained.
+   document contained. **From the moment of confirmation, the document must be excluded from
+   retrieval, facts read by modules, reminders and alerts (A4 point 4)**, even if the physical
+   erasure runs later.
 2. **Erase a person.** This needs `advice_records.consent_id` to allow deletion (today it has
    no `ON DELETE`, so the database would refuse). That is an `ALTER`, which needs its own
    migration PR (rule 4).
@@ -183,8 +185,8 @@ named statements) and rule 4 (migrations reviewed separately) apply.
 3. ~~**Lapsed documents:** keep until erased, or erase automatically?~~ **Decided
    2026-10-02 (A4):** never deleted automatically.
 4. **Section 25:** quote the operative wording into "Basis" once it can be read from the Act.
-5. **During the 72 hours:** does the document stop being used as soon as the User confirms
-   (proposed), or only once the erasure is complete?
+5. ~~**During the 72 hours:** does the document stop being used at once?~~ **Decided
+   2026-10-02 (A4 point 4):** yes, as soon as the User confirms.
 6. **Persons and Reset Workspace:** do the same rules apply (confirmation, 72 hours, only on
    instruction)?
 7. **Advice records and the 72 hours.** "Completely erased from PARROT within 72 hours" rules
