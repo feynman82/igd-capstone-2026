@@ -13,6 +13,7 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `imda-genai-nine-dimensions.md` | IMDA GenAI (2024) | Siew | W8 |
 | `autonomy-statement.md` | IMDA Agentic AI (Jan 2026), dimensions 1 and 2 | Siew with Christian | W8 |
 | `synthetic-data-case.md` | Why synthetic data, what it proves and what it does not | Siew with Desmond | W6 |
+| `imda-what-applies.md` | IMDA GenAI (2024) and Agentic AI (Jan 2026) — first extract, mapped to code | Siew | W1 |
 | `terms-of-use.md` | PDPA s 15 deemed consent — the contractual basis for one adult filing for another | Siew | — |
 
 ## The autonomy statement in one line
