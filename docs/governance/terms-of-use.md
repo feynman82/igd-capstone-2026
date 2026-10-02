@@ -1,11 +1,12 @@
 # Terms of use
 
-> **Status: draft. One clause so far. Not yet presented to anyone, and not yet accepted.**
+> **Status: draft. Definitions and Clauses A and B approved by Siew. Not yet presented to users,
+> and not yet accepted by anyone.**
 > Owner: Siew. Started 2026-10-01.
 >
 > These terms are the contractual basis for two decisions in `data-inventory.md` §6: 5a (one
 > adult filing another adult's document) and 5d (purpose). Clause A is Siew's text, reproduced
-> **verbatim**. Do not edit its wording without Siew. Clause B was drafted for Siew to approve.
+> **verbatim**. Do not edit its wording without Siew. Clause B was drafted for Siew and approved by Siew on 2026-10-02.
 > Notes about the clauses sit outside them, under "Status against the code".
 
 ---
@@ -82,8 +83,8 @@
 ## Clause B. Purpose of Collection, Use and Retention
 
 > *Drafted at Siew's request on 2026-10-01 (decision 5d: one purpose statement that names all
-> four uses), and restyled to match Clause A on 2026-10-02. The wording is for Siew to
-> approve.*
+> four uses), restyled to match Clause A, and **approved by Siew on 2026-10-02**, together with
+> the definition of "User".*
 
 1. **Purpose.** Any document, information or personal data submitted by a User through the
    System shall be collected, used and retained solely for the purpose of assisting the User’s
