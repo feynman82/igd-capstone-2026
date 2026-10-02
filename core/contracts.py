@@ -304,6 +304,14 @@ class AdviceShape(Strict):
     closed_by: list[Slug] = Field(default_factory=list)
 
 
+class ExplainStep(Strict):
+    """One step of how a review is explained: a verbatim quote from a file of the pack's own
+    grounding corpus. A quote its reviewed, in-date source does not print is never cited."""
+
+    file: str = Field(pattern=r"^[a-z0-9][a-z0-9_.-]*\.md$")
+    quote: str = Field(min_length=20, max_length=600)
+
+
 class Review(Strict):
     """One question that runs several of a pack's shapes for a person, on one card (ADR 0016
     addendum): every shortfall, met guideline and missing fact, and each category in `holds` that
@@ -313,6 +321,9 @@ class Review(Strict):
     asked: list[Phrase] = Field(min_length=1)
     shapes: list[Slug] = Field(min_length=1)  # ids of this pack's advice shapes, run in order
     holds: list[Slug] = Field(default_factory=list)  # category ids named when none is on file
+    # Published guidance the explanation follows, in order, and may cite (ADR 0016 addendum,
+    # 2 October 2026). Chosen by the pack author, never retrieved.
+    explained_by: list[ExplainStep] = Field(default_factory=list, max_length=8)
 
 
 class Advice(Strict):

@@ -516,3 +516,18 @@ def test_a_review_names_only_declared_shapes_and_categories() -> None:
     }
     with pytest.raises(ValueError, match="not category ids"):
         PackManifest.model_validate(raw).check_against(catalog().documents)
+
+
+def test_a_review_is_explained_by_quotes_from_named_corpus_files() -> None:
+    raw = _advised()
+    step = {"file": "moneysense-guide.md", "quote": "This fact-finding process is called an FNA."}
+    raw["advice"]["review"] = {
+        "label": "cover review",
+        "asked": ["lacking"],
+        "shapes": ["ci_gap"],
+        "explained_by": [step],
+    }
+    PackManifest.model_validate(raw)
+    raw["advice"]["review"]["explained_by"] = [{**step, "file": "../outside.md"}]
+    with pytest.raises(ValidationError):
+        PackManifest.model_validate(raw)
