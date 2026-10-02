@@ -1,7 +1,7 @@
 # Terms of use
 
-> **Status: draft. Definitions and Clauses A and B approved by Siew. Not yet presented to users,
-> and not yet accepted by anyone.**
+> **Status: draft. Definitions and Clauses A and B approved by Siew; Clause C awaiting
+> approval. Not yet presented to users, and not yet accepted by anyone.**
 > Owner: Siew. Started 2026-10-01.
 >
 > These terms are the contractual basis for two decisions in `data-inventory.md` §6: 5a (one
@@ -110,6 +110,37 @@
 
 ---
 
+## Clause C. Personal Data of Third Parties
+
+> *Drafted at Siew's request on 2026-10-02 from decisions already recorded in
+> `data-inventory.md` §6, 5c: the definition of a third party, consent or contractual agreement
+> as the basis, and the business contact exclusion. The wording is for Siew to approve.*
+
+1. **Third Party.** In this clause, “Third Party” means an individual whose personal data
+   appears on any document submitted through the System and who is neither the Submitting
+   Party nor a member of the User’s household as recorded in the System. An individual whose
+   relationship to the household has not been confirmed in the System shall be treated as a
+   Third Party until it is confirmed.
+
+2. **Consent or Contractual Entitlement.** Where any document submitted through the System
+   contains personal data of a Third Party, the User represents and warrants that the User has
+   obtained the Third Party’s consent to the collection, use and retention of such personal
+   data by the System for the Purpose, or is otherwise entitled to provide such personal data
+   for the Purpose under a contractual agreement with the Third Party.
+
+3. **Business Contact Information.** Paragraph 2 shall not apply to the business contact
+   information of a Third Party, being the Third Party’s name, business title, business
+   telephone number, business address, business email, business fax or any other similar
+   information which is not provided by the Third Party solely for personal purposes,
+   including the licence number of an insurance agent and the name and clinic details of a
+   medical practitioner.
+
+4. **Mandatory Rights Preserved.** Nothing in this clause shall exclude or limit any
+   liability, obligation or right that cannot lawfully be excluded or limited under applicable
+   law.
+
+---
+
 ## Status against the code
 
 These notes are not part of the terms. Each one is something the code does today, or does not
@@ -127,11 +158,14 @@ do yet, that the clause relies on.
 | Clause B 2(d) Advice only under consent | **Enforced.** Consent is checked in the same transaction as the advice record. | `core/advice_consent.py`; `core/advice_records.py`; ADR 0016 | — |
 | Clause B 3: no action on behalf of the User | **Enforced by type.** A pack that sets anything else will not load. | `core/contracts.py` (`never_acts: Literal[True]`) | — |
 | Clause B 4: no other use | **Policy.** Nothing in the code uses documents for anything outside 2(a) to 2(d). This should be re-checked whenever a module is added. | `modules/` (reminder, alert, advice); `core/graph/` | — |
+| Clause C 1: an unconfirmed person is a Third Party | **Enforced for answers.** An unconfirmed alias scopes nothing. | `core/household.py` (aliases built with `FILTER (... AND a.confirmed)`) | — |
+| Clause C 1: "member of the User’s household as recorded in the System" | **Built.** The roster is `people`, with `external = false` for household members. | `db/migrations/0002_household.sql` | — |
+| Clause C 2: the User's warranty is given before third-party data is submitted | **Missing**, for the same reason as Clause A: no screen presents the terms. | — | Zee |
 | A minor is never a Represented Party under this clause | **Policy, not code.** The clause speaks of adults. A child's document is filed by a parent under decision 5b. Nothing stops an adult's filing being recorded against a person with `relation = 'child'`, or the reverse. | `data-inventory.md` §6, 5b | — |
 
 ## Not yet written
 
-These terms need more than Clauses A and B:
+These terms need more than Clauses A to C:
 - **Definitions.** Siew defined "System", "System Developer" and "System Deployer" on
   2026-10-01. On 2026-10-02 they were cut back to one line each, at Siew's request. A note against the code:
   today the household runs the installer itself (`FIRST-RUN.md`, `START.cmd`). The terms
