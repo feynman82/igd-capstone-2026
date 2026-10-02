@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-02)
 
 ## Corpus Check
-- 315 files · ~725,517 words
+- 315 files · ~725,533 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 34 file(s) not represented in the graph (top: (none) 11, .jsonl 7, .csv 5)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2dcea99f`
+- Built from commit: `a92c6eb9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -218,16 +218,16 @@
 10. `Ollama` - 70 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `A1. Retention rules` --references--> `basis()`  [INFERRED]
-  docs/governance/retention-and-erasure.md → tests/test_advice_module.py
-- `Part C. What must be built (for Christian)` --references--> `documents()`  [INFERRED]
-  docs/governance/retention-and-erasure.md → core/vault.py
 - `B1. The only erasure paths that exist` --references--> `documents()`  [INFERRED]
   docs/governance/retention-and-erasure.md → core/vault.py
 - `B1. The only erasure paths that exist` --references--> `obligations()`  [INFERRED]
   docs/governance/retention-and-erasure.md → eval/modules.py
 - `B2. What deleting a `documents` row cascades to, and what it leaves` --references--> `documents()`  [INFERRED]
   docs/governance/retention-and-erasure.md → core/vault.py
+- `B2. What deleting a `documents` row cascades to, and what it leaves` --references--> `obligations()`  [INFERRED]
+  docs/governance/retention-and-erasure.md → eval/modules.py
+- `B2. What deleting a `documents` row cascades to, and what it leaves` --references--> `basis()`  [INFERRED]
+  docs/governance/retention-and-erasure.md → tests/test_advice_module.py
 
 ## Import Cycles
 - None detected.
@@ -943,8 +943,8 @@ Nodes (3): _as_sentence(), Cited, _answered()
   README.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **391 isolated node(s):** `Basis`, `A2. What erasure means`, `A3. Three ways to erase`, `A4. Deleting a document: only on instruction, confirmed, and complete within 72 hours`, `B4. Does today's system meet Part A?` (+386 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1724 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **392 isolated node(s):** `Basis`, `A1. Retention rules`, `A2. What erasure means`, `A3. Three ways to erase`, `A4. Deleting a document: only on instruction, confirmed, and complete within 72 hours` (+387 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1725 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **42 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
