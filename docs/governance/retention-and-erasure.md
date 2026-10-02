@@ -64,9 +64,9 @@ the User, not implied away**:
 
 | Erasure | What it removes | Status |
 |---|---|---|
-| **Erase a document** | One document and everything derived from it (A2). Any document, not only a quarantined one. | **Proposed.** Today only quarantined documents can be erased. |
-| **Erase a person** | A household member or third party, their aliases and chat mapping, and the records about them. Their documents are erased too, if the User chooses. | **Proposed.** Not possible today. |
-| **Reset Workspace** | Everything in Part A1 at once. PARROT is returned to its state before first use. | **Proposed.** Not built. |
+| **Erase a document** | One document and everything derived from it (A2). Any document, not only a quarantined one. | **Decided (A4).** Not built: today only quarantined documents can be erased. |
+| **Erase a person** | A household member or third party, their aliases and chat mapping, their advice consents and advice records. Their documents are erased too, if the User chooses. | **Decided (A5).** Not possible today. |
+| **Reset Workspace** | Everything in Part A1 at once. PARROT is returned to its state before first use. | **Decided (A5).** Not built. |
 
 ### A4. Deleting a document: only on instruction, confirmed, and complete within 72 hours
 
@@ -97,6 +97,42 @@ true only if the User is also told what PARROT cannot reach.
 4. **Withdrawn at once.** *(Decided, Siew, 2026-10-02.)* As soon as the User confirms, the
    document stops being used in answers, reminders, alerts and advice. The 72 hours is only
    the time allowed to finish erasing it.
+
+### A5. Erasing a person, and resetting the workspace
+
+> **Decided (Siew, 2026-10-02).**
+
+1. **Same three rules as A4.** A person is erased, and the workspace is reset, **only on the
+   User's instruction**, **after confirmation**, and **completely within 72 hours**. What is
+   erased is **withdrawn from use as soon as the User confirms**.
+2. **A person's documents are an explicit choice.** The confirmation lists the documents the
+   person appears on. The User chooses either to erase them too, or to keep them, and is told
+   that the person's details will remain in them. Erasing a person while keeping their
+   documents does not erase their details from those documents' page text (`chunks.text`).
+   The confirmation must not imply otherwise.
+3. **Shared documents are marked.** A document that is also about another household member
+   is marked as shared in that list. It is not erased unless the User selects it.
+4. **The owner is erased only by Reset Workspace.** The database allows exactly one owner
+   (`db/migrations/0002_household.sql`, `people_one_owner`), and every first-person answer is
+   scoped to them. Erasing the owner alone is not offered.
+5. **Reset needs a stronger confirmation.** The User types `RESET` to confirm, because a reset
+   is wider than any other action and cannot be undone.
+
+**Suggested wording** (drafted for Siew to approve; the screens are Zee's):
+
+> **Remove Rachel from PARROT?**
+> Her names, chat link, advice consents and advice records will be completely erased from
+> PARROT within 72 hours (3 days).
+> **She appears on 6 documents.** [Erase them too] [Keep them — her details will remain in
+> those documents]
+> **[Cancel]  [Remove]**
+
+> **Reset PARROT?**
+> Every document, everyone in your household, and everything PARROT has learned will be
+> completely erased from PARROT within 72 hours (3 days). This cannot be undone.
+> PARROT cannot erase copies held outside it: photos sent through Telegram, files committed to
+> git, or backups of this computer.
+> **Type RESET to confirm.**  **[Cancel]  [Reset]**
 
 ---
 
@@ -164,18 +200,23 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    document contained. **From the moment of confirmation, the document must be excluded from
    retrieval, facts read by modules, reminders and alerts (A4 point 4)**, even if the physical
    erasure runs later.
-2. **Erase a person.** This needs `advice_records.consent_id` to allow deletion (today it has
-   no `ON DELETE`, so the database would refuse). That is an `ALTER`, which needs its own
-   migration PR (rule 4).
-3. **Reset Workspace.** Every table in A1, every file in the watched folder, the queue, and the
-   lock verifier. Then a check that the database is empty, which Siew's sign-off can cite.
+2. **Erase a person (A5)**, on confirmed instruction, complete within 72 hours, withdrawn
+   from use at once. It must list the person's documents with shared ones marked, and erase
+   only those the User selects. It must refuse the owner. This needs
+   `advice_records.consent_id` to allow deletion (today it has no `ON DELETE`, so the
+   database would refuse). That is an `ALTER`, which needs its own migration PR (rule 4).
+   Which documents a person "appears on" has to be decided in code: through `facts.subject`
+   resolved by their aliases, `document_attribution`, or both.
+3. **Reset Workspace (A5)**, confirmed by typing `RESET`, complete within 72 hours. Every table
+   in A1, every file in the watched folder, the queue, and the lock verifier. Then a check that
+   the database is empty, which Siew's sign-off can cite.
 4. **A test for each**, using corpus fixtures with known ground truth (AGENTS.md, definition of
    done). Without a test, this policy can only point at intent.
-5. **The confirmation screen (A4).** Ask before deleting, state the 72 hours, and name what
-   is out of reach (Telegram, the household's own backups). The erase and reset screens must
-   also name git history (A2). Screens are Zee's work in `web/`.
-6. **No automatic deletion (A4).** No scheduled job may delete a document. This is a rule for
-   any future module, and worth a test.
+5. **The confirmation screens (A4, A5).** Document, person and reset, each with the 72 hours,
+   what is out of reach, and A5's document choice and typed `RESET`. The reset screen must also
+   name git history (A2). Screens are Zee's work in `web/`.
+6. **No automatic deletion (A4, A5).** No scheduled job may delete a document, erase a person
+   or reset. This is a rule for any future module, and worth a test.
 
 ---
 
@@ -191,7 +232,12 @@ named statements) and rule 4 (migrations reviewed separately) apply.
 4. **Section 25:** quote the operative wording into "Basis" once it can be read from the Act.
 5. ~~**During the 72 hours:** does the document stop being used at once?~~ **Decided
    2026-10-02 (A4 point 4):** yes, as soon as the User confirms.
-6. **Persons and Reset Workspace:** do the same rules apply (confirmation, 72 hours, only on
-   instruction)?
+6. ~~**Persons and Reset Workspace:** do the same rules apply?~~ **Decided 2026-10-02 (A5):**
+   yes, with the four additions.
 7. ~~**Advice records and the 72 hours.**~~ Settled by Decision 1, option (a): nothing is
    kept, so nothing needs redacting.
+8. **Who may instruct erasing a person, or a reset?** Anyone who unlocks the screen can today:
+   there is one passphrase per household (`web/lib/lock.ts`). So one adult could remove
+   another. Should these two actions be limited to the owner? That would need code (Christian)
+   and a screen (Zee), because PARROT has no notion of who is signed in.
+9. **Approve the wording** suggested in A4 and A5.
