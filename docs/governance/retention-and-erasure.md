@@ -1,11 +1,12 @@
 # Retention and erasure policy
 
-> **Status: draft for Siew's decisions and Christian's technical review.** Owner: Siew.
+> **Status: Siew's decisions complete (2026-10-02); ready for Christian's technical review.**
+> Owner: Siew.
 > Started 2026-10-02 and checked against the code on `main` at `fc035bd` plus this branch.
 >
 > Part A is policy: how long each kind of data is kept and what erasing it means. Part B is
 > what the code does today. Part C is what has to be built for Part A to be true. Every claim
-> about the code points at a file. Rules marked **Proposed** are for Siew to decide.
+> about the code points at a file.
 
 **The short version.** Today PARROT keeps everything until someone deletes it by hand. The
 only deletion it offers is for a document that failed to be read. **"Reset Workspace" does not
@@ -34,15 +35,15 @@ exist.** This policy says what it must do, and the policy cannot be met until it
 
 | Data | Codes | Rule | Status |
 |---|---|---|---|
-| Documents, and everything read from them: the original file, page text and embeddings, facts, and reminders derived from them | D1–D10 | **Kept until the User erases the document, or resets the workspace.** A document stays useful for as long as it is on file. A policy that has lapsed still answers "what was I covered for", so lapsing is not a reason to delete. | **Proposed** |
-| Household roster and the names each person goes by | S1, S2 | Kept until the person is erased, or the workspace is reset. | **Proposed** |
-| Telegram chat → person mapping | S3 | Kept until the person is erased, the chat is removed from `TELEGRAM_CHAT_IDS`, or the workspace is reset. | **Proposed** |
-| Advice consent (granted and withdrawn) | S4 | Kept for as long as any advice record that relies on it is kept. Without it, an advice record cannot show it was lawful. | **Proposed** |
+| Documents, and everything read from them: the original file, page text and embeddings, facts, and reminders derived from them | D1–D10 | **Kept until the User erases the document, or resets the workspace.** A document stays useful for as long as it is on file. A policy that has lapsed still answers "what was I covered for", so lapsing is not a reason to delete. | **Decided** (Siew, 2026-10-02) |
+| Household roster and the names each person goes by | S1, S2 | Kept until the person is erased, or the workspace is reset. | **Decided** (Siew, 2026-10-02) |
+| Telegram chat → person mapping | S3 | Kept until the person is erased, the chat is removed from `TELEGRAM_CHAT_IDS`, or the workspace is reset. | **Decided** (Siew, 2026-10-02) |
+| Advice consent (granted and withdrawn) | S4 | Kept for as long as any advice record that relies on it is kept. Without it, an advice record cannot show it was lawful. | **Decided** (Siew, 2026-10-02) |
 | Advice records | S5 | **Erased with the document and the person it was about.** An advice record is erased in full, within the same 72 hours (A4), when any document it relied on is erased or the person it was about is erased. No skeleton or audit copy is kept. | **Decided** (Siew, 2026-10-02; option (a)) |
-| Correction, ingest and alert traces | S6, S7 | Erased with the document they concern (correction traces carry the old and new value). Traces with no document are kept until reset. | **Proposed** |
+| Correction, ingest and alert traces | S6, S7 | Erased with the document they concern (correction traces carry the old and new value). Traces with no document are kept until reset. | **Decided** (Siew, 2026-10-02) |
 | The conversation | S8 | Not retained. It is held in process memory and lost when the API restarts (`MemorySaver`). **If the Postgres checkpointer is ever adopted, this rule must be decided again before it ships.** | Holds today |
 | Process log lines | S9 | Not retained by PARROT. No log file is written. | Holds today, `unverified` for every launcher |
-| Screen-lock verifier | S10 | Kept until the household changes or clears the passphrase. | **Proposed** |
+| Screen-lock verifier | S10 | Kept until the household changes or clears the passphrase. | **Decided** (Siew, 2026-10-02) |
 | The 40-document real holdout (team members) | — | Governed by `consent-and-redaction.md`, **which does not exist yet**. Not covered here. | **Open** |
 
 ### A2. What erasure means
@@ -82,7 +83,7 @@ the User, not implied away**:
    everything derived from it is erased from everything PARROT controls (A2). That includes the
    file in the watched folder and the copies listed in B2.
 
-**Suggested confirmation wording** (drafted for Siew to approve; the screen is Zee's):
+**Confirmation wording** (approved by Siew, 2026-10-02; the screen is Zee's):
 
 > **Delete "{file name}"?**
 > This document and everything PARROT has read from it will be completely erased from PARROT
@@ -121,7 +122,7 @@ true only if the User is also told what PARROT cannot reach.
    reset the workspace. Any User may still delete a document (A4). A household member who
    wants to be removed must ask the owner.
 
-**Suggested wording** (drafted for Siew to approve; the screens are Zee's):
+**Confirmation wording** (approved by Siew, 2026-10-02; the screens are Zee's):
 
 > **Remove Rachel from PARROT?**
 > Her names, chat link, advice consents and advice records will be completely erased from
@@ -235,8 +236,8 @@ named statements) and rule 4 (migrations reviewed separately) apply.
 1. ~~**Advice records (S5):** erased with the document and person, or kept for a fixed audit
    period?~~ **Decided 2026-10-02:** option (a). They are erased in full with the document or
    person (A1).
-2. **The proposed rules in A1:** confirm, change, or set fixed periods instead of "until
-   erased or reset". *(For documents, settled by A4: kept until the User instructs deletion.)*
+2. ~~**The proposed rules in A1.**~~ **Confirmed 2026-10-02:** kept until erased or reset, as
+   stated in A1.
 3. ~~**Lapsed documents:** keep until erased, or erase automatically?~~ **Decided
    2026-10-02 (A4):** never deleted automatically.
 4. **Section 25:** quote the operative wording into "Basis" once it can be read from the Act.
@@ -248,4 +249,4 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    kept, so nothing needs redacting.
 8. ~~**Who may instruct erasing a person, or a reset?**~~ **Decided 2026-10-02 (A5 point 6):**
    only the owner.
-9. **Approve the wording** suggested in A4 and A5.
+9. ~~**Approve the wording** in A4 and A5.~~ **Approved 2026-10-02.**
