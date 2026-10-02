@@ -117,6 +117,9 @@ true only if the User is also told what PARROT cannot reach.
    scoped to them. Erasing the owner alone is not offered.
 5. **Reset needs a stronger confirmation.** The User types `RESET` to confirm, because a reset
    is wider than any other action and cannot be undone.
+6. **Only the owner.** *(Decided, Siew, 2026-10-02.)* Only the owner may erase a person or
+   reset the workspace. Any User may still delete a document (A4). A household member who
+   wants to be removed must ask the owner.
 
 **Suggested wording** (drafted for Siew to approve; the screens are Zee's):
 
@@ -207,15 +210,22 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    database would refuse). That is an `ALTER`, which needs its own migration PR (rule 4).
    Which documents a person "appears on" has to be decided in code: through `facts.subject`
    resolved by their aliases, `document_attribution`, or both.
-3. **Reset Workspace (A5)**, confirmed by typing `RESET`, complete within 72 hours. Every table
+3. **Reset Workspace (A5)**, confirmed by typing `RESET`, complete within 72 hours.
+   **Owner only**, like erasing a person (A5 point 6). Every table
    in A1, every file in the watched folder, the queue, and the lock verifier. Then a check that
    the database is empty, which Siew's sign-off can cite.
-4. **A test for each**, using corpus fixtures with known ground truth (AGENTS.md, definition of
+4. **Owner-only check (A5 point 6).** PARROT cannot tell today who is at the screen. There
+   is one passphrase per household (`web/lib/lock.ts`), and the API answers any loopback
+   request without authentication (`data-inventory.md` §3). Erasing a person and resetting
+   therefore need a way to confirm the owner is the one acting, such as an owner-only
+   passphrase asked for at that moment. The check has to sit in the API as well as on the
+   screen, or calling the API directly gets round it. This is for Christian and Zee to design.
+5. **A test for each**, using corpus fixtures with known ground truth (AGENTS.md, definition of
    done). Without a test, this policy can only point at intent.
-5. **The confirmation screens (A4, A5).** Document, person and reset, each with the 72 hours,
+6. **The confirmation screens (A4, A5).** Document, person and reset, each with the 72 hours,
    what is out of reach, and A5's document choice and typed `RESET`. The reset screen must also
    name git history (A2). Screens are Zee's work in `web/`.
-6. **No automatic deletion (A4, A5).** No scheduled job may delete a document, erase a person
+7. **No automatic deletion (A4, A5).** No scheduled job may delete a document, erase a person
    or reset. This is a rule for any future module, and worth a test.
 
 ---
@@ -236,8 +246,6 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    yes, with the four additions.
 7. ~~**Advice records and the 72 hours.**~~ Settled by Decision 1, option (a): nothing is
    kept, so nothing needs redacting.
-8. **Who may instruct erasing a person, or a reset?** Anyone who unlocks the screen can today:
-   there is one passphrase per household (`web/lib/lock.ts`). So one adult could remove
-   another. Should these two actions be limited to the owner? That would need code (Christian)
-   and a screen (Zee), because PARROT has no notion of who is signed in.
+8. ~~**Who may instruct erasing a person, or a reset?**~~ **Decided 2026-10-02 (A5 point 6):**
+   only the owner.
 9. **Approve the wording** suggested in A4 and A5.
