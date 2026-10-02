@@ -1,7 +1,7 @@
 # Terms of use
 
-> **Status: draft. Definitions and Clauses A and B approved by Siew; Clause C awaiting
-> approval. Not yet presented to users, and not yet accepted by anyone.**
+> **Status: draft. Definitions and Clauses A, B and C approved by Siew. Not yet presented to
+> users, and not yet accepted by anyone.**
 > Owner: Siew. Started 2026-10-01.
 >
 > These terms are the contractual basis for two decisions in `data-inventory.md` §6: 5a (one
@@ -114,7 +114,7 @@
 
 > *Drafted at Siew's request on 2026-10-02 from decisions already recorded in
 > `data-inventory.md` §6, 5c: the definition of a third party, consent or contractual agreement
-> as the basis, and the business contact exclusion. The wording is for Siew to approve.*
+> as the basis, and the business contact exclusion. **Approved by Siew on 2026-10-02.***
 
 1. **Third Party.** In this clause, “Third Party” means an individual whose personal data
    appears on any document submitted through the System and who is neither the Submitting

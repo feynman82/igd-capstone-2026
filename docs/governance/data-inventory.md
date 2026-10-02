@@ -329,7 +329,7 @@ These are carried from the first draft unless marked new.
        agreement itself, would have to permit this use.
      Nothing in the code records either for a third party (S1 to S4 hold nothing about
      consent, except advice consent). **The User's warranty of either is Clause C of
-     `terms-of-use.md`** (drafted 2026-10-02; awaiting Siew's approval).
+     `terms-of-use.md`** (approved by Siew, 2026-10-02).
    - **5d.** Purpose. Deemed consent covers the purpose the data was submitted for. Is
      "answering questions about the household's documents" one purpose, or are reminders,
      alerts and advice separate ones? Advice already has explicit consent (S4).
