@@ -38,7 +38,7 @@ exist.** This policy says what it must do, and the policy cannot be met until it
 | Household roster and the names each person goes by | S1, S2 | Kept until the person is erased, or the workspace is reset. | **Proposed** |
 | Telegram chat → person mapping | S3 | Kept until the person is erased, the chat is removed from `TELEGRAM_CHAT_IDS`, or the workspace is reset. | **Proposed** |
 | Advice consent (granted and withdrawn) | S4 | Kept for as long as any advice record that relies on it is kept. Without it, an advice record cannot show it was lawful. | **Proposed** |
-| Advice records | S5 | **For Siew to decide**, with two options. (a) **Same as the document:** erased with the documents and person it was about. (b) **Fixed audit period:** kept for a set period after the advice and then erased, with the advice text and the figures in `basis` redacted when the document behind them is erased. | **Open** |
+| Advice records | S5 | **Erased with the document and the person it was about.** An advice record is erased in full, within the same 72 hours (A4), when any document it relied on is erased or the person it was about is erased. No skeleton or audit copy is kept. | **Decided** (Siew, 2026-10-02; option (a)) |
 | Correction, ingest and alert traces | S6, S7 | Erased with the document they concern (correction traces carry the old and new value). Traces with no document are kept until reset. | **Proposed** |
 | The conversation | S8 | Not retained. It is held in process memory and lost when the API restarts (`MemorySaver`). **If the Postgres checkpointer is ever adopted, this rule must be decided again before it ships.** | Holds today |
 | Process log lines | S9 | Not retained by PARROT. No log file is written. | Holds today, `unverified` for every launcher |
@@ -150,9 +150,12 @@ Each item is code or schema, so none of it is Siew's to build. Rule 1 (hand-writ
 named statements) and rule 4 (migrations reviewed separately) apply.
 
 1. **Erase a document**, for any status, **only on the User's confirmed instruction (A4)**.
-   One transaction that deletes the `documents` row (cascade does the rest), deletes or
-   redacts that document's `traces` and `advice_records` (A1 decides which), and removes the
-   file from the watched folder. Removing the file is what stops the watcher reading it again.
+   One transaction that deletes the `documents` row (cascade does the rest), deletes that
+   document's `traces`, deletes **every `advice_records` row that relied on it** (A1), and
+   removes the file from the watched folder. Those advice rows can be found because each
+   figure in `basis.inputs` carries the `document_id` it came from (`core/graph/answer.py`,
+   `_advice_basis`). There is no foreign key to follow, so the statement has to match on that
+   field. Removing the file is what stops the watcher reading it again.
    Today's refusal while the file is still in the inbox exists for exactly this reason.
    **Everything must be complete within 72 hours of the confirmation.** That includes
    whatever is needed for Postgres to stop holding the deleted rows (B3), if Christian
@@ -178,8 +181,9 @@ named statements) and rule 4 (migrations reviewed separately) apply.
 
 ## Decisions for Siew
 
-1. **Advice records (S5):** option (a) erased with the document and person, or option (b) a
-   fixed audit period, and if so, how long?
+1. ~~**Advice records (S5):** erased with the document and person, or kept for a fixed audit
+   period?~~ **Decided 2026-10-02:** option (a). They are erased in full with the document or
+   person (A1).
 2. **The proposed rules in A1:** confirm, change, or set fixed periods instead of "until
    erased or reset". *(For documents, settled by A4: kept until the User instructs deletion.)*
 3. ~~**Lapsed documents:** keep until erased, or erase automatically?~~ **Decided
@@ -189,6 +193,5 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    2026-10-02 (A4 point 4):** yes, as soon as the User confirms.
 6. **Persons and Reset Workspace:** do the same rules apply (confirmation, 72 hours, only on
    instruction)?
-7. **Advice records and the 72 hours.** "Completely erased from PARROT within 72 hours" rules
-   out option (b) in Decision 1 for anything the advice record copied from the document. Under
-   (b), the record could be kept only with those values redacted within the 72 hours.
+7. ~~**Advice records and the 72 hours.**~~ Settled by Decision 1, option (a): nothing is
+   kept, so nothing needs redacting.
