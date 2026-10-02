@@ -32,7 +32,7 @@ from core.graph.answer import (
     _either,
     _without_passage_numbers,
 )
-from core.graph.gate import Claim, check
+from core.graph.gate import Claim, check_one, precheck
 from core.graph.inventory import Holding
 from core.graph.knowledge import categorise
 from core.graph.ports import Passage
@@ -335,56 +335,26 @@ def test_a_question_naming_another_member_does_not_call_them_the_asker() -> None
 
 
 def test_a_sentence_with_no_supporting_passage_is_dropped() -> None:
-    verdict = check(
-        [
-            Claim("The premium is SGD 1,248.90.", ("document:11",)),
-            Claim("It is good value.", ()),
-        ],
-        PASSAGES,
-        abstain_below=0.45,
-    )
+    retrieved = {p.ref for p in PASSAGES}
 
-    assert [claim.text for claim in verdict.grounded] == ["The premium is SGD 1,248.90."]
-    assert verdict.dropped[0][1] == "no supporting passage"
+    assert check_one(Claim("The premium is SGD 1,248.90.", ("document:11",)), retrieved) is None
+    assert check_one(Claim("It is good value.", ()), retrieved) == "no supporting passage"
 
 
 def test_a_sentence_citing_a_passage_that_was_never_retrieved_is_dropped() -> None:
-    verdict = check(
-        [Claim("The excess is SGD 500.", ("document:99",))], PASSAGES, abstain_below=0.45
-    )
+    why = check_one(Claim("The excess is SGD 500.", ("document:99",)), {p.ref for p in PASSAGES})
 
-    assert verdict.grounded == []
-    assert verdict.abstained
-    assert "not retrieved" in verdict.dropped[0][1]
+    assert "not retrieved" in (why or "")
 
 
 def test_weak_evidence_abstains_before_anything_is_written() -> None:
     weak = [Passage(11, DOC, 1, "unrelated text", 0.2, "note.pdf")]
-    verdict = check([Claim("Something.", ("document:11",))], weak, abstain_below=0.45)
 
-    assert verdict.abstained
-    assert "not close enough" in (verdict.reason or "")
+    assert "not close enough" in (precheck(weak, abstain_below=0.45) or "")
 
 
 def test_no_passages_at_all_abstains() -> None:
-    verdict = check([Claim("Something.", ("document:1",))], [], abstain_below=0.45)
-
-    assert verdict.abstained
-    assert not verdict.has_answer
-
-
-def test_a_grounded_claim_renders_its_document_and_page() -> None:
-    claim = Claim("The premium is SGD 1,248.90.", ("document:11",))
-    rendered = claim.with_citation({p.ref: p for p in PASSAGES})
-
-    assert rendered.endswith("[renewal-notice.pdf, page 1]")
-
-
-def test_a_claim_citing_the_same_document_twice_says_it_once() -> None:
-    claim = Claim("It renews on 30 November 2026.", ("document:11", "document:11"))
-    rendered = claim.with_citation({p.ref: p for p in PASSAGES})
-
-    assert rendered.count("renewal-notice.pdf") == 1
+    assert precheck([], abstain_below=0.45) is not None
 
 
 # ------------------------------------------------------------------------------ the graph

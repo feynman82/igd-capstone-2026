@@ -16,7 +16,7 @@ no longer be the only thing that understood the household's words.
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from core.contracts import Categories, Category
@@ -25,13 +25,6 @@ from core.packs import InstalledPack, catalog
 
 def _pattern(phrase: str) -> re.Pattern[str]:
     return re.compile(rf"(?<!\w){re.escape(phrase)}(?!\w)", re.IGNORECASE)
-
-
-def _make_replacer(replacement: str) -> Callable[[re.Match[str]], str]:
-    def replacer(match: re.Match[str]) -> str:
-        return replacement
-
-    return replacer
 
 
 def mentions(text: str, phrase: str) -> bool:
@@ -52,7 +45,8 @@ def reworded(question: str, packs: Sequence[InstalledPack]) -> str | None:
     pairs = sorted(_vocabulary(packs), key=lambda pair: len(pair[0]), reverse=True)
     out = question
     for said, printed in pairs:
-        out = _pattern(said).sub(_make_replacer(printed), out)
+        # Backslashes doubled, so a printed `\1` or `\g` is text, not a backreference.
+        out = _pattern(said).sub(printed.replace("\\", "\\\\"), out)
     return out if out != question else None
 
 

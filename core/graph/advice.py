@@ -140,7 +140,7 @@ class AdviceRecord:
     answer_text: str
 
 
-def _kind_of(ref: str) -> Kind:
+def kind_of(ref: str) -> Kind:
     """`"fact:12"` -> `"fact"`, `"rule:7"` -> `"rule"`. Anything else is a calculator bug: an
     `Input.ref` is written by `modules/advice/` and this is the one place that trusts its shape,
     so a malformed one fails loudly here rather than mislabelling a passage's kind."""
@@ -179,7 +179,7 @@ def passages_for(calc: Calculation) -> list[Passage]:
             document_name=item.title,
             context_prefix=item.citation,
             pack_id=calc.pack_id,
-            kind=_kind_of(item.ref),
+            kind=kind_of(item.ref),
         )
         for item in calc.inputs
     ]

@@ -56,19 +56,6 @@ log = logging.getLogger(__name__)
 # a stray keystroke than a first person.
 _FIRST_PERSON = re.compile(r"(?i)\b(?:my|mine|myself|me)\b|\bI\b")
 
-# Words that make a question somebody else's even when it opens with "my". "My wife's policy"
-# is a question about the wife. Rather than try to resolve the relationship — which needs a
-# roster we may not have and grammar we certainly do not — the question is simply left unscoped
-# and answered from the whole vault, which is what Parrot did before any of this existed.
-_SOMEONE_ELSE = re.compile(
-    r"(?i)\b(?:wife|husband|spouse|partner|son|daughter|child|children|kid|kids|"
-    r"father|mother|dad|daddy|mum|mummy|mom|mommy|mama|papa|parent|parents|grandfather|"
-    r"grandmother|grandpa|grandma|grandparent|grandparents|granddad|grandad|granny|grandmum|"
-    r"ah\s+gong|ah\s+kong|ah\s+ma|ah\s+mah|popo|"
-    r"brother|sister|sibling|in-law|our|we|us|everyone|household|family)\b"
-)
-
-
 # "My son's", "my dad's": a possessive relationship word is a question about that member of the
 # household's own documents. Only the possessive: "does my policy cover my son?" may well be
 # answered by the owner's policy, and is left unscoped.
@@ -129,6 +116,21 @@ _RELATION_WORDS: dict[str, str] = {
     # answering from the owner's own hospital plan — which it did, on 13 September.
     **dict.fromkeys(("maid", "helper", "nanny", "driver", "tenant"), "outside"),
 }
+
+# Words that make a question somebody else's even when it opens with "my". "My wife's policy"
+# is a question about the wife. Rather than try to resolve the relationship — which needs a
+# roster we may not have and grammar we certainly do not — the question is simply left unscoped
+# and answered from the whole vault, which is what Parrot did before any of this existed. Every
+# family relation word above, so the two lists cannot drift, plus the ones no roster records.
+_SOMEONE_ELSE = re.compile(
+    r"(?i)\b(?:"
+    + "|".join(
+        re.escape(word).replace(r"\ ", r"\s+")
+        for word, relation in _RELATION_WORDS.items()
+        if relation != "outside"
+    )
+    + r"|brother|sister|sibling|in-law|our|we|us|everyone|household|family)\b"
+)
 _RELATION = re.compile(
     r"(?i)\bmy\s+("
     + "|".join(
@@ -301,21 +303,6 @@ SELECT f.document_id, p.id, p.display_name
 """
 
 
-def scope_passages(
-    conn: Any,
-    passages: list[Passage],
-    *,
-    owner_id: int,
-    owner_name: str,
-) -> Scoped:
-    """Keep the owner's passages and the household's; set aside everybody else's.
-
-    A document with no resolvable subject is the household's and is kept. That is the third
-    bucket, and leaving it out is how "my home insurance" breaks quietly.
-    """
-    return scope_to(conn, passages, person_ids=frozenset({owner_id}), name=owner_name)
-
-
 def scope_to(
     conn: Any,
     passages: list[Passage],
@@ -325,7 +312,11 @@ def scope_to(
     about: str | None = None,
     someone_else: bool = False,
 ) -> Scoped:
-    """Keep the passages of these people and of the household; set aside everybody else's."""
+    """Keep the passages of these people and of the household; set aside everybody else's.
+
+    A document with no resolvable subject is the household's and is kept. That is the third
+    bucket, and leaving it out is how "my home insurance" breaks quietly.
+    """
     if not passages:
         return Scoped([], name, about=about, someone_else=someone_else)
 
