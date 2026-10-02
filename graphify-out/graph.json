@@ -34911,7 +34911,7 @@
       "node_kind": "heading",
       "norm_label": "decisions for siew",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L177"
+      "source_location": "L179"
     },
     {
       "id": "docs_governance_retention_and_erasure_part_a_policy",
@@ -141660,7 +141660,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L177",
+      "source_location": "L179",
       "weight": 1.0
     },
     {
@@ -193477,5 +193477,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "a6a1d1f75bce7afcceb7277ecd4923ef040adb01"
+  "built_at_commit": "2dcea99fbaaaf9ab49299547c3af32159a47f6a8"
 }
