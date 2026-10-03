@@ -20,7 +20,8 @@ import pytest
 from core.ingest.chunk import TARGET_CHARS, chunk_pages
 from core.ingest.classify import CLASSIFY_SAMPLE_CHARS, classification_sample, classify
 from core.ingest.extract import extract, find_page
-from core.ingest.parse import ParsedPage, parse
+from core.ingest.parse import ParsedDocument, ParsedPage, parse
+from core.ingest.pipeline import Outcome, read_and_commit
 from core.packs import CORE, catalog, installed_packs
 from core.runtime.ollama import Generated, ModelUnavailable
 
@@ -406,7 +407,7 @@ def test_every_extracted_fact_carries_a_page_and_the_right_column(iras: Any) -> 
     by_key = {fact.key: fact for fact in result.facts}
     assert by_key["gross_salary"].page == 1
     assert str(by_key["gross_salary"].value_num) == "8900.00"
-    assert by_key["gross_salary"].column == "value_num"
+    assert by_key["gross_salary"].value_text is None and by_key["gross_salary"].value_date is None
     assert by_key["employee"].value_text == "Marcus Fernandez"
     assert by_key["pay_period"].value_text == "2026-01", "a month is text, not a number"
     assert all(fact.subject == "Marcus Fernandez" for fact in result.facts)
@@ -831,3 +832,65 @@ def test_a_model_that_does_not_answer_is_not_asked_a_longer_question(insurance: 
     result = extract(client, insurance, "policy_schedule", LONG_POLICY, confidence=0.9)  # type: ignore[arg-type]
     assert not result.ok
     assert len(client.prompts) == 1
+
+
+# ------------------------------------------------------------------- reading to both lanes
+
+
+class RecordingConn:
+    """A connection and its cursor in one: records every statement, commits nothing real."""
+
+    def __init__(self) -> None:
+        self.executed: list[str] = []
+        self.commits = 0
+
+    def cursor(self) -> RecordingConn:
+        return self
+
+    def __enter__(self) -> RecordingConn:
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        return None
+
+    def execute(self, statement: str, params: Any = None) -> None:
+        self.executed.append(statement)
+
+    def fetchone(self) -> tuple[int]:
+        return (1,)
+
+    def commit(self) -> None:
+        self.commits += 1
+
+
+PAYSLIP_CLASSIFIED = {"document_type": "payslip", "confidence": 0.95}
+
+
+def test_a_read_document_is_written_to_both_lanes_in_one_commit() -> None:
+    conn = RecordingConn()
+    client = FakeOllama([PAYSLIP_CLASSIFIED, PAYSLIP_REPLY])
+    parsed = ParsedDocument(True, "plaintext", PAGES)
+    outcome = read_and_commit(conn, client, document_id="d1", parsed=parsed, name="p.txt")
+    assert isinstance(outcome, Outcome)
+    assert (outcome.status, outcome.doc_type, outcome.pages) == ("indexed", "payslip", 2)
+    assert outcome.facts == len(PAYSLIP_REPLY) and outcome.chunks >= 1
+    assert conn.commits == 1
+
+
+def test_a_document_that_fails_extraction_is_neither_embedded_nor_written() -> None:
+    """Extraction is judged before embedding: a document bound for quarantine costs no vectors."""
+
+    class NoEmbedding(FakeOllama):
+        def embed(self, texts: list[str]) -> list[list[float]]:
+            raise AssertionError("embedded a document that failed extraction")
+
+    conn = RecordingConn()
+    reason = read_and_commit(
+        conn,
+        NoEmbedding([PAYSLIP_CLASSIFIED, {}]),
+        document_id="d1",
+        parsed=ParsedDocument(True, "plaintext", PAGES),
+        name="p.txt",
+    )
+    assert isinstance(reason, str) and reason
+    assert conn.executed == [] and conn.commits == 0

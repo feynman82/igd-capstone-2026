@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from core.graph.ports import Passage
+from core.runtime.db import vector_literal
 from core.runtime.ollama import Ollama
 
 log = logging.getLogger(__name__)
@@ -60,10 +61,10 @@ class DenseRetriever:
     def search(self, question: str, *, candidates: int) -> list[Passage]:
         # The query prompt must match the one chunks were embedded with. See `QUERY_PROMPT`.
         vector = self.client.embed_query(question)
-        literal = "[" + ",".join(f"{value:.6f}" for value in vector) + "]"
         allowed = sorted(self.packs) if self.packs is not None else None
+        query = {"query": vector_literal(vector), "limit": candidates, "packs": allowed}
         with self.conn.cursor() as cur:
-            cur.execute(DENSE_SEARCH, {"query": literal, "limit": candidates, "packs": allowed})
+            cur.execute(DENSE_SEARCH, query)
             rows = cur.fetchall()
         return [
             Passage(

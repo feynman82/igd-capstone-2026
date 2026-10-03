@@ -23,7 +23,7 @@ from typing import Any
 from core.ingest import sql
 from core.ingest.chunk import chunk_pages
 from core.ingest.parse import parse
-from core.ingest.pipeline import _vector_literal, document_title
+from core.ingest.pipeline import document_title, write_chunks
 from core.packs import catalog
 from core.runtime.ollama import ModelUnavailable
 
@@ -78,19 +78,7 @@ def reindex_document(conn: Any, client: Any, document: IndexedDocument, payload:
 
     try:
         with conn.cursor() as cur:
-            cur.execute(sql.DELETE_CHUNKS, {"document_id": document.document_id})
-            for chunk, vector in zip(chunks, vectors, strict=True):
-                cur.execute(
-                    sql.INSERT_CHUNK,
-                    {
-                        "document_id": document.document_id,
-                        "page": chunk.page,
-                        "ordinal": chunk.ordinal,
-                        "context_prefix": chunk.context_prefix,
-                        "text": chunk.text,
-                        "embedding": _vector_literal(vector),
-                    },
-                )
+            write_chunks(cur, document.document_id, chunks, vectors)
         conn.commit()
     except Exception:
         conn.rollback()

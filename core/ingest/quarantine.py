@@ -31,13 +31,9 @@ from pathlib import Path
 from typing import Any
 
 from core.ingest import sql
-from core.ingest.chunk import chunk_pages
-from core.ingest.classify import classification_sample, classify
-from core.ingest.extract import extract
 from core.ingest.parse import ParsedDocument, ParsedPage
-from core.ingest.pipeline import commit_both_lanes, document_title
+from core.ingest.pipeline import read_and_commit
 from core.ingest.source import index_folder
-from core.packs import PackUnavailable, catalog
 from core.pages import PageUnavailable, RendererUnavailable, page_count, render_page
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -225,52 +221,13 @@ def retry(
     if not read.ok:
         return _still_quarantined(conn, document_id, read.reason or "the image pass failed")
 
-    classification = classify(client, classification_sample(read.pages))
-    if not classification.recognised:
-        return _still_quarantined(
-            conn, document_id, classification.reason or "still not a known document type"
-        )
-    assert classification.pack_id is not None and classification.doc_type is not None
-
-    try:
-        documents = catalog()
-    except PackUnavailable as error:
-        return _still_quarantined(conn, document_id, str(error))
-
-    extraction = extract(
-        client,
-        documents,
-        classification.doc_type,
-        read.pages,
-        confidence=classification.confidence,
+    outcome = read_and_commit(
+        conn, client, document_id=document_id, parsed=read, name=original_name
     )
-    if not extraction.ok:
-        return _still_quarantined(
-            conn, document_id, extraction.reason or "the type's fields are still not satisfied"
-        )
-
-    chunks = chunk_pages(
-        read.pages,
-        original_name=original_name,
-        doc_type=classification.doc_type,
-        title=document_title(documents, classification.doc_type, extraction.facts, original_name),
-    )
-    try:
-        vectors = client.embed_documents([(chunk.title, chunk.embedding_input) for chunk in chunks])
-    except ModelUnavailable as error:
-        return _still_quarantined(conn, document_id, str(error))
-
-    written = commit_both_lanes(
-        conn,
-        document_id=document_id,
-        parsed=read,
-        chunks=chunks,
-        vectors=vectors,
-        extraction=extraction,
-        doc_type=classification.doc_type,
-    )
-    log.info("recovered %s from the page image: %d cited fact(s)", document_id, written)
-    return Recovery(document_id, True, None, written, len(chunks), len(read.pages))
+    if isinstance(outcome, str):
+        return _still_quarantined(conn, document_id, outcome)
+    log.info("recovered %s from the page image: %d cited fact(s)", document_id, outcome.facts)
+    return Recovery(document_id, True, None, outcome.facts, outcome.chunks, outcome.pages)
 
 
 def _still_quarantined(conn: Any, document_id: Any, reason: str) -> Recovery:
