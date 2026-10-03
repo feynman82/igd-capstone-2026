@@ -22,41 +22,128 @@ documents:
     Supplied by Zee as a PDF on 2026-10-03, because the session could not reach iras.gov.sg;
     the URL was matched by title, not fetched. All 13 pages extracted verbatim, one page
     marker each. The guide says donations get an enhanced deduction under section 37(3) ITA
-    but does not print the 250% rate, so that rate must not be cited from this source. Its
+    but does not print the 250% rate, so that rate must not be cited from this source (iras-donations-and-tax-deductions.md prints it). Its
     copyright notice forbids storing any part in a retrieval system without IRAS's written
     permission; Siew to decide whether the private-repository research use is acceptable.
+- file: iras-individual-income-tax-rates.md
+  title: "Individual Income Tax rates"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-residency-and-tax-rates/individual-income-tax-rates
+  published: 2026-04-27
+  retrieved: 2026-10-03
+  applies_to: Resident and non-resident tax rates, YA2024 onwards (YA2025 to YA2027)
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of the `tax_rate` values. Every band of the YA2024-onwards resident table was checked: each cumulative gross tax payable equals the previous one plus that band's tax, so no digit was misread. URL matched by the page title; the print does not carry it.
+- file: iras-srs-contributions-and-tax-relief.md
+  title: "SRS contributions and tax relief"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/special-tax-schemes/srs-contributions
+  published: 2026-08-14
+  retrieved: 2026-10-03
+  applies_to: SRS contribution caps and SRS relief, YA2025 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of `srs_contribution_cap`. The caps ($15,300 for citizens and PRs, $35,700 for foreigners) were checked against the page image. URL matched by the page title; the print does not carry it.
+- file: iras-cpf-cash-top-up-relief.md
+  title: "Central Provident Fund (CPF) Cash Top-up Relief"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/central-provident-fund-(cpf)-cash-top-up-relief
+  published: 2026-08-07
+  retrieved: 2026-10-03
+  applies_to: CPF cash top-up relief, YA2025 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+- file: iras-cpf-cash-top-up-relief-factsheet.md
+  title: "CPF Cash Top-up Relief (factsheet)"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/docs/default-source/individual-income-tax/employees/cpf-cash-top-up-relief.pdf?Status=Master&sfvrsn=9745769c_45
+  published: 2025-02-21
+  retrieved: 2026-10-03
+  applies_to: CPF cash top-up relief amounts from YA2023 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    Supplied by Zee on 2026-10-03; a text PDF, so extracted verbatim, not by OCR.
+- file: iras-tax-reliefs.md
+  title: "Tax reliefs"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs
+  published: 2026-08-14
+  retrieved: 2026-10-03
+  applies_to: List of personal reliefs and the $80,000 relief cap, YA2025 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+- file: iras-personal-income-tax-rebate.md
+  title: "Personal Income Tax Rebate"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/personal-income-tax-rebate
+  published: 2026-08-11
+  retrieved: 2026-10-03
+  applies_to: Personal income tax rebates for YA2024 and YA2025
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+- file: iras-donations-and-tax-deductions.md
+  title: "Donations and tax deductions"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/other-taxes/charities/donations-tax-deductions
+  published: 2026-04-14
+  retrieved: 2026-10-03
+  applies_to: 250% deduction for qualifying donations to IPCs, YA2025 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. The print itself carries this URL and the date 3 October 2026. This page, not the e-Tax Guide, is where the 250% rate is printed.
+- file: iras-understanding-my-tax-assessment.md
+  title: "Understanding my tax assessment"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/receive-tax-bill-pay-tax-check-refunds/understanding-my-tax-assessment
+  published: 2026-03-04
+  retrieved: 2026-10-03
+  applies_to: What a Notice of Assessment shows, YA2025 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+- file: iras-basic-guide-for-new-individual-taxpayers.md
+  title: "Basic guide for new individual taxpayers"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/taxes/individual-income-tax/employees/basic-guide-for-new-individual-taxpayers
+  published: 2026-04-16
+  retrieved: 2026-10-03
+  applies_to: Filing, the tax bill and paying, including GIRO, YA2025 onwards
+  review_by: 2027-04-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
 
-# To capture, verbatim, as one .md per page with a `<!-- source: -->` and `<!-- retrieved: -->`
-# header like packs/insurance_agent/grounding/sg_protection_guidance/. Blocked on 2026-09-29:
-# the session's network policy refused www.iras.gov.sg. Confirm each URL when it is fetched,
-# because IRAS moves pages. Each entry, once captured, takes this form:
-#
-# - file: iras-personal-reliefs-overview.md
-#   title: Personal Reliefs and Tax Rebates
-#   publisher: Inland Revenue Authority of Singapore
-#   publisher_kind: regulator
-#   url: https://www.iras.gov.sg/taxes/individual-income-tax/employees/deductions-for-individuals/personal-reliefs-and-tax-rebates
-#   published: null
-#   retrieved: 2026-09-29
-#   applies_to: YA2025 to YA2027 list of personal reliefs
-#   review_by: 2027-09-29
-#   reviewed_by: null
-#   reviewed_on: null
-#   note: Site navigation cut.
-#
-# Reliefs overview and caps
-#   - Personal Reliefs and Tax Rebates (overview)
-#   - Personal Income Tax Relief Cap ($80,000)
-#   - Course Fees Relief (YA2025 only; lapses from YA2026)
-#   - Parent Relief / Handicapped Parent Relief
-# SRS and CPF top-up relief
-#   - Supplementary Retirement Scheme (SRS) relief, with the contribution caps
-#   - CPF Cash Top-up Relief
-# Donations
-#   - Captured: e-Tax Guide on Tax Deductibility of Donations (above)
-#   - Still needed: the IRAS page that states the 250% deduction rate
-# Rates, rebates, the Notice of Assessment and paying
-#   - Individual Income Tax rates (resident bands; source of the `tax_rate` values)
-#   - Personal Income Tax Rebate for the years that have one
-#   - Understanding my Notice of Assessment
-#   - Paying tax, including GIRO and the payment due date
+# Still to capture, if the pack is to answer on them: the individual relief pages (Parent
+# Relief, Course Fees Relief for YA2025, Earned Income Relief and the others the Tax reliefs
+# page lists). Rule pages are dated by IRAS's "Last updated"; review_by is six months out
+# because IRAS revises them after each Budget.

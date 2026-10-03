@@ -34739,6 +34739,66 @@
       "source_location": "L1"
     },
     {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_basic_guide_for_new_individual_taxpayers",
+      "label": "iras-basic-guide-for-new-individual-taxpayers.md",
+      "_origin": "ast",
+      "community": 215,
+      "community_name": "iras-basic-guide-for-new-individual-taxpayers.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-basic-guide-for-new-individual-taxpayers.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-basic-guide-for-new-individual-taxpayers.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_cpf_cash_top_up_relief",
+      "label": "iras-cpf-cash-top-up-relief.md",
+      "_origin": "ast",
+      "community": 216,
+      "community_name": "iras-cpf-cash-top-up-relief.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-cpf-cash-top-up-relief.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-cpf-cash-top-up-relief.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_cpf_cash_top_up_relief_factsheet",
+      "label": "iras-cpf-cash-top-up-relief-factsheet.md",
+      "_origin": "ast",
+      "community": 217,
+      "community_name": "iras-cpf-cash-top-up-relief-factsheet.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-cpf-cash-top-up-relief-factsheet.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-cpf-cash-top-up-relief-factsheet.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_donations_and_tax_deductions",
+      "label": "iras-donations-and-tax-deductions.md",
+      "_origin": "ast",
+      "community": 218,
+      "community_name": "iras-donations-and-tax-deductions.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-donations-and-tax-deductions.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-donations-and-tax-deductions.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_individual_income_tax_rates",
+      "label": "iras-individual-income-tax-rates.md",
+      "_origin": "ast",
+      "community": 219,
+      "community_name": "iras-individual-income-tax-rates.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-individual-income-tax-rates.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-individual-income-tax-rates.md",
+      "source_location": "L1"
+    },
+    {
       "id": "tests_test_api_py_parametrize",
       "label": "parametrize",
       "_origin": "ast",
@@ -34891,6 +34951,54 @@
       "norm_label": "a watched folder holding one document, hashed the way the ingest registered it.",
       "source_file": "tests/test_api.py",
       "source_location": "L948"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_personal_income_tax_rebate",
+      "label": "iras-personal-income-tax-rebate.md",
+      "_origin": "ast",
+      "community": 220,
+      "community_name": "iras-personal-income-tax-rebate.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-personal-income-tax-rebate.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-personal-income-tax-rebate.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_srs_contributions_and_tax_relief",
+      "label": "iras-srs-contributions-and-tax-relief.md",
+      "_origin": "ast",
+      "community": 221,
+      "community_name": "iras-srs-contributions-and-tax-relief.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-srs-contributions-and-tax-relief.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-srs-contributions-and-tax-relief.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_tax_reliefs",
+      "label": "iras-tax-reliefs.md",
+      "_origin": "ast",
+      "community": 222,
+      "community_name": "iras-tax-reliefs.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-tax-reliefs.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-tax-reliefs.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_understanding_my_tax_assessment",
+      "label": "iras-understanding-my-tax-assessment.md",
+      "_origin": "ast",
+      "community": 223,
+      "community_name": "iras-understanding-my-tax-assessment.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-understanding-my-tax-assessment.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-understanding-my-tax-assessment.md",
+      "source_location": "L1"
     },
     {
       "id": "core_modules",
@@ -184709,5 +184817,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "932ab3325ae76fa31c290a78ceea442917e30a05"
+  "built_at_commit": "f3a44aad19e21b7c3e1f7f14626dc0f0b40bea9c"
 }
