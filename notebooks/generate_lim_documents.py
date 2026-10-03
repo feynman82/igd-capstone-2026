@@ -175,6 +175,22 @@ DOCUMENTS = [
         },
     },
     {
+        "doc_id": "b2-0019",
+        "template": "protectplus_life_with_riders.html",
+        "filename": "b2-0019_Marcus_LifePolicy_Schedule.pdf",
+        "data": {
+            "doc_id": "b2-0019",
+            "insurer": "Lionhead Life Assurance",
+            "policy_no": "LF-2026-641205",
+            "insured": "Marcus Lim Jun Wei",
+            "product_name": "Lionhead ProtectPlus Life Plan",
+            "cover_from": "2026-07-01",
+            "expiry_date": "2066-06-30",
+            "premium_payable": "2960.00",
+            "sum_insured": "200000.00",
+        },
+    },
+    {
         "doc_id": "b2-0011",
         "template": "car_loan_agreement.html",
         "filename": "b2-0011_Car_Loan_Hire_Purchase_Agreement.pdf",
