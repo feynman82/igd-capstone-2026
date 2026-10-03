@@ -6,7 +6,25 @@ maintained_by: Zee
 reviewed_by: Siew
 reviewed_on: null                 # set the date Siew signs off
 
-documents: []
+documents:
+- file: iras-etax-guide-tax-deductibility-of-donations.md
+  title: "IRAS e-Tax Guide: Tax Deductibility of Donations"
+  publisher: Inland Revenue Authority of Singapore
+  publisher_kind: regulator
+  url: https://www.iras.gov.sg/media/docs/default-source/e-tax/guidance-on-tax-deductible-donations.pdf?sfvrsn=d038d29d_26
+  published: 2026-01-30
+  retrieved: 2026-10-03
+  applies_to: Which contributions to an IPC or grant-maker are tax deductible donations, YA2025 onwards
+  review_by: 2027-10-03
+  reviewed_by: null
+  reviewed_on: null
+  note: >
+    Supplied by Zee as a PDF on 2026-10-03, because the session could not reach iras.gov.sg;
+    the URL was matched by title, not fetched. All 13 pages extracted verbatim, one page
+    marker each. The guide says donations get an enhanced deduction under section 37(3) ITA
+    but does not print the 250% rate, so that rate must not be cited from this source. Its
+    copyright notice forbids storing any part in a retrieval system without IRAS's written
+    permission; Siew to decide whether the private-repository research use is acceptable.
 
 # To capture, verbatim, as one .md per page with a `<!-- source: -->` and `<!-- retrieved: -->`
 # header like packs/insurance_agent/grounding/sg_protection_guidance/. Blocked on 2026-09-29:
@@ -35,7 +53,8 @@ documents: []
 #   - Supplementary Retirement Scheme (SRS) relief, with the contribution caps
 #   - CPF Cash Top-up Relief
 # Donations
-#   - Tax deductions for donations (250% for qualifying IPC donations)
+#   - Captured: e-Tax Guide on Tax Deductibility of Donations (above)
+#   - Still needed: the IRAS page that states the 250% deduction rate
 # Rates, rebates, the Notice of Assessment and paying
 #   - Individual Income Tax rates (resident bands; source of the `tax_rate` values)
 #   - Personal Income Tax Rebate for the years that have one
