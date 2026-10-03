@@ -50,19 +50,6 @@ class Registration:
         return not self.inserted
 
 
-class Cursor(Protocol):
-    def execute(self, query: str, params: Any = ..., /) -> Any: ...
-    def fetchone(self) -> Any: ...
-    def __enter__(self) -> Cursor: ...
-    def __exit__(self, *exc: object) -> None: ...
-
-
-class Connection(Protocol):
-    """Just enough of `psycopg.Connection` to register a document and to be faked in a test."""
-
-    def cursor(self) -> Cursor: ...
-
-
 class Registrar(Protocol):
     """What a capture adapter is handed. It does not know psycopg exists."""
 
@@ -78,7 +65,7 @@ class Registrar(Protocol):
 
 
 def register_document(
-    conn: Connection,
+    conn: Any,
     *,
     payload: bytes,
     mime: str,

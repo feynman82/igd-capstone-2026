@@ -14,8 +14,11 @@ import hashlib
 import mimetypes
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol
 from uuid import UUID
+
+if TYPE_CHECKING:
+    from core.ingest.register import Registrar
 
 # Magic bytes for the formats a household actually photographs or downloads. Filenames lie;
 # a suffix is a hint and these are the confirmation.
@@ -75,7 +78,6 @@ class IngestJob:
         return self.sha256.hex()
 
 
-@runtime_checkable
 class CaptureAdapter(Protocol):
     """Folder, Telegram, and post-MVP WhatsApp and Drive, all reduced to one call."""
 
@@ -90,3 +92,28 @@ class CaptureAdapter(Protocol):
         *,
         original_name: str,
     ) -> IngestJob: ...
+
+
+def receive_via(
+    register: Registrar,
+    channel: str,
+    payload: bytes,
+    mime: str,
+    ts: datetime,
+    *,
+    original_name: str,
+) -> IngestJob:
+    """The body of every adapter's `receive`: register the bytes, and say what that did."""
+    registration = register(
+        payload=payload, mime=mime, original_name=original_name, source_channel=channel
+    )
+    return IngestJob(
+        document_id=registration.document_id,
+        sha256=registration.sha256,
+        source_channel=registration.source_channel,
+        original_name=original_name,
+        mime=registration.mime,
+        received_at=ts,
+        ingested_at=registration.ingested_at,
+        already_registered=registration.already_registered,
+    )

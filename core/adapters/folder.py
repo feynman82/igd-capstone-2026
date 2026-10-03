@@ -21,7 +21,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 
-from core.adapters.base import IngestJob, sniff_mime
+from core.adapters.base import IngestJob, receive_via, sniff_mime
 from core.ingest.register import Registrar
 
 log = logging.getLogger(__name__)
@@ -49,7 +49,6 @@ class _Pending:
     size: int
     mtime: float
     stable_for: float = 0.0
-    last_seen: float = 0.0
 
 
 @dataclass(slots=True)
@@ -81,21 +80,8 @@ class FolderAdapter:
         *,
         original_name: str,
     ) -> IngestJob:
-        registration = self._register(
-            payload=payload,
-            mime=mime,
-            original_name=original_name,
-            source_channel=self.channel,
-        )
-        return IngestJob(
-            document_id=registration.document_id,
-            sha256=registration.sha256,
-            source_channel=registration.source_channel,
-            original_name=original_name,
-            mime=registration.mime,
-            received_at=ts,
-            ingested_at=registration.ingested_at,
-            already_registered=registration.already_registered,
+        return receive_via(
+            self._register, self.channel, payload, mime, ts, original_name=original_name
         )
 
     # ------------------------------------------------------------------- the debounce
@@ -138,11 +124,10 @@ class FolderAdapter:
 
             pending = self._pending.get(path)
             if pending is None or pending.size != stat.st_size or pending.mtime != stat.st_mtime:
-                self._pending[path] = _Pending(stat.st_size, stat.st_mtime, 0.0, self._clock)
+                self._pending[path] = _Pending(stat.st_size, stat.st_mtime)
                 continue
 
             pending.stable_for += elapsed
-            pending.last_seen = self._clock
             if pending.stable_for >= self._settings.stable_seconds and stat.st_size > 0:
                 ready.append(path)
 
