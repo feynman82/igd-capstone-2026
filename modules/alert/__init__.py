@@ -24,6 +24,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from functools import partial
 from typing import Any
 
 from core.contracts import AlertConfig
@@ -102,7 +103,7 @@ def _per_subject(conn: Any, query: str, today: date) -> dict[str | None, list[tu
     return grouped
 
 
-def _totals(conn: Any, query: str, today: date) -> list[Measurement]:
+def _totals(conn: Any, today: date, *, query: str) -> list[Measurement]:
     return [
         Measurement(
             sum((value for value, _ in facts), Decimal(0)),
@@ -122,12 +123,8 @@ def srs_contributions_ytd(conn: Any, today: date) -> list[Measurement]:
     return out
 
 
-def donations_ytd(conn: Any, today: date) -> list[Measurement]:
-    return _totals(conn, queries.DONATIONS_YTD, today)
-
-
-def cpf_contributions_ytd(conn: Any, today: date) -> list[Measurement]:
-    return _totals(conn, queries.CPF_CONTRIBUTIONS_YTD, today)
+donations_ytd = partial(_totals, query=queries.DONATIONS_YTD)
+cpf_contributions_ytd = partial(_totals, query=queries.CPF_CONTRIBUTIONS_YTD)
 
 
 def days_uncovered(conn: Any, today: date) -> list[Measurement]:

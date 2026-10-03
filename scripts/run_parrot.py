@@ -83,17 +83,19 @@ def start_worker(settings: Settings) -> subprocess.Popen[bytes] | None:
     return worker
 
 
-def stop_worker(worker: subprocess.Popen[bytes] | None) -> None:
-    """Stop the worker and the schedule it started, not just the launcher in front of them.
+def stop(process: subprocess.Popen[bytes] | None) -> None:
+    """Stop a child the launcher started -- the worker or the screens -- and everything under it.
 
-    On Windows `sys.executable` is the virtual environment's launcher, which starts the real
-    interpreter as a child, and the worker then starts its nightly schedule as a child of its own.
-    Terminating the launcher skipped the worker's clean-up, so the schedule outlived it: after one
-    restart and one shut-down from the screens, two schedules were still running with no parent.
+    Terminating only the process we launched is not enough on either side. The worker: on Windows
+    `sys.executable` is the virtual environment's launcher, which starts the real interpreter as a
+    child, and the worker starts its nightly schedule as a child of its own; after one restart and
+    one shut-down from the screens, two schedules were still running with no parent. The screens:
+    `Popen.terminate()` reaches `npm.cmd` and the `node` it spawned outlives it, still bound to
+    3000, so the next double-click reports a busy port.
     """
-    if worker is None or worker.poll() is not None:
+    if process is None or process.poll() is not None:
         return
-    _kill_tree(worker)
+    _kill_tree(process)
 
 
 def _kill_tree(process: subprocess.Popen[bytes]) -> None:
@@ -169,7 +171,7 @@ def start_web(api_port: int, web_port: int) -> subprocess.Popen[bytes] | None:
     # A new process group, so the whole tree can be signalled at once. npm is a shell wrapper
     # around node: terminating the wrapper leaves node holding the port, and the next
     # double-click then fails with "address already in use" on a port with no visible owner.
-    # See `stop_web`.
+    # See `stop`.
     group = (
         {"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP}
         if sys.platform == "win32"
@@ -182,18 +184,6 @@ def start_web(api_port: int, web_port: int) -> subprocess.Popen[bytes] | None:
         return None
     print(f"Screens: starting on http://localhost:{web_port} — first load compiles.", flush=True)
     return web
-
-
-def stop_web(web: subprocess.Popen[bytes] | None) -> None:
-    """Stop the whole npm tree, not just the wrapper that was launched.
-
-    This is the difference between a second double-click that works and one that reports a busy
-    port. `Popen.terminate()` reaches `npm.cmd` on Windows and the `node` process it spawned
-    outlives it, still bound to 3000.
-    """
-    if web is None or web.poll() is not None:
-        return
-    _kill_tree(web)
 
 
 # Set on the engine child by the supervisor, so the same file knows which of the two it is.
@@ -224,7 +214,7 @@ def supervise(
     *,
     spawn: Callable[[list[str]], int] = spawn_child,
     start_screens: Callable[[int, int], Any] = start_web,
-    stop_screens: Callable[[Any], None] = stop_web,
+    stop_screens: Callable[[Any], None] = stop,
     load_settings: Callable[[], Settings] | None = None,
 ) -> int:
     """Keep Parrot running across restarts, and own the screens so they outlive them.
@@ -409,8 +399,6 @@ def main(argv: list[str] | None = None) -> int:
         telegram = TelegramCapture(settings, use_queue=queueing)
         if telegram.start():
             print("Telegram capture: on. Send a photograph to your bot.", flush=True)
-        elif settings.telegram_configured:  # pragma: no cover - start() only refuses on no token
-            print("Telegram capture: not started.", flush=True)
         else:
             print(
                 "Telegram capture: off. Put TELEGRAM_BOT_TOKEN in .env to file documents from "
@@ -424,8 +412,8 @@ def main(argv: list[str] | None = None) -> int:
         finally:
             capture.stop()
             telegram.stop()
-            stop_worker(worker)
-            stop_web(web)
+            stop(worker)
+            stop(web)
             finished.set()
             watcher.join(timeout=1)
         if lifecycle.requested == "restart":
