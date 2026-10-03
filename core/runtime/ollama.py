@@ -178,19 +178,9 @@ class Ollama:
         parser could not recover text. That is the quarantine second pass.
         """
         model = self._settings.generation_model
-        message: dict[str, Any] = {"role": "user", "content": prompt}
+        body = self._constrained_body(system, prompt, schema, temperature, stream=False)
         if images:
-            message["images"] = images
-        body = {
-            "model": model,
-            "messages": [{"role": "system", "content": system}, message],
-            "format": schema,
-            "stream": False,
-            "options": {
-                "temperature": temperature,
-                "num_ctx": int(self._settings.context_tokens),
-            },
-        }
+            body["messages"][1]["images"] = images
         try:
             with self._client(self._settings.generation_url) as client:
                 response = client.post("/api/chat", json=body)
@@ -205,6 +195,24 @@ class Ollama:
         elapsed = payload.get("total_duration") or 0
         return Generated(content.strip(), model, int(elapsed / 1_000_000))
 
+    def _constrained_body(
+        self, system: str, prompt: str, schema: dict[str, Any], temperature: float, *, stream: bool
+    ) -> dict[str, Any]:
+        """The one request body both constrained calls send. See `constrained_stream`."""
+        return {
+            "model": self._settings.generation_model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            "format": schema,
+            "stream": stream,
+            "options": {
+                "temperature": temperature,
+                "num_ctx": int(self._settings.context_tokens),
+            },
+        }
+
     def constrained_stream(
         self,
         system: str,
@@ -215,29 +223,17 @@ class Ollama:
     ) -> Iterator[str]:
         """The same constrained generation, yielded as it is written.
 
-        Identical body to `constrained` but for `stream`, deliberately: the schema, the
-        temperature and the context window must not differ between the streaming and batch
-        paths, or the interface and the command line would be asking two different questions of
-        the same model.
+        The same body as `constrained` but for `stream`, built in one place, deliberately: the
+        schema, the temperature and the context window must not differ between the streaming and
+        batch paths, or the interface and the command line would be asking two different questions
+        of the same model.
 
         Yields raw content deltas. They are fragments of JSON, not sentences — whoever wants
         sentences reads them through `core.graph.sentences.SentenceScanner`, which is the only
         thing that knows when one has finished.
         """
         model = self._settings.generation_model
-        body = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": prompt},
-            ],
-            "format": schema,
-            "stream": True,
-            "options": {
-                "temperature": temperature,
-                "num_ctx": int(self._settings.context_tokens),
-            },
-        }
+        body = self._constrained_body(system, prompt, schema, temperature, stream=True)
         try:
             with (
                 self._client(self._settings.generation_url) as client,

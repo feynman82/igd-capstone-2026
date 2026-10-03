@@ -6,13 +6,12 @@ import asyncio
 import socket
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 import httpx
 import psycopg
-from redis import Redis
-from redis.exceptions import RedisError
 
+from core.runtime.capture import broker_available
 from core.runtime.ollama import ModelUnavailable
 from core.runtime.settings import Settings
 
@@ -50,13 +49,18 @@ class Check:
         return asdict(self)
 
 
+def _read_only(settings: Settings) -> psycopg.Connection[tuple[Any, ...]]:
+    """A connection the startup page can only read through, and only for two seconds."""
+    return psycopg.connect(
+        settings.database_url,
+        connect_timeout=2,
+        options="-c statement_timeout=2000 -c default_transaction_read_only=on",
+    )
+
+
 def database_check(settings: Settings) -> Check:
     try:
-        with psycopg.connect(
-            settings.database_url,
-            connect_timeout=2,
-            options="-c statement_timeout=2000 -c default_transaction_read_only=on",
-        ) as connection:
+        with _read_only(settings) as connection:
             row = connection.execute(SCHEMA_QUERY).fetchone()
         if row and 170000 <= row[0] < 180000 and all(row[1:]):
             return Check("Database", "available", "PostgreSQL 17, pgvector and base tables found.")
@@ -77,11 +81,7 @@ def capture_check(settings: Settings) -> Check:
     if not folder.is_dir():
         return Check("Capture", "blocked", f"The watched folder does not exist yet: {folder}")
     try:
-        with psycopg.connect(
-            settings.database_url,
-            connect_timeout=2,
-            options="-c statement_timeout=2000 -c default_transaction_read_only=on",
-        ) as connection:
+        with _read_only(settings) as connection:
             row = connection.execute(CAPTURE_QUERY).fetchone()
     except psycopg.Error:
         return Check("Capture", "blocked", "The watched folder exists but the database does not.")
@@ -109,11 +109,7 @@ def telegram_check(settings: Settings) -> Check:
             "Set TELEGRAM_BOT_TOKEN in .env to file from a phone.",
         )
     try:
-        with psycopg.connect(
-            settings.database_url,
-            connect_timeout=2,
-            options="-c statement_timeout=2000 -c default_transaction_read_only=on",
-        ) as connection:
+        with _read_only(settings) as connection:
             row = connection.execute(TELEGRAM_QUERY).fetchone()
     except psycopg.Error:
         return Check("Telegram capture", "blocked", "A bot is configured but the database is not.")
@@ -138,14 +134,9 @@ def telegram_check(settings: Settings) -> Check:
 
 
 def redis_check(settings: Settings) -> Check:
-    try:
-        with Redis.from_url(
-            settings.redis_url, socket_connect_timeout=2, socket_timeout=2
-        ) as client:
-            client.ping()
+    if broker_available(settings):
         return Check("Queue broker", "available", "Redis responds.")
-    except (RedisError, ValueError):
-        return Check("Queue broker", "blocked", "Cannot reach Redis. Start the local queue broker.")
+    return Check("Queue broker", "blocked", "Cannot reach Redis. Start the local queue broker.")
 
 
 def interface_check(settings: Settings) -> Check:
