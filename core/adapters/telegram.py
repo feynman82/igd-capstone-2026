@@ -25,7 +25,7 @@ from typing import Any
 
 import httpx
 
-from core.adapters.base import IngestJob, sniff_mime
+from core.adapters.base import IngestJob, receive_via, sniff_mime
 from core.ingest.register import Registrar
 
 log = logging.getLogger(__name__)
@@ -108,21 +108,8 @@ class TelegramAdapter:
         *,
         original_name: str,
     ) -> IngestJob:
-        registration = self._register(
-            payload=payload,
-            mime=mime,
-            original_name=original_name,
-            source_channel=self.channel,
-        )
-        return IngestJob(
-            document_id=registration.document_id,
-            sha256=registration.sha256,
-            source_channel=registration.source_channel,
-            original_name=original_name,
-            mime=registration.mime,
-            received_at=ts,
-            ingested_at=registration.ingested_at,
-            already_registered=registration.already_registered,
+        return receive_via(
+            self._register, self.channel, payload, mime, ts, original_name=original_name
         )
 
     # --------------------------------------------------------------------- the transport
