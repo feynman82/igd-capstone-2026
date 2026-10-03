@@ -30,6 +30,11 @@ from core.ingest.register import Registrar
 
 log = logging.getLogger(__name__)
 
+# The Bot API carries the token in the URL path, and httpx logs every URL it requests at INFO --
+# the level every script here runs at. So any process that holds this adapter printed the token on
+# each poll. Its warnings and errors still come through.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+
 CHANNEL = "telegram"
 API = "https://api.telegram.org"
 MAX_BYTES = 20 * 1024 * 1024  # what the bot API will hand back through getFile
@@ -308,18 +313,23 @@ def _attachment(message: dict[str, Any]) -> tuple[str | None, str]:
     photos = message.get("photo")
     if isinstance(photos, list) and photos:
         largest = max((item for item in photos if isinstance(item, dict)), key=_pixels)
+        # The message id as well as the second: an album is one message per photograph, all sent
+        # in the same second, and a name they share is a file each one overwrites.
         stamp = int(message.get("date", 0) or 0)
-        return str(largest.get("file_id")), f"telegram-photo-{stamp}.jpg"
+        number = int(message.get("message_id", 0) or 0)
+        return str(largest.get("file_id")), f"telegram-photo-{stamp}-{number}.jpg"
     return None, ""
 
 
 def _write_local_copy(inbox: Any, name: str, payload: bytes) -> None:
-    """Keep the bytes where the quarantine retry can find them again."""
+    """Keep the bytes where the quarantine retry can find them again.
+
+    Raises rather than logs. Once the message is deleted at source this copy is the only one, so
+    a failure here must stop the registration and the delete behind it; `poll_once` then tells
+    the person to send it again, and the message is still in the chat to send.
+    """
     from pathlib import Path
 
     folder = Path(inbox)
-    try:
-        folder.mkdir(parents=True, exist_ok=True)
-        (folder / name).write_bytes(payload)
-    except OSError as error:
-        log.warning("could not write the local copy of %s: %s", name, error)
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / name).write_bytes(payload)
