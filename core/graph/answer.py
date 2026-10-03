@@ -72,6 +72,7 @@ from core.graph.knowledge import categories_asked, glossary, mentions, reworded
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
 from core.graph.sentences import SentenceScanner
+from core.grounding.corpus import load_corpus
 from core.packs import InstalledPack, catalog, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -755,6 +756,54 @@ def _input_citation(item: Input) -> Citation:
     )
 
 
+def _guidance(installed: InstalledPack, today: date) -> list[tuple[Passage, Citation]]:
+    """The review's `explained_by` steps, in order, as passages the explanation may cite.
+
+    A step is kept only when its source is reviewed, not past `review_by`, and still prints the
+    quote (whitespace aside, since a PDF extraction keeps its line breaks): a quote nobody can
+    find in a signed-off source is not guidance. Read from the pack's own folder, never
+    retrieved — the author chose these words, so the order they give is the order explained.
+    """
+    advice = installed.manifest.advice
+    steps = advice.review.explained_by if advice and advice.review else []
+    if not steps:
+        return []
+    sources = {source.document.file: source for source in load_corpus(installed)}
+    out: list[tuple[Passage, Citation]] = []
+    for number, step in enumerate(steps, start=1):
+        source = sources.get(step.file)
+        quote = " ".join(step.quote.split())
+        if (
+            source is None
+            or source.reviewed_on is None
+            or source.document.review_by < today
+            or quote not in " ".join(source.text.split())
+        ):
+            log.warning("%s: explained_by step %d is not cited", installed.id, number)
+            continue
+        document = source.document
+        day = document.published or document.retrieved
+        dated = f"{day.day} {day:%B} {day.year}"
+        text = f"{document.publisher}, {document.title}, {dated}"
+        passage = Passage(
+            chunk_id=number,
+            document_id=None,
+            page=0,
+            text=quote,
+            score=1.0,
+            document_name=document.title,
+            context_prefix=text,
+            pack_id=installed.id,
+            kind="guidance",
+        )
+        chip = Citation(
+            None, document.title, 0, text, "guidance", document.publisher, document.title,
+            dated, document.url,
+        )  # fmt: skip
+        out.append((passage, chip))
+    return out
+
+
 def _distinct(citations: Iterable[Citation]) -> list[Citation]:
     """Each chip once, first use first: a sentence citing one input twice shows it once."""
     out: list[Citation] = []
@@ -793,10 +842,18 @@ def _advice_prompt(
         for index, passage in enumerate(evidence, start=1)
     )
     points = "\n".join(f"- {point}" for point in shape.disadvantages)
+    order = (
+        " Follow the order of a licensed adviser's needs analysis that the published guidance "
+        "passages describe, citing them: first what is on file and the guideline it is measured "
+        "against, then each gap and the kind of cover that closes it, then the next step the "
+        "guidance describes."
+        if any(passage.kind == "guidance" for passage in evidence)
+        else ""
+    )
     return (
         f"Today is {today:%d %B %Y}.\n{whose}\n"
         f"Explain this worked result to {addressee} in at most three sentences. Do not add a "
-        "verdict or advice; the verdict is already given.\n\n"
+        f"verdict or advice; the verdict is already given.{order}\n\n"
         f"Verdict: {calc.verdict_text}\n\n"
         f"Passages:\n{numbered}"
         + (f"\n\nPoints to mention if relevant:\n{points}" if points else "")
@@ -1351,6 +1408,11 @@ class AnswerGraph:
         }
         cards = list(chips.values())
         chips[evidence[-1].ref] = Citation(None, "", 0, CALCULATION_CITATION, "calculation")
+        # A review is explained in the order its pack's published guidance gives, and may cite
+        # it (ADR 0016 addendum, 2 October). Not on the card: the card is the calculation's.
+        guidance = _guidance(installed, today) if shape.id == REVIEW else []
+        chips.update((passage.ref, chip) for passage, chip in guidance)
+        evidence = [*evidence, *(passage for passage, _ in guidance)]
         product_disclosure = advice.product_disclosure.strip() if calc.names_product else ""
         exclusions = installed.manifest.answering.exclusions
         scanner = SentenceScanner()

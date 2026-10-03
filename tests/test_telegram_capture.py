@@ -15,6 +15,7 @@ photograph that vanished between the chat and the vault with nothing written dow
 from __future__ import annotations
 
 import json
+import logging
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,7 @@ import pytest
 from core.adapters.base import sha256
 from core.adapters.telegram import TelegramAdapter, TelegramSettings, TelegramUnavailable
 from core.ingest.register import Registration
+from core.ingest.source import index_folder
 from core.runtime.settings import ConfigurationError, Settings
 
 JPEG = b"\xff\xd8\xff\xe0" + b"y" * 4000
@@ -34,6 +36,7 @@ PDF = b"%PDF-1.7\nnot really a pdf, but it starts like one\n" + b"x" * 400
 
 CHAT = 4242
 STAMP = 1789000000
+NAME = f"telegram-photo-{STAMP}-77.jpg"  # the message id too, so an album keeps every page
 
 
 class FakeRegistrar:
@@ -172,7 +175,7 @@ def test_a_photograph_becomes_a_document_on_the_telegram_channel(tmp_path: Path)
     assert len(jobs) == 1
     assert registrar.calls[0]["channel"] == "telegram"
     assert registrar.calls[0]["mime"] == "image/jpeg"  # sniffed from the magic bytes, not the name
-    assert registrar.calls[0]["name"] == f"telegram-photo-{STAMP}.jpg"
+    assert registrar.calls[0]["name"] == NAME
     assert jobs[0].source_channel == "telegram"
 
 
@@ -191,8 +194,8 @@ def test_the_bytes_are_on_disk_before_the_document_is_registered(tmp_path: Path)
 
     adapter.poll_once(inbox)
 
-    assert registrar.inbox_at_call == [[f"telegram-photo-{STAMP}.jpg"]]
-    assert (inbox / f"telegram-photo-{STAMP}.jpg").read_bytes() == JPEG
+    assert registrar.inbox_at_call == [[NAME]]
+    assert (inbox / NAME).read_bytes() == JPEG
 
 
 def test_the_message_is_deleted_at_source_and_the_person_is_told(tmp_path: Path) -> None:
@@ -201,7 +204,7 @@ def test_the_message_is_deleted_at_source_and_the_person_is_told(tmp_path: Path)
     adapter.poll_once(inbox)
 
     assert api.deleted == [77]
-    assert api.said == [f"Filed: telegram-photo-{STAMP}.jpg."]
+    assert api.said == [f"Filed: {NAME}."]
 
 
 def test_the_same_photograph_twice_is_filed_once_and_said_so(tmp_path: Path) -> None:
@@ -212,7 +215,54 @@ def test_the_same_photograph_twice_is_filed_once_and_said_so(tmp_path: Path) -> 
     adapter.poll_once(inbox)
 
     assert len(registrar.by_digest) == 1
-    assert api.said[-1] == f"I already have that one: telegram-photo-{STAMP}.jpg."
+    assert api.said[-1] == f"I already have that one: {NAME}."
+
+
+def test_every_photograph_in_an_album_keeps_its_own_file(tmp_path: Path) -> None:
+    """An album arrives as one message per photograph, all stamped with the same second.
+
+    Named by the second alone, the second page overwrote the first on disk. Both were registered,
+    so the first became a document whose bytes are nowhere -- the quarantine retry and a queued
+    worker both find a document by hashing the inbox, and they found nothing.
+    """
+    first, second = photo_update(update_id=1), photo_update(update_id=2)
+    second["message"]["message_id"] = 78
+    second["message"]["photo"] = [{"file_id": "page-two", "width": 1280, "height": 960}]
+    page_two = b"\xff\xd8\xff\xe0" + b"z" * 4000
+    adapter, registrar, _api, inbox = build(
+        tmp_path, [first, second], files={"largest": JPEG, "page-two": page_two}
+    )
+
+    adapter.poll_once(inbox)
+
+    assert len(registrar.by_digest) == 2
+    assert set(index_folder(inbox)) == set(registrar.by_digest)
+
+
+def test_a_photograph_that_cannot_be_kept_is_neither_filed_nor_deleted(tmp_path: Path) -> None:
+    """The inbox copy is the only copy once the chat's is deleted, so failing to write it stops
+    everything after it. It used to be logged and carried on: registered, deleted at source,
+    and told "Filed" -- a document with no bytes anywhere."""
+    blocked = tmp_path / "inbox"
+    blocked.write_bytes(b"a file where the folder should be")
+    adapter, registrar, api, _inbox = build(tmp_path, [photo_update()])
+
+    adapter.poll_once(blocked)
+
+    assert registrar.calls == []
+    assert api.deleted == []
+    assert api.said == ["Something went wrong filing that. Send it again."]
+
+
+def test_the_token_never_reaches_the_log(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
+    """The Bot API puts the token in the URL path, and httpx logs every URL at INFO -- the level
+    the launcher runs at. A START.cmd window, or a screen recording of the demo, showed it."""
+    adapter, _registrar, _api, inbox = build(tmp_path, [photo_update()])
+
+    with caplog.at_level(logging.INFO):
+        adapter.poll_once(inbox)
+
+    assert "test-token" not in caplog.text
 
 
 def test_a_document_keeps_the_name_it_was_sent_under(tmp_path: Path) -> None:

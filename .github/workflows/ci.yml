@@ -17,8 +17,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:parrot@localhost:5432/parrot_test
       PARROT_LLM: fake            # no model in CI; core code takes a fake client
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.1.0
       - run: uv sync --all-extras
       - run: psql "$DATABASE_URL" -f db/migrations/0001_init.sql
       - run: psql "$DATABASE_URL" -f db/migrations/0002_household.sql
@@ -36,8 +36,8 @@ jobs:
   web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm, cache-dependency-path: web/package-lock.json }
       - run: npm ci
         working-directory: web
