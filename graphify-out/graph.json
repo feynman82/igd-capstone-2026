@@ -34727,6 +34727,18 @@
       "source_location": "L150"
     },
     {
+      "id": "packs_iras_tax_grounding_iras_tax_ya2025_ya2027_iras_etax_guide_tax_deductibility_of_donations",
+      "label": "iras-etax-guide-tax-deductibility-of-donations.md",
+      "_origin": "ast",
+      "community": 214,
+      "community_name": "iras-etax-guide-tax-deductibility-of-donations.md",
+      "file_type": "document",
+      "node_kind": "page",
+      "norm_label": "iras-etax-guide-tax-deductibility-of-donations.md",
+      "source_file": "packs/iras_tax/grounding/iras_tax_ya2025_ya2027/iras-etax-guide-tax-deductibility-of-donations.md",
+      "source_location": "L1"
+    },
+    {
       "id": "tests_test_api_py_parametrize",
       "label": "parametrize",
       "_origin": "ast",
@@ -184697,5 +184709,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "de4779baa7149040c4cb700226d74a6e9c9f4a30"
+  "built_at_commit": "932ab3325ae76fa31c290a78ceea442917e30a05"
 }

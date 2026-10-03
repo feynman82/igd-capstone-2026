@@ -1,17 +1,17 @@
-# Graph Report - igd-capstone-2026  (2026-09-29)
+# Graph Report - igd-capstone-2026  (2026-10-03)
 
 ## Corpus Check
-- 306 files · ~700,196 words
+- 307 files · ~704,491 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 29 file(s) not represented in the graph (top: (none) 11, .csv 5, .jsonl 3)
 
 ## Summary
-- 4475 nodes · 11165 edges · 214 communities (186 shown, 28 thin omitted)
+- 4476 nodes · 11165 edges · 215 communities (186 shown, 29 thin omitted)
 - Extraction: 90% EXTRACTED · 9% INFERRED · 0% AMBIGUOUS · INFERRED: 1059 edges (avg confidence: 0.92)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `de4779ba`
+- Built from commit: `932ab332`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -241,10 +241,10 @@
 ## Surprising Connections (you probably didn't know these)
 - `Work in this order, stopping for the author at each step` --references--> `money()`  [INFERRED]
   .claude/skills/authoring-a-domain-pack/SKILL.md → modules/advice/__init__.py
-- `How to give the feedback` --references--> `FieldSpec`  [INFERRED]
-  .claude/skills/integration-review/SKILL.md → core/contracts.py
 - `2. Limiting a fact input to one year` --references--> `FactInput`  [INFERRED]
   packs/iras_tax/CONTRACT_REQUESTS.md → core/contracts.py
+- `How to give the feedback` --references--> `FieldSpec`  [INFERRED]
+  .claude/skills/integration-review/SKILL.md → core/contracts.py
 - `Explicitly not doing: cloud, hosted vectors, autonomous spending` --semantically_similar_to--> `The autonomy statement`  [INFERRED] [semantically similar]
   tools/paperbrain/docs/ROADMAP.md → team/siew/README.md
 - `Task: hybrid retrieval with reciprocal rank fusion` --semantically_similar_to--> `Hybrid retrieval, not embeddings alone`  [INFERRED] [semantically similar]
@@ -273,7 +273,7 @@
 - **Module manifests sharing the reads/writes/runs/surfaces contract** — modules__template_module_module_template, modules_advice_module_advice, modules_alert_module_alert, modules_reminder_module_reminder [INFERRED 0.95]
 - **The 9x/4x protection rule of thumb and the published sources a person approved it from** — packs_insurance_agent_grounding_sg_protection_guidance_moneysense_bfpg_faq_protection_rule_of_thumb, packs_insurance_agent_grounding_sg_protection_guidance_moneysense_bfpg_faq_consumer_faqs, packs_insurance_agent_grounding_sg_protection_guidance_moneysense_bfpg_starting_a_family_starting_a_family_guide, packs_insurance_agent_grounding_sg_protection_guidance_moneysense_basic_financial_planning_basic_financial_planning_guide, packs_insurance_agent_grounding_sg_protection_guidance_lia_protection_gap_study_protection_gap_study_2022, packs_insurance_agent_pack_death_tpd_income_multiple, packs_insurance_agent_pack_ci_income_multiple [INFERRED 0.95]
 
-## Communities (214 total, 28 thin omitted)
+## Communities (215 total, 29 thin omitted)
 
 ### Community 0 - "answer.py"
 Cohesion: 0.03
@@ -1040,9 +1040,9 @@ Nodes (3): fixture, A three-page PDF, each page a different size so a render can
   README.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **356 isolated node(s):** `session-start.sh script`, `PATH`, `Action`, `Stage`, `DependencyCheck` (+351 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1573 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **28 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **356 isolated node(s):** `Action`, `Stage`, `DependencyCheck`, `Phase`, `Status` (+351 more)
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1574 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
