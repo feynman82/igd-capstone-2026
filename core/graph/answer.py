@@ -45,7 +45,7 @@ import re
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 from core.contracts import DEFAULT_DECLINE, AdviceShape
 from core.graph.advice import (
@@ -56,6 +56,7 @@ from core.graph.advice import (
     ConsentBook,
     Input,
     Missing,
+    kind_of,
     passages_for,
 )
 from core.graph.gate import (
@@ -572,14 +573,9 @@ def _numbered(passages: list[Passage]) -> str:
 
 
 def _citations(passages: Iterable[Passage]) -> list[Citation]:
-    out: list[Citation] = []
-    for passage in passages:
-        cited = Citation(
-            passage.document_id, passage.document_name, passage.page, passage.cite(), passage.kind
-        )
-        if all(cited.text != seen.text for seen in out):
-            out.append(cited)
-    return out
+    return _distinct(
+        Citation(p.document_id, p.document_name, p.page, p.cite(), p.kind) for p in passages
+    )
 
 
 # 14 September: "…SGD 1,860.00, as stated in the policy document (6) and confirmed on file (7)." was
@@ -746,10 +742,7 @@ def _input_citation(item: Input) -> Citation:
     for a fact with no name and "None, page 0" for a published value. The input already carries
     its citation as a person reads it, and a published value's publisher, title, date and URL.
     """
-    prefix = item.ref.partition(":")[0]
-    if prefix not in ("fact", "rule"):
-        raise ValueError(f"not a fact or rule ref: {item.ref!r}")
-    kind: Kind = "fact" if prefix == "fact" else "rule"
+    kind = kind_of(item.ref)
     return Citation(
         document_id=item.document_id,
         document_name=item.title if kind == "rule" else "",
@@ -1103,12 +1096,16 @@ class AnswerGraph:
         if self._inventory is None:
             return []
         on_file = self._inventory.holdings(packs)
-        if scoped is None or not scoped.scoped or self._household is None:
+        if scoped is None or not scoped.scoped:
             return on_file
-        kept = {
-            str(p.document_id)
-            for p in self._household.apply(asked, [h.passage() for h in on_file]).passages
-        }
+        return self._narrowed(asked, on_file)
+
+    def _narrowed(self, question: str, on_file: list[Holding]) -> list[Holding]:
+        """The holdings whose documents scoping keeps for `question`, as it keeps passages."""
+        if self._household is None:
+            return on_file
+        passages = self._household.apply(question, [h.passage() for h in on_file]).passages
+        kept = {str(p.document_id) for p in passages}
         return [h for h in on_file if str(h.document_id) in kept]
 
     def _absence(
@@ -1246,13 +1243,7 @@ class AnswerGraph:
         held: set[str] = set()
         on_file: list[Holding] = []
         if self._inventory is not None and categories is not None:
-            on_file = self._inventory.holdings([installed])
-            if self._household is not None:
-                passages = [h.passage() for h in on_file]
-                kept = {
-                    str(p.document_id) for p in self._household.apply(question, passages).passages
-                }
-                on_file = [h for h in on_file if str(h.document_id) in kept]
+            on_file = self._narrowed(question, self._inventory.holdings([installed]))
             held = {h.category.id for h in on_file if h.category}
             labels = {rule.id: rule.label for rule in categories.rules}
         for shape_id in review.shapes:
@@ -1854,6 +1845,3 @@ class AnswerGraph:
             passages_read=passages_read,
             reason="the answer did not finish",
         )
-
-
-Intent = Literal["explain", "act", "advise"]
