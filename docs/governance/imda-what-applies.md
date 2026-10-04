@@ -17,15 +17,17 @@
 
 | Instrument | Date | Dimensions | Source of the names used here |
 |---|---|---|---|
-| IMDA, *Model AI Governance Framework for Generative AI* | May 2024 | Nine | Architecture review §10. **One discrepancy, see below.** |
+| IMDA, *Model AI Governance Framework for Generative AI* | May 2024 | Nine | Architecture review §10. Ninth dimension decided by Siew, see below. |
 | IMDA / MDDI, *Model AI Governance Framework for Agentic AI* | Launched 22 January 2026; the review notes an update in June 2026 | Four | Architecture review §10 |
 
-**Discrepancy to check.** The architecture review lists the nine GenAI dimensions as
-accountability, data governance, trusted development, incident reporting, testing and assurance,
-content provenance, safety and alignment, cybersecurity, and **human oversight**. The author of
-this draft recalls the published framework's ninth dimension as **"AI for Public Good"**, with
-no separate "human oversight" dimension. Neither list has been checked against the source.
-Siew to confirm from the framework itself. Both are mapped below so that nothing is lost.
+**The ninth dimension: decided (Siew, 2026-10-04).** The ninth GenAI dimension is
+**human oversight**, as the architecture review lists it. The nine are accountability, data
+governance, trusted development, incident reporting, testing and assurance, content provenance,
+safety and alignment, cybersecurity, and human oversight.
+*Note kept for the record:* the drafting author recalled the published ninth dimension as "AI
+for Public Good". The framework's own text has still not been read in this environment, so a
+check of the dimension names against the published framework remains worthwhile before the
+chapter cites them.
 
 ---
 
@@ -59,8 +61,7 @@ government, and PARROT, as a deployer, has only a small part to play.
 | **Security** (the review: "cybersecurity") | Partly | Loopback-only services. Screens bound to `127.0.0.1`. The API refuses non-loopback hosts. **Gaps:** the screen lock does not encrypt, the API has no authentication for local callers, and an empty Telegram allow list accepts any chat. Prompt injection is to be tested by Set C. | `data-inventory.md` §3 and §5; `web/lib/lock.ts`; `api/main.py` |
 | **Content provenance** | Partly, **fit to be checked** | Every fact cites a document and a page (`NOT NULL`), and every answer sentence cites a passage. That is provenance *of the answer's sources*. If the framework means marking content as AI-generated, then whether answers are labelled as machine-written has **not been checked**. | `db/migrations/0001_init.sql` (`facts`); `core/graph/gate.py` |
 | **Safety and alignment (R&D)** | Little | Mainly addressed to model developers. What PARROT does as a deployer: the model only explains, and code chooses the verdict. A pack can forbid phrases (`never_say`), and the gate refuses unsupported claims. | `core/contracts.py` (`verdict_by_code`, `AdviceShape.never_say`) |
-| **AI for Public Good** *(if it is the ninth)* | Little | Uses SEA-LION, a regional model from AI Singapore (MIT licence), and runs on a household's own hardware. | AGENTS.md (stack); `docs/artefacts/README.md` |
-| **Human oversight** *(if it is the ninth, as the review lists)* | Applies | The same evidence as Agentic dimension 2. | See above |
+| **Human oversight** | Applies | The same evidence as Agentic dimension 2: people approve published rule values, confirm names before they scope answers, and correct facts. Only the owner may erase a person or reset. | See Agentic dimension 2 |
 
 ---
 
@@ -87,7 +88,7 @@ government, and PARROT, as a deployer, has only a small part to play.
 
 ## For Siew
 
-1. Read both frameworks. Confirm the dimension names, settle the GenAI discrepancy, and check
-   each "Applies?" judgement.
+1. Read both frameworks. Confirm the dimension names against the published text, and check
+   each "Applies?" judgement. *(The ninth dimension is decided: human oversight.)*
 2. Decide whether an incident and breach procedure becomes a governance artefact. It would be
    a short document, but at present there is nothing.
