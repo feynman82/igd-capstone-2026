@@ -56,7 +56,7 @@ government, and PARROT, as a deployer, has only a small part to play.
 | **Accountability** | Applies | The `never_acts` and `verdict_by_code` types. Ownership by lane through CODEOWNERS. An advice record for every advised or withheld answer. Terms that allocate responsibility. | `core/contracts.py`; `.github/CODEOWNERS`; `core/advice_records.py`; `terms-of-use.md` |
 | **Data (governance)** | Applies | **The strongest dimension.** A data inventory, a retention and erasure policy, a deemed-consent basis, and a synthetic corpus built register-first. Data stays on the household's computer at inference and at rest. | `data-inventory.md`; `retention-and-erasure.md`; `synthetic-data-case.md`; `corpus/register/` |
 | **Trusted development and deployment** | Partly | ADRs for every non-obvious decision. Published sources carry publisher, URL, retrieval date and a review-by date, and none is cited until a person signs it off. **Gap:** the model card is not written yet (W4, overdue). | `docs/adr/`; `core/contracts.py` (`GroundingDocument`); `db/migrations/0003_advice.sql` |
-| **Incident reporting** | **Gap** | Nothing yet. `traces` would show what happened, but there is no process for noticing, recording or reporting an incident. That includes a personal data breach, which the PDPA has its own notification rules for (Part 6A, **not read** for this draft). | — |
+| **Incident reporting** | Partly | A procedure is drafted (2026-10-04): report, contain, record, assess, notify, learn, with an incident log that holds no personal data. `traces` and `advice_records` are the evidence. **Gap:** the PDPA Part 6A steps are still to be confirmed from the Act, and the procedure has never been exercised. | `incident-and-breach-procedure.md`; `db/migrations/0001_init.sql` (`traces`) |
 | **Testing and assurance** | Applies | The evaluation harness (Ragas) with targets. Run 1, on 2026-09-29: context recall 0.895, context precision 0.868, **faithfulness 0.819 against a 0.90 target**, answer relevancy 0.765 against 0.80. Adversarial Set C is not written yet (W3, overdue). `make check` gates every change. | `eval/`; `eval/results/2026-09-29-baseline-dense-only.md`; `Makefile` |
 | **Security** (the review: "cybersecurity") | Partly | Loopback-only services. Screens bound to `127.0.0.1`. The API refuses non-loopback hosts. **Gaps:** the screen lock does not encrypt, the API has no authentication for local callers, and an empty Telegram allow list accepts any chat. Prompt injection is to be tested by Set C. | `data-inventory.md` §3 and §5; `web/lib/lock.ts`; `api/main.py` |
 | **Content provenance** | Partly, **fit to be checked** | Every fact cites a document and a page (`NOT NULL`), and every answer sentence cites a passage. That is provenance *of the answer's sources*. If the framework means marking content as AI-generated, then whether answers are labelled as machine-written has **not been checked**. | `db/migrations/0001_init.sql` (`facts`); `core/graph/gate.py` |
@@ -87,8 +87,8 @@ government, and PARROT, as a deployer, has only a small part to play.
    "specified".
 3. **Faithfulness is below target** (0.819 against 0.90). This is the measured number that
    testing-and-assurance, and the model card, must report as it is.
-4. **Incident reporting has nothing behind it.** It is the one dimension with no artefact, and
-   the PDPA's breach rules make it more than a framework point.
+4. **Incident reporting had nothing behind it.** A procedure is now drafted in
+   `incident-and-breach-procedure.md`, awaiting Siew's approval.
 
 ## For Siew
 
