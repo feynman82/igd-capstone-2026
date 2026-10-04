@@ -71,8 +71,12 @@ government, and PARROT, as a deployer, has only a small part to play.
    no code reads the flag (`grep` finds it only in `core/contracts.py` and the pack YAML). The
    citation rule is enforced, but unconditionally, by `core/graph/gate.py`. Setting
    `must_cite: false` would change nothing. The chapter should cite the gate as the evidence,
-   not the flag. Raise with Christian: remove the flag, or make it `Literal[True]` like
-   `never_acts`.
+   not the flag.
+   **Recommendation to Christian (Siew, 2026-10-04):** type `must_cite` as `Literal[True]`,
+   like `never_acts` and `verdict_by_code`, so that a pack setting it to `false` fails to load.
+   This is a change to `core/contracts.py`, so it needs its own reviewed PR (AGENTS.md rule 4).
+   Once it lands, the chapter can say that three guardrails are fixed by type, and that the
+   gate enforces citation.
 2. **"The Actions module is specified and deliberately not built"**
    (`docs/governance/README.md`). The only "specification" found is a box in Fig 1 of the
    architecture review, "drawn deliberately as a boundary". There is no written specification.
