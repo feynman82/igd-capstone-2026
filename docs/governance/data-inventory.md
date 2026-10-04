@@ -103,7 +103,7 @@ card, and parents' ID numbers on a birth certificate.
 | **Where it rests** | The original file in the watched folder; `documents`, `chunks`, `facts`, `person_aliases`; and in answers that quote it, `advice_records.answer_text` and `traces.payload`. Whether an identity value lands there depends on the question asked: **unverified**. **Corrected:** there are no LangGraph checkpoint tables. The checkpointer is `MemorySaver`, in process memory only | `db/migrations/0001`–`0003`; `core/advice_records.py`; `core/graph/answer.py` (module docstring) |
 | **Encrypted at rest** | No, not by the application | `web/lib/lock.ts` docstring: the lock "does not encrypt anything" |
 | **Who can see it** | Through the interface: only a browser with an in-date session cookie from the local passphrase. Pages redirect to `/unlock`, and `/api/parrot/*` and `/api/chat` return 401 without one. Not through the interface: anyone with a terminal on this computer. The API answers any loopback request without authentication, and Postgres and the folder are readable directly | `web/app/(app)/layout.tsx`; `web/app/api/parrot/[...path]/route.ts`; `web/app/api/chat/route.ts`; `web/lib/lock.ts`; `api/main.py` |
-| **What crosses a boundary** | As in the flow map. **Corrected:** the screens now bind to loopback (`next dev -H 127.0.0.1`), so the earlier concern about the local network no longer holds. What Telegram retains after a message is deleted is **unverified** | `web/package.json`; `core/adapters/telegram.py` |
+| **What crosses a boundary** | As in the flow map. **Corrected:** the screens now bind to loopback (`next dev -H 127.0.0.1`), so the earlier concern about the local network no longer holds. After deletion, Telegram removes the message from its servers but may keep metadata (IP address, device information, timestamps) for up to 12 months: see open question 7 | `web/package.json`; `core/adapters/telegram.py` |
 | **Purpose** | Identity questions for bookings and forms, with the page cited; loans for "what do I owe"; dates of birth for age in insurance advice, only under recorded consent | ADR 0017 decision 6; ADR 0016; `advice_consents` |
 | **Retention and erasure** | **Corrected:** now covered by [`retention-and-erasure.md`](retention-and-erasure.md). Chunks and facts cascade from `documents`. The file in the folder is not removed by a database delete. An indexed document cannot yet be erased through the product | `db/migrations/0001_init.sql`; `core/ingest/sql.py` (`DELETE_QUARANTINED`) |
 
@@ -131,5 +131,12 @@ capture, which the claim should name rather than leave out.
 6. ~~**NRIC guidelines.** Do the PDPC advisory guidelines on NRIC numbers bear on a
    household's own copy?~~ **Decided, Siew, 2026-10-04: they do not apply to a household's own
    copy.** The citation, with the guidelines' title and date, is still to be added.
-7. **What Telegram keeps** after a bot deletes a message. Check Telegram's published privacy
-   policy and cite it with its date. For Siew.
+7. ~~**What Telegram keeps** after a bot deletes a message.~~ **Answered, Siew, 2026-10-04,
+   from Telegram's privacy policy:** a deleted cloud message is removed from the chat and from
+   Telegram's servers. Some metadata (IP address, device information, basic interaction
+   timestamps) may be kept for up to 12 months for security and abuse prevention. So the
+   document image does not outlive the deletion, but the fact that the household's device
+   sent something does. **Still to add:** the policy's URL and its last-updated date. Also
+   still to confirm: the policy describes a person deleting a message, and the bot deletes
+   it through the Bot API (`core/adapters/telegram.py`, `_delete`). Whether the two are
+   treated the same is **unverified**.
