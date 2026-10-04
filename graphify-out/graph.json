@@ -36645,7 +36645,7 @@
       "node_kind": "heading",
       "norm_label": "findings from this pass",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L67"
+      "source_location": "L68"
     },
     {
       "id": "docs_governance_imda_what_applies_for_siew",
@@ -36657,7 +36657,7 @@
       "node_kind": "heading",
       "norm_label": "for siew",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L88"
+      "source_location": "L89"
     },
     {
       "id": "docs_governance_imda_what_applies_genai_framework_nine_dimensions",
@@ -36669,7 +36669,7 @@
       "node_kind": "heading",
       "norm_label": "genai framework: nine dimensions",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L46"
+      "source_location": "L48"
     },
     {
       "id": "docs_governance_imda_what_applies_imda_frameworks_what_applies_to_parrot",
@@ -47595,7 +47595,7 @@
       "node_kind": "heading",
       "norm_label": "agentic ai framework: four dimensions",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L32"
+      "source_location": "L34"
     },
     {
       "id": "eval_score_py_collection",
@@ -141646,7 +141646,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L32",
+      "source_location": "L34",
       "weight": 1.0
     },
     {
@@ -141657,7 +141657,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L46",
+      "source_location": "L48",
       "weight": 1.0
     },
     {
@@ -141668,7 +141668,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L67",
+      "source_location": "L68",
       "weight": 1.0
     },
     {
@@ -141679,7 +141679,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L88",
+      "source_location": "L89",
       "weight": 1.0
     },
     {
@@ -175704,7 +175704,7 @@
       "confidence_score": 0.95,
       "context": "AdviceNote",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L42",
+      "source_location": "L44",
       "weight": 1.0
     },
     {
@@ -175716,7 +175716,7 @@
       "confidence_score": 0.95,
       "context": "GroundingDocument",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0
     },
     {
@@ -175728,7 +175728,7 @@
       "confidence_score": 0.95,
       "context": "Guardrails",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L39",
+      "source_location": "L41",
       "weight": 1.0
     },
     {
@@ -175824,7 +175824,7 @@
       "confidence_score": 0.95,
       "context": "check_one",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L41",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -176724,7 +176724,7 @@
       "confidence_score": 0.95,
       "context": "local_url",
       "source_file": "docs/governance/imda-what-applies.md",
-      "source_location": "L41",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -193710,5 +193710,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "b71717e4ad4e9d4e6e0fae586b003f761b630daa"
+  "built_at_commit": "e12252d9e53f0fb14953335959be924877e19123"
 }
