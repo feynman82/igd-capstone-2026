@@ -101,7 +101,7 @@ card, and parents' ID numbers on a birth certificate.
 |---|---|---|
 | **Where it enters** | The watched folder, or a photograph sent to the Telegram bot, which writes a copy into the same folder | `core/adapters/telegram.py` (`_write_local_copy`); `core/runtime/settings.py` |
 | **Where it rests** | The original file in the watched folder; `documents`, `chunks`, `facts`, `person_aliases`; and in answers that quote it, `advice_records.answer_text` and `traces.payload`. Whether an identity value lands there depends on the question asked: **unverified**. **Corrected:** there are no LangGraph checkpoint tables. The checkpointer is `MemorySaver`, in process memory only | `db/migrations/0001`–`0003`; `core/advice_records.py`; `core/graph/answer.py` (module docstring) |
-| **Encrypted at rest** | No, not by the application | `web/lib/lock.ts` docstring: the lock "does not encrypt anything" |
+| **Encrypted at rest** | No, not by the application. Accepted for v1: see open question 3 | `web/lib/lock.ts` docstring: the lock "does not encrypt anything" |
 | **Who can see it** | Through the interface: only a browser with an in-date session cookie from the local passphrase. Pages redirect to `/unlock`, and `/api/parrot/*` and `/api/chat` return 401 without one. Not through the interface: anyone with a terminal on this computer. The API answers any loopback request without authentication, and Postgres and the folder are readable directly | `web/app/(app)/layout.tsx`; `web/app/api/parrot/[...path]/route.ts`; `web/app/api/chat/route.ts`; `web/lib/lock.ts`; `api/main.py` |
 | **What crosses a boundary** | As in the flow map. **Corrected:** the screens now bind to loopback (`next dev -H 127.0.0.1`), so the earlier concern about the local network no longer holds. After deletion, Telegram removes the message from its servers but may keep metadata (IP address, device information, timestamps) for up to 12 months: see open question 7 | `web/package.json`; `core/adapters/telegram.py` |
 | **Purpose** | Identity questions for bookings and forms, with the page cited; loans for "what do I owe"; dates of birth for age in insurance advice, only under recorded consent | ADR 0017 decision 6; ADR 0016; `advice_consents` |
@@ -123,8 +123,12 @@ capture, which the claim should name rather than leave out.
    deletion remains question 7.
 2. **Values quoted in `traces` and `advice_records`** (Christian's question 2). Redact them,
    or keep them as the audit trail? Now an open question in the retention policy.
-3. **Screen lock, not encryption** (Christian's question 3). Is a passphrase lock enough for
-   identity numbers, which ADR 0017 calls the most sensitive data in the vault? For Siew.
+3. ~~**Screen lock, not encryption** (Christian's question 3). Is a passphrase lock enough for
+   identity numbers, which ADR 0017 calls the most sensitive data in the vault?~~ **Decided,
+   Siew, 2026-10-04: the screen lock is accepted as enough for v1.** It protects against a
+   person at an unlocked laptop, not against anyone with a terminal on the machine
+   (`web/lib/lock.ts`). Encrypting the disk with the operating system's own tool (BitLocker,
+   FileVault) is the household's responsibility, not Parrot's. Parrot does not encrypt.
 4. ~~Should the screens bind to loopback only?~~ Done: `web/package.json`.
 5. **Health data.** Do the corpus's claim letters print a diagnosis? If they do, health
    data is held in `chunks.text`. Check `b1-0007` to `b1-0009`. For Desmond.
