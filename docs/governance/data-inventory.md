@@ -115,8 +115,12 @@ capture, which the claim should name rather than leave out.
 
 ## Open questions
 
-1. **Telegram for identity documents** (Christian's question 1). Acceptable with
-   delete-at-source, or should identity documents be folder-only? For Siew.
+1. ~~**Telegram for identity documents** (Christian's question 1). Acceptable with
+   delete-at-source, or should identity documents be folder-only?~~ **Decided, Siew,
+   2026-10-04: identity documents may be accepted through Telegram.** The image crosses
+   Telegram's servers, as the flow map records. Delete-at-source is on by default
+   (`TELEGRAM_DELETE_AT_SOURCE`, `core/runtime/settings.py`), and what Telegram keeps after
+   deletion remains question 7.
 2. **Values quoted in `traces` and `advice_records`** (Christian's question 2). Redact them,
    or keep them as the audit trail? Now an open question in the retention policy.
 3. **Screen lock, not encryption** (Christian's question 3). Is a passphrase lock enough for
