@@ -46,7 +46,7 @@ and embedded, including values no field names.
 | **Corrections and traces** | `traces.payload`. A correction keeps `subject`, `was` and `now` | Whoever the fact is about | Audit trail and evaluation data | May quote any of the above | Indefinitely, today. See the retention policy |
 | **File names** | `documents.original_name`; Celery task arguments in Redis | Whoever the file is about | Showing and re-reading the document | Often carries a name | With the document; Redis results expire in 1 hour |
 
-**To check against the instrument:** the PDPC's *Advisory Guidelines on the PDPA for NRIC and
+**Decided (open question 6):** these do not apply to a household's own copy. **To check against the instrument:** the PDPC's *Advisory Guidelines on the PDPA for NRIC and
 other National Identification Numbers*. As we understand them, they restrict organisations
 collecting NRIC numbers. Whether they apply to a household's own copy depends on the
 domestic-capacity question raised in the retention policy.
@@ -128,7 +128,8 @@ capture, which the claim should name rather than leave out.
 4. ~~Should the screens bind to loopback only?~~ Done: `web/package.json`.
 5. **Health data.** Do the corpus's claim letters print a diagnosis? If they do, health
    data is held in `chunks.text`. Check `b1-0007` to `b1-0009`. For Desmond.
-6. **NRIC guidelines.** Read the PDPC advisory guidelines on NRIC numbers and record whether
-   they bear on a household's own copy. For Siew.
+6. ~~**NRIC guidelines.** Do the PDPC advisory guidelines on NRIC numbers bear on a
+   household's own copy?~~ **Decided, Siew, 2026-10-04: they do not apply to a household's own
+   copy.** The citation, with the guidelines' title and date, is still to be added.
 7. **What Telegram keeps** after a bot deletes a message. Check Telegram's published privacy
    policy and cite it with its date. For Siew.
