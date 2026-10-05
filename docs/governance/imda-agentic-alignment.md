@@ -3,9 +3,10 @@
 Status: draft · Owner: Siew · Reviewer: Christian
 
 **Instrument:** Infocomm Media Development Authority (IMDA), *Model AI Governance Framework
-for Agentic AI*, Version 1.5. Published 20 May 2026, updated 5 June 2026. Copy read: the PDF
-release supplied by Siew on 2026-10-05 (file `Mgf_for_Agentic_AI_atx_Release_July_2026.pdf`, 53
-pages). Section numbers below are the framework's own.
+for Agentic AI*, Version 1.5. Published 20 May 2026, updated 5 June 2026.
+<https://www.imda.gov.sg/-/media/imda/files/about/emerging-tech-and-research/artificial-intelligence/mgf-for-agentic-ai.pdf>.
+Copy read: the PDF release supplied by Siew on 2026-10-05 (file
+`Mgf_for_Agentic_AI_atx_Release_July_2026.pdf`, 53 pages). Section numbers below are the framework's own.
 
 > This supersedes the repository's references to "the Agentic AI framework published
 > 22 January 2026". That was version 1.0. Version 1.5 keeps the four dimensions and adds,
@@ -231,8 +232,9 @@ autonomy statement (due 20 October).
 
 1. **Q1, residual risk.** Is an abstention rate of 0.52 acceptable for v1, given it advises
    and never acts? It needs a stated decision (§2.1.2). Siew.
-2. **Q2, the framework's URL.** Add IMDA's web address for version 1.5 to the instrument line.
-   Siew.
+2. ~~**Q2, the framework's URL.**~~ Added to the instrument line (Siew, 2026-10-05). The
+   address is unversioned, so it will serve whatever IMDA publishes next. The version and dates
+   above record what was read.
 3. **Q3, other repository references.** `team/siew/README.md` and `docs/governance/README.md`
    are updated in this change. `.claude/skills/writing-a-governance-artefact/SKILL.md` still
    says "22 January 2026", and it is Christian's file to correct.
