@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-05)
 
 ## Corpus Check
-- 321 files · ~731,890 words
+- 321 files · ~731,907 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 35 file(s) not represented in the graph (top: (none) 11, .jsonl 8, .csv 5)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `12b97e34`
+- Built from commit: `268cf232`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -516,10 +516,10 @@
   docs/artefacts/Parrot UIUX refinement/uploads/parrot-design-evaluation.html → packs/README.md
 - `One cell, one field` --semantically_similar_to--> `A field name is three things at once`  [INFERRED] [semantically similar]
   corpus/templates/policy_schedule.html → docs/PACK_AUTHORING.md
-- `ModelWarmth` --uses--> `ModelUnavailable`  [INFERRED]
-  api/startup.py → core/runtime/ollama.py
-- `_Formatter` --uses--> `ModelUnavailable`  [INFERRED]
-  eval/run.py → core/runtime/ollama.py
+- `_answer_events()` --indirect_call--> `close()`  [INFERRED]
+  api/routes.py → modules/reminder/__init__.py
+- `_Answering` --uses--> `HybridRetriever`  [INFERRED]
+  api/routes.py → core/retrieve/hybrid.py
 
 ## Import Cycles
 - None detected.
@@ -1463,7 +1463,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `Provenance register for corpus sg_protection_guidance` and `Lane A - Christian, integration and product`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
 - **Why does `Settings` connect `Settings` to `HybridRetriever`, `ScriptedOllama`, `test_advice_module.py`, `run_parrot.py`, `routes.py`, `test_telegram_capture.py`, `FakeConn`, `InstalledPack`, `bench_runtime.py`, `settings`, `Passage`, `test_lifecycle.py`, `test_household.py`, `.load`, `test_modules.py`, `test_registration.py`, `test_api.py`, `StreamingGraph`, `eval/modules.py`, `_Answering`, `report.py`, `registry.py`, `typing`, `run.py`, `load_corpus.py`, `ModuleAdviser`, `test_startup.py`, `Any`, `tasks.py`, `Answer`, `worker.py`, `DatabaseUnavailable`, `ModuleManifest`, `schedule.py`, `test_rerank.py`, `test_worker_queue.py`, `TelegramCapture`?**
-  _High betweenness centrality (0.039) - this node is a cross-community bridge._
+  _High betweenness centrality (0.036) - this node is a cross-community bridge._
 - **Are the 64 inferred relationships involving `InstalledPack` (e.g. with `_Answering` and `AdviceLog`) actually correct?**
   _`InstalledPack` has 64 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `1. Where Parrot sits`, `Risk factors (§2.1.1)`, `Bounding the risks by design (§2.1.2)` to the rest of the system?**
@@ -1473,4 +1473,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `LIA 2022 Protection Gap Study Key Findings` and `Protection rule of thumb: 9x annual income for death and TPD, 4x for critical illness`?**
   _Edge tagged AMBIGUOUS (relation: cites) - confidence is low._
 - **Why does `InstalledPack` connect `InstalledPack` to `_as_event`, `test_advice_graph.py`, `ScriptedOllama`, `Basis`, `test_advice_module.py`, `test_grounding_index.py`, `routes.py`, `FakeConn`, `settings`, `packs.py`, `Passage`, `test_api.py`, `StreamingGraph`, `DocumentCatalog`, `advice/__init__.py`, `_Answering`, `registry.py`, `.stream`, `test_grounding.py`, `ModuleAdviser`, `PackManifest`, `pack`, `Answer`, `DatabaseUnavailable`, `ModuleManifest`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+  _High betweenness centrality (0.027) - this node is a cross-community bridge._

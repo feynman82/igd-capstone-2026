@@ -39417,7 +39417,7 @@
       "node_kind": "heading",
       "norm_label": "1. where parrot sits",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L18"
+      "source_location": "L19"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_2_dimension_1_assess_and_bound_the_risks_upfront_2_1",
@@ -39429,7 +39429,7 @@
       "node_kind": "heading",
       "norm_label": "2. dimension 1: assess and bound the risks upfront (\u00a72.1)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L42"
+      "source_location": "L43"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_3_dimension_2_make_humans_meaningfully_accountable_2_2",
@@ -39441,7 +39441,7 @@
       "node_kind": "heading",
       "norm_label": "3. dimension 2: make humans meaningfully accountable (\u00a72.2)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L98"
+      "source_location": "L99"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_4_dimension_3_implement_technical_controls_and_processes_2_3",
@@ -39453,7 +39453,7 @@
       "node_kind": "heading",
       "norm_label": "4. dimension 3: implement technical controls and processes (\u00a72.3)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L143"
+      "source_location": "L144"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_5_dimension_4_enable_end_user_responsibility_2_4",
@@ -39465,7 +39465,7 @@
       "node_kind": "heading",
       "norm_label": "5. dimension 4: enable end-user responsibility (\u00a72.4)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L181"
+      "source_location": "L182"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_6_what_would_have_to_be_true_before_parrot_acts",
@@ -39477,7 +39477,7 @@
       "node_kind": "heading",
       "norm_label": "6. what would have to be true before parrot acts",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L199"
+      "source_location": "L200"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_alignment_with_the_imda_model_ai_governance_framework_for_agentic_ai",
@@ -39501,7 +39501,7 @@
       "node_kind": "heading",
       "norm_label": "bounding the risks by design (\u00a72.1.2)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L64"
+      "source_location": "L65"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_controls_2_3_1",
@@ -39513,7 +39513,7 @@
       "node_kind": "heading",
       "norm_label": "controls (\u00a72.3.1)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L145"
+      "source_location": "L146"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_gaps",
@@ -39525,7 +39525,7 @@
       "node_kind": "heading",
       "norm_label": "gaps",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L218"
+      "source_location": "L219"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_meaningful_human_oversight_2_2_2",
@@ -39537,7 +39537,7 @@
       "node_kind": "heading",
       "norm_label": "meaningful human oversight (\u00a72.2.2)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L120"
+      "source_location": "L121"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_monitoring_and_change_management_2_3_3",
@@ -39549,7 +39549,7 @@
       "node_kind": "heading",
       "norm_label": "monitoring and change management (\u00a72.3.3)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L169"
+      "source_location": "L170"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_open_questions",
@@ -39561,7 +39561,7 @@
       "node_kind": "heading",
       "norm_label": "open questions",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L230"
+      "source_location": "L231"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_responsibility_along_the_value_chain_2_2_1",
@@ -39573,7 +39573,7 @@
       "node_kind": "heading",
       "norm_label": "responsibility along the value chain (\u00a72.2.1)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L100"
+      "source_location": "L101"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_risk_factors_2_1_1",
@@ -39585,7 +39585,7 @@
       "node_kind": "heading",
       "norm_label": "risk factors (\u00a72.1.1)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L44"
+      "source_location": "L45"
     },
     {
       "id": "docs_governance_imda_agentic_alignment_testing_before_deployment_2_3_2",
@@ -39597,7 +39597,7 @@
       "node_kind": "heading",
       "norm_label": "testing before deployment (\u00a72.3.2)",
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L157"
+      "source_location": "L158"
     },
     {
       "id": "modules_advice_init_is_an_adviser",
@@ -144132,7 +144132,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0
     },
     {
@@ -144143,7 +144143,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L64",
+      "source_location": "L65",
       "weight": 1.0
     },
     {
@@ -144154,7 +144154,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L100",
+      "source_location": "L101",
       "weight": 1.0
     },
     {
@@ -144165,7 +144165,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0
     },
     {
@@ -144176,7 +144176,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L145",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -144187,7 +144187,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L157",
+      "source_location": "L158",
       "weight": 1.0
     },
     {
@@ -144198,7 +144198,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L169",
+      "source_location": "L170",
       "weight": 1.0
     },
     {
@@ -144209,18 +144209,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L143",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_governance_imda_agentic_alignment_alignment_with_the_imda_model_ai_governance_framework_for_agentic_ai",
-      "target": "docs_governance_imda_agentic_alignment_1_where_parrot_sits",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L18",
+      "source_location": "L144",
       "weight": 1.0
     },
     {
@@ -144231,7 +144220,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L181",
+      "source_location": "L182",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_governance_imda_agentic_alignment_alignment_with_the_imda_model_ai_governance_framework_for_agentic_ai",
+      "target": "docs_governance_imda_agentic_alignment_1_where_parrot_sits",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/governance/imda-agentic-alignment.md",
+      "source_location": "L19",
       "weight": 1.0
     },
     {
@@ -144242,7 +144242,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L199",
+      "source_location": "L200",
       "weight": 1.0
     },
     {
@@ -144253,7 +144253,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L218",
+      "source_location": "L219",
       "weight": 1.0
     },
     {
@@ -144264,7 +144264,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L230",
+      "source_location": "L231",
       "weight": 1.0
     },
     {
@@ -144275,7 +144275,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L42",
+      "source_location": "L43",
       "weight": 1.0
     },
     {
@@ -144286,7 +144286,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/imda-agentic-alignment.md",
-      "source_location": "L98",
+      "source_location": "L99",
       "weight": 1.0
     },
     {
@@ -199149,5 +199149,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "12b97e3472d5c3242d1201efcb048ce631dceac3"
+  "built_at_commit": "268cf23256c0346b63384cbc43cff0274c8ffde8"
 }
