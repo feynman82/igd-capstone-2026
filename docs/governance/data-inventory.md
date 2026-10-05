@@ -72,6 +72,11 @@ Parrot never uses an NRIC number to authenticate anyone: the only login is a loc
 (`web/lib/lock.ts`). So the 2026 authentication deadline would not touch it even if the
 guidelines did apply. *Summary supplied by Siew, 2026-10-05, from the sources linked.*
 
+**Decided, Siew, 2026-10-05: the screens show NRIC and other identification numbers in full.**
+The guidelines' preference for partial numbers (`xxxx567A`) is not adopted. The household is
+the holder of its own numbers, and the purpose they are kept for (forms and bookings) needs
+the whole number.
+
 ## Flow map
 
 ```
