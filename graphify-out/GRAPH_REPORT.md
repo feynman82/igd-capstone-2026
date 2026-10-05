@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-05)
 
 ## Corpus Check
-- 318 files · ~731,245 words
+- 318 files · ~731,389 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 34 file(s) not represented in the graph (top: (none) 11, .jsonl 7, .csv 5)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ed609cf0`
+- Built from commit: `63576d49`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -987,7 +987,7 @@ Nodes (7): 2. The six steps, 3. Is it a notifiable breach?, 4. The incident log,
   README.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **405 isolated node(s):** `3. Is it a notifiable breach?`, `4. The incident log`, `5. Who is responsible on a household's own computer`, `Decisions for Siew`, `Template` (+400 more)
+- **405 isolated node(s):** `3. Is it a notifiable breach?`, `4. The incident log`, `5. Who is responsible on a household's own computer`, `Decisions for Siew`, `Basis` (+400 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1741 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **38 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
