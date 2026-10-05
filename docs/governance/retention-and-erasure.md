@@ -83,13 +83,15 @@ the User, not implied away**:
    everything derived from it is erased from everything PARROT controls (A2). That includes the
    file in the watched folder and the copies listed in B2.
 
-**Confirmation wording** (approved by Siew, 2026-10-02; the screen is Zee's):
+**Confirmation wording** (approved by Siew, 2026-10-02; incident line added 2026-10-05; the screen is Zee's):
 
 > **Delete "{file name}"?**
 > This document and everything PARROT has read from it will be completely erased from PARROT
 > within 72 hours (3 days). It cannot be recovered.
 > PARROT cannot erase copies held outside it: a photo sent through Telegram, or a backup of
 > this computer.
+> If this document is part of an open incident investigation, its records will be erased when
+> the investigation closes.
 > **[Cancel]  [Delete]**
 
 The last sentence of the wording is there because of A2. "Completely erased from PARROT" is
@@ -122,13 +124,15 @@ true only if the User is also told what PARROT cannot reach.
    reset the workspace. Any User may still delete a document (A4). A household member who
    wants to be removed must ask the owner.
 
-**Confirmation wording** (approved by Siew, 2026-10-02; the screens are Zee's):
+**Confirmation wording** (approved by Siew, 2026-10-02; incident line added 2026-10-05; the screens are Zee's):
 
 > **Remove Rachel from PARROT?**
 > Her names, chat link, advice consents and advice records will be completely erased from
 > PARROT within 72 hours (3 days).
 > **She appears on 6 documents.** [Erase them too] [Keep them — her details will remain in
 > those documents]
+> If any of this is part of an open incident investigation, those records will be erased when
+> the investigation closes.
 > **[Cancel]  [Remove]**
 
 > **Reset PARROT?**
@@ -136,6 +140,8 @@ true only if the User is also told what PARROT cannot reach.
 > completely erased from PARROT within 72 hours (3 days). This cannot be undone.
 > PARROT cannot erase copies held outside it: photos sent through Telegram, files committed to
 > git, or backups of this computer.
+> If any of this is part of an open incident investigation, those records will be erased when
+> the investigation closes.
 > **Type RESET to confirm.**  **[Cancel]  [Reset]**
 
 ### A6. Incident hold
@@ -154,10 +160,11 @@ true only if the User is also told what PARROT cannot reach.
    when the User confirms deletion (A4 point 4). Only its evidence is kept, and only for the
    incident. The incident log never contains personal data, so it is not itself held data.
 
-**For Siew: one consequence.** The approved confirmation wording promises erasure "within 72
-hours (3 days)". If a User deletes a document whose evidence is held, that promise is broken
-for the held records. Either add a line to the wording for this rare case, or accept that the
-incident procedure explains it to the User when it happens.
+**The 72-hour promise under a hold: decided (Siew, 2026-10-05).** Option 1 was adopted: each
+confirmation now says that records forming part of an open incident investigation are erased
+when the investigation closes (A4, A5). The promise of erasure within 72 hours therefore holds
+in every case. The line is on the person and reset screens as well as the document screen,
+because both can erase held records.
 
 ---
 
