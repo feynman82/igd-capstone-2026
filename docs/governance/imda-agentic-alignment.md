@@ -153,10 +153,13 @@ human-in-the-loop review" (§2.1.2). For Parrot:
    information provided by the agent". This joins gap G6. Zee.
 4. **Refresh Set B.** b-b05 and b-b19 are no longer hard negatives. Yew Mun.
 
-**Recommended decision:** do not accept the current residual risk for v1 (0.52, with one
-high-impact failure). Accept it for the mid-term demonstration on synthetic data only, with the
-figure disclosed. Re-decide after run 3 (W8) against the tolerance above. **Pending Siew's
-decision:** open question Q1.
+**Decided, Siew, 2026-10-05:**
+- The tiered tolerance above is adopted.
+- Run 2's residual risk is **not accepted for v1**: abstention 0.52, with one high-impact
+  failure (b-b24).
+- It is **accepted for the mid-term demonstration only**, on synthetic data, with the figure
+  disclosed.
+- To be re-decided after run 3 (W8) against the tolerance.
 
 ## 3. Dimension 2: Make humans meaningfully accountable (§2.2)
 
@@ -292,9 +295,9 @@ autonomy statement (due 20 October).
 
 ## Open questions
 
-1. **Q1, residual risk.** Adopt the tolerance proposed under "Residual risk: abstention", and
-   the recommended decision not to accept run 2's level for v1? It needs a stated decision
-   (§2.1.2). Siew, with Yew Mun.
+1. ~~**Q1, residual risk.**~~ **Decided, Siew, 2026-10-05.** Tolerance adopted. Run 2 is not
+   accepted for v1, and is accepted for the mid-term demonstration only, with the figure
+   disclosed. Re-decide after run 3. See "Residual risk: abstention".
 2. ~~**Q2, the framework's URL.**~~ Added to the instrument line (Siew, 2026-10-05). The
    address is unversioned, so it will serve whatever IMDA publishes next. The version and dates
    above record what was read.
