@@ -121,8 +121,11 @@ capture, which the claim should name rather than leave out.
    Telegram's servers, as the flow map records. Delete-at-source is on by default
    (`TELEGRAM_DELETE_AT_SOURCE`, `core/runtime/settings.py`), and what Telegram keeps after
    deletion remains question 7.
-2. **Values quoted in `traces` and `advice_records`** (Christian's question 2). Redact them,
-   or keep them as the audit trail? Now an open question in the retention policy.
+2. ~~**Values quoted in `traces` and `advice_records`** (Christian's question 2). Redact them,
+   or keep them as the audit trail?~~ **Decided, Siew, 2026-10-04: kept unredacted, as the
+   audit trail.** A correction's before-and-after values and an advice answer's basis stay as
+   written. How long they are kept, and whether a reset removes them, is still open in
+   [`retention-and-erasure.md`](retention-and-erasure.md).
 3. ~~**Screen lock, not encryption** (Christian's question 3). Is a passphrase lock enough for
    identity numbers, which ADR 0017 calls the most sensitive data in the vault?~~ **Decided,
    Siew, 2026-10-04: the screen lock is accepted as enough for v1.** It protects against a
@@ -130,8 +133,13 @@ capture, which the claim should name rather than leave out.
    (`web/lib/lock.ts`). Encrypting the disk with the operating system's own tool (BitLocker,
    FileVault) is the household's responsibility, not Parrot's. Parrot does not encrypt.
 4. ~~Should the screens bind to loopback only?~~ Done: `web/package.json`.
-5. **Health data.** Do the corpus's claim letters print a diagnosis? If they do, health
-   data is held in `chunks.text`. Check `b1-0007` to `b1-0009`. For Desmond.
+5. ~~**Health data.** Do the corpus's claim letters print a diagnosis?~~ **Decided, Siew,
+   2026-10-04: synthetic claim letters must not print a diagnosis.** They may print the claim
+   number, incident date, amounts and hospital stay, but no medical condition. Two hospital
+   claim letters are registered (`b1-0008`, `b1-0009`, `corpus/register/batch1.csv`) and are
+   not yet in `corpus/batches/batch1/`, so the rule applies when they are generated. A real
+   document in the holdout may still print one. That falls to the consent and redaction
+   protocol. For Desmond to apply.
 6. ~~**NRIC guidelines.** Do the PDPC advisory guidelines on NRIC numbers bear on a
    household's own copy?~~ **Decided, Siew, 2026-10-04: they do not apply to a household's own
    copy.** The citation, with the guidelines' title and date, is still to be added.
