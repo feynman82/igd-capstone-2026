@@ -56,6 +56,12 @@ numbers for authentication
 The guidelines stop private organisations collecting, using, disclosing or retaining NRIC
 numbers beyond what the law requires or what high-accuracy identity verification needs
 ([PDPC media release, 2019](https://www.pdpc.gov.sg/-/media/Files/PDPC/PDF-Files/Press-Room/2019/Media-Release-on-Reminder-on-NRIC-Advisory-Guidelines.pdf)).
+They cover every national identification number Parrot holds: NRIC, FIN, birth certificate
+and passport numbers. An organisation may collect one only where a law requires it, or where
+identity must be verified to a high degree of fidelity. Even then the PDPA's consent,
+protection and retention obligations still apply. The guidelines favour partial numbers (the
+last three digits and the checksum letter) and masking over storing the full number
+([PDPC technical guide, 26 August 2019](https://www.pdpc.gov.sg/-/media/files/pdpc/pdf-files/other-guides/technical-guide-to-advisory-guidelines-on-nric-numbers---260819.pdf)).
 Organisations must stop using NRIC numbers for authentication by 31 December 2026, and
 enforcement starts 1 January 2027
 ([Baker McKenzie, February 2026](https://www.bakermckenzie.com/en/insight/publications/2026/02/singapore-pdpc-to-ban-nric-authentication-use-by-end-2026)).
