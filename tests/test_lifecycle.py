@@ -164,7 +164,7 @@ def test_exit_codes_tell_the_supervisor_what_to_do() -> None:
 
 
 class Screens:
-    """Stands in for `start_web` and `stop_web`: counts, and never touches npm."""
+    """Stands in for `start_web` and `stop`: counts, and never touches npm."""
 
     def __init__(self) -> None:
         self.started = 0

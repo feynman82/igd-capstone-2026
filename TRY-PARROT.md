@@ -29,6 +29,10 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 Then **start Docker Desktop and leave it running.** Ollama starts itself and sits in the
 system tray. Both must be running before PARROT will work.
 
+> **Intel Macs are not supported.** `torch 2.14.0` publishes no macOS x86_64 wheel, and
+> `docling-parse 7.22.1` has to be compiled from source there, so `uv sync` fails.
+> Use Windows 11 with an NVIDIA GPU (the tested path) or an Apple Silicon Mac [VERIFY: not yet tested].
+
 ---
 
 ## 2 · Download the AI models

@@ -23,7 +23,7 @@ import pytest
 
 from core import household
 from core.graph.ports import Passage
-from core.graph.scope import Scoped, is_first_person, scope_passages
+from core.graph.scope import Scoped, is_first_person, scope_to
 from core.runtime.settings import Settings
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -102,7 +102,7 @@ def test_another_persons_documents_are_set_aside() -> None:
     mine, theirs = _passage(1, "doc-mine"), _passage(2, "doc-theirs")
     conn = _conn_returning([("doc-mine", 1, "Marcus"), ("doc-theirs", 2, "Rachel")])
 
-    scoped = scope_passages(conn, [mine, theirs], owner_id=1, owner_name="Marcus")
+    scoped = scope_to(conn, [mine, theirs], person_ids=frozenset({1}), name="Marcus")
 
     assert scoped.passages == [mine]
     assert scoped.dropped_people == ("Rachel",)
@@ -118,7 +118,7 @@ def test_a_document_with_no_subject_belongs_to_everybody() -> None:
     household_doc = _passage(3, "doc-household")
     conn = _conn_returning([])  # no fact on it resolves to anyone
 
-    scoped = scope_passages(conn, [household_doc], owner_id=1, owner_name="Marcus")
+    scoped = scope_to(conn, [household_doc], person_ids=frozenset({1}), name="Marcus")
 
     assert scoped.passages == [household_doc]
     assert scoped.dropped_people == ()
@@ -129,7 +129,7 @@ def test_a_document_naming_the_owner_and_somebody_else_is_kept() -> None:
     joint = _passage(4, "doc-joint")
     conn = _conn_returning([("doc-joint", 1, "Marcus"), ("doc-joint", 2, "Rachel")])
 
-    scoped = scope_passages(conn, [joint], owner_id=1, owner_name="Marcus")
+    scoped = scope_to(conn, [joint], person_ids=frozenset({1}), name="Marcus")
 
     assert scoped.passages == [joint]
 
@@ -139,7 +139,7 @@ def test_nothing_of_mine_is_the_interesting_abstention() -> None:
     theirs = _passage(5, "doc-theirs")
     conn = _conn_returning([("doc-theirs", 2, "Rachel Ng Hui Shan")])
 
-    scoped = scope_passages(conn, [theirs], owner_id=1, owner_name="Marcus Lim")
+    scoped = scope_to(conn, [theirs], person_ids=frozenset({1}), name="Marcus Lim")
 
     assert scoped.passages == []
     assert scoped.empty_for_owner

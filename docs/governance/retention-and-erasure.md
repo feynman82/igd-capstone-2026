@@ -19,6 +19,11 @@ exist.** This policy says what it must do, and the policy cannot be met until it
 - **Why the PDPA is used here.** A household's own use is outside the PDPA (domestic
   capacity). PARROT is designed to its standards anyway, and the team is bound in full for its
   own work (`data-inventory.md` §1, "two capacities", Siew, 2026-10-05).
+- **No general right to erasure.** As the team understands it, the PDPA has no general right to
+  erasure comparable to GDPR Article 17 (from the 2026-10-04 draft on `main`, **to confirm**).
+  So this policy does not claim to "satisfy PDPA erasure". It says it **meets the Retention
+  Limitation Obligation, and gives the household a working erase-on-request** (A3–A5), as the
+  standard PARROT holds itself to.
 - **PDPA 2012, Part 6, section 25 (retention limitation).** The Part and section numbers are
   still to be confirmed. The section has *not* yet been quoted from the Act for this document,
   so it is not paraphrased here. The quote and the revised-edition
@@ -177,7 +182,7 @@ because both can erase held records.
 
 | Path | Reaches | Limits | Evidence |
 |---|---|---|---|
-| **Forget a quarantined document** | One `documents` row, and by cascade its `chunks`, `facts`, `obligations` and `document_attribution` | **Quarantined documents only:** "an indexed document is evidence that answers and reminders already cite". Refused while the file is still in the inbox, because the folder watcher would re-register it within a minute. **It deletes no file.** | `core/ingest/quarantine.py` (`forget`); `core/ingest/sql.py` (`DELETE_QUARANTINED`) |
+| **Forget a quarantined document**: `DELETE /quarantine/{document_id}` (`api/routes.py`, `forget_one`) | One `documents` row, and by cascade its `chunks`, `facts`, `obligations` and `document_attribution` | **Quarantined documents only:** "an indexed document is evidence that answers and reminders already cite". Refused **with a 409** while the file is still in the inbox, because the folder watcher would re-register it within a minute. **It deletes no file.** | `core/ingest/quarantine.py` (`forget`); `core/ingest/sql.py` (`DELETE_QUARANTINED`) |
 | **Remove one alias** | One `person_aliases` row | One name string at a time | `core/household.py` (`DELETE_ALIAS`) |
 | **Re-read a document** | Replaces that document's `chunks` and `facts` | Not an erasure. The document row is kept on purpose, so citations survive. | `core/ingest/sql.py` (`DELETE_CHUNKS`, `DELETE_FACTS`); `core/ingest/pipeline.py` |
 
@@ -202,7 +207,8 @@ From the foreign keys in `db/migrations/0001_init.sql`, `0002_household.sql` and
 | Where | What is there | Evidence |
 |---|---|---|
 | The watched folder | The original file. Telegram captures are written here too. | `core/runtime/settings.py` (`_folder`); `core/adapters/telegram.py` (`_write_local_copy`) |
-| The job queue (Redis) | Per job: the document id, digest, MIME type and **original file name**. Never the file itself. Whether Redis writes a snapshot to disk is **`unverified`**. The compose file mounts no volume for Redis, so its data lasts as long as the container. | `core/worker/tasks.py` (`send`); `infra/docker-compose.yml` |
+| The job queue (Redis) | Per job: the document id, digest, MIME type and **original file name**. Never the file itself. **Task results expire after 1 hour** (`result_expires=3600`). Whether Redis writes a snapshot to disk is **`unverified`**. The compose file mounts no volume for Redis, so its data lasts as long as the container. | `core/worker/tasks.py` (`send`); `core/worker/app.py` (`result_expires`); `infra/docker-compose.yml` |
+| Backups | **None are taken by the stack.** `infra/docker-compose.yml` defines one volume and no backup service. A backup the household takes itself is outside PARROT's reach (A2), and the reset confirmation says so. | `infra/docker-compose.yml` |
 | Postgres storage | A deleted row is not overwritten at once. It stays in the table files until Postgres reclaims the space, and in its write-ahead log. This is standard Postgres behaviour, **`unverified`** for this deployment. Whether erasure should force reclamation is a question for Christian. | `infra/docker-compose.yml` (`pgdata` volume) |
 | The repository | `inbox/` is tracked by git (`.gitignore`). A real document committed there survives in history, whatever PARROT deletes. | `.gitignore` |
 

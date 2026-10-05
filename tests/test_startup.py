@@ -123,13 +123,13 @@ def test_stopping_the_screens_kills_the_tree_not_the_wrapper() -> None:
         patch.object(run_parrot.shutil, "which", return_value="taskkill"),
         patch.object(run_parrot.subprocess, "run") as kill,
     ):
-        run_parrot.stop_web(web)
+        run_parrot.stop(web)
         assert kill.call_args.args[0] == ["taskkill", "/PID", "4242", "/T", "/F"]
 
 
 def test_stopping_screens_that_were_never_started_does_nothing() -> None:
     with patch.object(run_parrot.subprocess, "run") as kill:
-        run_parrot.stop_web(None)
+        run_parrot.stop(None)
         kill.assert_not_called()
 
 
@@ -145,7 +145,7 @@ def test_stopping_the_worker_kills_the_tree_not_the_launcher() -> None:
         patch.object(run_parrot.shutil, "which", return_value="taskkill"),
         patch.object(run_parrot.subprocess, "run") as kill,
     ):
-        run_parrot.stop_worker(worker)
+        run_parrot.stop(worker)
         assert kill.call_args.args[0] == ["taskkill", "/PID", "5151", "/T", "/F"]
 
 
@@ -153,8 +153,8 @@ def test_a_worker_that_has_already_stopped_is_left_alone() -> None:
     worker = MagicMock()
     worker.poll.return_value = 0
     with patch.object(run_parrot.subprocess, "run") as kill:
-        run_parrot.stop_worker(worker)
-        run_parrot.stop_worker(None)
+        run_parrot.stop(worker)
+        run_parrot.stop(None)
         kill.assert_not_called()
 
 

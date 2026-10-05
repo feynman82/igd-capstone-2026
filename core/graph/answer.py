@@ -45,7 +45,7 @@ import re
 from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date
-from typing import Any, Literal, TypedDict
+from typing import Any, TypedDict
 
 from core.contracts import DEFAULT_DECLINE, AdviceShape
 from core.graph.advice import (
@@ -56,6 +56,7 @@ from core.graph.advice import (
     ConsentBook,
     Input,
     Missing,
+    kind_of,
     passages_for,
 )
 from core.graph.gate import (
@@ -71,6 +72,7 @@ from core.graph.knowledge import categories_asked, glossary, mentions, reworded
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
 from core.graph.sentences import SentenceScanner
+from core.grounding.corpus import load_corpus
 from core.packs import InstalledPack, catalog, installed_packs
 from core.runtime.ollama import ModelUnavailable, Ollama
 
@@ -571,14 +573,9 @@ def _numbered(passages: list[Passage]) -> str:
 
 
 def _citations(passages: Iterable[Passage]) -> list[Citation]:
-    out: list[Citation] = []
-    for passage in passages:
-        cited = Citation(
-            passage.document_id, passage.document_name, passage.page, passage.cite(), passage.kind
-        )
-        if all(cited.text != seen.text for seen in out):
-            out.append(cited)
-    return out
+    return _distinct(
+        Citation(p.document_id, p.document_name, p.page, p.cite(), p.kind) for p in passages
+    )
 
 
 # 14 September: "…SGD 1,860.00, as stated in the policy document (6) and confirmed on file (7)." was
@@ -745,10 +742,7 @@ def _input_citation(item: Input) -> Citation:
     for a fact with no name and "None, page 0" for a published value. The input already carries
     its citation as a person reads it, and a published value's publisher, title, date and URL.
     """
-    prefix = item.ref.partition(":")[0]
-    if prefix not in ("fact", "rule"):
-        raise ValueError(f"not a fact or rule ref: {item.ref!r}")
-    kind: Kind = "fact" if prefix == "fact" else "rule"
+    kind = kind_of(item.ref)
     return Citation(
         document_id=item.document_id,
         document_name=item.title if kind == "rule" else "",
@@ -760,6 +754,54 @@ def _input_citation(item: Input) -> Citation:
         dated=item.dated,
         url=item.url,
     )
+
+
+def _guidance(installed: InstalledPack, today: date) -> list[tuple[Passage, Citation]]:
+    """The review's `explained_by` steps, in order, as passages the explanation may cite.
+
+    A step is kept only when its source is reviewed, not past `review_by`, and still prints the
+    quote (whitespace aside, since a PDF extraction keeps its line breaks): a quote nobody can
+    find in a signed-off source is not guidance. Read from the pack's own folder, never
+    retrieved — the author chose these words, so the order they give is the order explained.
+    """
+    advice = installed.manifest.advice
+    steps = advice.review.explained_by if advice and advice.review else []
+    if not steps:
+        return []
+    sources = {source.document.file: source for source in load_corpus(installed)}
+    out: list[tuple[Passage, Citation]] = []
+    for number, step in enumerate(steps, start=1):
+        source = sources.get(step.file)
+        quote = " ".join(step.quote.split())
+        if (
+            source is None
+            or source.reviewed_on is None
+            or source.document.review_by < today
+            or quote not in " ".join(source.text.split())
+        ):
+            log.warning("%s: explained_by step %d is not cited", installed.id, number)
+            continue
+        document = source.document
+        day = document.published or document.retrieved
+        dated = f"{day.day} {day:%B} {day.year}"
+        text = f"{document.publisher}, {document.title}, {dated}"
+        passage = Passage(
+            chunk_id=number,
+            document_id=None,
+            page=0,
+            text=quote,
+            score=1.0,
+            document_name=document.title,
+            context_prefix=text,
+            pack_id=installed.id,
+            kind="guidance",
+        )
+        chip = Citation(
+            None, document.title, 0, text, "guidance", document.publisher, document.title,
+            dated, document.url,
+        )  # fmt: skip
+        out.append((passage, chip))
+    return out
 
 
 def _distinct(citations: Iterable[Citation]) -> list[Citation]:
@@ -800,10 +842,18 @@ def _advice_prompt(
         for index, passage in enumerate(evidence, start=1)
     )
     points = "\n".join(f"- {point}" for point in shape.disadvantages)
+    order = (
+        " Follow the order of a licensed adviser's needs analysis that the published guidance "
+        "passages describe, citing them: first what is on file and the guideline it is measured "
+        "against, then each gap and the kind of cover that closes it, then the next step the "
+        "guidance describes."
+        if any(passage.kind == "guidance" for passage in evidence)
+        else ""
+    )
     return (
         f"Today is {today:%d %B %Y}.\n{whose}\n"
         f"Explain this worked result to {addressee} in at most three sentences. Do not add a "
-        "verdict or advice; the verdict is already given.\n\n"
+        f"verdict or advice; the verdict is already given.{order}\n\n"
         f"Verdict: {calc.verdict_text}\n\n"
         f"Passages:\n{numbered}"
         + (f"\n\nPoints to mention if relevant:\n{points}" if points else "")
@@ -1046,12 +1096,16 @@ class AnswerGraph:
         if self._inventory is None:
             return []
         on_file = self._inventory.holdings(packs)
-        if scoped is None or not scoped.scoped or self._household is None:
+        if scoped is None or not scoped.scoped:
             return on_file
-        kept = {
-            str(p.document_id)
-            for p in self._household.apply(asked, [h.passage() for h in on_file]).passages
-        }
+        return self._narrowed(asked, on_file)
+
+    def _narrowed(self, question: str, on_file: list[Holding]) -> list[Holding]:
+        """The holdings whose documents scoping keeps for `question`, as it keeps passages."""
+        if self._household is None:
+            return on_file
+        passages = self._household.apply(question, [h.passage() for h in on_file]).passages
+        kept = {str(p.document_id) for p in passages}
         return [h for h in on_file if str(h.document_id) in kept]
 
     def _absence(
@@ -1189,13 +1243,7 @@ class AnswerGraph:
         held: set[str] = set()
         on_file: list[Holding] = []
         if self._inventory is not None and categories is not None:
-            on_file = self._inventory.holdings([installed])
-            if self._household is not None:
-                passages = [h.passage() for h in on_file]
-                kept = {
-                    str(p.document_id) for p in self._household.apply(question, passages).passages
-                }
-                on_file = [h for h in on_file if str(h.document_id) in kept]
+            on_file = self._narrowed(question, self._inventory.holdings([installed]))
             held = {h.category.id for h in on_file if h.category}
             labels = {rule.id: rule.label for rule in categories.rules}
         for shape_id in review.shapes:
@@ -1360,6 +1408,11 @@ class AnswerGraph:
         }
         cards = list(chips.values())
         chips[evidence[-1].ref] = Citation(None, "", 0, CALCULATION_CITATION, "calculation")
+        # A review is explained in the order its pack's published guidance gives, and may cite
+        # it (ADR 0016 addendum, 2 October). Not on the card: the card is the calculation's.
+        guidance = _guidance(installed, today) if shape.id == REVIEW else []
+        chips.update((passage.ref, chip) for passage, chip in guidance)
+        evidence = [*evidence, *(passage for passage, _ in guidance)]
         product_disclosure = advice.product_disclosure.strip() if calc.names_product else ""
         exclusions = installed.manifest.answering.exclusions
         scanner = SentenceScanner()
@@ -1792,6 +1845,3 @@ class AnswerGraph:
             passages_read=passages_read,
             reason="the answer did not finish",
         )
-
-
-Intent = Literal["explain", "act", "advise"]

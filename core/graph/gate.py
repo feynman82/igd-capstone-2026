@@ -25,14 +25,12 @@ retrieval before a single token is generated.
 
 That means a sentence can be verified the moment the model finishes writing it, and released
 with its citations already attached — rather than the interface showing text it may have to take
-back. `precheck` is the evidence question, `check_one` is the sentence question, and `check` is
-the two of them composed for a caller that has the whole answer in hand. There is one set of
-rules; the streaming path and the batch path are two ways of asking it.
+back. `precheck` is the evidence question and `check_one` is the sentence question; the answer
+graph asks the first before generating and the second of each sentence as it arrives.
 """
 
 from __future__ import annotations
 
-import logging
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -41,33 +39,11 @@ from core.contracts import Exclusions
 from core.graph.advice import Figure
 from core.graph.ports import Passage
 
-log = logging.getLogger(__name__)
-
 
 @dataclass(frozen=True, slots=True)
 class Claim:
     text: str
     supports: tuple[str, ...]  # passage refs, "document:11"
-
-    def with_citation(self, by_ref: dict[str, Passage]) -> str:
-        cited = [by_ref[ref].cite() for ref in self.supports if ref in by_ref]
-        seen: list[str] = []
-        for citation in cited:
-            if citation not in seen:
-                seen.append(citation)
-        return f"{self.text} [{'; '.join(seen)}]" if seen else self.text
-
-
-@dataclass(frozen=True, slots=True)
-class Verdict:
-    grounded: list[Claim]
-    dropped: list[tuple[str, str]]  # (sentence, why)
-    abstained: bool
-    reason: str | None = None
-
-    @property
-    def has_answer(self) -> bool:
-        return bool(self.grounded) and not self.abstained
 
 
 def precheck(passages: list[Passage], *, abstain_below: float) -> str | None:
@@ -108,39 +84,6 @@ def check_one(claim: Claim, retrieved: set[str]) -> str | None:
     return None
 
 
-def check(
-    claims: list[Claim],
-    passages: list[Passage],
-    *,
-    abstain_below: float,
-) -> Verdict:
-    """Never raises, never rewrites a claim. It keeps, drops, or abstains.
-
-    The whole-answer form, for a caller holding every sentence at once. `precheck` and
-    `check_one` are the same rules, asked one at a time.
-    """
-    refusal = precheck(passages, abstain_below=abstain_below)
-    if refusal is not None:
-        return Verdict([], [], True, refusal)
-
-    retrieved = {passage.ref for passage in passages}
-    grounded: list[Claim] = []
-    dropped: list[tuple[str, str]] = []
-    for claim in claims:
-        why = check_one(claim, retrieved)
-        if why is None:
-            grounded.append(claim)
-        elif why != "empty":  # an empty sentence is not a dropped claim, it is nothing
-            dropped.append((claim.text, why))
-
-    for sentence, why in dropped:
-        log.info("gate dropped a sentence (%s): %.80s", why, sentence)
-
-    if not grounded:
-        return Verdict([], dropped, True, "nothing in the answer could be traced to a document")
-    return Verdict(grounded, dropped, False)
-
-
 _NUMBER = re.compile(r"\d[\d,]*(?:\.\d+)?")
 
 # A policy number, claim reference or the like: letters, a hyphen, then digits and letters —
@@ -157,6 +100,19 @@ def _normal(number: str) -> str:
     return plain.lstrip("0") or "0"
 
 
+def _loose_numbers(text: str) -> list[str]:
+    """Every number in `text` that is not part of an identifier: an identifier is checked whole."""
+    covered = [
+        (match.start(), match.start() + len(match.group().rstrip("-.")))
+        for match in _IDENTIFIER.finditer(text)
+    ]
+    return [
+        found.group()
+        for found in _NUMBER.finditer(text)
+        if not any(start <= found.start() < end for start, end in covered)
+    ]
+
+
 def unprinted_numbers(text: str, cited: Sequence[Passage]) -> list[str]:
     """Every number or identifier in a sentence that no cited passage prints. An identifier (a
     policy number, a claim reference) is copied whole, verbatim, or it is unprinted — its digits
@@ -165,29 +121,17 @@ def unprinted_numbers(text: str, cited: Sequence[Passage]) -> list[str]:
     value."""
     haystacks = [f"{passage.context_prefix}\n{passage.text}".lower() for passage in cited]
 
-    identifiers: list[str] = []
-    covered: list[tuple[int, int]] = []
-    for match in _IDENTIFIER.finditer(text):
-        identifier = match.group().rstrip("-.")
-        identifiers.append(identifier)
-        covered.append((match.start(), match.start() + len(identifier)))
-
     missing = [
         identifier
-        for identifier in identifiers
+        for identifier in (match.group().rstrip("-.") for match in _IDENTIFIER.finditer(text))
         if not any(identifier.lower() in haystack for haystack in haystacks)
     ]
-
     printed = {
         _normal(found)
         for passage in cited
         for found in _NUMBER.findall(f"{passage.context_prefix}\n{passage.text}")
     }
-    for found in _NUMBER.finditer(text):
-        if any(start <= found.start() < end for start, end in covered):
-            continue  # part of an identifier already checked above
-        if _normal(found.group()) not in printed:
-            missing.append(found.group())
+    missing += [number for number in _loose_numbers(text) if _normal(number) not in printed]
     return missing
 
 
@@ -300,14 +244,8 @@ def check_advice(
         figure_numbers = [
             (figure, {_normal(n) for n in _NUMBER.findall(figure.text)}) for figure in figures
         ]
-        covered: list[tuple[int, int]] = []
-        for match in _IDENTIFIER.finditer(claim.text):
-            identifier = match.group().rstrip("-.")
-            covered.append((match.start(), match.start() + len(identifier)))
-        for found in _NUMBER.finditer(claim.text):
-            if any(start <= found.start() < end for start, end in covered):
-                continue  # part of an identifier, already ruled on above
-            token = _normal(found.group())
+        for number in _loose_numbers(claim.text):  # an identifier's digits were ruled on above
+            token = _normal(number)
             matching = [figure for figure, numbers in figure_numbers if token in numbers]
             # A shared value (two figures printing the same number) is correctly labelled if
             # the sentence names *either* figure's word; only naming neither is a violation.

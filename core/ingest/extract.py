@@ -52,14 +52,6 @@ class ExtractedFact:
     value_date: date | None
     confidence: float
 
-    @property
-    def column(self) -> str:
-        if self.value_num is not None:
-            return "value_num"
-        if self.value_date is not None:
-            return "value_date"
-        return "value_text"
-
 
 @dataclass(frozen=True, slots=True)
 class Extraction:

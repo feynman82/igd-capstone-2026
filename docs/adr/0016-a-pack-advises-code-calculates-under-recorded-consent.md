@@ -156,3 +156,26 @@ later one is used, which errs toward withholding.
 **Riders.** A rider is its own fact (ADR 0017, `labelled_money`). It is categorised by its own
 printed name, so a critical illness rider counts toward critical illness cover and a hospital cash
 rider does not.
+
+## Addendum, 2 October 2026: a review is explained in the adviser's order, citing it
+
+Decided by Christian (Lane A).
+
+"How can I optimise my personal coverage?" was read as `advise` by the router and then declined,
+because no review phrase matched. The insurance review now lists the optimise/optimize wordings.
+
+The explanation only ever cited the calculation's inputs, so it repeated the card's verdict and
+could cite no guidance that prints no number. `Review.explained_by` (its own contracts commit)
+lists verbatim quotes from the pack's own corpus, in the order a MAS-licensed adviser works:
+fact-find, needs analysis, a basis for the recommendation, a check against existing cover,
+then review. For a review only, each quote becomes a numbered `guidance` passage after the
+calculation's passages. The prompt asks for that order, and the gate checks a sentence citing
+one exactly as it checks any other.
+
+- **Chosen, not retrieved.** This amends "Nothing is retrieved" only by passages the author named.
+  Reranking all 356 corpus paragraphs took 120–150 s a question on the workstation and ranked the
+  LIA study and BFPG tables above the advisory process.
+- **A quote is cited only while its source is reviewed, in date and still prints it,** with
+  whitespace ignored. A pack test fails if any quote stops resolving.
+- **Unchanged:** the card, the verdict, the figures, the three-sentence cap, consent, the
+  disclaimer and the two model calls. Guidance chips are not on the card.
