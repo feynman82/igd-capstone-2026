@@ -46,10 +46,25 @@ and embedded, including values no field names.
 | **Corrections and traces** | `traces.payload`. A correction keeps `subject`, `was` and `now` | Whoever the fact is about | Audit trail and evaluation data | May quote any of the above | Indefinitely, today. See the retention policy |
 | **File names** | `documents.original_name`; Celery task arguments in Redis | Whoever the file is about | Showing and re-reading the document | Often carries a name | With the document; Redis results expire in 1 hour |
 
-**Decided (open question 6):** these do not apply to a household's own copy. **To check against the instrument:** the PDPC's *Advisory Guidelines on the PDPA for NRIC and
-other National Identification Numbers*. As we understand them, they restrict organisations
-collecting NRIC numbers. Whether they apply to a household's own copy depends on the
-domestic-capacity question raised in the retention policy.
+**NRIC numbers.** The instrument is the PDPC's *Advisory Guidelines on the Personal Data
+Protection Act for NRIC and other National Identification Numbers*, first issued
+31 August 2018
+([PDF](https://www.pdpc.gov.sg/-/media/files/pdpc/pdf-files/advisory-guidelines/advisory-guidelines-for-nric-numbers---310818.pdf)).
+Updates followed on 14 December 2024 and 2 February 2026, including restrictions on using NRIC
+numbers for authentication
+([PDPC](https://www.pdpc.gov.sg/organisations/regulations-decisions/regulatory-guidance/advisory-guidelines-on-the-personal-data-protection-act-for-nric-and-other-national-identification-numbers)).
+The guidelines stop private organisations collecting, using, disclosing or retaining NRIC
+numbers beyond what the law requires or what high-accuracy identity verification needs
+([PDPC media release, 2019](https://www.pdpc.gov.sg/-/media/Files/PDPC/PDF-Files/Press-Room/2019/Media-Release-on-Reminder-on-NRIC-Advisory-Guidelines.pdf)).
+Organisations must stop using NRIC numbers for authentication by 31 December 2026, and
+enforcement starts 1 January 2027
+([Baker McKenzie, February 2026](https://www.bakermckenzie.com/en/insight/publications/2026/02/singapore-pdpc-to-ban-nric-authentication-use-by-end-2026)).
+
+**Decided (open question 6):** they do not apply to a household's own copy. The guidelines
+address organisations, and Parrot is run by a household over its own documents. Separately,
+Parrot never uses an NRIC number to authenticate anyone: the only login is a local passphrase
+(`web/lib/lock.ts`). So the 2026 authentication deadline would not touch it even if the
+guidelines did apply. *Summary supplied by Siew, 2026-10-05, from the sources linked.*
 
 ## Flow map
 
@@ -142,7 +157,8 @@ capture, which the claim should name rather than leave out.
    protocol. For Desmond to apply.
 6. ~~**NRIC guidelines.** Do the PDPC advisory guidelines on NRIC numbers bear on a
    household's own copy?~~ **Decided, Siew, 2026-10-04: they do not apply to a household's own
-   copy.** The citation, with the guidelines' title and date, is still to be added.
+   copy.** Cited under [The inventory](#the-inventory), below the table, with title, dates and
+   sources.
 7. ~~**What Telegram keeps** after a bot deletes a message.~~ **Answered, Siew, 2026-10-04,
    from Telegram's privacy policy:** a deleted cloud message is removed from the chat and from
    Telegram's servers. Some metadata (IP address, device information, basic interaction
