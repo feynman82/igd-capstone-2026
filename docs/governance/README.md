@@ -11,9 +11,9 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `model-card.md` | IMDA GenAI, dimensions 1 and 5 | Siew with Yew Mun | W6 |
 | `iso-stage-process-map.md` | ISO/IEC 22989 stages against ISO/IEC 5338 processes | Siew | W7 |
 | `imda-genai-nine-dimensions.md` | IMDA GenAI (2024) | Siew | W8 |
-| `autonomy-statement.md` | IMDA Agentic AI (Jan 2026), dimensions 1 and 2 | Siew with Christian | W8 |
+| `autonomy-statement.md` | MGF for Agentic AI (v1.5, May 2026): *Assess and bound the risks upfront* and *Make humans meaningfully accountable* | Siew with Christian | W8 |
 | `synthetic-data-case.md` | Why synthetic data, what it proves and what it does not | Siew with Desmond | W6 |
-| `imda-what-applies.md` | IMDA GenAI (2024) and Agentic AI (Jan 2026) — first extract, mapped to code | Siew | W1 |
+| `imda-what-applies.md` | IMDA GenAI (2024) and MGF for Agentic AI (v1.5, May 2026) — extract, mapped to code | Siew | W1 |
 | `incident-and-breach-procedure.md` | IMDA GenAI incident reporting; PDPA Part 6A data breach notification | Siew with Christian | — |
 | `terms-of-use.md` | PDPA s 15 deemed consent — the contractual basis for one adult filing for another | Siew | — |
 
