@@ -170,7 +170,7 @@ capture, which the claim should name rather than leave out.
    Telegram's servers. Some metadata (IP address, device information, basic interaction
    timestamps) may be kept for up to 12 months for security and abuse prevention. So the
    document image does not outlive the deletion, but the fact that the household's device
-   sent something does. **Still to add:** the policy's URL and its last-updated date. Also
-   still to confirm: the policy describes a person deleting a message, and the bot deletes
+   sent something does. Source: [Telegram Privacy Policy](https://telegram.org/privacy), last updated
+   21 August 2026. Still to confirm: the policy describes a person deleting a message, and the bot deletes
    it through the Bot API (`core/adapters/telegram.py`, `_delete`). Whether the two are
    treated the same is **unverified**.
