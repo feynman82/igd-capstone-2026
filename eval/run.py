@@ -25,7 +25,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Sequence
+from collections.abc import Collection, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -59,6 +59,12 @@ SELECT string_agg(c.text, E'\\n' ORDER BY c.ordinal)
   JOIN documents d ON d.id = c.document_id
  WHERE regexp_replace(d.original_name, '\\.[^.]+$', '') = %(doc_id)s
    AND c.page = %(page)s
+"""
+
+INDEXED_DOCUMENTS = """
+SELECT DISTINCT regexp_replace(original_name, '\\.[^.]+$', '') AS doc_id
+  FROM documents
+ WHERE status = 'indexed'
 """
 
 INDEXED_FACTS = """
@@ -95,6 +101,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="cross-encoder",
         help="none is the stopgap that keeps retrieval's order",
     )
+    parser.add_argument(
+        "--no-modules",
+        action="store_true",
+        help="skip metrics 7 and 8 (obligation precision, alert FPR); they read the vault only",
+    )
+    parser.add_argument(
+        "--score-missing",
+        action="store_true",
+        help="score a question whose document is not in the vault, instead of skipping it",
+    )
+    parser.add_argument(
+        "--rerank-floor",
+        type=float,
+        default=None,
+        help="relevance a passage must reach to be read (default: the calibrated one, ADR 0019)",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -104,10 +126,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     for name in NOISY:
         logging.getLogger(name).setLevel(logging.ERROR)
 
+    from core.retrieve.rerank import RELEVANCE_FLOOR
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import ModelUnavailable, Ollama
     from core.runtime.settings import ConfigurationError, Settings
     from eval import harness, score
+    from eval import modules as eval_modules
     from eval.sets_io import MalformedQuestion, load_set, read_registers, subset
 
     try:
@@ -143,11 +167,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"{len(questions)} questions ({_counts(questions)}); "
         f"retrieval {args.retriever}, reranker {args.reranker}"
+        + (f" (floor {args.rerank_floor or RELEVANCE_FLOOR})" if args.reranker != "none" else "")
     )
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
 
     try:
         with connect(settings) as conn:
+            indexed = _indexed(conn)
+            questions, waiting = _partition(questions, indexed, score_missing=args.score_missing)
+            if waiting:
+                print(
+                    f"skipping {len(waiting)} question(s) whose document is not in the vault "
+                    f"(the register runs ahead of the batch; --score-missing includes them)"
+                )
+            if not questions:
+                print("Nothing left to run: no question's document is indexed.")
+                return 2
             graph, recorder = harness.build(
                 conn,
                 settings,
@@ -155,6 +190,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 keep=args.keep,
                 retriever=args.retriever,
                 reranker=args.reranker,
+                rerank_floor=args.rerank_floor,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
@@ -164,6 +200,13 @@ def main(argv: Sequence[str] | None = None) -> int:
                 if q.set == "A"
             }
             facts = _facts(conn)
+            # Metrics 7 and 8, from the same connection: no judge, no golden question, and both
+            # sweeps marked `mark=False` so measuring never consumes a lead window or a debounce.
+            module_metrics = (
+                None
+                if args.no_modules
+                else eval_modules.measure(conn, read_registers(ROOT), date.today())
+            )
     except DatabaseUnavailable as error:
         print(error)
         return 2
@@ -176,10 +219,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         judge = score.RagasJudge(judge_model, settings.generation_url, Ollama(settings).embed)
         score.judge_sync(scored, judge, references)
 
-    extraction = score.extraction_f1(read_registers(ROOT), facts)
+    extraction = score.extraction_f1(read_registers(ROOT), facts, indexed)
     runtime, runtime_source = _runtime_numbers(ROOT / "eval" / "results", settings.context_tokens)
     metrics, also, why = score.summarise(
-        scored, extraction=extraction, runtime=runtime, judged=bool(judge_model)
+        scored,
+        extraction=extraction,
+        runtime=runtime,
+        judged=bool(judge_model),
+        modules=module_metrics,
     )
     result = {
         "run": {
@@ -195,9 +242,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             "judge": judge_model or None,
             "retriever": args.retriever,
             "reranker": args.reranker,
+            "rerank_floor": (
+                None if args.reranker == "none" else args.rerank_floor or RELEVANCE_FLOOR
+            ),
+            # Both module metrics are date-dependent — a lead window and a lapse are gaps against
+            # a day — so the day they were measured for is part of the run, not an aside.
+            "modules_as_of": None if module_metrics is None else module_metrics.as_of.isoformat(),
             "candidates": args.candidates,
             "keep": args.keep,
             "runtime_numbers_from": runtime_source,
+            "skipped_no_document": waiting,
         },
         "metrics": metrics,
         "not_measured": why,
@@ -252,6 +306,30 @@ def _progress(trace: Any) -> None:
     from eval.score import outcome_of
 
     print(f"  {trace.question.id:<8} {outcome_of(trace.answer):<16} {trace.latency_ms:>6} ms")
+
+
+def _partition(
+    questions: list[Any], indexed: Collection[str], *, score_missing: bool
+) -> tuple[list[Any], list[str]]:
+    """The questions worth running, and the ids of those whose document is not in the vault.
+
+    Golden questions are written from the register, which is complete and runs ahead of the
+    mail-merged batch. A question about a document nobody has generated yet is not wrong — it is
+    not yet answerable — and scoring it as a retrieval failure would say the retriever is worse
+    than it is. It is skipped and counted, in the result file as well as on the terminal.
+    An abstention question cites no document and is always runnable.
+    """
+    waiting = [q.id for q in questions if q.must_cite_doc and q.must_cite_doc not in indexed]
+    if score_missing:
+        return questions, []
+    return [q for q in questions if q.id not in set(waiting)], waiting
+
+
+def _indexed(conn: Any) -> set[str]:
+    """The register ids the vault has indexed, by document file stem."""
+    with conn.cursor() as cur:
+        cur.execute(INDEXED_DOCUMENTS)
+        return {str(row[0]) for row in cur.fetchall()}
 
 
 def _page_text(conn: Any, doc_id: str, page: int) -> str:

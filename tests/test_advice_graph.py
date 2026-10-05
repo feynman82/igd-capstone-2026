@@ -812,6 +812,36 @@ def test_a_coverage_review_runs_every_shape_onto_one_card_in_two_model_calls() -
     assert [(record.shape, record.outcome) for record in log.records] == [("review", "advised")]
 
 
+def test_optimising_cover_is_a_review_explained_in_the_advisers_order_citing_that_guidance() -> (
+    None
+):
+    # The pack's own phrases and guidance steps; the router saying "explain" does not matter.
+    real = pack("insurance_agent").manifest.advice
+    assert real is not None and real.review is not None
+    raw = reviewing_pack().manifest.model_dump()
+    raw["advice"]["review"]["asked"] = real.review.asked
+    raw["advice"]["review"]["explained_by"] = [s.model_dump() for s in real.review.explained_by]
+    raw["grounding"]["corpus"] = "sg_protection_guidance"
+    # Passages: 3 inputs, the calculation at 4, then the six guidance steps from 5, in order.
+    fact_find = {"text": "An adviser starts from what you earn and hold.", "supports": [5]}
+    client = ScriptedOllama({"intent": "explain"}, {"sentences": [fact_find, THE_GAP]})
+    graph, _, _, log, _ = build(client, packs=[InstalledPack(PackManifest.model_validate(raw))])
+
+    got = list(graph.stream("How can I optimise my personal coverage?"))
+
+    assert [type(event) for event in got] == [AdviceCard, Sentence, Sentence, Finished]
+    first, finished = got[1], got[-1]
+    assert isinstance(first, Sentence) and isinstance(finished, Finished)
+    assert [c.text for c in first.citations] == [
+        "MoneySense, Financial advisory process, 14 September 2026"
+    ]
+    assert "MoneySense, Financial advisory process, 14 September 2026" in finished.citations
+    prompt = client.prompts[-1]
+    assert "needs analysis" in prompt and "This fact-finding process is called an FNA" in prompt
+    assert prompt.index("Section 36 of the Act") < prompt.index("check in with you")
+    assert [(record.shape, record.outcome) for record in log.records] == [("review", "advised")]
+
+
 def test_a_review_with_nothing_calculable_names_everything_missing() -> None:
     client = ScriptedOllama({"intent": "advise"})
     graph, _, _, log, _ = build(client, result=MISSING, packs=[reviewing_pack()])

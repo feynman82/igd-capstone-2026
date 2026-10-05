@@ -14,7 +14,7 @@ import asyncio
 import logging
 import re
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -50,39 +50,79 @@ JUDGED = ("context_recall", "context_precision", "faithfulness", "answer_relevan
 # ------------------------------------------------------------------------------- what counts
 
 
+NOT_ON_FILE = re.compile(
+    r"\b(none|not|no|never)\b[^.]{0,60}\b(listed|stated|specified|provided|itemi[sz]ed|"
+    r"mentioned|printed|contain|contains|include|includes|on file|in the (provided )?documents?)\b",
+    re.IGNORECASE,
+)
+# The two lines the code writes rather than the model: the inventory naming what is on file, and
+# the inventory naming that nothing of the kind asked about is. Neither is a claim about the
+# question. They are matched by shape rather than by wording so that a prose decline written by
+# the model — which the generic pattern above also matches — stays a separate category.
+ON_FILE_LINE = re.compile(r"^On file for ", re.IGNORECASE)
+ABSENCE_LINE = re.compile(r"^None of the \d+ \w+ on file\b", re.IGNORECASE)
+
+
+def _written_by_code(sentence: str) -> bool:
+    return bool(ON_FILE_LINE.match(sentence) or ABSENCE_LINE.match(sentence))
+
+
+def _sentences(answer: Answer) -> list[str]:
+    """What the answer said, one gated sentence at a time. A terminal joins them; the metrics
+    need them apart, because one claim among five declines is still a claim."""
+    said = [claim.text for claim in answer.claims] or [answer.text]
+    return [sentence.strip() for sentence in said if sentence.strip()]
+
+
+def inventory_only(answer: Answer) -> bool:
+    """Every sentence is a line the code wrote about the vault, and none is about the question.
+
+    "On file for Marcus Lim: HomeShelter Contents Policy …" and "None of the 6 policies on file
+    is a car policy" are the inventory describing itself. An answer made only of those has
+    declined, whatever flag it carries.
+    """
+    said = _sentences(answer)
+    return bool(said) and all(_written_by_code(sentence) for sentence in said)
+
+
+def declined_in_prose(answer: Answer) -> bool:
+    """The model itself saying the documents do not carry it — "the chassis number is not listed
+    in the provided passages" — rather than the gate stopping it. Counted apart from the
+    inventory lines so the two can be argued about separately."""
+    said = [s for s in _sentences(answer) if not _written_by_code(s)]
+    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+
+
 def held_back(answer: Answer) -> bool:
-    """Did the system decline to answer? Abstaining, declining advice, withholding it, asking
-    for consent, refusing, and saying only what is on file all count: none of them is a claim
-    about the question that the documents did not support."""
-    return not answer.grounded or answer.unanswered
+    """Did the system decline to answer?
+
+    Decided from **what the answer says**, not from the flag it carries. `Answer.unanswered` is
+    the product's own record of having said nothing of its own, and one path through the graph
+    forgets to set it (issue #16) — so an answer that declined correctly was being counted as a
+    claim. A metric that moves when that flag is fixed, with no change in behaviour, would make
+    run 2's delta bookkeeping rather than a finding; `also.abstention_rate_by_flag` keeps the
+    old reading so the difference between the two is visible rather than quietly applied.
+
+    Abstaining, refusing, declining advice, withholding it and asking for consent are all the
+    gate. Saying only what the vault holds, or only that it does not hold it, is the answer.
+    """
+    return (
+        not answer.grounded
+        or answer.unanswered
+        or inventory_only(answer)
+        or declined_in_prose(answer)
+    )
 
 
 def refused(answer: Answer) -> bool:
     return answer.refused or answer.declined
 
 
-NOT_ON_FILE = re.compile(
-    r"\b(none|not|no|never)\b[^.]{0,60}\b(listed|stated|specified|provided|itemi[sz]ed|"
-    r"mentioned|printed|contain|contains|include|includes|on file|in the (provided )?documents?)\b",
-    re.IGNORECASE,
-)
-# The inventory's own line naming a document on file ("On file for Marcus Lim: …") is neither a
-# claim about the question nor a decline; it is skipped when deciding what an answer said.
-ON_FILE_LINE = re.compile(r"^On file for ", re.IGNORECASE)
-
-
 def says_not_on_file(answer: Answer) -> bool:
-    """A grounded answer whose sentences say, in words, that the documents do not state it.
-
-    That is an honest decline written by the model rather than by the gate — "the chassis
-    number is not listed in the provided documents" — and it is reported beside the strict
-    abstention rate rather than folded into it, so the two can be argued about separately.
-    """
-    if held_back(answer):
-        return False
-    sentences = [claim.text for claim in answer.claims] or [answer.text]
-    said = [s for s in sentences if s.strip() and not ON_FILE_LINE.match(s.strip())]
-    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+    """A grounded answer that declined in prose rather than at the gate. Kept as its own number
+    because "the documents do not say" written by a 4B model is a weaker promise than the gate
+    refusing to let it speak."""
+    return not (not answer.grounded or answer.unanswered) and declined_in_prose(answer)
 
 
 # ------------------------------------------------------------------------------- value matching
@@ -228,25 +268,41 @@ class F1:
         }
 
 
-def extraction_f1(register: Sequence[Mapping[str, str]], facts: Iterable[FactRow]) -> dict[str, F1]:
-    """Field extraction scored against the register, overall and by document type.
+def _outcomes(
+    register: Sequence[Mapping[str, str]],
+    facts: Iterable[FactRow],
+    indexed: Collection[str] | None = None,
+) -> Iterator[tuple[str, str, str, tuple[int, int, int]]]:
+    """`(doc_id, doc_type, field, (tp, fp, fn))` for every register cell that was scorable.
 
     The register is the ground truth because every document was authored from it. For each
     document on file and each field the register fills, an extracted value that matches is a
     hit, a missing one is a miss, and a wrong one is both a false claim and a miss. A value the
     extractor produced for a field the register leaves empty is a false claim: the document does
-    not print it. Documents the register knows but the vault has not indexed are not scored, so
-    a half-ingested batch reports on what was ingested rather than on what was not.
+    not print it. A field neither side filled is not an outcome at all and is not counted.
+
+    Documents the register knows but the vault has not indexed are not scored, so a
+    half-ingested batch reports on what was ingested rather than on what was not. The same
+    applies to a quarantined document: nothing extracted it, so counting its fields as misses
+    would score the quarantine rather than the extractor.
+
+    `indexed` closes the hole in that reasoning. Without it, "has no facts" and "is not in the
+    vault" are the same thing to this function, so a document that *was* indexed and that the
+    extractor wrote nothing at all for drops out of the metric instead of scoring zero — the one
+    failure that matters most would be the one failure that cannot be seen. Pass the doc ids the
+    vault has indexed and such a document is counted as a miss on every field the register
+    fills. No run has yet contained one; the metric should not depend on that staying true.
     """
     extracted: dict[str, dict[str, str | None]] = defaultdict(dict)
     for fact in facts:
         extracted[fact.doc_id][fact.key] = fact.value
-    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
+    in_vault = set(extracted) | set(indexed or ())
     for row in register:
         doc_id = row.get("doc_id", "")
-        if doc_id not in extracted:
+        if doc_id not in in_vault:
             continue
-        found = extracted[doc_id]
+        found = extracted.get(doc_id, {})  # `.get`, so a factless document is not inserted
+        doc_type = row.get("doc_type") or "unknown"
         for key, value in row.items():
             if key in REGISTER_META or key is None:
                 continue
@@ -263,10 +319,94 @@ def extraction_f1(register: Sequence[Mapping[str, str]], facts: Iterable[FactRow
                 outcome = (0, 1, 0)
             else:
                 continue
-            for bucket in ("all", row.get("doc_type") or "unknown"):
-                for index, amount in enumerate(outcome):
-                    counts[bucket][index] += amount
-    return {bucket: F1(*totals) for bucket, totals in sorted(counts.items())}
+            yield doc_id, doc_type, key, outcome
+
+
+def _totals(counted: Iterable[tuple[str, tuple[int, int, int]]]) -> dict[str, F1]:
+    counts: dict[str, list[int]] = defaultdict(lambda: [0, 0, 0])
+    for bucket, outcome in counted:
+        for index, amount in enumerate(outcome):
+            counts[bucket][index] += amount
+    return {bucket: F1(*numbers) for bucket, numbers in sorted(counts.items())}
+
+
+def extraction_f1(
+    register: Sequence[Mapping[str, str]],
+    facts: Iterable[FactRow],
+    indexed: Collection[str] | None = None,
+) -> dict[str, F1]:
+    """Metric 6, micro-averaged over every scored field: `all`, then one entry per document type.
+
+    `_outcomes` explains what counts as a hit, a miss and a false claim, and what `indexed` is for.
+    """
+    return _totals(
+        (bucket, outcome)
+        for _, doc_type, _, outcome in _outcomes(register, facts, indexed)
+        for bucket in ("all", doc_type)
+    )
+
+
+@dataclass(frozen=True, slots=True)
+class TypeScore:
+    """One document type's extraction score, and the fields it is made of.
+
+    `documents` is how many indexed documents of the type were scored, which is the number that
+    says whether an F1 of 0.76 is a finding or a sample of two. `fields` is the same arithmetic
+    per register column, because "this type is weak" is not actionable and "this field is never
+    extracted" is: the lane that owns extraction can go to one field on one template.
+    """
+
+    doc_type: str
+    documents: int
+    overall: F1
+    fields: dict[str, F1]
+
+    @property
+    def weakest(self) -> list[tuple[str, F1]]:
+        """The fields holding the type's score down, worst first, best excluded."""
+        below = [(key, f1) for key, f1 in self.fields.items() if (f1.f1 or 0.0) < 1.0]
+        return sorted(below, key=lambda pair: (pair[1].f1 or 0.0, pair[0]))
+
+
+def extraction_by_type(
+    register: Sequence[Mapping[str, str]],
+    facts: Iterable[FactRow],
+    indexed: Collection[str] | None = None,
+) -> list[TypeScore]:
+    """Every scored document type, worst F1 first — the week 6 table, in order of what to fix."""
+    outcomes = list(_outcomes(register, facts, indexed))
+    documents: dict[str, set[str]] = defaultdict(set)
+    per_type: dict[str, list[tuple[str, tuple[int, int, int]]]] = defaultdict(list)
+    for doc_id, doc_type, key, outcome in outcomes:
+        documents[doc_type].add(doc_id)
+        per_type[doc_type].append((key, outcome))
+    scores = [
+        TypeScore(
+            doc_type=doc_type,
+            documents=len(documents[doc_type]),
+            overall=next(iter(_totals((("one", o) for _, o in counted)).values())),
+            fields=_totals(counted),
+        )
+        for doc_type, counted in per_type.items()
+    ]
+    return sorted(scores, key=lambda s: (s.overall.f1 or 0.0, -s.documents, s.doc_type))
+
+
+def unjoined(register: Sequence[Mapping[str, str]], facts: Iterable[FactRow]) -> dict[str, int]:
+    """Documents the extractor wrote facts for that no register row claims, and how many each.
+
+    `corpus/README.md` makes the file name the register id, so a document ingested under any
+    other name — a specimen dropped into `inbox/` and named for what it is — has no ground truth
+    and cannot be scored either way. Its facts are neither hits nor misses; they are invisible.
+    That is not an extraction failure and it is not nothing: it is a rename away from being
+    measurable, so the report names the documents rather than quietly leaving them out.
+    """
+    known = {row.get("doc_id", "") for row in register}
+    counted: dict[str, int] = defaultdict(int)
+    for fact in facts:
+        if fact.doc_id not in known:
+            counted[fact.doc_id] += 1
+    return dict(sorted(counted.items()))
 
 
 # ------------------------------------------------------------------------------- the judge
@@ -455,6 +595,7 @@ def summarise(
     extraction: Mapping[str, F1] | None,
     runtime: Mapping[str, float | None] | None,
     judged: bool,
+    modules: Any | None = None,
 ) -> tuple[dict[str, float | None], dict[str, Any], dict[str, str]]:
     """The nine metrics, the extras worth keeping beside them, and a reason for every null."""
     by_set: dict[str, list[Scored]] = defaultdict(list)
@@ -479,8 +620,24 @@ def summarise(
     if metrics["extraction_f1"] is None:
         why["extraction_f1"] = "no indexed document has a register row to score against"
 
-    why["obligation_precision"] = "module questions arrive in W7; not measured by this harness"
-    why["alert_fpr"] = "module questions arrive in W7; not measured by this harness"
+    # Metrics 7 and 8 need no judge and no golden question: the register is the ground truth, as
+    # it is for extraction. `eval.modules` measures them from the vault; see its docstring for
+    # what each one asks. They are reported here *and* apart, in eval/results/w7-module-metrics.md.
+    if modules is not None:
+        metrics["obligation_precision"] = modules.precision
+        metrics["alert_fpr"] = modules.fpr
+    if metrics["obligation_precision"] is None:
+        why["obligation_precision"] = (
+            "no obligation in the vault came from a document"
+            if modules is not None
+            else "the module metrics were not measured in this run"
+        )
+    if metrics["alert_fpr"] is None:
+        why["alert_fpr"] = (
+            "no alert fired, so a false-positive rate is unmeasured rather than 0.0"
+            if modules is not None
+            else "the module metrics were not measured in this run"
+        )
 
     for key in ("decode_tok_s", "peak_vram_gb"):
         metrics[key] = (runtime or {}).get(key)
@@ -502,6 +659,20 @@ def summarise(
             if abstentions == 0 or not b
             else round(sum(held_back(i.trace.answer) for i in b) / abstentions, 4)
         ),
+        # How the 0.95 target is actually being met or missed, one question in exactly one row.
+        "abstention_b": {
+            "at_the_gate": sum(not i.trace.answer.grounded for i in b),
+            "said_nothing_of_its_own": sum(
+                i.trace.answer.grounded and inventory_only(i.trace.answer) for i in b
+            ),
+            "declined_in_prose": sum(says_not_on_file(i.trace.answer) for i in b),
+            "claimed": sum(not held_back(i.trace.answer) for i in b),
+        },
+        # What `abstention_rate` would read if it trusted `Answer.unanswered` (issue #16). The
+        # gap between the two is the flag, not the system; when #16 lands they converge.
+        "abstention_rate_by_flag": _rate(
+            [not i.trace.answer.grounded or i.trace.answer.unanswered for i in b]
+        ),
         "said_not_on_file_b": _rate([says_not_on_file(i.trace.answer) for i in b]),
         "refusal_rate_c": _rate([refused(i.trace.answer) for i in c]),
         "held_back_rate_c": _rate([held_back(i.trace.answer) for i in c]),
@@ -510,6 +681,8 @@ def summarise(
             k: v.as_dict() for k, v in (extraction or {}).items() if k != "all"
         },
     }
+    if modules is not None:
+        also["modules"] = modules.as_dict()
     return metrics, also, why
 
 

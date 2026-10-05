@@ -22,6 +22,7 @@ from core.ingest.extract import Extraction, extract
 from core.ingest.obligations import fixed, from_facts
 from core.ingest.parse import ParsedDocument, parse
 from core.packs import CORE, PackUnavailable, catalog
+from core.runtime.db import vector_literal
 from core.runtime.ollama import ModelUnavailable, Ollama
 
 log = logging.getLogger(__name__)
@@ -67,18 +68,31 @@ def process(
     parsed = parse(payload, mime, original_name)
     if not parsed.ok:
         return _quarantine(conn, document_id, parsed, parsed.reason or "the parser failed")
+    read = read_and_commit(conn, client, document_id=document_id, parsed=parsed, name=original_name)
+    return _quarantine(conn, document_id, parsed, read) if isinstance(read, str) else read
 
+
+def read_and_commit(
+    conn: Any, client: Ollama, *, document_id: Any, parsed: ParsedDocument, name: str
+) -> Outcome | str:
+    """Pages of text to both lanes, committed: classify, extract, chunk, embed, write. Or the
+    reason it stopped, for the caller to quarantine in its own words — the first pass and the
+    image pass (`core/ingest/quarantine.py`) read a document the same way from here on.
+
+    Extraction is judged before anything is embedded. The retrieval lane would succeed where the
+    facts lane did not, and writing only half of a document is exactly the disagreement this
+    pipeline exists to prevent, so a document that fails extraction waits for the second pass
+    without costing an embedding call first.
+    """
     classification = classify(client, classification_sample(parsed.pages))
     if not classification.recognised:
-        return _quarantine(
-            conn, document_id, parsed, classification.reason or "not a known document type"
-        )
-    assert classification.pack_id is not None and classification.doc_type is not None
+        return classification.reason or "not a known document type"
+    assert classification.doc_type is not None
 
     try:
         documents = catalog()
     except PackUnavailable as error:
-        return _quarantine(conn, document_id, parsed, str(error))
+        return str(error)
 
     extraction = extract(
         client,
@@ -87,25 +101,19 @@ def process(
         parsed.pages,
         confidence=classification.confidence,
     )
+    if not extraction.ok:
+        return extraction.reason or "extraction did not satisfy the type"
 
     chunks = chunk_pages(
         parsed.pages,
-        original_name=original_name,
+        original_name=name,
         doc_type=classification.doc_type,
-        title=document_title(documents, classification.doc_type, extraction.facts, original_name),
+        title=document_title(documents, classification.doc_type, extraction.facts, name),
     )
     try:
         vectors = client.embed_documents([(chunk.title, chunk.embedding_input) for chunk in chunks])
     except ModelUnavailable as error:
-        return _quarantine(conn, document_id, parsed, str(error))
-
-    if not extraction.ok:
-        # The retrieval lane would succeed and the facts lane would not. Writing only half of it
-        # is exactly the disagreement this pipeline exists to prevent, so the whole document
-        # waits for the second pass.
-        return _quarantine(
-            conn, document_id, parsed, extraction.reason or "extraction did not satisfy the type"
-        )
+        return str(error)
 
     written = commit_both_lanes(
         conn,
@@ -156,20 +164,8 @@ def commit_both_lanes(
 ) -> int:
     version = catalog().version  # which field list read these facts, so re-extraction is auditable
     with conn.cursor() as cur:
-        cur.execute(sql.DELETE_CHUNKS, {"document_id": document_id})
+        write_chunks(cur, document_id, chunks, vectors)
         cur.execute(sql.DELETE_FACTS, {"document_id": document_id})
-        for chunk, vector in zip(chunks, vectors, strict=True):
-            cur.execute(
-                sql.INSERT_CHUNK,
-                {
-                    "document_id": document_id,
-                    "page": chunk.page,
-                    "ordinal": chunk.ordinal,
-                    "context_prefix": chunk.context_prefix,
-                    "text": chunk.text,
-                    "embedding": _vector_literal(vector),
-                },
-            )
         written_facts = []
         for fact in extraction.facts:
             cur.execute(
@@ -250,6 +246,20 @@ def _quarantine(conn: Any, document_id: Any, parsed: ParsedDocument, reason: str
     )
 
 
-def _vector_literal(vector: list[float]) -> str:
-    """pgvector accepts its own text form; this avoids registering an adapter for one column."""
-    return "[" + ",".join(f"{value:.6f}" for value in vector) + "]"
+def write_chunks(
+    cur: Any, document_id: Any, chunks: list[Chunk], vectors: list[list[float]]
+) -> None:
+    """Replace a document's chunks. The first pass, the image pass and a reindex all write here."""
+    cur.execute(sql.DELETE_CHUNKS, {"document_id": document_id})
+    for chunk, vector in zip(chunks, vectors, strict=True):
+        cur.execute(
+            sql.INSERT_CHUNK,
+            {
+                "document_id": document_id,
+                "page": chunk.page,
+                "ordinal": chunk.ordinal,
+                "context_prefix": chunk.context_prefix,
+                "text": chunk.text,
+                "embedding": vector_literal(vector),
+            },
+        )

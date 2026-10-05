@@ -29,6 +29,10 @@ powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | ie
 Then **start Docker Desktop and leave it running.** Ollama starts itself and sits in the
 system tray. Both must be running before PARROT will work.
 
+> **Intel Macs are not supported.** `torch 2.14.0` publishes no macOS x86_64 wheel, and
+> `docling-parse 7.22.1` has to be compiled from source there, so `uv sync` fails.
+> Use Windows 11 with an NVIDIA GPU (the tested path) or an Apple Silicon Mac [VERIFY: not yet tested].
+
 ---
 
 ## 2 · Download the AI models
@@ -259,7 +263,7 @@ is due today. The raw JSON is on the engine's port as well — `/api/today`, `/a
 | **You forgot the passphrase** | Delete `web/.parrot/lock.json` and choose a new one. Nothing is lost |
 | **Today is empty** | Either nothing is due — which is the normal state — or no documents have been read yet. Check Vault |
 | Answers are very slow | Expected on a laptop without a discrete GPU. It is a 4B model running on your own machine |
-| **On a Mac**, the window repeats `exited with 'signal 6 (SIGABRT)'` and Vault shows every document as pending | Known — [issue #4](https://github.com/feynman82/igd-capstone-2026/issues/4). The worker's process pool cannot use the GPU on macOS. Until the fix lands, start with `uv run python scripts/run_parrot.py --no-worker` and run the worker yourself with `--pool=solo`, as described there |
+| **On a Mac**, the window repeats `exited with 'signal 6 (SIGABRT)'` and every document stays pending | Your copy predates 14 September. `git pull`, then start PARROT again — the worker now uses a pool that is safe on macOS. If you were running the worker by hand with `--pool=solo`, you can stop doing that |
 | It abstained and you think it should not have | **Tell Yew Mun.** That is an evaluation finding, not a bug report |
 | It answered something it could not support | **Tell everyone immediately.** That is the one failure the project exists to prevent |
 
@@ -285,8 +289,3 @@ developer setup, then open Claude Code in the repository and run **`/orient`** �
 the working agreement, find your lane, and tell you your next task.
 
 
----
-
-## macOS worker note
-
-The ingestion worker uses Celery `solo` on macOS as well as Windows. This avoids fork-related crashes when RapidOCR/PyTorch initialises the Apple Silicon Metal backend. If you previously used the manual `--pool=solo` workaround, pull the latest repository and restart PARROT; the workaround is now built into the worker.

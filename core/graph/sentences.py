@@ -46,11 +46,6 @@ class SentenceScanner:
         self._in_string = False
         self._escape = False
 
-    @property
-    def raw(self) -> str:
-        """Everything received so far. Used once, at the end, to read `missing`."""
-        return self._buffer
-
     def feed(self, delta: str) -> list[dict[str, Any]]:
         """Append `delta` and return the sentences it completed. Usually none, sometimes one."""
         self._buffer += delta
@@ -103,7 +98,7 @@ class SentenceScanner:
                         found.append(sentence)
                     self._start = -1
             elif char == "]" and self._depth == 0:
-                # The array is over. Whatever follows is `missing`, read from `raw` at the end.
+                # The array is over. Whatever follows is `missing`, read by `missing()` at the end.
                 self._closed = True
                 index += 1
                 break

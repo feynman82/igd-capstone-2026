@@ -28,6 +28,7 @@ the difference matters when a supervisor asks.
 | [0016](0016-a-pack-advises-code-calculates-under-recorded-consent.md) | A pack advises: code calculates from cited facts and reviewed rule values, under recorded consent | Proposed |
 | [0017](0017-a-pack-is-grounding-and-persona-the-core-owns-documents.md) | A pack is grounding and persona; the core owns documents | Accepted |
 | [0018](0018-the-reranker-runs-in-process-because-ollama-cannot-serve-a-cross-encoder.md) | The reranker runs in-process, because Ollama cannot serve a cross-encoder | Proposed |
+| [0019](0019-the-reranker-drops-what-does-not-answer-the-question.md) | A relevance floor on the reranker does not buy abstention, and the reason is not calibration | Rejected |
 
 Add a row when you add a record.
 

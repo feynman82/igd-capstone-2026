@@ -16,8 +16,13 @@ rank fusion, then reranked with `bge-reranker-v2-m3`, then cut at the pack's sco
   in-process with `transformers` (ADR 0018: Ollama cannot serve a cross-encoder), loaded
   once per process on CUDA, MPS or CPU. It reorders and cuts; `Passage.score` stays the
   cosine similarity the floor reads.
-- `floor.py` — the score floor the grounding gate reads (today it reads the pack's
-  `guardrails.abstain_below` directly; this file exists when there is something to add)
+- there is no `floor.py`, and after ADR 0019 there should not be one. The gate reads the pack's
+  `guardrails.abstain_below` against `Passage.score`, a cosine similarity that says how close the
+  wording was. Making the cross-encoder's relevance the floor instead was built, measured at three
+  settings and **rejected**: it trades more answerable questions than hard negatives at every one,
+  because the hard negatives that get answered are the ones a relevant page exists for. The knob
+  survives as `CrossEncoderReranker.floor` / `eval.run --rerank-floor`, off by default. The residue
+  is not retrieval's to fix — see ADR 0019's last section.
 
 Fusion decides which candidates are *in*; the reranker decides which six are read. In
 between, `core/graph` re-sorts by score when it fuses several phrasings of one question,

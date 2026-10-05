@@ -24,6 +24,11 @@ from core.runtime.settings import Settings
 CONNECT_TIMEOUT_SECONDS = 3
 
 
+def vector_literal(vector: list[float]) -> str:
+    """pgvector accepts its own text form; this avoids registering an adapter for one column."""
+    return "[" + ",".join(f"{value:.6f}" for value in vector) + "]"
+
+
 class DatabaseUnavailable(RuntimeError):
     """Safe to show: the message never carries the connection string."""
 

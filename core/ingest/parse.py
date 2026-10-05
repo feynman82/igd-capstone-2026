@@ -68,10 +68,6 @@ class ParsedDocument:
     def page_count(self) -> int:
         return len(self.pages)
 
-    @property
-    def text(self) -> str:
-        return "\n\n".join(page.text for page in self.pages)
-
 
 class Parser(Protocol):
     name: str
