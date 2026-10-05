@@ -21,7 +21,7 @@ for until week 8.
 | 3 | **Retention and erasure policy** | W4 | PDPA Protection and Retention Limitation obligations. Includes the actual erasure path: what `DELETE FROM documents` cascades to, and what it does not. |
 | 4 | **Model card** | W6 | Model, licence, languages, intended use, out-of-scope use, measured performance, known failure modes. Yew Mun supplies the numbers; the framing is yours. |
 | 5 | **ISO/IEC 22989 ↔ 5338 map** | W7 | Life-cycle *stages* are 22989; life-cycle *processes* are 5338. Map ours onto both, and say explicitly which 5338 processes we are performing (6.4.7 knowledge acquisition, 6.4.8 AI data engineering, 6.4.14 continuous validation) and which we are consciously not. |
-| 6 | **IMDA mappings and autonomy statement** | W8 | The nine dimensions of the 2024 Model AI Governance Framework for Generative AI, and the four of the Agentic AI framework published 22 January 2026. The autonomy statement is the one to lead with. |
+| 6 | **IMDA mappings and autonomy statement** | W8 | The nine dimensions of the 2024 Model AI Governance Framework for Generative AI, and the four of IMDA's Model AI Governance Framework for Agentic AI, version 1.5 (published 20 May 2026, updated 5 June 2026; version 1.0 was 22 January 2026). See `docs/governance/imda-agentic-alignment.md`. The autonomy statement is the one to lead with. |
 
 ---
 
