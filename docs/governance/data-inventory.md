@@ -27,11 +27,20 @@ This document records it.
 | **People printed on a page but in no field** | Whatever the page says is chunked and embedded, including values no field names. Examples are the parents' ID numbers on a birth certificate and the address on the back of an identity card. | `core/ingest/chunk.py` → `chunks.text` in `0001_init.sql` |
 | **Team members (holdout only)** | The 40-document real holdout. It is kept out of git by `.gitignore` (`corpus/holdout/`). The consent protocol that must govern it, `consent-and-redaction.md`, **does not exist yet**. | `.gitignore`; `docs/governance/README.md` |
 
-### Lawful basis: deemed consent
+### Lawful basis: two capacities, and deemed consent
 
-> **Decision (Siew, 2026-10-01).** The exclusion for individuals acting in a personal or
-> domestic capacity is not relied on, so PARROT is treated as within the PDPA. The basis for
-> holding a household member's data is **deemed consent**: *Personal Data Protection Act 2012,
+> **Two capacities (Siew, 2026-10-05; this replaces the 2026-10-01 wording).**
+> - **A household using its own copy** acts in a personal or domestic capacity. The PDPA's Data
+>   Protection Provisions do not apply to it (Siew's source: PDPC, *Advisory Guidelines on Key
+>   Concepts in the PDPA*, 1 October 2021).
+> - **The PARROT team** is bound by the PDPA in full for its own work: the repository, the
+>   holdout, and the demonstration machine.
+> - **PARROT is designed to PDPA standards anyway,** as a choice and not an obligation:
+>   consent, purpose, retention and erasure, as this inventory and the linked policies set out.
+>   *PARROT holds itself to the PDPA, although its household users are not bound by it.*
+>
+> Within that standard, the basis for holding a household member's data is **deemed
+> consent**: *Personal Data Protection Act 2012,
 > Part 4 (Collection, Use and Disclosure of Personal Data), section 15 (Deemed consent)*. When a
 > member submits their own documents and information, they are deemed to consent to it being
 > held for the purpose they submitted it for.
@@ -202,8 +211,11 @@ These are carried from the first draft unless marked new.
 3. The lock is a screen lock, not encryption, and `web/lib/lock.ts` says so. Is that sufficient
    for identity numbers, which ADR 0017 calls the most sensitive data in the vault?
 4. ~~Should the screens bind to loopback only?~~ **Closed.** They do since `3a624c5`.
-5. ~~Which law applies to a household using its own copy?~~ **Decided 2026-10-01:** the PDPA
-   applies, and the lawful basis is deemed consent (§1). The decision leaves these cases open:
+5. ~~Which law applies to a household using its own copy?~~ **Decided 2026-10-05 (§1, "two
+   capacities"):** a household's own use is outside the PDPA (domestic capacity), and PARROT is
+   designed to PDPA standards anyway, with deemed consent as the basis within that standard.
+   *This replaces the 2026-10-01 wording, "the PDPA applies".* The decisions below stand
+   unchanged:
    - **5a.** A member who submits *another* member's document, for example the owner filing a
      partner's passport. **Decided (Siew, 2026-10-01): yes, covered.** The terms of use must
      say so expressly. When one adult completes or submits a document on behalf of another

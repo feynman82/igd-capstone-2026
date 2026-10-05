@@ -16,6 +16,9 @@ exist.** This policy says what it must do, and the policy cannot be met until it
 
 ## Basis
 
+- **Why the PDPA is used here.** A household's own use is outside the PDPA (domestic
+  capacity). PARROT is designed to its standards anyway, and the team is bound in full for its
+  own work (`data-inventory.md` §1, "two capacities", Siew, 2026-10-05).
 - **PDPA 2012, Part 6, section 25 (retention limitation).** The Part and section numbers are
   still to be confirmed. The section has *not* yet been quoted from the Act for this document,
   so it is not paraphrased here. The quote and the revised-edition

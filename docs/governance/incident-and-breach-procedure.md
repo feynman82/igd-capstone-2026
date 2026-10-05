@@ -114,16 +114,15 @@ So:
   machine. The team is an organisation holding personal data, so **this procedure applies in
   full, including section 3**.
 
-**This conflicts with an earlier decision and must be reconciled.** See "Decisions for Siew",
-item 3.
+This is consistent with `data-inventory.md` §1, "two capacities" (Siew, 2026-10-05).
+PARROT is designed to PDPA standards as a choice, and the team is bound in full for its own
+work.
 
 ## Decisions for Siew
 
 1. Approve the procedure, and the proposed "same day" times in section 2.
 2. ~~Confirm the PDPA Part 6A steps.~~ **Recorded 2026-10-05** (section 3). Still to confirm:
    whether affected individuals must be notified, and the "significant scale" threshold.
-3. **Reconcile section 5 with `data-inventory.md` §1.** On 2026-10-01 Siew decided that "the
-   exclusion for individuals acting in a personal or domestic capacity is not relied on", so
-   PARROT is treated as within the PDPA, with deemed consent (s 15) as the lawful basis.
-   Section 5 now relies on that exclusion. Both cannot stand as written.
+3. ~~Reconcile section 5 with the data inventory.~~ **Decided 2026-10-05:** option (a), two
+   capacities (`data-inventory.md` §1).
 4. ~~Approve the incident log.~~ **Approved 2026-10-05.**
