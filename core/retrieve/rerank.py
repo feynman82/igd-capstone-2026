@@ -18,6 +18,7 @@ be per graph.
 
 from __future__ import annotations
 
+import importlib.util
 import logging
 import math
 import threading
@@ -151,6 +152,24 @@ def _warn_once(truncated: int, total: int) -> None:
     )
 
 
+def _runtime_installed() -> bool:
+    """False on an install without PyTorch — an Intel Mac, where Docling and the torch it brings
+    are left out because no wheel exists. Retrieval's own order is kept there, and said once."""
+    global _warned_runtime
+    if importlib.util.find_spec("torch") and importlib.util.find_spec("transformers"):
+        return True
+    if not _warned_runtime:
+        _warned_runtime = True
+        log.warning(
+            "reranker: PyTorch is not installed on this machine, so passages keep retrieval's "
+            "order. Expected on an Intel Mac; answers may cite a less relevant page."
+        )
+    return False
+
+
+_warned_runtime = False
+
+
 def passage_text(passage: Passage) -> str:
     """What the reranker reads: the one-line context, when a chunk carries one, then the chunk."""
     return f"{passage.context_prefix}\n{passage.text}" if passage.context_prefix else passage.text
@@ -182,6 +201,8 @@ class CrossEncoderReranker:
     def rerank(self, question: str, passages: list[Passage], *, keep: int) -> list[Passage]:
         if keep <= 0 or not passages:
             return []
+        if not _runtime_installed():
+            return passages[:keep]
         scores = score_pairs(self.model_name, question, [passage_text(p) for p in passages])
         order = sorted(range(len(passages)), key=lambda i: (-scores[i], i))
         kept = [i for i in order if relevance(scores[i]) >= self.floor]

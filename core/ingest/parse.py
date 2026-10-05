@@ -10,6 +10,11 @@ Two parsers, one interface:
   tables, which is most of what a payslip or a policy schedule actually is.
 - `PlainTextParser` for text and markdown, which need no model and no OCR.
 
+Where Docling is not installed — an Intel Mac, for which neither PyTorch nor `docling-parse`
+publishes a wheel — a PDF's own text layer is read with pypdfium2 instead, page by page. It keeps
+pagination but not tables or headings, and it cannot read a photograph; those quarantine for the
+vision pass as before.
+
 Failure is a return value, not an exception. `ParsedDocument.ok` false with a reason is what
 routes a document to quarantine, and quarantine is where the vision-language second pass picks
 it up. Nothing is ever silently dropped.
@@ -112,24 +117,23 @@ class DoclingParser:
         try:
             pages = self._convert(payload, original_name)
         except ImportError:
-            return ParsedDocument(False, self.name, reason="Docling is not installed")
+            if not payload.startswith(b"%PDF"):
+                return ParsedDocument(False, self.name, reason="Docling is not installed")
+            try:
+                pages = _text_layer_pages(payload)
+            except Exception as error:  # pdfium raises its own class on a damaged file
+                log.info("pdfium could not read %s: %s", original_name, error)
+                return ParsedDocument(
+                    False, "pdfium", reason=f"the parser failed: {type(error).__name__}"
+                )
+            return _judged("pdfium", pages)
         except Exception as error:  # Docling raises a wide range on malformed input
             log.info("docling could not parse %s: %s", original_name, error)
             return ParsedDocument(
                 False, self.name, reason=f"the parser failed: {type(error).__name__}"
             )
 
-        if not pages:
-            return ParsedDocument(False, self.name, reason="no pages were recovered")
-        recovered = sum(len(p.text) for p in pages)
-        if recovered < MIN_CHARS_PER_PAGE * len(pages):
-            return ParsedDocument(
-                False,
-                self.name,
-                pages,
-                reason=f"only {recovered} characters recovered from {len(pages)} page(s)",
-            )
-        return ParsedDocument(True, self.name, pages)
+        return _judged(self.name, pages)
 
     def _convert(self, payload: bytes, original_name: str) -> list[ParsedPage]:
         from io import BytesIO
@@ -142,6 +146,38 @@ class DoclingParser:
         result = converter.convert(DocumentStream(name=original_name, stream=BytesIO(payload)))
         document: DoclingDocument = result.document
         return _pages_from(document)
+
+
+def _judged(parser: str, pages: list[ParsedPage]) -> ParsedDocument:
+    """A parse that recovered too little text is a scan the parser could not read."""
+    if not pages:
+        return ParsedDocument(False, parser, reason="no pages were recovered")
+    recovered = sum(len(p.text) for p in pages)
+    if recovered < MIN_CHARS_PER_PAGE * len(pages):
+        return ParsedDocument(
+            False,
+            parser,
+            pages,
+            reason=f"only {recovered} characters recovered from {len(pages)} page(s)",
+        )
+    return ParsedDocument(True, parser, pages)
+
+
+def _text_layer_pages(payload: bytes) -> list[ParsedPage]:
+    """A PDF's embedded text, one `ParsedPage` per page, for an install without Docling."""
+    import pypdfium2
+
+    document = pypdfium2.PdfDocument(payload)
+    try:
+        pages = []
+        for index in range(len(document)):
+            text = document[index].get_textpage().get_text_bounded()
+            text = "\n".join(line.strip() for line in text.splitlines() if line.strip())
+            if text:
+                pages.append(ParsedPage(index + 1, text))
+        return pages
+    finally:
+        document.close()
 
 
 def _pages_from(document: object) -> list[ParsedPage]:
