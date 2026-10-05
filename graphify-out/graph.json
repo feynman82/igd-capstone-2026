@@ -31677,7 +31677,7 @@
       "node_kind": "heading",
       "norm_label": "b3. things erasure has to reach beyond the database",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L190"
+      "source_location": "L197"
     },
     {
       "id": "core_adapters_base_rationale_57",
@@ -34956,7 +34956,7 @@
       "node_kind": "heading",
       "norm_label": "a5. erasing a person, and resetting the workspace",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L102"
+      "source_location": "L104"
     },
     {
       "id": "docs_governance_retention_and_erasure_a6_incident_hold",
@@ -34968,7 +34968,7 @@
       "node_kind": "heading",
       "norm_label": "a6. incident hold",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L141"
+      "source_location": "L147"
     },
     {
       "id": "docs_governance_retention_and_erasure_basis",
@@ -34992,7 +34992,7 @@
       "node_kind": "heading",
       "norm_label": "decisions for siew",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L258"
+      "source_location": "L265"
     },
     {
       "id": "docs_governance_retention_and_erasure_part_a_policy",
@@ -35016,7 +35016,7 @@
       "node_kind": "heading",
       "norm_label": "part c. what must be built (for christian)",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L208"
+      "source_location": "L215"
     },
     {
       "id": "docs_governance_retention_and_erasure_retention_and_erasure_policy",
@@ -36378,7 +36378,7 @@
       "node_kind": "heading",
       "norm_label": "b1. the only erasure paths that exist",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L166"
+      "source_location": "L173"
     },
     {
       "id": "docs_governance_retention_and_erasure_b2_what_deleting_a_documents_row_cascades_to_and_what_it_leaves",
@@ -36390,7 +36390,7 @@
       "node_kind": "heading",
       "norm_label": "b2. what deleting a `documents` row cascades to, and what it leaves",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L177"
+      "source_location": "L184"
     },
     {
       "id": "docs_governance_retention_and_erasure_b4_does_today_s_system_meet_part_a",
@@ -36402,7 +36402,7 @@
       "node_kind": "heading",
       "norm_label": "b4. does today's system meet part a?",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L199"
+      "source_location": "L206"
     },
     {
       "id": "docs_governance_retention_and_erasure_part_b_what_the_code_does_today",
@@ -36414,7 +36414,7 @@
       "node_kind": "heading",
       "norm_label": "part b. what the code does today",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L164"
+      "source_location": "L171"
     },
     {
       "id": "docs_governance_terms_of_use_status_against_the_code",
@@ -142047,7 +142047,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L102",
+      "source_location": "L104",
       "weight": 1.0
     },
     {
@@ -142058,7 +142058,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L141",
+      "source_location": "L147",
       "weight": 1.0
     },
     {
@@ -142113,7 +142113,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L166",
+      "source_location": "L173",
       "weight": 1.0
     },
     {
@@ -142124,7 +142124,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L177",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -142135,7 +142135,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L190",
+      "source_location": "L197",
       "weight": 1.0
     },
     {
@@ -142146,18 +142146,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L199",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_governance_retention_and_erasure_retention_and_erasure_policy",
-      "target": "docs_governance_retention_and_erasure_part_b_what_the_code_does_today",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L164",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
@@ -142173,13 +142162,24 @@
     },
     {
       "source": "docs_governance_retention_and_erasure_retention_and_erasure_policy",
+      "target": "docs_governance_retention_and_erasure_part_b_what_the_code_does_today",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/governance/retention-and-erasure.md",
+      "source_location": "L171",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_governance_retention_and_erasure_retention_and_erasure_policy",
       "target": "docs_governance_retention_and_erasure_part_c_what_must_be_built_for_christian",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L208",
+      "source_location": "L215",
       "weight": 1.0
     },
     {
@@ -142190,7 +142190,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L258",
+      "source_location": "L265",
       "weight": 1.0
     },
     {
@@ -176109,7 +176109,7 @@
       "confidence_score": 0.95,
       "context": "_advice_basis",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L218",
+      "source_location": "L225",
       "weight": 1.0
     },
     {
@@ -176145,7 +176145,7 @@
       "confidence_score": 0.95,
       "context": "_folder",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L194",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -176157,7 +176157,7 @@
       "confidence_score": 0.95,
       "context": "_write_local_copy",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L194",
+      "source_location": "L201",
       "weight": 1.0
     },
     {
@@ -176181,7 +176181,7 @@
       "confidence_score": 0.95,
       "context": "advice_consents",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L174",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -176193,7 +176193,7 @@
       "confidence_score": 0.95,
       "context": "advice_consents",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L188",
+      "source_location": "L195",
       "weight": 1.0
     },
     {
@@ -176217,7 +176217,7 @@
       "confidence_score": 0.95,
       "context": "basis",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L186",
+      "source_location": "L193",
       "weight": 1.0
     },
     {
@@ -176229,7 +176229,7 @@
       "confidence_score": 0.95,
       "context": "documents",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L170",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -176241,7 +176241,7 @@
       "confidence_score": 0.95,
       "context": "documents",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L177",
+      "source_location": "L184",
       "weight": 1.0
     },
     {
@@ -176253,7 +176253,7 @@
       "confidence_score": 0.95,
       "context": "documents",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L214",
+      "source_location": "L221",
       "weight": 1.0
     },
     {
@@ -177129,7 +177129,7 @@
       "confidence_score": 0.95,
       "context": "obligations",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L170",
+      "source_location": "L177",
       "weight": 1.0
     },
     {
@@ -177141,7 +177141,7 @@
       "confidence_score": 0.95,
       "context": "obligations",
       "source_file": "docs/governance/retention-and-erasure.md",
-      "source_location": "L185",
+      "source_location": "L192",
       "weight": 1.0
     },
     {
@@ -194103,5 +194103,5 @@
       "source_file": "packs/insurance_agent/grounding/sg_protection_guidance/sources.yaml"
     }
   ],
-  "built_at_commit": "f28c96a4f8647edf86cb29e90092166700e867ba"
+  "built_at_commit": "cdfe617d9969d32088dac149d841b53d4f05ecaf"
 }

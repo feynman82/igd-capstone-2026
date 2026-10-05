@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-05)
 
 ## Corpus Check
-- 317 files · ~730,670 words
+- 317 files · ~730,752 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 34 file(s) not represented in the graph (top: (none) 11, .jsonl 7, .csv 5)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f28c96a4`
+- Built from commit: `cdfe617d`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -242,10 +242,10 @@
   docs/governance/imda-what-applies.md → core/contracts.py
 - `Containment, by kind` --references--> `_chat_ids()`  [INFERRED]
   docs/governance/incident-and-breach-procedure.md → core/runtime/settings.py
-- `1. Assess and bound the risks upfront (§2.1, pp 15–24)` --references--> `Guardrails`  [INFERRED]
-  docs/governance/imda-what-applies.md → core/contracts.py
-- `2. Make humans meaningfully accountable (§2.2, pp 25–32)` --references--> `_advice_basis()`  [INFERRED]
-  docs/governance/imda-what-applies.md → core/graph/answer.py
+- `B1. The only erasure paths that exist` --references--> `documents()`  [INFERRED]
+  docs/governance/retention-and-erasure.md → core/vault.py
+- `B1. The only erasure paths that exist` --references--> `obligations()`  [INFERRED]
+  docs/governance/retention-and-erasure.md → eval/modules.py
 
 ## Import Cycles
 - None detected.
@@ -1009,7 +1009,7 @@ Nodes (7): 2. The six steps, 3. Is it a notifiable breach?, 4. The incident log,
   README.md · relation: conceptually_related_to
 
 ## Knowledge Gaps
-- **403 isolated node(s):** `The two instruments`, `The framework's terms, and ours`, `4. Enable end-user responsibility (§2.4, pp 46–49)`, `Findings from this pass`, `For Siew` (+398 more)
+- **403 isolated node(s):** `Basis`, `A1. Retention rules`, `A2. What erasure means`, `A3. Three ways to erase`, `A4. Deleting a document: only on instruction, confirmed, and complete within 72 hours` (+398 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1738 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **49 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
