@@ -93,10 +93,10 @@ For users who **interact with** agents (§2.4.2, pp 46–47):
 | Framework practice | PARROT | Status | Evidence |
 |---|---|---|---|
 | **User's responsibilities**, "such as asking the user to double-check all information" | Every answer carries a source chip that opens the cited page. Advice cards carry the pack's disclaimer. | **Meets** | `web/components/source-chip.tsx`; `web/components/ask/advice-card.tsx` |
-| **Interaction**: "declare upfront in the user interface that the users are interacting with agents" | The screens call it "this assistant" or "household assistant". No screen found says plainly that answers are **written by AI**. | **Gap** (for Zee) | `web/app/unlock/page.tsx`; `web/app/(app)/packs/page.tsx` |
+| **Interaction**: "declare upfront in the user interface that the users are interacting with agents" | **Terms of use, Clause D** (drafted 2026-10-05) says that answers are AI-generated and must be verified. But the framework asks for this **in the interface, "rather than writing it only in separate documentation"**. The screens still say only "this assistant" or "household assistant". | **Partly**: in the terms; a screen line is still needed (Zee) | `web/app/unlock/page.tsx`; `web/app/(app)/packs/page.tsx` |
 | **Agents' range of actions and decisions** | Clause B states the four uses, and that the System makes no payment, booking, renewal or filing. | **Meets** (drafted) | `terms-of-use.md` Clause B |
 | **Data**: how it is collected, stored and used, with "explicit consent" where necessary | The data inventory and Clause B. Explicit, recorded consent before advice. | **Meets** | `data-inventory.md`; `core/advice_consent.py` |
-| **Human accountability and escalation**: "human contact points … whom the users can alert if the agents malfunction" | **No contact point is named** to users. The incident procedure is internal to the team. | **Gap** | `incident-and-breach-procedure.md` |
+| **Human accountability and escalation**: "human contact points … whom the users can alert if the agents malfunction" | **Terms of use, Clause D 3:** the PARROT helpdesk at +65 9123 4567 (number to confirm). The incident procedure handles what the helpdesk receives. | **Meets** (drafted; number to confirm) | `incident-and-breach-procedure.md` |
 
 ---
 
@@ -152,8 +152,9 @@ government, and PARROT, as a deployer, has only a small part to play.
    exactly an open incident's evidence, so the framework is met for them. Every other record
    follows the erasure policy.
 6. **Three gaps the framework names, all small:**
-   - no screen says plainly that answers are written by AI (p 47; Zee);
-   - no contact point is given to users (p 47; Siew, in the terms of use);
+   - no screen says plainly that answers are written by AI (p 47; Zee). The terms now say it
+     (Clause D), but the framework wants it in the interface too;
+   - ~~no contact point is given to users~~: now in the terms of use, Clause D 3 (helpdesk);
    - the Telegram allow list is open when empty, the risk the OpenClaw case names (p 14;
      Christian).
 7. **No written residual-risk evaluation** (p 24). It is a short paragraph, and could sit in
