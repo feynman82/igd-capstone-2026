@@ -15,6 +15,7 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `synthetic-data-case.md` | Why synthetic data, what it proves and what it does not | Siew with Desmond | W6 |
 | `imda-what-applies.md` | IMDA GenAI (2024) and MGF for Agentic AI (v1.5, May 2026) — extract, mapped to code | Siew | W1 |
 | `incident-and-breach-procedure.md` | IMDA GenAI incident reporting; PDPA Part 6A data breach notification | Siew with Christian | — |
+| `incidents.md` | The incident log (PDPA Accountability Obligation); never holds personal data | Siew | — |
 | `terms-of-use.md` | PDPA s 15 deemed consent — the contractual basis for one adult filing for another | Siew | — |
 
 ## The autonomy statement in one line

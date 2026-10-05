@@ -61,48 +61,69 @@ confirmed.
 
 ## 3. Is it a notifiable breach?
 
-**To confirm from the Act (PDPA 2012, Part 6A).** The structure below is for Siew to check
-against the text. The figures commonly cited for these rules are an assessment within 30 days
-of suspecting a breach, notification to the PDPC within 3 calendar days of assessing it as
-notifiable, and a breach being notifiable if it is likely to cause significant harm to an
-affected individual or involves 500 or more individuals. They are **unverified** here and must
-not be used until quoted from the Act.
+> **Source: Siew, 2026-10-05**, summarising *PDPA 2012, Part 6A* (Notification of Data
+> Breaches), https://sso.agc.gov.sg/Act/PDPA2012?ProvIds=P16A-. That page could not be opened
+> from the environment this was written in. The section numbers and the exact wording are to
+> be quoted when the chapter cites them.
+
+| Step | Rule | Where it sits in this procedure |
+|---|---|---|
+| **Assess** | When a data breach is suspected, carry out a **reasonable and expeditious assessment** of whether it is a **notifiable data breach**: one that causes or is likely to cause **significant harm** to individuals, or is of a **significant scale**. | Section 2, step 4 |
+| **Notify the PDPC** | Once the breach is assessed as notifiable, notify the Personal Data Protection Commission **within 3 calendar days**. | Section 2, step 5 |
+| **Data intermediary** | A data intermediary that processes data on behalf of another organisation, and has a breach, must notify that organisation **without undue delay**. | Applies only if a team member ever processes personal data for another organisation. The team never receives a household's data (`data-inventory.md` §3), so it is not a household's data intermediary. |
+
+*Not in this summary, so still to confirm from the Act:*
+- whether, and when, the **affected individuals** must also be notified;
+- the threshold that defines "significant scale".
+
+The earlier draft's "30 days to assess" and "500 or more individuals" were unverified, and are
+**removed**. Neither appears in the Act's rule as summarised above, which says "expeditious".
 
 A breach of **NRIC or passport numbers, dates of birth, salary, loan or health information**
-should be assumed serious until assessed. These are the categories the data inventory (D2, D4,
-D5, D8, D9) identifies as most sensitive.
+should be assumed to risk **significant harm** until assessed. These are the categories the
+data inventory (D2, D4, D5, D8, D9) identifies as most sensitive.
 
 ## 4. The incident log
 
-**Proposed:** `docs/governance/incidents.md`, one entry per incident, committed like every other
-governance file. **It never contains personal data.** Documents are named by their id and
-people by their role.
+> **Approved (Siew, 2026-10-05):** `docs/governance/incidents.md`.
 
-```
-### INC-<yyyy-mm-dd>-<n>: <one-line title>
-- Noticed:   <date and time>, by <role>, through <how>
-- Kind:      <one of section 1>
-- Data:      <categories, by inventory code, e.g. D2, D5>; <number of people affected>
-- Contained: <what was done, when>
-- Assessed:  breach yes/no; notifiable yes/no; why
-- Notified:  <PDPC / individuals / supervisors, and when>, or "not required, because ..."
-- Cause:     <root cause>
-- Fixed:     <commit, test or Set C item, ADR>
-- Closed:    <date>
-```
+The incident log is the evidence that the team meets the **Accountability Obligation**. The PDPC
+expects an organisation to be able to *show* its data controls (Siew, 2026-10-05). So
+**every** incident is logged, including ones assessed as minor or not notifiable. A logged
+non-notifiable incident is the proof that the team monitors and assesses its risks. **The log
+never contains personal data.** Documents are named by their id and people by their role.
+
+Each entry records:
+- the date, time and nature of the incident;
+- **the assessment process used** to decide whether it was notifiable;
+- the containment measures; and
+- the long-term remedial actions taken to prevent a recurrence.
+
+The template is in `incidents.md`.
 
 ## 5. Who is responsible on a household's own computer
 
-PARROT runs on the household's computer, and the System Developer and Deployer is the PARROT
-team (`terms-of-use.md`, Definitions). For incidents in **the team's own work** (the
-repository, the holdout, the demonstration machine) the team follows this procedure in full.
-For incidents on **a household's copy**, it is **for Siew to decide** whether the household or
-the team carries the duties in section 3. The team never receives a household's data
-(`data-inventory.md` §3), which bears on that.
+> **Siew, 2026-10-05:** no one carries PDPA duties for a household's own copy. The PDPA excludes
+> any individual acting in a personal or domestic capacity from the Data Protection Provisions
+> (Siew's source: PDPC, *Advisory Guidelines on Key Concepts in the PDPA*, 1 October 2021).
+
+So:
+- **A household's own copy:** this procedure is offered to the household as **good
+  practice**. It is not a statutory duty, and the team does not notify the PDPC for it.
+- **The team's own work:** the repository, the 40-document holdout, and the demonstration
+  machine. The team is an organisation holding personal data, so **this procedure applies in
+  full, including section 3**.
+
+**This conflicts with an earlier decision and must be reconciled.** See "Decisions for Siew",
+item 3.
 
 ## Decisions for Siew
 
 1. Approve the procedure, and the proposed "same day" times in section 2.
-2. Confirm the PDPA Part 6A steps and time limits from the Act (section 3).
-3. Decide section 5: who carries the PDPA duties for an incident on a household's own copy.
-4. Approve `docs/governance/incidents.md` as the incident log.
+2. ~~Confirm the PDPA Part 6A steps.~~ **Recorded 2026-10-05** (section 3). Still to confirm:
+   whether affected individuals must be notified, and the "significant scale" threshold.
+3. **Reconcile section 5 with `data-inventory.md` §1.** On 2026-10-01 Siew decided that "the
+   exclusion for individuals acting in a personal or domestic capacity is not relied on", so
+   PARROT is treated as within the PDPA, with deemed consent (s 15) as the lawful basis.
+   Section 5 now relies on that exclusion. Both cannot stand as written.
+4. ~~Approve the incident log.~~ **Approved 2026-10-05.**
