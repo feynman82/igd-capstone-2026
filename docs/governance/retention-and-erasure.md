@@ -39,8 +39,8 @@ exist.** This policy says what it must do, and the policy cannot be met until it
 | Household roster and the names each person goes by | S1, S2 | Kept until the person is erased, or the workspace is reset. | **Decided** (Siew, 2026-10-02) |
 | Telegram chat → person mapping | S3 | Kept until the person is erased, the chat is removed from `TELEGRAM_CHAT_IDS`, or the workspace is reset. | **Decided** (Siew, 2026-10-02) |
 | Advice consent (granted and withdrawn) | S4 | Kept for as long as any advice record that relies on it is kept. Without it, an advice record cannot show it was lawful. | **Decided** (Siew, 2026-10-02) |
-| Advice records | S5 | **Erased with the document and the person it was about.** An advice record is erased in full, within the same 72 hours (A4), when any document it relied on is erased or the person it was about is erased. No skeleton or audit copy is kept. | **Decided** (Siew, 2026-10-02; option (a)) |
-| Correction, ingest and alert traces | S6, S7 | Erased with the document they concern (correction traces carry the old and new value). Traces with no document are kept until reset. | **Decided** (Siew, 2026-10-02) |
+| Advice records | S5 | **Erased with the document and the person it was about.** An advice record is erased in full, within the same 72 hours (A4), when any document it relied on is erased or the person it was about is erased. No skeleton or audit copy is kept. *Exception: the incident hold (A6).* | **Decided** (Siew, 2026-10-02; option (a)) |
+| Correction, ingest and alert traces | S6, S7 | Erased with the document they concern (correction traces carry the old and new value). Traces with no document are kept until reset. *Exception: the incident hold (A6).* | **Decided** (Siew, 2026-10-02) |
 | The conversation | S8 | Not retained. It is held in process memory and lost when the API restarts (`MemorySaver`). **If the Postgres checkpointer is ever adopted, this rule must be decided again before it ships.** | Holds today |
 | Process log lines | S9 | Not retained by PARROT. No log file is written. | Holds today, `unverified` for every launcher |
 | Screen-lock verifier | S10 | Kept until the household changes or clears the passphrase. | **Decided** (Siew, 2026-10-02) |
@@ -138,6 +138,27 @@ true only if the User is also told what PARROT cannot reach.
 > git, or backups of this computer.
 > **Type RESET to confirm.**  **[Cancel]  [Reset]**
 
+### A6. Incident hold
+
+> **Decided (Siew, 2026-10-05).** This reconciles the erasure rules with the MGF for Agentic
+> AI's "ensure log immutability" (v1.5, p 44). See `imda-what-applies.md`, finding 5.
+
+1. **Evidence is kept only while an incident is open.** When an incident is recorded under
+   `incident-and-breach-procedure.md`, the records that are its evidence are **held**: the
+   traces, advice records and attribution rows that show what happened. They are not erased
+   while the incident is open.
+2. **Otherwise, erase as this policy says.** When the incident is closed, held records are
+   erased under A1, A4 and A5. Any erasure the User confirmed during the hold is completed then.
+   Records that are not evidence of an open incident are never held.
+3. **What a hold does not change.** A held document is still **withdrawn from use at once**
+   when the User confirms deletion (A4 point 4). Only its evidence is kept, and only for the
+   incident. The incident log never contains personal data, so it is not itself held data.
+
+**For Siew: one consequence.** The approved confirmation wording promises erasure "within 72
+hours (3 days)". If a User deletes a document whose evidence is held, that promise is broken
+for the held records. Either add a line to the wording for this rare case, or accept that the
+incident procedure explains it to the User when it happens.
+
 ---
 
 ## Part B. What the code does today
@@ -228,6 +249,9 @@ named statements) and rule 4 (migrations reviewed separately) apply.
    name git history (A2). Screens are Zee's work in `web/`.
 7. **No automatic deletion (A4, A5).** No scheduled job may delete a document, erase a person
    or reset. This is a rule for any future module, and worth a test.
+8. **Incident hold (A6).** A way to mark records as held for an open incident, so that
+   erasure skips them until the hold is released, and then completes. Held records need no new
+   copy: the hold only defers their erasure.
 
 ---
 

@@ -83,7 +83,7 @@ Each practice is marked **Meets**, **Partly** or **Gap**, and points at the file
 | Tool controls: strict input formats, least privilege, no write access to sensitive tables unless needed (p 34) | The model writes no SQL. Every query is hand-written and parameterised (AGENTS.md rule 1). Modules read typed rows and never write to `facts`. | **Meets** | AGENTS.md rule 1; `core/contracts.py` (`ModuleManifest`) |
 | **Before deploying, test agents** for task execution, policy compliance, robustness, repeatedly and across varied datasets (§2.3.2, p 38) | A Ragas harness over golden sets with targets, a register-first corpus with known ground truth, and `make check` on every change. Run 1: faithfulness 0.819 against a 0.90 target. **Policy compliance (refusals) is untested until Set C exists.** | **Partly** | `eval/`; `eval/results/2026-09-29-baseline-dense-only.md` |
 | **Continuously monitor and test** after deployment (§2.3.3, pp 42–44) | Each ingest, correction and alert writes a trace. There are no alert thresholds and no scheduled re-evaluation. | **Partly** | `db/migrations/0001_init.sql` (`traces`) |
-| **"Ensure log immutability"**: problematic trajectories "cannot be deleted" (p 44) | **This conflicts with the erasure policy.** Traces and advice records are erased with the document and the person (`retention-and-erasure.md` A1). See finding 5. | **Conflict** | — |
+| **"Ensure log immutability"**: problematic trajectories "cannot be deleted" (p 44) | **Resolved by an incident hold (Siew, 2026-10-05).** The evidence of an *open incident* is kept until the incident is closed. Otherwise it is erased as the retention policy says. | **Meets as policy**, for problematic records only | `retention-and-erasure.md` A6; `incident-and-breach-procedure.md` |
 | **Robust change management**: triggers for review, including "model updates" (p 45) | ADRs for every decision. Each fact carries the `pack_version` that extracted it. There is no defined trigger to re-run the evaluation when the model changes. | **Partly** | `docs/adr/`; `db/migrations/0001_init.sql` (`facts.pack_version`) |
 
 #### 4. Enable end-user responsibility (§2.4, pp 46–49)
@@ -144,12 +144,13 @@ government, and PARROT, as a deployer, has only a small part to play.
    testing-and-assurance, and the model card, must report as it is.
 4. **Incident reporting had nothing behind it.** A procedure is now drafted in
    `incident-and-breach-procedure.md`, awaiting Siew's approval.
-5. **Log immutability against erasure.** The Agentic framework recommends that problematic
-   agent trajectories "cannot be deleted" (p 44). The retention policy erases traces and advice
-   records with the document and person, within 72 hours (A1, A4). Both cannot hold for the same
-   record. One way through, for Siew to decide: keep an incident's evidence only while an
-   incident is open (`incident-and-breach-procedure.md`, containment), and otherwise erase as
-   the policy says.
+5. **Log immutability against erasure: decided (Siew, 2026-10-05).** The framework recommends
+   that problematic agent trajectories "cannot be deleted" (p 44). The retention policy erases
+   traces and advice records with the document and person. Siew's decision: **keep evidence
+   only while an incident is open, and erase as the policy says otherwise.** This is recorded
+   as `retention-and-erasure.md` A6. The "problematic trajectories" the framework means are
+   exactly an open incident's evidence, so the framework is met for them. Every other record
+   follows the erasure policy.
 6. **Three gaps the framework names, all small:**
    - no screen says plainly that answers are written by AI (p 47; Zee);
    - no contact point is given to users (p 47; Siew, in the terms of use);
@@ -163,4 +164,4 @@ government, and PARROT, as a deployer, has only a small part to play.
 1. **Agentic framework:** check the statuses above against your reading. **GenAI framework:**
    still to read, then confirm its dimension names and each "Applies?" judgement. *(The ninth
    dimension is decided: human oversight.)*
-2. Decide finding 5: log immutability against erasure.
+2. ~~Decide finding 5.~~ **Decided 2026-10-05:** an incident hold (`retention-and-erasure.md` A6).

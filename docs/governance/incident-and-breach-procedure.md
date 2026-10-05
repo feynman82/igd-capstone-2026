@@ -57,7 +57,7 @@ confirmed.
 | Wrong person's data | Unconfirm the alias that caused it (`DELETE_ALIAS`), so it scopes nothing until a person decides again. | `core/household.py` |
 | Device lost | Nothing on the device can be reached remotely. Assess what was on it from the data inventory. | `data-inventory.md` §2 |
 | Advice without consent | Stop the advice path for that pack until the cause is found. | `core/advice_consent.py` |
-| Any incident on the running system | Keep `traces` and `advice_records` as they are until the incident is recorded. They are the evidence. | `db/migrations/0001_init.sql` (`traces`) |
+| Any incident on the running system | **Place an incident hold** on the records that are the incident's evidence (`traces`, `advice_records`, attribution rows). They are not erased while the incident is open. **Release the hold when the incident is closed**, and the retention policy then applies. | `retention-and-erasure.md` A6; `db/migrations/0001_init.sql` (`traces`) |
 
 ## 3. Is it a notifiable breach?
 
