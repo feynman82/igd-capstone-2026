@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from eval.generate import choose, hand_written, main, on_file, pool
+from eval.generate import choose, documents, hand_written, main, on_file, pool, unclaimed
 from eval.phrasings import LANES, SPECS, lane_of
 from eval.sets_io import load_set, read_registers
 
@@ -181,7 +181,32 @@ def test_set_a_is_complete_gradeable_and_covers_every_lane() -> None:
             assert question.expected.key in SPECS[row["doc_type"]].asks
 
 
-def test_the_documents_on_file_are_a_subset_of_the_register() -> None:
-    """The register runs ahead of the batch. That is expected, and it is why `eval.run` skips a
-    question whose document is not in the vault rather than scoring it as a miss."""
-    assert on_file(ROOT) <= {row["doc_id"] for row in read_registers(ROOT)}
+def test_a_document_is_looked_for_everywhere_one_can_arrive(tmp_path: Path) -> None:
+    """A document reaches the vault through `inbox/` as often as through `corpus/batches/`, and
+    looking in only one of them reported "6 of 50 register rows have a document" on 5 October
+    while 42 sat in the other. `on_file` counts register rows, so it is filtered to ids the
+    register claims; `documents` is the unfiltered set and `unclaimed` is the remainder.
+    """
+    (tmp_path / "corpus" / "batches" / "batch1").mkdir(parents=True)
+    (tmp_path / "inbox").mkdir()
+    (tmp_path / "corpus" / "batches" / "batch1" / "b1-0001.pdf").write_bytes(b"%PDF")
+    (tmp_path / "inbox" / "b2-0004.pdf").write_bytes(b"%PDF")
+    (tmp_path / "inbox" / "marcus-nric-back.jpg").write_bytes(b"\xff\xd8")
+    (tmp_path / "inbox" / "README.md").write_text("not a document", encoding="utf-8")
+    (tmp_path / "corpus" / "batches" / ".DS_Store").write_bytes(b"")
+
+    rows = [{"doc_id": "b1-0001"}, {"doc_id": "b2-0004"}, {"doc_id": "b1-0099"}]
+    assert documents(tmp_path) == {"b1-0001", "b2-0004", "marcus-nric-back"}
+    assert on_file(tmp_path, rows) == {"b1-0001", "b2-0004"}  # b1-0099 has no document yet
+    assert unclaimed(tmp_path, rows) == {"marcus-nric-back"}
+    # Without the register it is every stem, which is what "is there a file called this" means.
+    assert on_file(tmp_path) == documents(tmp_path)
+
+
+def test_the_register_rows_with_a_document_are_a_subset_of_the_register() -> None:
+    """The register runs ahead of the documents. That is expected, and it is why `eval.run` skips
+    a question whose document is not in the vault rather than scoring it as a miss."""
+    rows = read_registers(ROOT)
+    assert on_file(ROOT, rows) <= {row["doc_id"] for row in rows}
+    # The real corpus has both kinds: rows awaiting a document, and documents no row claims.
+    assert on_file(ROOT, rows), "no register row has a document; the generator would say so"

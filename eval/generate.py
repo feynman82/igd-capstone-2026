@@ -67,12 +67,59 @@ class Generated:
         }
 
 
-def on_file(root: Path) -> set[str]:
-    """The register ids that have a document under `corpus/batches/`, by file stem."""
-    folder = root / "corpus" / "batches"
-    if not folder.is_dir():
-        return set()
-    return {p.stem for p in folder.rglob("*") if p.is_file() and not p.name.startswith(".")}
+# Where a document can be, before it is in the vault. `corpus/batches/` is where a mail-merged
+# batch lands; `inbox/` is the capture folder the watcher reads, and in practice it is where most
+# of this corpus lives — 42 documents against the batch folder's 6 on 5 October. Looking in only
+# one of them made `on_file` report "6 of 50 register rows have a document" while eight times that
+# many were sitting a folder away, which understates the corpus every time the generator runs.
+DOCUMENT_FOLDERS = (("corpus", "batches"), ("inbox",))
+SIDECAR_SUFFIXES = frozenset({".md", ".csv", ".json", ".txt", ".yaml", ".yml"})
+
+
+def documents(root: Path) -> set[str]:
+    """Every document file stem under the folders a document can arrive in.
+
+    Not all of them are register ids: a specimen captured under its own name — a photograph
+    called `marcus-nric-back.jpg` — is a document the vault can ingest and the register cannot
+    score, because `corpus/README.md` makes the file name the register id. `on_file` is the
+    register's view of this set and `unclaimed` is the remainder.
+    """
+    found: set[str] = set()
+    for parts in DOCUMENT_FOLDERS:
+        folder = root.joinpath(*parts)
+        if not folder.is_dir():
+            continue
+        found |= {
+            path.stem
+            for path in folder.rglob("*")
+            if path.is_file()
+            and not path.name.startswith(".")
+            and path.suffix.lower() not in SIDECAR_SUFFIXES
+        }
+    return found
+
+
+def on_file(root: Path, rows: Sequence[Row] | None = None) -> set[str]:
+    """The register ids that have a document on disk, by file stem.
+
+    `rows` is the register; without it every stem is returned, which is what a caller that only
+    wants "is there a file called this" means. With it, the answer is filtered to ids the
+    register actually claims, so a count of it is a count of register rows rather than of files.
+    """
+    found = documents(root)
+    if rows is None:
+        return found
+    return found & {(row.get("doc_id") or "").strip() for row in rows}
+
+
+def unclaimed(root: Path, rows: Sequence[Row]) -> set[str]:
+    """Documents on disk that no register row claims, and so cannot be scored either way.
+
+    Each one is a rename away from being ground truth; until then it is invisible to extraction
+    F1 and to every generated question. `eval.modules.unjoined` reports the same gap from the
+    vault's side, for documents that were ingested rather than merely present.
+    """
+    return documents(root) - {(row.get("doc_id") or "").strip() for row in rows}
 
 
 def hand_written(root: Path) -> set[str]:
@@ -214,7 +261,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error("--out writes one file, so it cannot be used with --all-lanes")
 
     rows = read_registers(ROOT)
-    present = on_file(ROOT)
+    present = on_file(ROOT, rows)
     every_question = pool(rows)
     already = hand_written(ROOT)
     written = waiting = 0
@@ -226,11 +273,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             print(f"             from a pool of {size}; {missing} await their document")
     if not args.dry_run:
         print(f"\n{written} questions written; {waiting} of them await a document.")
+        folders = ", ".join("/".join(parts) + "/" for parts in DOCUMENT_FOLDERS)
         print(
             f"{len(present)} of {len({r.get('doc_id') for r in rows})} register rows have a "
-            "document under corpus/batches/. `eval.run` skips a question whose document is not "
-            "in the vault and says how many it skipped."
+            f"document under {folders}. `eval.run` skips a question whose document is not in "
+            "the vault and says how many it skipped."
         )
+        loose = unclaimed(ROOT, rows)
+        if loose:
+            print(
+                f"{len(loose)} document(s) on disk are named for what they are rather than for a "
+                "register row, so nothing can score them: "
+                + ", ".join(sorted(loose)[:4])
+                + (", …" if len(loose) > 4 else "")
+            )
     return 0
 
 
