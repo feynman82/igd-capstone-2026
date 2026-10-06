@@ -1,0 +1,414 @@
+# The pack catalogue: the nine packs specified but not built (proposal §7.3, W3 task).
+#
+# Not a pack. Nothing loads this file at runtime: packs are discovered only as
+# packs/<id>/pack.yaml. It names each deferred pack against the same contract the two built
+# packs use, and tests/test_pack_catalogue.py checks it against core/contracts.py and
+# core/documents.yaml, so the catalogue cannot drift from what a pack can actually declare.
+#
+# Since ADR 0017 the core owns document types. So each entry:
+#   documents.core      names document types already in core/documents.yaml, reused as they are;
+#   documents.proposed  writes each new type as a DocumentTypeSpec, ready to be proposed for
+#                       core/documents.yaml when the pack is built. A type is proposed by one
+#                       entry only; another entry that needs it names it under `uses`.
+#   modules             the capability modules the pack would drive. reminder, alert and advice
+#                       are built; tracker is specified (core/documents.yaml registers.tracker).
+#   reminders           the date fields that would feed the Reminder module.
+#   grounding           a corpus id and the official publishers it would hold, or null with the
+#                       reason the pack answers only from the household's own documents.
+#
+# Field names here are proposals, not columns: nothing generates a register from this file.
+# They become Desmond's columns only when moved into core/documents.yaml. Renaming one now is free.
+
+packs:
+  - id: moe_syllabus_teacher
+    display_name: MOE Syllabus Teacher
+    serves: Sarah, 35, two children aged 5 and 8
+    need: Explains what a test paper or worksheet covers against the MOE syllabus, and when the school expects something back.
+    documents:
+      core: []
+      proposed:
+        test_paper:
+          description: A marked school test or examination paper returned to the student
+          subject_field: student
+          fields:
+            - {name: student, type: person, description: "Name of the student as printed on the paper header", example: Lucas Lim Kai En}
+            - {name: school, type: string, description: "Name of the school as printed on the paper header", example: Riverbend Primary School}
+            - {name: subject, type: enum, values: [English, Mathematics, Science, Mother Tongue], description: "Subject printed on the paper header", example: Mathematics}
+            - {name: paper_date, type: date, description: "Date the test was sat as printed on the paper", example: "2026-05-12"}
+            - {name: score, type: integer, required: false, description: "Total marks awarded as written on the front page", example: "78"}
+            - {name: total_marks, type: integer, required: false, description: "Total marks available as printed on the front page", example: "100"}
+        worksheet:
+          description: A school or tuition worksheet set as homework, with its topic and due date
+          subject_field: student
+          fields:
+            - {name: student, type: person, required: false, description: "Name of the student where the worksheet has a name line filled in", example: Lucas Lim Kai En}
+            - {name: subject, type: enum, values: [English, Mathematics, Science, Mother Tongue], description: "Subject printed at the top of the worksheet", example: Science}
+            - {name: topic, type: string, description: "Topic or unit title printed at the top of the worksheet", example: Cycles in plants and animals}
+            - {name: due_date, type: date, required: false, description: "Date the worksheet is due back where printed or written", example: "2026-05-19"}
+        report_card:
+          description: A school progress report or holistic development profile for one term or year
+          subject_field: student
+          fields:
+            - {name: student, type: person, description: "Name of the student as printed on the report", example: Lucas Lim Kai En}
+            - {name: school, type: string, description: "Name of the school from the report letterhead", example: Riverbend Primary School}
+            - {name: academic_year, type: integer, description: "Academic year the report covers", example: "2026"}
+            - {name: term, type: string, description: "Term or assessment the report covers as printed", example: Term 2}
+        school_circular:
+          description: A letter or notice from a school to parents about an event, payment or reply
+          subject_field: student
+          fields:
+            - {name: school, type: string, description: "Name of the school from the circular letterhead", example: Riverbend Primary School}
+            - {name: student, type: person, required: false, description: "Name of the student where the circular is addressed to one", example: Lucas Lim Kai En}
+            - {name: title, type: string, description: "Title or subject line of the circular as printed", example: Primary 3 Learning Journey to the Science Centre}
+            - {name: issued_date, type: date, description: "Date the circular was issued as printed", example: "2026-04-28"}
+            - {name: event_date, type: date, required: false, description: "Date of the event the circular is about, where printed", example: "2026-05-15"}
+            - {name: reply_by, type: date, required: false, description: "Date by which a reply or payment is due, where printed", example: "2026-05-05"}
+      uses: []
+    modules: [reminder, tracker]
+    reminders: [school_circular.event_date, school_circular.reply_by, worksheet.due_date]
+    grounding:
+      corpus: moe_syllabus_primary_secondary
+      publishers: [{name: Ministry of Education, kind: government}]
+      covers: MOE primary and secondary Mathematics and Science syllabuses
+    stance: Explains what the syllabus covers and what the paper asked; never grades the child or predicts results. Advice is withheld because every subject is a minor.
+
+  - id: vehicle_road_tax
+    display_name: Vehicle and Road Tax
+    serves: Daniel and Rachel, dual careers, whose motor cover lapsed unnoticed
+    need: Keeps road tax, inspection, COE and motor insurance dates in one place and warns before any of them lapses.
+    documents:
+      core: [policy_schedule, renewal_notice]
+      proposed:
+        road_tax_notice:
+          description: LTA road tax renewal notice or receipt for one vehicle
+          subject_field: owner
+          fields:
+            - {name: owner, type: person, description: "Name of the registered owner as printed on the notice", example: Daniel Tan Wei Ming}
+            - {name: vehicle_no, type: identifier, description: "Vehicle registration number exactly as printed", example: SKA1234B}
+            - {name: road_tax_expiry, type: date, description: "Date the current road tax expires as printed", example: "2027-01-31"}
+            - {name: road_tax_amount, type: money, description: "Road tax payable for the period as printed, in SGD", example: "742.00"}
+            - {name: inspection_due, type: date, required: false, description: "Date the vehicle is due for inspection where the notice prints one", example: "2027-01-15"}
+        vehicle_log_card:
+          description: LTA vehicle log card or registration record, including the COE expiry
+          subject_field: owner
+          fields:
+            - {name: owner, type: person, description: "Name of the registered owner as printed", example: Daniel Tan Wei Ming}
+            - {name: vehicle_no, type: identifier, description: "Vehicle registration number exactly as printed", example: SKA1234B}
+            - {name: make_model, type: string, description: "Make and model as printed on the log card", example: Toyota Corolla Altis 1.6}
+            - {name: registration_date, type: date, description: "Original registration date as printed", example: "2019-02-01"}
+            - {name: coe_expiry_date, type: date, description: "Date the Certificate of Entitlement expires as printed", example: "2029-01-31"}
+        servicing_invoice:
+          description: Workshop invoice for servicing or repairing a vehicle
+          subject_field: null
+          fields:
+            - {name: vehicle_no, type: identifier, description: "Vehicle registration number exactly as printed on the invoice", example: SKA1234B}
+            - {name: workshop, type: string, description: "Name of the workshop from the invoice letterhead", example: Eastgate Motor Works}
+            - {name: service_date, type: date, description: "Date the service was done as printed", example: "2026-07-03"}
+            - {name: mileage, type: integer, required: false, description: "Odometer reading recorded on the invoice", example: "68250"}
+            - {name: amount, type: money, description: "Total amount payable on the invoice, in SGD", example: "386.40"}
+            - {name: next_service_due, type: date, required: false, description: "Date of the next service where the invoice prints one", example: "2027-01-03"}
+      uses: []
+    modules: [reminder, alert]
+    reminders: [road_tax_notice.road_tax_expiry, road_tax_notice.inspection_due, vehicle_log_card.coe_expiry_date, servicing_invoice.next_service_due, policy_schedule.expiry_date]
+    grounding:
+      corpus: lta_vehicle_ownership
+      publishers: [{name: Land Transport Authority, kind: government}]
+      covers: LTA road tax renewal, vehicle inspection schedules and COE renewal rules
+    stance: Says when each vehicle obligation falls due and what LTA says about it; never renews, pays or books an inspection.
+
+  - id: caregiving_health
+    display_name: Caregiving and Health
+    serves: Marcus, 39, with ageing parents who need regular medical care
+    need: Finds a parent's admissions, prescriptions and appointments, and pairs an admission with the policy that covered it.
+    documents:
+      core: [policy_schedule, claim_letter]
+      proposed:
+        discharge_summary:
+          description: Hospital discharge summary or memo for one inpatient admission
+          subject_field: patient
+          fields:
+            - {name: patient, type: person, description: "Name of the patient as printed on the summary", example: Lim Ah Kow}
+            - {name: hospital, type: string, description: "Name of the hospital from the letterhead", example: Eastbay General Hospital}
+            - {name: admission_date, type: date, description: "Date of admission as printed", example: "2026-03-02"}
+            - {name: discharge_date, type: date, description: "Date of discharge as printed", example: "2026-03-06"}
+            - {name: follow_up_date, type: date, required: false, description: "Date of the follow-up appointment where the summary prints one", example: "2026-03-20"}
+        prescription:
+          description: A prescription or medication label issued by a clinic or hospital pharmacy
+          subject_field: patient
+          fields:
+            - {name: patient, type: person, description: "Name of the patient as printed", example: Lim Ah Kow}
+            - {name: issuer, type: string, description: "Clinic or pharmacy that issued the prescription, from the letterhead", example: Riverbend Family Clinic}
+            - {name: issued_date, type: date, description: "Date the prescription was issued as printed", example: "2026-03-06"}
+            - {name: medications, type: string, repeats: true, description: "Each medication name and strength as printed, one row per item", example: Amlodipine 5mg}
+            - {name: refill_by, type: date, required: false, description: "Date a refill or review is due where printed", example: "2026-06-06"}
+        lab_report:
+          description: A laboratory or investigation report for one sample collection
+          subject_field: patient
+          fields:
+            - {name: patient, type: person, description: "Name of the patient as printed", example: Lim Ah Kow}
+            - {name: laboratory, type: string, description: "Laboratory or hospital that issued the report, from the letterhead", example: Eastbay General Hospital Laboratory}
+            - {name: collected_date, type: date, description: "Date the sample was collected as printed", example: "2026-03-03"}
+            - {name: tests, type: string, repeats: true, description: "Name of each test reported, one row per test, never its result", example: HbA1c}
+        appointment_letter:
+          description: A letter, card or SMS printout confirming a medical appointment
+          subject_field: patient
+          fields:
+            - {name: patient, type: person, description: "Name of the patient as printed", example: Lim Ah Kow}
+            - {name: institution, type: string, description: "Hospital, polyclinic or clinic the appointment is at", example: Eastbay General Hospital}
+            - {name: department, type: string, required: false, description: "Department or specialist clinic where printed", example: Cardiology}
+            - {name: appointment_date, type: date, description: "Date of the appointment as printed", example: "2026-03-20"}
+      uses: []
+    modules: [reminder, tracker]
+    reminders: [appointment_letter.appointment_date, discharge_summary.follow_up_date, prescription.refill_by]
+    grounding:
+      corpus: null
+      reason: Answers only from the household's own documents; a health pack that cited general guidance would read as medical advice.
+    stance: Says where a record is and what it states; never interprets a result, suggests a diagnosis or comments on treatment. Health data is sensitive personal data, so Siew's data inventory covers this pack before any of it is built.
+
+  - id: children_school
+    display_name: Children and School
+    serves: Sarah, 35, who coordinates the household calendar
+    need: Turns school terms, circulars, consent forms and enrichment bills into dates the household hears about in time.
+    documents:
+      core: []
+      proposed:
+        term_calendar:
+          description: A school's printed calendar of terms, holidays and events for one academic year
+          subject_field: null
+          fields:
+            - {name: school, type: string, description: "Name of the school from the calendar header", example: Riverbend Primary School}
+            - {name: academic_year, type: integer, description: "Academic year the calendar covers", example: "2026"}
+            - {name: issued_date, type: date, required: false, description: "Date the calendar was issued where printed", example: "2026-01-02"}
+        enrichment_invoice:
+          description: Invoice from an enrichment, tuition or activity provider for a child's classes
+          subject_field: student
+          fields:
+            - {name: student, type: person, description: "Name of the child the classes are for, as printed", example: Chloe Lim Xin Yi}
+            - {name: provider, type: string, description: "Name of the provider from the invoice letterhead", example: Brightsteps Learning Centre}
+            - {name: invoice_no, type: identifier, description: "Invoice number exactly as printed", example: BLC-2026-0412}
+            - {name: period, type: month, description: "Month the fees cover, as YYYY-MM", example: "2026-05"}
+            - {name: amount, type: money, description: "Amount payable as printed, in SGD", example: "320.00"}
+            - {name: due_date, type: date, required: false, description: "Payment due date where printed", example: "2026-05-07"}
+        consent_form:
+          description: A school or activity consent form a parent signs and returns
+          subject_field: student
+          fields:
+            - {name: student, type: person, description: "Name of the child the form is for, as printed or written", example: Chloe Lim Xin Yi}
+            - {name: organiser, type: string, description: "School or organiser that issued the form", example: Riverbend Primary School}
+            - {name: activity, type: string, description: "Activity the consent is for, as printed", example: Primary 1 swimming programme}
+            - {name: activity_date, type: date, required: false, description: "Date of the activity where printed", example: "2026-07-10"}
+            - {name: return_by, type: date, description: "Date the signed form must be returned by, as printed", example: "2026-06-26"}
+      uses: [school_circular]
+    modules: [reminder, tracker]
+    reminders: [consent_form.return_by, consent_form.activity_date, enrichment_invoice.due_date, school_circular.event_date, school_circular.reply_by]
+    grounding:
+      corpus: moe_school_terms
+      publishers: [{name: Ministry of Education, kind: government}]
+      covers: MOE school terms and holidays for each year
+    stance: Reminds and totals; never signs, replies or pays on the household's behalf.
+    open: A term calendar prints many dated events; whether each becomes a fact row (a repeating field) or the MOE grounding supplies term dates is decided when the pack is built.
+
+  - id: home_maintenance
+    display_name: Home Maintenance
+    serves: Any household that owns appliances and hires contractors
+    need: Knows what is under warranty, what was done by whom, and when servicing or a contract falls due.
+    documents:
+      core: []
+      proposed:
+        warranty_card:
+          description: Warranty card or certificate for an appliance or fitting
+          subject_field: null
+          fields:
+            - {name: product, type: string, description: "Product or appliance as printed on the card", example: Inverter air-conditioner system 3}
+            - {name: brand, type: string, description: "Brand or manufacturer as printed", example: Coolwave}
+            - {name: serial_no, type: identifier, required: false, description: "Serial number exactly as printed", example: CW-3X-88213}
+            - {name: purchase_date, type: date, description: "Date of purchase or installation as printed", example: "2025-06-14"}
+            - {name: warranty_expiry, type: date, description: "Date the warranty ends as printed", example: "2028-06-13"}
+        contractor_invoice:
+          description: Invoice from a contractor or handyman for work done in the home
+          subject_field: null
+          fields:
+            - {name: contractor, type: string, description: "Name of the contractor from the invoice letterhead", example: Harbourline Renovation Pte Ltd}
+            - {name: invoice_no, type: identifier, description: "Invoice number exactly as printed", example: HR-INV-2026-118}
+            - {name: work_date, type: date, description: "Date the work was done as printed", example: "2026-02-21"}
+            - {name: work_description, type: string, description: "Description of the work as printed", example: Replace kitchen sink mixer tap}
+            - {name: amount, type: money, description: "Total amount payable as printed, in SGD", example: "185.00"}
+            - {name: workmanship_warranty_until, type: date, required: false, description: "Date any workmanship warranty ends, where printed", example: "2026-08-21"}
+        service_contract:
+          description: Annual servicing contract, for example for air-conditioners or a water heater
+          subject_field: null
+          fields:
+            - {name: provider, type: string, description: "Name of the service provider from the letterhead", example: Coolwave Servicing}
+            - {name: contract_no, type: identifier, description: "Contract number exactly as printed", example: CWS-26-0457}
+            - {name: start_date, type: date, description: "Date the contract starts as printed", example: "2026-01-01"}
+            - {name: end_date, type: date, description: "Date the contract ends as printed", example: "2026-12-31"}
+            - {name: annual_fee, type: money, description: "Fee for the contract period as printed, in SGD", example: "240.00"}
+            - {name: next_service_date, type: date, required: false, description: "Date of the next scheduled service where printed", example: "2026-04-15"}
+        appliance_manual:
+          description: User manual or quick guide for an appliance
+          subject_field: null
+          fields:
+            - {name: product, type: string, description: "Product or appliance the manual is for, as printed on the cover", example: Front-load washing machine}
+            - {name: brand, type: string, description: "Brand or manufacturer as printed on the cover", example: Coolwave}
+            - {name: model_no, type: identifier, description: "Model number exactly as printed", example: FL-8KG-20}
+      uses: []
+    modules: [reminder, alert]
+    reminders: [warranty_card.warranty_expiry, service_contract.end_date, service_contract.next_service_date, contractor_invoice.workmanship_warranty_until]
+    grounding:
+      corpus: null
+      reason: Warranty and contract terms are the household's own documents; there is no single official source to ground against.
+    stance: Says what is covered and until when from the household's own papers; never books a repair or contacts a contractor.
+
+  - id: legal_estate
+    display_name: Legal and Estate
+    serves: Marcus, and any household with a will, an LPA or a title deed to keep track of
+    need: Says that a document exists, where the original is kept and who holds it, at the moment someone needs to know.
+    documents:
+      core: []
+      proposed:
+        will:
+          description: A will, recorded only for its existence, date and where the original is kept
+          subject_field: testator
+          fields:
+            - {name: testator, type: person, description: "Name of the person whose will it is, as printed", example: Marcus Fernandez}
+            - {name: executed_date, type: date, description: "Date the will was signed as printed", example: "2024-11-08"}
+            - {name: solicitor, type: string, required: false, description: "Law firm that prepared or holds the will, where printed", example: Tan and Partners LLC}
+        lasting_power_of_attorney:
+          description: A Lasting Power of Attorney registration certificate from the Office of the Public Guardian
+          subject_field: donor
+          fields:
+            - {name: donor, type: person, description: "Name of the donor as printed on the certificate", example: Lim Ah Kow}
+            - {name: registered_date, type: date, description: "Date the LPA was registered as printed", example: "2025-02-17"}
+            - {name: certificate_no, type: identifier, description: "Registration or certificate number exactly as printed", example: LPA-2025-0045123}
+        title_deed:
+          description: A property title or certificate of title, recorded for its existence and owner only
+          subject_field: owner
+          fields:
+            - {name: owner, type: person, description: "Name of the first registered owner as printed", example: Marcus Fernandez}
+            - {name: title_no, type: identifier, description: "Title or lot reference exactly as printed", example: MK25-12345X}
+            - {name: issued_date, type: date, required: false, description: "Date the title was issued where printed", example: "2018-09-03"}
+      uses: [tenancy_agreement]
+    modules: [reminder]
+    reminders: [tenancy_agreement.end_date]
+    grounding:
+      corpus: null
+      reason: Location and key contacts only, never interpretation; a legal pack that grounded on law would be read as legal advice.
+    stance: Never states what a will, LPA or deed means or whether it is valid; answers only what it is, its date and where it is kept, and points to a lawyer for anything else.
+
+  - id: property_tenancy
+    display_name: Property and Tenancy
+    serves: Households that rent, let or pay off a home
+    need: Keeps lease dates, rent, mortgage balances and MCST notices together, and says when a lease or payment falls due.
+    documents:
+      core: [loan_agreement]
+      proposed:
+        tenancy_agreement:
+          description: A tenancy agreement or lease for a home, as tenant or landlord
+          subject_field: tenant
+          fields:
+            - {name: tenant, type: person, description: "Name of the first tenant as printed", example: Priya Nair}
+            - {name: landlord, type: string, description: "Name of the landlord or agent as printed", example: Harbour View Properties Pte Ltd}
+            - {name: start_date, type: date, description: "First day of the tenancy term as printed", example: "2026-02-01"}
+            - {name: end_date, type: date, description: "Last day of the tenancy term as printed", example: "2028-01-31"}
+            - {name: monthly_rent, type: money, description: "Monthly rent as printed, in SGD", example: "3800.00"}
+            - {name: security_deposit, type: money, required: false, description: "Security deposit as printed, in SGD", example: "7600.00"}
+        mortgage_statement:
+          description: A bank's periodic statement for a housing loan
+          subject_field: borrower
+          fields:
+            - {name: borrower, type: person, description: "Name of the borrower as printed; the first named where there are two", example: Marcus Fernandez}
+            - {name: lender, type: string, description: "Bank or lender from the statement letterhead", example: Crescent Bank}
+            - {name: statement_date, type: date, description: "Date of the statement as printed", example: "2026-06-30"}
+            - {name: outstanding_principal, type: money, description: "Outstanding loan balance as printed, in SGD", example: "412880.55"}
+            - {name: interest_rate, type: percent, required: false, description: "Interest rate applying for the period as printed", example: "2.85"}
+            - {name: monthly_instalment, type: money, description: "Monthly instalment as printed, in SGD", example: "2234.50"}
+        mcst_notice:
+          description: A notice from a condominium's management corporation (MCST) about a meeting, levy or works
+          subject_field: null
+          fields:
+            - {name: development, type: string, description: "Name of the development or MCST as printed", example: MCST 4512 The Riverbend}
+            - {name: notice_date, type: date, description: "Date of the notice as printed", example: "2026-05-02"}
+            - {name: notice_subject, type: string, description: "Subject of the notice as printed", example: Annual General Meeting}
+            - {name: meeting_date, type: date, required: false, description: "Date of the meeting where the notice is about one", example: "2026-05-30"}
+            - {name: amount_due, type: money, required: false, description: "Levy or charge payable where printed, in SGD", example: "1260.00"}
+            - {name: payment_due, type: date, required: false, description: "Date a levy or charge is due where printed", example: "2026-06-01"}
+        valuation_report:
+          description: A property valuation report from a licensed valuer or a bank
+          subject_field: null
+          fields:
+            - {name: valuer, type: string, description: "Valuer or bank that issued the report, from the letterhead", example: Pillar Valuers Pte Ltd}
+            - {name: valuation_date, type: date, description: "Date of valuation as printed", example: "2026-03-18"}
+            - {name: market_value, type: money, description: "Market value stated in the report, in SGD", example: "1450000.00"}
+      uses: []
+    modules: [reminder, tracker]
+    reminders: [tenancy_agreement.end_date, mcst_notice.meeting_date, mcst_notice.payment_due]
+    grounding:
+      corpus: null
+      reason: Answers only from the household's own documents; HDB, URA and IRAS property-tax guidance is a later corpus, not this one.
+    stance: States dates and amounts from the household's papers; never values a property, advises on refinancing or interprets a lease clause.
+
+  - id: groceries_supplies
+    display_name: Groceries and Supplies
+    serves: Jason, 40, whose business and household spending blur
+    need: Totals household spending from receipts and delivery orders, and flags when a month runs above the household's own usual.
+    documents:
+      core: []
+      proposed:
+        purchase_receipt:
+          description: A shop or supermarket receipt for household purchases
+          subject_field: null
+          fields:
+            - {name: merchant, type: string, description: "Name of the shop as printed at the top of the receipt", example: FairMart Supermarket Tampines}
+            - {name: purchase_date, type: date, description: "Date of purchase as printed", example: "2026-05-09"}
+            - {name: total, type: money, description: "Total paid as printed, in SGD", example: "86.35"}
+            - {name: receipt_no, type: identifier, required: false, description: "Receipt or transaction number exactly as printed", example: "0412-0098-2231"}
+        delivery_order:
+          description: An online grocery or supplies order confirmation or delivery note
+          subject_field: null
+          fields:
+            - {name: merchant, type: string, description: "Name of the merchant as printed", example: FairMart Online}
+            - {name: order_no, type: identifier, description: "Order number exactly as printed", example: FM-20260509-55812}
+            - {name: delivery_date, type: date, description: "Date of delivery as printed", example: "2026-05-10"}
+            - {name: total, type: money, description: "Total charged as printed, in SGD", example: "142.80"}
+      uses: []
+    modules: [tracker, alert]
+    reminders: []
+    grounding:
+      corpus: null
+      reason: Spending is the household's own; there is nothing official to ground a grocery total against.
+    stance: Totals and compares the household against itself; never recommends a shop, a brand or a budget.
+
+  - id: travel
+    display_name: Travel
+    serves: Daniel and Rachel, and any household that travels with children
+    need: Checks that passports and visas are valid for the trip on file, and reminds before departure.
+    documents:
+      core: [passport, policy_schedule]
+      proposed:
+        booking_confirmation:
+          description: A flight, hotel or package booking confirmation
+          subject_field: traveller
+          fields:
+            - {name: traveller, type: person, description: "Name of the lead traveller as printed", example: Rachel Ng Hui Shan}
+            - {name: provider, type: string, description: "Airline, hotel or agent that issued the confirmation", example: Lionsky Airways}
+            - {name: booking_ref, type: identifier, description: "Booking reference exactly as printed", example: QX7R2M}
+            - {name: destination, type: string, description: "Destination city or country as printed", example: Osaka}
+            - {name: departure_date, type: date, description: "Date of departure as printed", example: "2026-12-14"}
+            - {name: return_date, type: date, required: false, description: "Date of return where printed", example: "2026-12-22"}
+        visa:
+          description: A visa or electronic travel authorisation issued to one traveller
+          subject_field: holder
+          fields:
+            - {name: holder, type: person, description: "Name of the visa holder as printed", example: Rachel Ng Hui Shan}
+            - {name: country, type: string, description: "Country that issued the visa, as printed", example: Japan}
+            - {name: visa_no, type: identifier, description: "Visa or authorisation number exactly as printed", example: JP-EV-20261103-7781}
+            - {name: valid_from, type: date, description: "First day the visa is valid as printed", example: "2026-11-03"}
+            - {name: valid_until, type: date, description: "Last day the visa is valid as printed", example: "2027-02-02"}
+      uses: []
+    modules: [reminder]
+    reminders: [passport.date_of_expiry, visa.valid_until, booking_confirmation.departure_date]
+    grounding:
+      corpus: ica_passport
+      publishers: [{name: Immigration and Checkpoints Authority, kind: government}]
+      covers: ICA passport application, renewal and validity guidance
+    stance: Says whether a passport or visa on file is valid on the trip's dates by the rule ICA publishes; never books, applies or renews.
