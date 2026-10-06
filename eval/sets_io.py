@@ -23,6 +23,22 @@ Kind = Literal["fact", "passage", "abstain"]
 SET_FOLDERS: dict[SetId, str] = {"A": "answerable", "B": "hard_negatives", "C": "adversarial"}
 KINDS: tuple[Kind, ...] = ("fact", "passage", "abstain")
 
+# The `Answer` flags a run can come back with, in the precedence `eval.score.outcome_of` reports
+# them in. They are the vocabulary of the question files as well as of the code, which is why they
+# live here rather than in the scorer: `expected_outcome` in a Set C line names one of them, and a
+# typo there should be refused at load time rather than silently never matching.
+OUTCOMES: tuple[str, ...] = (
+    "refused",
+    "declined",
+    "consent_required",
+    "withheld",
+    "abstained",
+    "unanswered",
+    "answered",
+)
+# The five that count as holding back for Set C's first reading (eval/sets/adversarial/README.md).
+HELD_BACK: frozenset[str] = frozenset(OUTCOMES[:5])
+
 
 class MalformedQuestion(ValueError):
     """A line the harness cannot grade. The message names the file and the line."""
@@ -46,6 +62,14 @@ class Question:
     must_cite_doc: str = ""  # the register's doc_id: "b1-0001"
     must_cite_page: int = 0  # 0 only for an abstention, which has nothing correct to cite
     notes: str = ""
+
+    # Set C's four extra fields. They were written for a person to score by hand; the first
+    # three of them are mechanical, so they are loaded. `expected_refusal` stays a model answer
+    # for a human reading — no string match could judge whether a refusal gave the right reason.
+    category: str = ""  # act, injection, not_on_file, advice, out_of_date
+    expected_outcome: str = ""  # one of OUTCOMES
+    expected_refusal: str = ""  # what a good refusal says; for the write-up, not for scoring
+    must_not_say: tuple[str, ...] = ()  # appearing in the answer is a failure on its own
 
     @property
     def gradeable_citation(self) -> bool:
@@ -117,7 +141,40 @@ def _question(raw: Any, where: str) -> Question:
         must_cite_doc=doc,
         must_cite_page=page,
         notes=str(raw.get("notes") or ""),
+        category=str(raw.get("category") or ""),
+        expected_outcome=_outcome(raw.get("expected_outcome"), where),
+        expected_refusal=str(raw.get("expected_refusal") or ""),
+        must_not_say=_must_not_say(raw.get("must_not_say"), where),
     )
+
+
+def _outcome(raw: Any, where: str) -> str:
+    if raw is None or raw == "":
+        return ""
+    if not isinstance(raw, str) or raw not in OUTCOMES:
+        raise MalformedQuestion(
+            f"{where}: expected_outcome must be one of {', '.join(OUTCOMES)}, not {raw!r}"
+        )
+    return raw
+
+
+def _must_not_say(raw: Any, where: str) -> tuple[str, ...]:
+    """A list of strings, and never a bare string.
+
+    `"must_not_say": "8200"` is the mistake worth refusing at load time: it is valid JSON, it
+    iterates into four single characters, and every one of them appears in almost any answer —
+    so the item would fail for ever, for a reason nobody would look for in the question file.
+    """
+    if raw is None:
+        return ()
+    if isinstance(raw, str) or not isinstance(raw, list):
+        raise MalformedQuestion(f"{where}: must_not_say must be a list of strings, not {raw!r}")
+    out: list[str] = []
+    for item in raw:
+        if not isinstance(item, str) or not item.strip():
+            raise MalformedQuestion(f"{where}: must_not_say holds non-empty strings, not {item!r}")
+        out.append(item)
+    return tuple(out)
 
 
 def _expected(raw: Any, where: str) -> Expected:
