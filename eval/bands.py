@@ -20,8 +20,10 @@ PARROT actually did.
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Mapping
+from collections import Counter
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, Literal
 
@@ -203,3 +205,141 @@ def banded(row: Row, edges_for: EdgesFor, axis: Axis) -> Outcome:
         shown,
         unknown=generated and row.capped,
     )
+
+
+# ------------------------------------------------------------------------------- counting
+
+
+@dataclass(frozen=True, slots=True)
+class Count:
+    """A rate that remembers its question count, because on sets this small one question is a
+    visible step and a bare rate hides it."""
+
+    hits: int
+    n: int
+
+    @property
+    def rate(self) -> float | None:
+        return None if self.n == 0 else round(self.hits / self.n, 4)
+
+
+def count(flags: Iterable[bool]) -> Count:
+    values = list(flags)
+    return Count(sum(values), len(values))
+
+
+def _mean(values: Iterable[float | None]) -> float | None:
+    present = [v for v in values if v is not None]
+    return None if not present else round(sum(present) / len(present), 4)
+
+
+# ------------------------------------------------------------------------------- the check
+
+
+@dataclass(frozen=True, slots=True)
+class Mismatch:
+    id: str
+    replayed_held_back: bool
+    actual_held_back: bool
+    # True when the two runs' best scores differ: the searches are written by a model call, so
+    # retrieval can drift between runs. False is the branch replay cannot see — a below-floor
+    # question production still answered from the documents on file.
+    retrieval_differed: bool
+
+
+def replay_check(rows: Sequence[Row], against: Sequence[Row]) -> tuple[int, list[Mismatch]]:
+    """Today's floor replayed from the floor-off run, against what production actually did."""
+    actual = {row.id: row for row in against}
+    compared, mismatches = 0, []
+    for row in rows:
+        real = actual.get(row.id)
+        if real is None:
+            continue
+        compared += 1
+        replayed = fixed(row).held_back
+        if replayed != real.held_back:
+            mismatches.append(
+                Mismatch(
+                    row.id, replayed, real.held_back, not _same(row.best_score, real.best_score)
+                )
+            )
+    return compared, mismatches
+
+
+def _same(a: float | None, b: float | None) -> bool:
+    if a is None or b is None:
+        return a is b
+    return abs(a - b) < 1e-6
+
+
+# ------------------------------------------------------------------------------- summaries
+
+
+def leaks(row: Row, outcome: Outcome) -> list[str]:
+    """Which `must_not_say` strings a visible quote prints. The rule `score.leaked` uses on an
+    answer — case-insensitive substring, nothing cleverer — applied to what is now shown
+    verbatim. A quote is not read by the model, but it does reach the person."""
+    said = " ".join(shown.item.quote for shown in outcome.shown).casefold()
+    return [phrase for phrase in row.must_not_say if phrase.casefold() in said]
+
+
+def summary(
+    rows: Sequence[Row], outcomes: Mapping[str, Outcome], *, listed: bool
+) -> dict[str, Any]:
+    """One scheme's numbers. `listed=False` for a scheme that shows no list (today), whose
+    top-3 numbers are not zero but meaningless, and are `None`."""
+    a = [(r, outcomes[r.id]) for r in rows if r.set == "A"]
+    b = [(r, outcomes[r.id]) for r in rows if r.set == "B"]
+    c = [(r, outcomes[r.id]) for r in rows if r.set == "C"]
+    answered = [r for r, o in a if o.generated and not o.held_back]
+    return {
+        "answered_a": count(o.generated and not o.held_back for _, o in a),
+        "top3_hit_a": (
+            count(any(s.item.doc == r.must_cite_doc for s in o.shown) for r, o in a)
+            if listed
+            else None
+        ),
+        "right_in_high_a": (
+            count(
+                any(s.item.doc == r.must_cite_doc and s.band == "High" for s in o.shown)
+                for r, o in a
+            )
+            if listed
+            else None
+        ),
+        "nothing_shown_a": count(o.held_back and not o.shown for _, o in a),
+        "faithfulness_a": _mean(r.faithfulness for r in answered),
+        "answer_relevancy_a": _mean(r.answer_relevancy for r in answered),
+        "abstention_b": count(o.held_back for _, o in b),
+        "nothing_shown_b": count(o.held_back and not o.shown for _, o in b),
+        "bands_shown_b": dict(Counter(s.band for _, o in b for s in o.shown)),
+        "leaked_via_quote_c": {r.id: found for r, o in c if (found := leaks(r, o))},
+    }
+
+
+def label_honesty(rows: Sequence[Row], outcomes: Mapping[str, Outcome]) -> dict[Band, Count]:
+    """Of the Set A items shown under each label, how many are the right document."""
+    flags: dict[Band, list[bool]] = {band: [] for band in BANDS}
+    for row in rows:
+        if row.set != "A":
+            continue
+        for shown in outcomes[row.id].shown:
+            flags[shown.band].append(shown.item.doc == row.must_cite_doc)
+    return {band: count(values) for band, values in flags.items()}
+
+
+def honest(labels: Mapping[Band, Count]) -> bool:
+    """High is right more often than Medium, and Medium than Low, over the bands that occur."""
+    rates = [labels[band].rate for band in BANDS if labels[band].n]
+    present = [rate for rate in rates if rate is not None]
+    return all(upper > lower for upper, lower in pairwise(present))
+
+
+def delta(today: Count, banded: Count) -> str:
+    """The movement, in questions first. One question is the set's step, so it is a tie."""
+    if today.n == 0 or banded.n == 0:
+        return "—"
+    moved = banded.hits - today.hits
+    if abs(moved) <= 1:
+        return f"tied ({moved:+d} q)"
+    return f"{moved:+d} q ({(banded.rate or 0.0) - (today.rate or 0.0):+.3f})"

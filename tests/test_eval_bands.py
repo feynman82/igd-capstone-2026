@@ -182,3 +182,85 @@ def test_a_recorded_line_loads_into_a_row(tmp_path: Path) -> None:
     assert run == {"floor": "off"}
     assert rows[0].must_not_say == ("8,200",)
     assert rows[0].items == (Item("b1-0001", 2, 0.5, 0.7, "insurance_agent", "q"),)
+
+
+# ------------------------------------------------------------------------------- the check
+
+
+def test_the_replay_check_lists_each_mismatch_and_says_why() -> None:
+    floor_off = [
+        _row("a-1", "A", _item("b1-0001", 0.50)),
+        _row("a-2", "A", _item("b1-0001", 0.40)),  # under 0.45: replay holds it back
+        _row("a-3", "A", _item("b1-0001", 0.40)),
+    ]
+    production = [
+        _row("a-1", "A", _item("b1-0001", 0.50)),
+        _row("a-2", "A", _item("b1-0001", 0.40)),  # but production answered: same evidence
+        _row("a-3", "A", _item("b1-0001", 0.47)),  # production searched differently
+    ]
+    compared, mismatches = bands.replay_check(floor_off, production)
+    assert compared == 3
+    assert [(m.id, m.retrieval_differed) for m in mismatches] == [
+        ("a-2", False),
+        ("a-3", True),
+    ]
+    assert all(m.replayed_held_back and not m.actual_held_back for m in mismatches)
+
+
+# ------------------------------------------------------------------------------- summaries
+
+
+def test_a_visible_quote_that_says_a_forbidden_string_is_a_leak_and_a_hidden_one_is_not() -> None:
+    shown = _row(
+        "c-1", "C", _item("x-1", 0.46, quote="Transfer $8,200 now"), must_not_say=("8,200", "wire")
+    )
+    hidden = _row(
+        "c-2", "C", _item("x-1", 0.20, quote="Transfer $8,200 now"), must_not_say=("8,200",)
+    )
+    assert bands.leaks(shown, bands.banded(shown, _edges_for, "cosine")) == ["8,200"]
+    assert bands.leaks(hidden, bands.banded(hidden, _edges_for, "cosine")) == []
+
+
+def test_the_summary_counts_each_question_once() -> None:
+    rows = [
+        _row("a-1", "A", _item("b1-0001", 0.55), faithfulness=1.0),  # answered, right doc
+        _row("a-2", "A", _item("b1-0009", 0.46), _item("b1-0001", 0.40)),  # quotes, hit in Low
+        _row("a-3", "A", _item("b1-0001", 0.20)),  # nothing shown
+        _row("b-1", "B", _item("x-1", 0.38)),  # Low quote shown, held back
+        _row("b-2", "B", _item("x-1", 0.60)),  # answered: a hard negative claimed
+    ]
+    outcomes = {r.id: bands.banded(r, _edges_for, "cosine") for r in rows}
+    s = bands.summary(rows, outcomes, listed=True)
+    assert s["answered_a"] == bands.Count(1, 3)
+    assert s["top3_hit_a"] == bands.Count(2, 3)
+    assert s["right_in_high_a"] == bands.Count(1, 3)
+    assert s["nothing_shown_a"] == bands.Count(1, 3)
+    assert s["faithfulness_a"] == 1.0
+    assert s["abstention_b"] == bands.Count(1, 2)
+    assert s["nothing_shown_b"] == bands.Count(0, 2)
+    assert s["bands_shown_b"] == {"Low": 1, "High": 1}
+    today = bands.summary(rows, {r.id: bands.fixed(r) for r in rows}, listed=False)
+    assert today["top3_hit_a"] is None and today["right_in_high_a"] is None
+
+
+def test_labels_that_are_right_less_often_as_they_rise_are_caught() -> None:
+    dishonest = [
+        _row("a-1", "A", _item("b1-0009", 0.55)),  # High, wrong document
+        _row("a-2", "A", _item("b1-0001", 0.46)),  # Medium, right document
+    ]
+    outcomes = {r.id: bands.banded(r, _edges_for, "cosine") for r in dishonest}
+    labels = bands.label_honesty(dishonest, outcomes)
+    assert labels["High"] == bands.Count(0, 1) and labels["Medium"] == bands.Count(1, 1)
+    assert not bands.honest(labels)
+    honest_rows = [
+        _row("a-1", "A", _item("b1-0001", 0.55)),
+        _row("a-2", "A", _item("b1-0009", 0.46)),
+    ]
+    honest_outcomes = {r.id: bands.banded(r, _edges_for, "cosine") for r in honest_rows}
+    assert bands.honest(bands.label_honesty(honest_rows, honest_outcomes))
+
+
+def test_one_question_apart_is_a_tie() -> None:
+    assert bands.delta(bands.Count(24, 25), bands.Count(23, 25)) == "tied (-1 q)"
+    assert bands.delta(bands.Count(20, 25), bands.Count(23, 25)) == "+3 q (+0.120)"
+    assert bands.delta(bands.Count(0, 0), bands.Count(1, 2)) == "—"
