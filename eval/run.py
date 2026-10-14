@@ -455,12 +455,19 @@ def _table(metrics: dict[str, float | None], why: dict[str, str]) -> str:
 
 def _note(result: dict[str, Any]) -> str:
     run = result["run"]
+    floor = (
+        "Floor off: every question reached the model, so this is not a measurement of "
+        "production.\n\n"
+        if run.get("floor") == "off"
+        else ""
+    )
     return (
         f"# {run['label']} — {run['date'][:10]}\n\n"
         f"Sets {', '.join(run['sets'])}; retrieval {run['retriever']}, reranker "
         f"{run['reranker']}; generator `{run['generator']}`; judge "
         f"`{run['judge'] or 'none'}`; corpus `{run['corpus_manifest_sha']}`; "
         f"code `{run['git_sha']}`.\n\n"
+        f"{floor}"
         "What changed, what moved, and whether that was expected:\n\n"
         "_(one paragraph, written on the day)_\n"
     )

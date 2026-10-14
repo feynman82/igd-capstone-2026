@@ -29,6 +29,9 @@
 3. **The replay check takes a production run made after Task 2 (`--against`).** Older result files lack `held_back` and `best_score`. A mismatch is classed as "retrieval differed" when the two runs' `best_score` disagree — the understand step that writes the searches is a model call, so retrieval can drift between runs — or as "same evidence", the documents-on-file branch replay cannot see.
 4. **Section 6 (cosine against relevance) compares the High-edge sweep on each axis**, at the two reference points. Label honesty (section 4) is reported for the chosen axis only: the other axis has no edges to label with.
 5. **Regenerating a bands report with identical inputs rewrites it and keeps "How to read it"; different inputs under the same label are refused.** Replay is deterministic, so identical inputs give identical numbers — this is how "append-only" and "kept on regeneration" both hold.
+6. Each document's quote and page come from the reranker's first passage of that document, while its cosine and relevance are the document's best; an item can be labelled by a passage other than the one quoted.
+7. Items are listed band first, then by score within a band, so a label never rises down the list when packs' edges differ; the spec's "descending order of the axis score" holds within a band.
+8. Final-review fixes: mismatch causes in three classes; bands records its own git sha so the append-only guard holds across code changes; rows with no evidence keep their recorded outcome.
 
 ## File structure
 
@@ -2142,20 +2145,24 @@ Expected: writes `eval/results/<date>-production-for-replay.json`.
 Run: `uv run python -m eval.run --corpus all --floor-off --judge qwen2.5:7b-instruct --label floor-off`
 Expected: writes `eval/results/<date>-floor-off.json` with `run.floor: "off"`; note `run.core_floor_capped`.
 
-- [ ] **Step 4: A first look at the sweep**
+- [ ] **Step 4: Sanity-check the wiring**
+
+In the floor-off file, at least one non-core question with `best_score` < `floor_in_force` must have outcome "answered". If none does, `--floor-off` did not reach the graph; stop.
+
+- [ ] **Step 5: A first look at the sweep**
 
 Run: `uv run python -m eval.bands eval/results/<date>-floor-off.json --against eval/results/<date>-production-for-replay.json --high 0.45 --medium 0.42 --hard 0.35 --label first-look`
 Read: the replay check, the label table, both packs' sweeps, the axis comparison.
 
-- [ ] **Step 5: Choose edges per pack — a person's decision**
+- [ ] **Step 6: Choose edges per pack — a person's decision**
 
 Stop and show Yew Mun the sweep and the two marked points per pack. The edges are chosen by them, not by the agent. Then run `eval.bands` again with the chosen `--high/--medium/--hard` (per pack where they differ) and `--label chosen`.
 
-- [ ] **Step 6: Write "How to read it"**
+- [ ] **Step 7: Write "How to read it"**
 
 Yew Mun writes the paragraph under "## How to read it" in `eval/results/<date>-bands-chosen.md`: what moved against today, whether the labels are honest, the Set C quote leaks for Siew, and that the edges are fitted to the golden sets until the holdout confirms them.
 
-- [ ] **Step 7: Commit the results**
+- [ ] **Step 8: Commit the results**
 
 ```bash
 git add eval/results/*-production-for-replay.* eval/results/*-floor-off.* eval/results/*-bands-first-look.* eval/results/*-bands-chosen.*
@@ -2164,7 +2171,7 @@ git commit -m "eval: the first banded replay, against today's floor on the same 
 
 **PR 3 ends here.**
 
-- [ ] **Step 8 (after `yew-mun/holdout-isolated-vault` merges): confirm on the holdout, once**
+- [ ] **Step 9 (after `yew-mun/holdout-isolated-vault` merges): confirm on the holdout, once**
 
 Run the same two `eval.run` commands against the holdout vault (see `eval/holdout.py` for how it is selected), then `eval.bands` with the chosen edges and `--label chosen-holdout`. Report the holdout number beside the fitted one. This is the only time the holdout is scored with these edges.
 

@@ -133,9 +133,20 @@ def test_a_high_item_whose_answer_declined_shows_its_quotes() -> None:
 def test_fixed_is_todays_floor() -> None:
     above = _row("a-1", "A", _item("b1-0001", 0.46))
     below = _row("a-2", "A", _item("b1-0001", 0.44))
-    nothing = _row("a-3", "A")
+    nothing = _row("a-3", "A", held_back=True)  # no evidence: the recorded outcome
     assert [bands.fixed(r).held_back for r in (above, below, nothing)] == [False, True, True]
     assert bands.fixed(above).shown == ()
+
+
+def test_a_question_with_no_evidence_keeps_its_recorded_outcome_under_both_schemes() -> None:
+    answered = _row("a-1", "A", held_back=False)
+    declined = _row("a-2", "A", held_back=True)
+    for scheme in (bands.fixed, lambda r: bands.banded(r, _edges_for, "cosine")):
+        assert scheme(answered).generated and not scheme(answered).held_back
+        assert not scheme(declined).generated and scheme(declined).held_back
+        assert scheme(answered).shown == ()
+    assert bands.fixed(answered).kind == "answered"
+    assert bands.fixed(declined).kind == "abstained"
 
 
 def test_a_core_question_under_the_core_floor_is_unknown_if_a_scheme_would_answer_it() -> None:
@@ -194,19 +205,26 @@ def test_the_replay_check_lists_each_mismatch_and_says_why() -> None:
         _row("a-1", "A", _item("b1-0001", 0.50)),
         _row("a-2", "A", _item("b1-0001", 0.40)),  # under 0.45: replay holds it back
         _row("a-3", "A", _item("b1-0001", 0.40)),
+        _row("a-4", "A", _item("b1-0001", 0.50)),  # replay answers
     ]
     production = [
         _row("a-1", "A", _item("b1-0001", 0.50)),
         _row("a-2", "A", _item("b1-0001", 0.40)),  # but production answered: same evidence
         _row("a-3", "A", _item("b1-0001", 0.47)),  # production searched differently
+        _row("a-4", "A", _item("b1-0001", 0.50), held_back=True),  # same evidence, model declined
     ]
     compared, mismatches = bands.replay_check(floor_off, production)
-    assert compared == 3
-    assert [(m.id, m.retrieval_differed) for m in mismatches] == [
-        ("a-2", False),
-        ("a-3", True),
+    assert compared == 4
+    assert [(m.id, m.cause) for m in mismatches] == [
+        ("a-2", "documents on file"),
+        ("a-3", "retrieval differed"),
+        ("a-4", "generation differed"),
     ]
-    assert all(m.replayed_held_back and not m.actual_held_back for m in mismatches)
+    assert [(m.replayed_held_back, m.actual_held_back) for m in mismatches] == [
+        (True, False),
+        (True, False),
+        (False, True),
+    ]
 
 
 # ------------------------------------------------------------------------------- summaries
@@ -221,6 +239,19 @@ def test_a_visible_quote_that_says_a_forbidden_string_is_a_leak_and_a_hidden_one
     )
     assert bands.leaks(shown, bands.banded(shown, _edges_for, "cosine")) == ["8,200"]
     assert bands.leaks(hidden, bands.banded(hidden, _edges_for, "cosine")) == []
+
+
+def test_a_forbidden_string_cannot_match_across_two_visible_quotes() -> None:
+    row = _row(
+        "c-1",
+        "C",
+        _item("x-1", 0.60, quote="pay 8,2"),
+        _item("x-2", 0.59, quote="00 now"),
+        must_not_say=("8,200", "8,2 00"),
+    )
+    outcome = bands.banded(row, _edges_for, "cosine")
+    assert len(outcome.shown) == 2
+    assert bands.leaks(row, outcome) == []
 
 
 def test_the_summary_counts_each_question_once() -> None:
@@ -507,3 +538,84 @@ def test_labels_that_are_not_honest_are_said_so(tmp_path: Path) -> None:
     text, saved = _written(out)
     assert "The labels are not honest on this run" in text
     assert saved["honest"] is False
+
+
+def test_a_rerun_at_another_commit_is_refused_and_at_the_same_commit_is_not(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source, against = _files(tmp_path)
+    out = tmp_path / "results"
+    monkeypatch.setattr(bands, "_git_sha", lambda: "a")
+    assert bands.main(_args(source, against, out)) == 0
+    note = next(out.glob("*-bands-t.md"))
+    note.write_text(
+        note.read_text(encoding="utf-8").replace(bands.PLACEHOLDER, "Written by a person."),
+        encoding="utf-8",
+    )
+    assert "replayed by bands at `a`" in note.read_text(encoding="utf-8")
+    assert bands.main(_args(source, against, out)) == 0
+    assert "Written by a person." in note.read_text(encoding="utf-8")
+    monkeypatch.setattr(bands, "_git_sha", lambda: "b")
+    assert bands.main(_args(source, against, out)) == 2
+    assert _written(out)[1]["inputs"]["bands_git_sha"] == "a"
+
+
+def test_an_edge_for_a_pack_that_is_not_in_the_run_is_refused_by_name(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source, against = _files(tmp_path)
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out, high="0.50,iras_taxx=0.48")) == 2
+    assert "iras_taxx" in capsys.readouterr().out
+    assert bands.main(_args(source, against, out, high="0.50,insurance_agent=0.48")) == 0
+
+
+def test_runs_with_different_configuration_are_refused_by_key(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source, against = _files(tmp_path)
+    for path, keep in ((source, 6), (against, 3)):
+        _rewrite(path, lambda d, keep=keep: d["run"].update(keep=keep, candidates=20))
+    assert bands.main(_args(source, against, tmp_path / "results")) == 2
+    message = capsys.readouterr().out
+    assert "keep" in message and "candidates" not in message
+
+
+def test_a_key_missing_from_one_run_is_not_a_difference(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+    _rewrite(source, lambda d: d["run"].update(keep=6))
+    assert bands.main(_args(source, against, tmp_path / "results")) == 0
+
+
+def test_fewer_than_two_bands_is_said_not_called_honest(tmp_path: Path) -> None:
+    only_high = _row("a-1", "A", _item("b1-0001", 0.60))
+    source, against = _files(tmp_path)
+    for path in (source, against):
+        _rewrite(path, lambda d: d.update(per_question=[_line(only_high)]))
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    text = _written(out)[0]
+    assert "Fewer than two bands were shown, so there is nothing to compare." in text
+    assert "\nHonest.\n" not in text
+
+
+def test_the_sweep_prints_every_point_at_two_hundredths_and_leaves_out_no_evidence(
+    tmp_path: Path,
+) -> None:
+    source, against = _files(tmp_path)
+    nothing = _row("b-9", "B")
+    for path in (source, against):
+        _rewrite(path, lambda d: d["per_question"].append(_line(nothing)))
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    text, saved = _written(out)
+    sweep = text[text.index("## The sweep") : text.index("## Cosine against relevance")]
+    assert "### none" not in sweep and "none" not in saved["sweeps"]
+    assert "none" not in saved["references"]
+    cosine = sweep[sweep.index("### insurance_agent") :]
+    assert "| 0.31 |" not in cosine and "| 0.32 |" in cosine and "| 0.34 |" in cosine
+    # relevance is swept in steps of 0.02: every one is printed
+    by_relevance = tmp_path / "relevance"
+    assert bands.main([*_args(source, against, by_relevance), "--axis", "relevance"]) == 0
+    text = _written(by_relevance)[0]
+    assert "| 0.02 |" in text and "| 0.04 |" in text

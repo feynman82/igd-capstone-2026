@@ -6,9 +6,10 @@
 
 Today the grounding gate answers when the best passage's cosine clears the governing pack's
 `abstain_below`, and otherwise says nothing. The banded alternative shows up to three documents,
-each labelled High, Medium or Low, with a generated answer only when the first is High — and
-the floor beneath them stays. Both are replayed from one `eval.run --floor-off` file, because
-the floor decides only *whether* the model writes, never what it reads. Design:
+each labelled High, Medium or Low, with a generated answer only when the first is High. The
+hard edge is the floor beneath them: below it nothing is shown and PARROT abstains as today.
+Both are replayed from one `eval.run --floor-off` file, because the floor decides only
+*whether* the model writes, never what it reads. Design:
 `docs/superpowers/specs/2026-10-14-banded-abstention-eval-design.md`.
 
 Pure: no database, no model, no judge. `--high`, `--medium` and `--hard` take one number for
@@ -31,6 +32,7 @@ from typing import Any, Literal
 
 from eval.ranked import CORE_FLOOR
 from eval.report import PLACEHOLDER, _paragraph
+from eval.run import _git_sha
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -44,6 +46,8 @@ SWEEP: dict[Axis, tuple[float, float, float]] = {
     "cosine": (0.30, 0.60, 0.01),
     "relevance": (0.0, 1.0, 0.02),
 }
+# What the two runs must share to be compared: the corpus (checked on its own) and these.
+CONFIGURATION = ("retriever", "reranker", "rerank_floor", "candidates", "keep", "generator")
 REQUIRED = ("held_back", "best_score", "governing_pack", "floor_in_force", "ranked")
 
 
@@ -177,7 +181,10 @@ def _row(line: Mapping[str, Any]) -> Row:
 
 
 def fixed(row: Row) -> Outcome:
-    """Today: the model writes when the best passage clears the governing pack's floor."""
+    """Today: the model writes when the best passage clears the governing pack's floor. A row
+    with no evidence was never decided by the floor, so its recorded outcome stands."""
+    if row.best_score is None:
+        return Outcome(row.id, not row.held_back, row.held_back)
     generated = (
         row.best_score is not None
         and row.floor_in_force is not None
@@ -189,7 +196,10 @@ def fixed(row: Row) -> Outcome:
 def banded(row: Row, edges_for: EdgesFor, axis: Axis) -> Outcome:
     """The top 3: each document labelled by its own pack's edges, hidden below `hard`, listed
     High first and by score within a band — so a label never rises down the list — and
-    answered only when the first is High."""
+    answered only when the first is High. A row with no evidence was never decided by the floor,
+    so its recorded outcome stands."""
+    if row.best_score is None:
+        return Outcome(row.id, not row.held_back, row.held_back)
     labelled: list[tuple[int, float, Shown]] = []
     for item in row.items:
         score = item.score(axis)
@@ -244,10 +254,25 @@ class Mismatch:
     id: str
     replayed_held_back: bool
     actual_held_back: bool
-    # True when the two runs' best scores differ: the searches are written by a model call, so
-    # retrieval can drift between runs. False is the branch replay cannot see — a below-floor
-    # question production still answered from the documents on file.
-    retrieval_differed: bool
+    # Why the replay and production disagree, one of CAUSES.
+    cause: str
+
+
+RETRIEVAL_DIFFERED = "retrieval differed"
+DOCUMENTS_ON_FILE = "documents on file"
+GENERATION_DIFFERED = "generation differed"
+CAUSES = {
+    # The searches are written by a model call, so the two runs can retrieve differently.
+    RETRIEVAL_DIFFERED: "the runs' best scores differ (the searches are a model call)",
+    # Same evidence, replay held back, production answered: a below-floor question production
+    # still answered from the documents on file, a branch replay cannot see.
+    DOCUMENTS_ON_FILE: "same evidence; production answered from the documents on file, a "
+    "branch replay cannot see",
+    # Same evidence, replay answered, production held back: the model declined, the gate
+    # dropped every sentence, or routing differed between runs — all model calls.
+    GENERATION_DIFFERED: "same evidence; the model declined, the gate dropped every "
+    "sentence, or routing differed (all model calls)",
+}
 
 
 def replay_check(rows: Sequence[Row], against: Sequence[Row]) -> tuple[int, list[Mismatch]]:
@@ -261,11 +286,13 @@ def replay_check(rows: Sequence[Row], against: Sequence[Row]) -> tuple[int, list
         compared += 1
         replayed = fixed(row).held_back
         if replayed != real.held_back:
-            mismatches.append(
-                Mismatch(
-                    row.id, replayed, real.held_back, not _same(row.best_score, real.best_score)
-                )
-            )
+            if not _same(row.best_score, real.best_score):
+                cause = RETRIEVAL_DIFFERED
+            elif replayed:
+                cause = DOCUMENTS_ON_FILE
+            else:
+                cause = GENERATION_DIFFERED
+            mismatches.append(Mismatch(row.id, replayed, real.held_back, cause))
     return compared, mismatches
 
 
@@ -279,11 +306,14 @@ def _same(a: float | None, b: float | None) -> bool:
 
 
 def leaks(row: Row, outcome: Outcome) -> list[str]:
-    """Which `must_not_say` strings a visible quote prints. The rule `score.leaked` uses on an
-    answer — case-insensitive substring, nothing cleverer — applied to what is now shown
-    verbatim. A quote is not read by the model, but it does reach the person."""
-    said = " ".join(shown.item.quote for shown in outcome.shown).casefold()
-    return [phrase for phrase in row.must_not_say if phrase.casefold() in said]
+    """Which `must_not_say` strings a visible quote prints, each quote read on its own. The rule
+    `score.leaked` uses on an answer — case-insensitive substring, nothing cleverer — applied
+    to what is now shown verbatim. A quote is not read by the model, but it does reach the
+    person."""
+    quotes = [shown.item.quote.casefold() for shown in outcome.shown]
+    return [
+        phrase for phrase in row.must_not_say if any(phrase.casefold() in quote for quote in quotes)
+    ]
 
 
 def summary(
@@ -490,7 +520,8 @@ def compute(rows: Sequence[Row], against: Sequence[Row], edges_for: EdgesFor, ax
     groups = {"all": list(rows), **packs}
     today = {name: summary(g, today_out, listed=False) for name, g in groups.items()}
     band = {name: summary(g, banded_out, listed=True) for name, g in groups.items()}
-    sweeps = {name: sweep(g, axis) for name, g in packs.items()}
+    # No evidence, nothing to sweep: no edge changes what a question with no passage shows.
+    sweeps = {name: sweep(g, axis) for name, g in packs.items() if name != "none"}
     references = {
         name: reference_points(points, today[name]["answered_a"]) for name, points in sweeps.items()
     }
@@ -539,6 +570,14 @@ def _move(today: Any, banded_value: Any) -> str:
     return ""
 
 
+def _verdict(report: Report) -> str:
+    if not report.honest:
+        return "**Not honest.**"
+    if sum(1 for count_ in report.labels.values() if count_.n) < 2:
+        return "Fewer than two bands were shown, so there is nothing to compare."
+    return "Honest."
+
+
 def render(
     report: Report, run: Mapping[str, Any], inputs: Mapping[str, Any], paragraph: str
 ) -> str:
@@ -546,7 +585,8 @@ def render(
     out += [
         f"Replayed from `{inputs['source']}`, checked against `{inputs['against']}`. Generator "
         f"`{run.get('generator')}`; judge `{run.get('judge') or 'none'}`; corpus "
-        f"`{run.get('corpus_manifest_sha')}`; git `{run.get('git_sha')}`. Axis **{report.axis}**; "
+        f"`{run.get('corpus_manifest_sha')}`; git `{run.get('git_sha')}`, replayed by bands at "
+        f"`{inputs['bands_git_sha']}`. Axis **{report.axis}**; "
         f"edges high `{inputs['high']}`, medium `{inputs['medium']}`, hard `{inputs['hard']}`.",
         "",
     ]
@@ -579,12 +619,8 @@ def render(
         ]
     for m in report.mismatches:
         said = "held back" if m.actual_held_back else "answered"
-        why = (
-            "retrieval differed between the runs (the searches are a model call)"
-            if m.retrieval_differed
-            else "same evidence: the documents-on-file branch replay cannot see"
-        )
-        out.append(f"- `{m.id}`: production {said}, replay did not — {why}")
+        replay = "held back" if m.replayed_held_back else "answered"
+        out.append(f"- `{m.id}`: production {said}, replay {replay} — {m.cause}: {CAUSES[m.cause]}")
     out.append("")
 
     out += ["## Set C: leaked via quote", ""]
@@ -599,7 +635,7 @@ def render(
         "|---|---|",
         *(f"| {band} | {_cell(report.labels[band])} |" for band in BANDS),
         "",
-        "Honest." if report.honest else "**Not honest.**",
+        _verdict(report),
         "",
     ]
 
@@ -629,9 +665,10 @@ def render(
             "| B nothing shown |",
             "|---|---|---|---|---|---|",
         ]
+        thin = SWEEP[report.axis][2] < 0.02  # print every 0.02 of the axis, whatever its step
         for i, p in enumerate(points):
             marked = p.edge in (keeps, meets)
-            if i % 2 and not marked:
+            if thin and i % 2 and not marked:
                 continue
             edge = f"**{p.edge:.2f}**" if marked else f"{p.edge:.2f}"
             out.append(
@@ -761,10 +798,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise NotReplayable(f"{args.against} is a floor-off run; the check needs production")
         if run.get("corpus_manifest_sha") != against_run.get("corpus_manifest_sha"):
             raise NotReplayable("the two runs read different corpora, so they do not compare")
-        edges_for = edges_for_packs(
-            parse_edge(args.high), parse_edge(args.medium), parse_edge(args.hard)
+        differing = sorted(
+            key
+            for key in CONFIGURATION
+            if key in run and key in against_run and run[key] != against_run[key]
         )
-        for pack in sorted({item.pack for row in rows for item in row.items}):
+        if differing:
+            raise NotReplayable(
+                f"the two runs were configured differently ({', '.join(differing)}), so they "
+                "do not compare"
+            )
+        high, medium, hard = parse_edge(args.high), parse_edge(args.medium), parse_edge(args.hard)
+        present = {item.pack for row in rows for item in row.items}
+        for edge in (high, medium, hard):
+            for named in sorted(set(edge) - {"*"} - present):
+                raise NotReplayable(
+                    f"an edge names the pack {named!r}, which is not in {args.source}; "
+                    f"its packs are {', '.join(sorted(present)) or 'none'}"
+                )
+        edges_for = edges_for_packs(high, medium, hard)
+        for pack in sorted(present):
             edges_for(pack)
         if not any(item.score(axis) is not None for row in rows for item in row.items):
             raise NotReplayable(f"no {axis} score was recorded in {args.source}")
@@ -780,6 +833,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         "hard": args.hard,
         "axis": axis,
         "label": args.label,
+        # The code that replayed it: a rerun at another commit is not the same report, and
+        # results are append-only.
+        "bands_git_sha": _git_sha(),
     }
     stem = args.out / f"{date.today().isoformat()}-bands-{args.label}"
     target, note = Path(f"{stem}.json"), Path(f"{stem}.md")

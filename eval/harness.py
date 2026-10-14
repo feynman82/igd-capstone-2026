@@ -117,7 +117,11 @@ def floorless(packs: Sequence[InstalledPack]) -> tuple[InstalledPack, ...]:
 
     Copies: the installed packs are frozen and shared, and a floor-off run must not leave the
     process answering below the floor. Only `eval.run --floor-off` uses this — a result file
-    from it records `run.floor: "off"` and is not a measurement of production."""
+    from it records `run.floor: "off"` and is not a measurement of production.
+
+    With every floor at 0.0 the graph's "strictest pack" tiebreak — used only when there is no
+    evidence at all, and to sign a declined-advice answer — picks the first pack, so those
+    answers' disclaimers can differ from production; `held_back` and replay are unaffected."""
     return tuple(
         replace(
             pack,

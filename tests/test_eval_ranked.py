@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import pytest
 
+from core.contracts import Guardrails
 from core.graph.answer import Answer
 from core.graph.ports import Passage
 from core.packs import installed_packs
@@ -85,3 +86,7 @@ def test_capped_names_core_questions_under_the_core_floor_only() -> None:
         {"id": "d", "governing_pack": None, "best_score": None},
     ]
     assert ranked.capped(lines) == ["a"]
+
+
+def test_the_core_floor_is_the_contract_default() -> None:
+    assert Guardrails.model_fields["abstain_below"].default == ranked.CORE_FLOOR

@@ -478,3 +478,24 @@ def test_the_run_says_it_was_floor_off_and_which_questions_the_core_floor_still_
     ]
     assert _floor_fields(True, lines) == {"floor": "off", "core_floor_capped": ["a"]}
     assert _floor_fields(False, lines) == {"floor": "pack", "core_floor_capped": []}
+
+
+def test_the_note_beside_a_floor_off_run_says_so_in_one_line() -> None:
+    from eval.run import _note
+
+    run = {
+        "label": "x",
+        "date": "2026-10-14T00:00:00",
+        "sets": ["A"],
+        "retriever": "hybrid",
+        "reranker": "none",
+        "generator": "g",
+        "judge": None,
+        "corpus_manifest_sha": "abc",
+        "git_sha": "s",
+    }
+    off = _note({"run": {**run, "floor": "off"}})
+    on = _note({"run": {**run, "floor": "pack"}})
+    lines = [line for line in off.splitlines() if "floor" in line.lower()]
+    assert len(lines) == 1 and "not a measurement of production" in lines[0]
+    assert "floor" not in on.lower()

@@ -86,7 +86,7 @@ def record(trace: Trace, packs: Sequence[InstalledPack]) -> dict[str, Any]:
         "best_score": max((p.score for p in trace.contexts), default=None),
         "governing_pack": pack,
         "floor_in_force": floor,
-        "ranked": documents(trace.contexts, getattr(trace, "relevance", ()), packs),
+        "ranked": documents(trace.contexts, trace.relevance, packs),
     }
 
 
