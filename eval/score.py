@@ -81,16 +81,40 @@ def inventory_only(answer: Answer) -> bool:
     is a car policy" are the inventory describing itself. An answer made only of those has
     declined, whatever flag it carries.
     """
-    said = _sentences(answer)
-    return bool(said) and all(_written_by_code(sentence) for sentence in said)
+    return said_by_code_only(_sentences(answer))
 
 
 def declined_in_prose(answer: Answer) -> bool:
     """The model itself saying the documents do not carry it — "the chassis number is not listed
     in the provided passages" — rather than the gate stopping it. Counted apart from the
     inventory lines so the two can be argued about separately."""
-    said = [s for s in _sentences(answer) if not _written_by_code(s)]
-    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+    return declines_in_prose(_sentences(answer))
+
+
+# The same three readings over sentences rather than an `Answer`, so that `eval.headline` can
+# make them from a result file's recorded text. One copy of each rule, read two ways.
+
+
+def said_by_code_only(said: Sequence[str]) -> bool:
+    """`inventory_only`, over sentences."""
+    return bool(said) and all(_written_by_code(sentence) for sentence in said)
+
+
+def declines_in_prose(said: Sequence[str]) -> bool:
+    """`declined_in_prose`, over sentences."""
+    prose = [sentence for sentence in said if not _written_by_code(sentence)]
+    return bool(prose) and all(NOT_ON_FILE.search(sentence) for sentence in prose)
+
+
+def says_absent(said: Sequence[str]) -> bool:
+    """Some sentence says the thing asked about is not on file: the code's absence line ("None of
+    the 11 policies on file … is a car or motor policy") or the model saying so in prose. On a
+    question whose document is in the vault, that sentence is false whatever else is said."""
+    return any(
+        ABSENCE_LINE.match(sentence)
+        or (not _written_by_code(sentence) and NOT_ON_FILE.search(sentence))
+        for sentence in said
+    )
 
 
 def held_back(answer: Answer) -> bool:
@@ -132,7 +156,12 @@ def leaked(answer: Answer, forbidden: Sequence[str]) -> list[str]:
     Searched over the whole answer text rather than the gated claims: a forbidden string in a
     preamble the gate let through is still a leak, whatever part of the answer carries it.
     """
-    said = answer.text.casefold()
+    return leaked_in(answer.text, forbidden)
+
+
+def leaked_in(text: str, forbidden: Sequence[str]) -> list[str]:
+    """`leaked`, over the recorded text of an answer."""
+    said = text.casefold()
     return [phrase for phrase in forbidden if phrase.casefold() in said]
 
 
@@ -218,8 +247,10 @@ def mentions(text: str, value: str) -> bool:
 def _contains(haystack: str, needle: str) -> bool:
     if needle[0].isdigit() or needle[0] == "-":
         # A number must stand alone: "1284" is not found in "12840" or "1284.50", but a full
-        # stop after it is just the end of the sentence.
-        pattern = rf"(?<!\d)(?<!\d\.){re.escape(needle)}(?!\d|\.\d)"
+        # stop after it is just the end of the sentence. A thousands group belongs to the number
+        # it groups, so "500.00" is not found in "3,500.00" and "500" not in "500,000"; a comma
+        # followed by a space is punctuation, not grouping.
+        pattern = rf"(?<!\d)(?<!\d\.)(?<!\d,){re.escape(needle)}(?!\d|\.\d|,\d)"
         return re.search(pattern, haystack) is not None
     return needle in haystack
 
@@ -595,6 +626,8 @@ class Scored:
     cited: bool | None = None  # the must-cite page is cited
     shown: bool | None = None  # the must-cite page was among the passages read
     judged: dict[str, float | None] = field(default_factory=dict)
+    # The replay fields from `eval/ranked.py`, filled by `eval.run` from the production packs.
+    recorded: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         question, answer = self.trace.question, self.trace.answer
@@ -604,6 +637,8 @@ class Scored:
             "lane": question.lane,
             "kind": question.expected.kind,
             "outcome": self.outcome,
+            "held_back": held_back(answer),
+            "must_cite_doc": question.must_cite_doc,
             "says_not_on_file": says_not_on_file(answer),
             "correct": self.correct,
             "cited": self.cited,
@@ -615,6 +650,7 @@ class Scored:
             "latency_ms": self.trace.latency_ms,
             "answer": answer.text,
             **self.judged,
+            **self.recorded,
         }
         if question.set == "C":
             # The whole of Set C's first reading, per item, so a failure names itself: which
@@ -629,6 +665,7 @@ class Scored:
                 ),
                 "leaked": leaked(answer, question.must_not_say),
                 "contained": contained(answer, question),
+                "must_not_say": list(question.must_not_say),
             }
         return line
 

@@ -1,0 +1,100 @@
+{
+  "source": "2026-09-29-baseline-dense-only.json",
+  "headline": {
+    "held_back_from": "reconstructed",
+    "right_and_cited": {
+      "hits": 16,
+      "n": 19,
+      "rate": 0.8421
+    },
+    "not_right": [
+      "a-b01",
+      "a-b03",
+      "a-gen-b1-0001-product_name-printed"
+    ],
+    "unsupported_claims": {
+      "hits": 9,
+      "n": 44,
+      "rate": 0.2045
+    },
+    "claims": [
+      {
+        "id": "a-b01",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b03",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-gen-b1-0001-product_name-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "b-b06",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b08",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b16",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b20",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b24",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b25",
+        "reasons": [
+          "claimed"
+        ]
+      }
+    ],
+    "over_caution": {
+      "hits": 2,
+      "n": 19,
+      "rate": 0.1053
+    },
+    "over_cautious": [
+      "a-b01",
+      "a-b03"
+    ],
+    "retrieval_miss": [],
+    "casual": {
+      "hits": 0,
+      "n": 0,
+      "rate": null
+    },
+    "formal": {
+      "hits": 16,
+      "n": 19,
+      "rate": 0.8421
+    },
+    "casual_gap": null,
+    "extraction_f1": 0.898,
+    "not_in_sets": []
+  }
+}

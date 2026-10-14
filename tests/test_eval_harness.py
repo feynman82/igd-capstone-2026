@@ -16,7 +16,8 @@ import pytest
 
 from core.graph.answer import Answer, Citation, Cited
 from core.graph.ports import Passage
-from eval import harness, score
+from eval import harness, headline, score
+from eval.bands import Count
 from eval.run import _runtime_numbers, _table
 from eval.sets_io import MalformedQuestion, Question, load_set, subset
 
@@ -75,6 +76,33 @@ def test_a_question_filed_under_the_wrong_set_is_refused(tmp_path: Path) -> None
         load_set(root, "A")
 
 
+def test_phrasing_loads_and_defaults_to_formal(tmp_path: Path) -> None:
+    fact = (
+        '"expected": {"kind": "fact", "key": "excess", "value": "750.00"}, '
+        '"must_cite_doc": "b1-0001", "must_cite_page": 1'
+    )
+    root = _write(
+        tmp_path,
+        "answerable",
+        '{"id": "a-1", "set": "A", "lane": "x", "question": "q", ' + fact + "}",
+        '{"id": "a-2", "set": "A", "lane": "x", "question": "q", "phrasing": "casual", '
+        + fact
+        + "}",
+    )
+    assert [q.phrasing for q in load_set(root, "A")] == ["formal", "casual"]
+
+
+def test_an_unknown_phrasing_is_refused(tmp_path: Path) -> None:
+    root = _write(
+        tmp_path,
+        "hard_negatives",
+        '{"id": "b-1", "set": "B", "lane": "x", "question": "q", "phrasing": "singlish", '
+        '"expected": {"kind": "abstain"}}',
+    )
+    with pytest.raises(MalformedQuestion, match="phrasing must be casual or formal"):
+        load_set(root, "B")
+
+
 def test_subset_is_stable_and_spread_across_lanes() -> None:
     questions = [
         _question(f"q{i}", lane=("packs", "retrieval", "governance")[i % 3]) for i in range(30)
@@ -101,6 +129,12 @@ def test_subset_is_stable_and_spread_across_lanes() -> None:
         ("1284.00", "premium payable: 1284", True),
         ("1284.00", "sum insured 12840.00", False),
         ("40000.00", "insured for S$40,000", True),
+        # A thousands group is part of the number before it: a-b22 on 14 October was marked
+        # correct for "SGD 3,500.00" when the excess is 500.00.
+        ("500.00", "an annual deductible of SGD 3,500.00", False),
+        ("500.00", "covered up to 500,000", False),
+        ("500.00", "the excess is SGD 500.00, as printed", True),
+        ("500.00", "excess: 500, then 20% co-payment", True),
         ("Meridian Assurance", "Issued by MERIDIAN  Assurance Ltd.", True),
         ("Meridian Assurance", "Issued by Lionhead Life Assurance.", False),
     ],
@@ -379,11 +413,19 @@ def test_the_code_scored_metrics_come_out_as_arithmetic_says(tmp_path: Path) -> 
 
     # The per-question lines and the table are plain data: they survive JSON and a terminal.
     lines = [s.as_dict() for s in scored]
+    head = headline.compute(
+        lines, {q.id: q for q in questions}, extraction_f1=metrics["extraction_f1"], rebuild=False
+    )
+    assert head.held_back_from == "recorded"
+    assert head.right_and_cited == Count(1, 3)  # a-2 cites the wrong page, a-3 held back
+    assert [c.id for c in head.claims] == ["b-2"]  # answered a hard negative
+    json.loads(json.dumps(headline.as_json(head)))
     json.loads(json.dumps(lines))
     assert lines[0]["contexts"] == ["document:1", "document:2"]
     assert lines[0]["citations"] == ["b1-0001.pdf, page 1"]
     printed = _table(metrics, why)
-    assert "abstention_rate" in printed and "✗" in printed and "✓" in printed
+    assert "abstention_rate" in printed and "ref >= 0.95" in printed
+    assert "✓" not in printed and "✗" not in printed  # reference lines, not lines to clear
 
 
 def test_runtime_numbers_are_read_from_the_benchmark_file_not_typed() -> None:
@@ -405,3 +447,97 @@ def test_reference_for_a_fact_question_states_the_value_in_its_printed_forms() -
         )
         == "page two"
     )
+
+
+# ------------------------------------------------------------------------------- floor-off
+
+
+def test_floorless_packs_reach_the_model_and_the_installed_ones_are_untouched() -> None:
+    from core.packs import installed_packs
+
+    packs = installed_packs()
+    before = {p.id: p.manifest.guardrails.abstain_below for p in packs}
+    copies = harness.floorless(packs)
+    assert [p.id for p in copies] == [p.id for p in packs]
+    assert all(p.manifest.guardrails.abstain_below == 0.0 for p in copies)
+    assert {p.id: p.manifest.guardrails.abstain_below for p in packs} == before
+    assert all(b > 0 for b in before.values())
+
+
+def test_the_recorder_keeps_the_rerankers_relevance_for_what_it_kept() -> None:
+    questions = [_question("a-1", text="when?"), _question("a-2", text="premium?")]
+    passages = {
+        "when?": [_passage(1, "b1-0001", 1), _passage(2, "b1-0002", 1)],
+        "premium?": [_passage(3, "b1-0001", 1)],
+    }
+    answers = {"when?": _answered("…", "b1-0001", 1), "premium?": _answered("…", "b1-0001", 1)}
+
+    def relevance_of(question: str, kept: list[Passage]) -> list[float]:
+        return [0.9 - 0.1 * i for i in range(len(kept))]
+
+    recorder = harness.Recorder(
+        harness.RecordingRetriever(FakeRetriever(passages)),
+        harness.RecordingReranker(KeepAll(), relevance_of=relevance_of),
+    )
+    traces = harness.trace_all(FakeGraph(recorder, answers), recorder, questions)
+    assert [t.relevance for t in traces] == [
+        pytest.approx((0.9, 0.8)),
+        pytest.approx((0.9,)),
+    ]
+    assert recorder.reranker.relevance == []  # the slate is clean for the next question
+
+
+def test_a_line_carries_what_replay_reads() -> None:
+    from core.packs import installed_packs
+    from eval import ranked
+
+    question = _question("a-1", text="when?")
+    trace = harness.Trace(
+        question,
+        _answered("It expires on 11 April 2027.", "b1-0001", 1),
+        (_passage(1, "b1-0001", 1),),
+        1,
+        1,
+        (0.9,),
+    )
+    item = score.grade([trace])[0]
+    item.recorded = ranked.record(trace, installed_packs())
+    line = item.as_dict()
+    assert line["held_back"] is False
+    assert line["must_cite_doc"] == "b1-0001"
+    assert line["best_score"] == 0.5
+    assert line["ranked"][0]["doc"] == "b1-0001"
+    assert line["ranked"][0]["relevance"] == 0.9
+    json.loads(json.dumps(line))
+
+
+def test_the_run_says_it_was_floor_off_and_which_questions_the_core_floor_still_held() -> None:
+    from eval.run import _floor_fields
+
+    lines = [
+        {"id": "a", "governing_pack": "core", "best_score": 0.40},
+        {"id": "b", "governing_pack": "insurance_agent", "best_score": 0.40},
+    ]
+    assert _floor_fields(True, lines) == {"floor": "off", "core_floor_capped": ["a"]}
+    assert _floor_fields(False, lines) == {"floor": "pack", "core_floor_capped": []}
+
+
+def test_the_note_beside_a_floor_off_run_says_so_in_one_line() -> None:
+    from eval.run import _note
+
+    run = {
+        "label": "x",
+        "date": "2026-10-14T00:00:00",
+        "sets": ["A"],
+        "retriever": "hybrid",
+        "reranker": "none",
+        "generator": "g",
+        "judge": None,
+        "corpus_manifest_sha": "abc",
+        "git_sha": "s",
+    }
+    off = _note({"run": {**run, "floor": "off"}})
+    on = _note({"run": {**run, "floor": "pack"}})
+    lines = [line for line in off.splitlines() if "floor" in line.lower()]
+    assert len(lines) == 1 and "not a measurement of production" in lines[0]
+    assert "floor" not in on.lower()

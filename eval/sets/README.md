@@ -14,6 +14,11 @@ that row's `field_pages` column — which names the page each value is printed o
 page 1 for any field it does not name. That is what makes the set gradeable without a human
 in the loop.
 
+A question may carry an optional `phrasing` field, `"casual"` or `"formal"` (default
+`formal`). Mark a question `casual` when it is worded the way a person types it ("my car
+insurance expire when ah?"); the headline's casual-phrasing gap compares "right and cited" on
+the casual questions with the rest.
+
 A question in `hard_negatives/` or `adversarial/` cites neither. There is nothing correct for
 it to cite, and inventing a document for it to have abstained *about* would make the set
 ungradeable in the one direction that matters.

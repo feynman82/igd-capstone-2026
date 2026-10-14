@@ -1,0 +1,164 @@
+{
+  "source": "2026-09-30-run2-hybrid-plus-reranker.json",
+  "headline": {
+    "held_back_from": "reconstructed",
+    "right_and_cited": {
+      "hits": 31,
+      "n": 39,
+      "rate": 0.7949
+    },
+    "not_right": [
+      "a-gen-b2-0010-principal-printed",
+      "a-gen-b2-0011-principal-printed",
+      "a-gen-b2-0012-date_of_birth-spoken",
+      "a-gen-b2-0013-date_of_birth-spoken",
+      "a-b01",
+      "a-b03",
+      "a-gen-b1-0001-product_name-printed",
+      "a-gen-b1-0031-premium_payable-spoken"
+    ],
+    "unsupported_claims": {
+      "hits": 19,
+      "n": 64,
+      "rate": 0.2969
+    },
+    "claims": [
+      {
+        "id": "a-gen-b2-0010-principal-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0011-principal-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0012-date_of_birth-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0013-date_of_birth-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-b01",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b03",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-gen-b1-0001-product_name-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "b-b04",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b05",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b06",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b08",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b13",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b14",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b16",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b19",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b20",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b21",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b24",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b25",
+        "reasons": [
+          "claimed"
+        ]
+      }
+    ],
+    "over_caution": {
+      "hits": 1,
+      "n": 39,
+      "rate": 0.0256
+    },
+    "over_cautious": [
+      "a-gen-b1-0031-premium_payable-spoken"
+    ],
+    "retrieval_miss": [],
+    "casual": {
+      "hits": 0,
+      "n": 0,
+      "rate": null
+    },
+    "formal": {
+      "hits": 31,
+      "n": 39,
+      "rate": 0.7949
+    },
+    "casual_gap": null,
+    "extraction_f1": 0.9028,
+    "not_in_sets": []
+  }
+}

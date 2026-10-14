@@ -25,7 +25,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -36,8 +36,9 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parents[1]
 NOISY = ("httpx", "docling", "RapidOCR", "huggingface_hub", "filelock", "openai", "instructor")
 
-# The targets in eval/README.md, repeated here only so the terminal can show a number next to
-# the bar it has to clear. The README is the agreed list; this is a courtesy.
+# The reference lines in eval/README.md, repeated here only so the terminal can show a number
+# beside the line the proposal drew for it. They explain a headline number; none is a line to
+# clear, so the terminal prints them as text and marks nothing passed or failed.
 TARGETS: dict[str, tuple[str, float] | None] = {
     "context_recall": (">=", 0.85),
     "context_precision": (">=", 0.70),
@@ -117,6 +118,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=None,
         help="relevance a passage must reach to be read (default: the calibrated one, ADR 0019)",
     )
+    parser.add_argument(
+        "--floor-off",
+        action="store_true",
+        help="answer below every pack's floor, for eval.bands to replay (not a production run)",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -130,7 +136,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import ModelUnavailable, Ollama
     from core.runtime.settings import ConfigurationError, Settings
-    from eval import harness, score
+    from eval import harness, headline, score
     from eval import modules as eval_modules
     from eval.sets_io import MalformedQuestion, load_set, read_registers, subset
 
@@ -158,7 +164,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.no_judge
         else (args.judge or os.environ.get("PARROT_JUDGE_MODEL") or settings.generation_model)
     )
-    label = args.label or ("judged" if judge_model else "code-scored")
+    label = args.label or (
+        "floor-off" if args.floor_off else "judged" if judge_model else "code-scored"
+    )
     target = args.out / f"{date.today().isoformat()}-{label}.json"
     if target.exists():
         print(f"{target} already exists and results are append-only. Choose another --label.")
@@ -170,6 +178,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         + (f" (floor {args.rerank_floor or RELEVANCE_FLOOR})" if args.reranker != "none" else "")
     )
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
+    if args.floor_off:
+        print("floor off: every question reaches the model; replay it with eval.bands")
 
     try:
         with connect(settings) as conn:
@@ -191,9 +201,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 retriever=args.retriever,
                 reranker=args.reranker,
                 rerank_floor=args.rerank_floor,
+                floor_off=args.floor_off,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
+            from core.registry import enabled_packs
+            from eval import ranked
+
+            production = enabled_packs(conn)
+            for item in scored:
+                item.recorded = ranked.record(item.trace, production)
             references = {
                 q.id: score.reference_for(q, _page_text(conn, q.must_cite_doc, q.must_cite_page))
                 for q in questions
@@ -228,6 +245,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         judged=bool(judge_model),
         modules=module_metrics,
     )
+    per_question = [item.as_dict() for item in scored]
+    head = headline.compute(
+        per_question,
+        {q.id: q for q in questions},
+        extraction_f1=metrics.get("extraction_f1"),
+        rebuild=False,
+        indexed=indexed,
+    )
     result = {
         "run": {
             "date": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -250,19 +275,28 @@ def main(argv: Sequence[str] | None = None) -> int:
             "modules_as_of": None if module_metrics is None else module_metrics.as_of.isoformat(),
             "candidates": args.candidates,
             "keep": args.keep,
+            **_floor_fields(args.floor_off, per_question),
             "runtime_numbers_from": runtime_source,
             "skipped_no_document": waiting,
         },
+        "headline": headline.as_json(head),
         "metrics": metrics,
         "not_measured": why,
         "also": also,
-        "per_question": [item.as_dict() for item in scored],
+        "per_question": per_question,
     }
     args.out.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     note = target.with_suffix(".md")
     if not note.exists():
         note.write_text(_note(result), encoding="utf-8")
+    print()
+    previous = headline.previous_run(
+        args.out, before=target, corpus=result["run"]["corpus_manifest_sha"]
+    )
+    print(headline.table(head, previous))
+    if previous is None:
+        print("(no earlier run on this corpus to compare with)")
     print()
     print(_table(metrics, why))
     print(f"\nwrote {target}")
@@ -306,6 +340,17 @@ def _progress(trace: Any) -> None:
     from eval.score import outcome_of
 
     print(f"  {trace.question.id:<8} {outcome_of(trace.answer):<16} {trace.latency_ms:>6} ms")
+
+
+def _floor_fields(floor_off: bool, lines: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Whether the packs' floors were applied, and — when they were not — which questions the
+    core's own floor still held back, because a pack copy cannot lower it."""
+    from eval.ranked import capped
+
+    return {
+        "floor": "off" if floor_off else "pack",
+        "core_floor_capped": capped(lines) if floor_off else [],
+    }
 
 
 def _partition(
@@ -409,29 +454,33 @@ def _corpus_sha(root: Path) -> str:
 
 
 def _table(metrics: dict[str, float | None], why: dict[str, str]) -> str:
-    lines = [f"{'metric':<22} {'value':>8}  target"]
+    """The nine diagnostics, each beside its reference line. Nothing here is passed or failed."""
+    lines = [f"{'diagnostic':<22} {'value':>8}  reference"]
     for key, value in metrics.items():
         target = TARGETS.get(key)
-        bar = f"{target[0]} {target[1]:.2f}" if target else "measured"
+        bar = f"ref {target[0]} {target[1]:.2f}" if target else "measured"
         if value is None:
             lines.append(f"{key:<22} {'—':>8}  {bar}   ({why.get(key, '')})")
         else:
-            met = ""
-            if target:
-                ok = value >= target[1] if target[0] == ">=" else value <= target[1]
-                met = "  ✓" if ok else "  ✗"
-            lines.append(f"{key:<22} {value:>8.4g}  {bar}{met}")
+            lines.append(f"{key:<22} {value:>8.4g}  {bar}")
     return "\n".join(lines)
 
 
 def _note(result: dict[str, Any]) -> str:
     run = result["run"]
+    floor = (
+        "Floor off: every question reached the model, so this is not a measurement of "
+        "production.\n\n"
+        if run.get("floor") == "off"
+        else ""
+    )
     return (
         f"# {run['label']} — {run['date'][:10]}\n\n"
         f"Sets {', '.join(run['sets'])}; retrieval {run['retriever']}, reranker "
         f"{run['reranker']}; generator `{run['generator']}`; judge "
         f"`{run['judge'] or 'none'}`; corpus `{run['corpus_manifest_sha']}`; "
         f"code `{run['git_sha']}`.\n\n"
+        f"{floor}"
         "What changed, what moved, and whether that was expected:\n\n"
         "_(one paragraph, written on the day)_\n"
     )

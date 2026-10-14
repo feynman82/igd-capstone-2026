@@ -1,0 +1,9 @@
+# floor-off-colloquial — 2026-10-14
+
+Sets A, B, C; retrieval hybrid, reranker cross-encoder; generator `hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M`; judge `qwen2.5:7b-instruct`; corpus `f5964ce1c1ae5cf2`; code `b53f7a5`.
+
+Floor off: every question reached the model, so this is not a measurement of production.
+
+What changed, what moved, and whether that was expected:
+
+_(one paragraph, written on the day)_
