@@ -462,6 +462,7 @@ def edges_for_packs(
 class Report:
     axis: Axis
     compared: int
+    replayed: int
     mismatches: list[Mismatch]
     today: dict[str, dict[str, Any]]  # "all" and each governing pack
     banded: dict[str, dict[str, Any]]
@@ -474,7 +475,7 @@ class Report:
 
     @property
     def trustworthy(self) -> bool:
-        return len(self.mismatches) <= 1  # one question is the step
+        return self.compared > 0 and len(self.mismatches) <= 1  # one question is the step
 
     @property
     def honest(self) -> bool:
@@ -496,6 +497,7 @@ def compute(rows: Sequence[Row], against: Sequence[Row], edges_for: EdgesFor, ax
     return Report(
         axis=axis,
         compared=compared,
+        replayed=len(rows),
         mismatches=mismatches,
         today=today,
         banded=band,
@@ -556,9 +558,9 @@ def render(
         ]
     if not report.trustworthy:
         out += [
-            f"> **The replay does not reproduce production**: {len(report.mismatches)} questions "
-            "differ, more than one question's step. Read nothing below until *Replay check* is "
-            "explained.",
+            f"> **The replay does not reproduce production**: {report.compared} of "
+            f"{report.replayed} questions compared, {len(report.mismatches)} differ. Read "
+            "nothing below until *Replay check* is explained.",
             "",
         ]
 
@@ -569,6 +571,12 @@ def render(
         f"compared with production, {len(report.mismatches)} differ.",
         "",
     ]
+    if report.compared < report.replayed:
+        out += [
+            f"{report.replayed - report.compared} of the {report.replayed} floor-off questions had "
+            "no production counterpart, so nothing was checked for them.",
+            "",
+        ]
     for m in report.mismatches:
         said = "held back" if m.actual_held_back else "answered"
         why = (
@@ -578,19 +586,6 @@ def render(
         )
         out.append(f"- `{m.id}`: production {said}, replay did not — {why}")
     out.append("")
-
-    out += ["## Today against banded", ""]
-    for name, today in report.today.items():
-        out += [
-            f"### {name}",
-            "",
-            "| | Today (fixed floor) | Banded top 3 | Δ |",
-            "|---|---|---|---|",
-        ]
-        for label, key in SIDE_BY_SIDE:
-            t, b = today[key], report.banded[name][key]
-            out.append(f"| {label} | {_cell(t)} | {_cell(b)} | {_move(t, b)} |")
-        out.append("")
 
     out += ["## Set C: leaked via quote", ""]
     leaked = report.banded["all"]["leaked_via_quote_c"]
@@ -607,6 +602,19 @@ def render(
         "Honest." if report.honest else "**Not honest.**",
         "",
     ]
+
+    out += ["## Today against banded", ""]
+    for name, today in report.today.items():
+        out += [
+            f"### {name}",
+            "",
+            "| | Today (fixed floor) | Banded top 3 | Δ |",
+            "|---|---|---|---|",
+        ]
+        for label, key in SIDE_BY_SIDE:
+            t, b = today[key], report.banded[name][key]
+            out.append(f"| {label} | {_cell(t)} | {_cell(b)} | {_move(t, b)} |")
+        out.append("")
 
     out += ["## The sweep", ""]
     for name, points in report.sweeps.items():
@@ -687,6 +695,7 @@ def as_json(report: Report) -> dict[str, Any]:
         "axis": report.axis,
         "replay_check": {
             "compared": report.compared,
+            "replayed": report.replayed,
             "trustworthy": report.trustworthy,
             "mismatches": [_plain(m) for m in report.mismatches],
         },

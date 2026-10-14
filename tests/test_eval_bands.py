@@ -4,7 +4,9 @@ result file, so it is tested as arithmetic."""
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -426,3 +428,82 @@ def test_a_production_run_is_not_replayed_and_a_floor_off_one_is_not_the_check(
     out = tmp_path / "results"
     assert bands.main(_args(against, against, out)) == 2
     assert bands.main(_args(source, source, out)) == 2
+
+
+def _written(out: Path) -> tuple[str, dict[str, Any]]:
+    note = next(out.glob("*-bands-t.md")).read_text(encoding="utf-8")
+    saved = json.loads(next(out.glob("*-bands-t.json")).read_text(encoding="utf-8"))
+    return note, saved
+
+
+def _rewrite(path: Path, edit: Callable[[dict[str, Any]], object]) -> None:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    edit(data)
+    path.write_text(json.dumps(data), encoding="utf-8")
+
+
+def test_the_checks_come_before_the_numbers(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    text = _written(out)[0]
+    order = [
+        "## Replay check",
+        "## Set C: leaked via quote",
+        "## Are the labels honest?",
+        "## Today against banded",
+        "## The sweep",
+        "## Cosine against relevance",
+        "## How to read it",
+    ]
+    positions = [text.index(heading) for heading in order]
+    assert positions == sorted(positions)
+
+
+def test_a_replay_that_compared_nothing_is_not_trusted(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+    _rewrite(
+        against,
+        lambda d: [q.update(id="other-" + str(q["id"])) for q in d["per_question"]],
+    )
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    text, saved = _written(out)
+    assert "The replay does not reproduce production" in text
+    assert "0 of 5 questions compared" in text
+    assert "5 of the 5 floor-off questions had no production counterpart" in text
+    assert saved["replay_check"]["trustworthy"] is False
+    assert saved["replay_check"]["replayed"] == 5
+
+
+def test_runs_of_different_corpora_are_refused(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+    _rewrite(against, lambda d: d["run"].update(corpus_manifest_sha="different"))
+    assert bands.main(_args(source, against, tmp_path / "results")) == 2
+
+
+def test_a_pack_with_no_edge_is_refused(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+
+    def retarget(data: dict[str, Any]) -> None:
+        for question in data["per_question"]:
+            question["governing_pack"] = "iras_tax"
+            for item in question["ranked"]:
+                item["pack"] = "iras_tax"
+
+    _rewrite(source, retarget)
+    _rewrite(against, retarget)
+    args = _args(source, against, tmp_path / "results", high="insurance_agent=0.50")
+    assert bands.main(args) == 2
+
+
+def test_labels_that_are_not_honest_are_said_so(tmp_path: Path) -> None:
+    wrong_high = _row("a-1", "A", _item("x-1", 0.60), _item("b1-0001", 0.47), doc="b1-0001")
+    source, against = _files(tmp_path)
+    for path in (source, against):
+        _rewrite(path, lambda d: d.update(per_question=[_line(wrong_high)]))
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    text, saved = _written(out)
+    assert "The labels are not honest on this run" in text
+    assert saved["honest"] is False
