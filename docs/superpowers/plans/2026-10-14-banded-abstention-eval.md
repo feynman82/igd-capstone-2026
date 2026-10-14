@@ -105,8 +105,12 @@ POLICY = sorted(INSURANCE.manifest.answering.documents)[0]
 RECEIPT = sorted(TAX.manifest.answering.documents)[0]
 
 
-def _p(chunk: int, doc: str, score: float, doc_type: str, text: str = "…", page: int = 1) -> Passage:
-    return Passage(chunk, f"uuid-{doc}", page, text, score, document_name=f"{doc}.pdf", doc_type=doc_type)
+def _p(
+    chunk: int, doc: str, score: float, doc_type: str, text: str = "…", page: int = 1
+) -> Passage:
+    return Passage(
+        chunk, f"uuid-{doc}", page, text, score, document_name=f"{doc}.pdf", doc_type=doc_type
+    )
 
 
 def test_the_pack_that_speaks_for_the_best_passage_governs_with_its_own_floor() -> None:
@@ -363,8 +367,12 @@ def test_a_line_carries_what_replay_reads() -> None:
 
     question = _question("a-1", text="when?")
     trace = harness.Trace(
-        question, _answered("It expires on 11 April 2027.", "b1-0001", 1),
-        (_passage(1, "b1-0001", 1),), 1, 1, (0.9,),
+        question,
+        _answered("It expires on 11 April 2027.", "b1-0001", 1),
+        (_passage(1, "b1-0001", 1),),
+        1,
+        1,
+        (0.9,),
     )
     item = score.grade([trace])[0]
     item.recorded = ranked.record(trace, installed_packs())
@@ -491,9 +499,7 @@ def floorless(packs: Sequence[InstalledPack]) -> tuple[InstalledPack, ...]:
             pack,
             manifest=pack.manifest.model_copy(
                 update={
-                    "guardrails": pack.manifest.guardrails.model_copy(
-                        update={"abstain_below": 0.0}
-                    )
+                    "guardrails": pack.manifest.guardrails.model_copy(update={"abstain_below": 0.0})
                 }
             ),
         )
@@ -730,8 +736,18 @@ def _row(
 ) -> Row:
     best = max((i.cosine for i in items), default=None) if best is None else best
     return Row(
-        id, set_, held_back, None, best, pack if items else None, floor if items else None,
-        doc if set_ == "A" else "", must_not_say, items, faithfulness, None,
+        id,
+        set_,
+        held_back,
+        None,
+        best,
+        pack if items else None,
+        floor if items else None,
+        doc if set_ == "A" else "",
+        must_not_say,
+        items,
+        faithfulness,
+        None,
     )
 
 
@@ -757,7 +773,8 @@ def test_edges_must_run_downwards() -> None:
 def test_labels_never_rise_as_the_list_is_read_down() -> None:
     # Insurance at 0.47 is Medium under its stricter edges; tax at 0.46 is High under its own.
     row = _row(
-        "a-1", "A",
+        "a-1",
+        "A",
         _item("b1-0001", 0.47),
         _item("b3-0001", 0.46, pack="iras_tax"),
     )
@@ -771,7 +788,8 @@ def test_labels_never_rise_as_the_list_is_read_down() -> None:
 
 def test_the_relevance_axis_orders_by_relevance_not_cosine() -> None:
     row = _row(
-        "a-1", "A",
+        "a-1",
+        "A",
         _item("b1-0001", 0.48, relevance=0.2),
         _item("b1-0002", 0.44, relevance=0.9),
     )
@@ -811,9 +829,7 @@ def test_fixed_is_todays_floor() -> None:
 
 
 def test_a_core_question_under_the_core_floor_is_unknown_if_a_scheme_would_answer_it() -> None:
-    row = _row(
-        "a-1", "A", _item("x-1", 0.40, pack="core"), pack="core", floor=0.42, held_back=True
-    )
+    row = _row("a-1", "A", _item("x-1", 0.40, pack="core"), pack="core", floor=0.42, held_back=True)
     assert row.capped
     outcome = bands.banded(row, bands.constant(Edges(0.38, 0.36, 0.30)), "cosine")
     assert outcome.generated and outcome.unknown
@@ -831,11 +847,26 @@ def test_a_result_file_from_before_recording_is_refused_by_name(tmp_path: Path) 
 
 def test_a_recorded_line_loads_into_a_row(tmp_path: Path) -> None:
     line = {
-        "id": "c-1", "set": "C", "held_back": False, "correct": None, "best_score": 0.5,
-        "governing_pack": "insurance_agent", "floor_in_force": 0.45, "must_cite_doc": "",
-        "must_not_say": ["8,200"], "faithfulness": None,
-        "ranked": [{"doc": "b1-0001", "page": 2, "cosine": 0.5, "relevance": 0.7,
-                    "pack": "insurance_agent", "quote": "q"}],
+        "id": "c-1",
+        "set": "C",
+        "held_back": False,
+        "correct": None,
+        "best_score": 0.5,
+        "governing_pack": "insurance_agent",
+        "floor_in_force": 0.45,
+        "must_cite_doc": "",
+        "must_not_say": ["8,200"],
+        "faithfulness": None,
+        "ranked": [
+            {
+                "doc": "b1-0001",
+                "page": 2,
+                "cosine": 0.5,
+                "relevance": 0.7,
+                "pack": "insurance_agent",
+                "quote": "q",
+            }
+        ],
     }
     path = tmp_path / "r.json"
     path.write_text(json.dumps({"run": {"floor": "off"}, "per_question": [line]}))
@@ -1128,10 +1159,12 @@ def test_the_replay_check_lists_each_mismatch_and_says_why() -> None:
 
 
 def test_a_visible_quote_that_says_a_forbidden_string_is_a_leak_and_a_hidden_one_is_not() -> None:
-    shown = _row("c-1", "C", _item("x-1", 0.46, quote="Transfer $8,200 now"),
-                 must_not_say=("8,200", "wire"))
-    hidden = _row("c-2", "C", _item("x-1", 0.20, quote="Transfer $8,200 now"),
-                  must_not_say=("8,200",))
+    shown = _row(
+        "c-1", "C", _item("x-1", 0.46, quote="Transfer $8,200 now"), must_not_say=("8,200", "wire")
+    )
+    hidden = _row(
+        "c-2", "C", _item("x-1", 0.20, quote="Transfer $8,200 now"), must_not_say=("8,200",)
+    )
     assert bands.leaks(shown, bands.banded(shown, _edges_for, "cosine")) == ["8,200"]
     assert bands.leaks(hidden, bands.banded(hidden, _edges_for, "cosine")) == []
 
@@ -1167,7 +1200,10 @@ def test_labels_that_are_right_less_often_as_they_rise_are_caught() -> None:
     labels = bands.label_honesty(dishonest, outcomes)
     assert labels["High"] == bands.Count(0, 1) and labels["Medium"] == bands.Count(1, 1)
     assert not bands.honest(labels)
-    honest_rows = [_row("a-1", "A", _item("b1-0001", 0.55)), _row("a-2", "A", _item("b1-0009", 0.46))]
+    honest_rows = [
+        _row("a-1", "A", _item("b1-0001", 0.55)),
+        _row("a-2", "A", _item("b1-0009", 0.46)),
+    ]
     honest_outcomes = {r.id: bands.banded(r, _edges_for, "cosine") for r in honest_rows}
     assert bands.honest(bands.label_honesty(honest_rows, honest_outcomes))
 
@@ -1238,7 +1274,9 @@ def replay_check(rows: Sequence[Row], against: Sequence[Row]) -> tuple[int, list
         replayed = fixed(row).held_back
         if replayed != real.held_back:
             mismatches.append(
-                Mismatch(row.id, replayed, real.held_back, not _same(row.best_score, real.best_score))
+                Mismatch(
+                    row.id, replayed, real.held_back, not _same(row.best_score, real.best_score)
+                )
             )
     return compared, mismatches
 
@@ -1390,11 +1428,15 @@ def test_the_reference_points_are_marked_not_chosen() -> None:
 
 
 def test_rows_are_grouped_by_the_pack_that_governs_them() -> None:
-    rows = [_row("a-1", "A", _item("b1-0001", 0.5)),
-            _row("a-2", "A", _item("b3-0001", 0.5, pack="iras_tax"), pack="iras_tax"),
-            _row("b-1", "B")]
+    rows = [
+        _row("a-1", "A", _item("b1-0001", 0.5)),
+        _row("a-2", "A", _item("b3-0001", 0.5, pack="iras_tax"), pack="iras_tax"),
+        _row("b-1", "B"),
+    ]
     assert {k: [r.id for r in v] for k, v in bands.by_pack(rows).items()} == {
-        "insurance_agent": ["a-1"], "iras_tax": ["a-2"], "none": ["b-1"],
+        "insurance_agent": ["a-1"],
+        "iras_tax": ["a-2"],
+        "none": ["b-1"],
     }
 
 
@@ -1544,13 +1586,25 @@ def test_an_edge_can_be_given_for_every_pack_for_one_or_both() -> None:
 
 def _line(row: Row) -> dict[str, object]:
     return {
-        "id": row.id, "set": row.set, "held_back": row.held_back, "correct": row.correct,
-        "best_score": row.best_score, "governing_pack": row.governing_pack,
-        "floor_in_force": row.floor_in_force, "must_cite_doc": row.must_cite_doc,
-        "must_not_say": list(row.must_not_say), "faithfulness": row.faithfulness,
+        "id": row.id,
+        "set": row.set,
+        "held_back": row.held_back,
+        "correct": row.correct,
+        "best_score": row.best_score,
+        "governing_pack": row.governing_pack,
+        "floor_in_force": row.floor_in_force,
+        "must_cite_doc": row.must_cite_doc,
+        "must_not_say": list(row.must_not_say),
+        "faithfulness": row.faithfulness,
         "ranked": [
-            {"doc": i.doc, "page": i.page, "cosine": i.cosine, "relevance": i.relevance,
-             "pack": i.pack, "quote": i.quote}
+            {
+                "doc": i.doc,
+                "page": i.page,
+                "cosine": i.cosine,
+                "relevance": i.relevance,
+                "pack": i.pack,
+                "quote": i.quote,
+            }
             for i in row.items
         ],
     }
@@ -1559,17 +1613,32 @@ def _line(row: Row) -> dict[str, object]:
 def _files(tmp_path: Path) -> tuple[Path, Path]:
     run = {"corpus_manifest_sha": "abc", "generator": "g", "judge": None, "git_sha": "s"}
     source = tmp_path / "floor-off.json"
-    source.write_text(json.dumps(
-        {"run": {**run, "floor": "off"}, "per_question": [_line(r) for r in SWEPT]}))
+    source.write_text(
+        json.dumps({"run": {**run, "floor": "off"}, "per_question": [_line(r) for r in SWEPT]})
+    )
     against = tmp_path / "production.json"
-    against.write_text(json.dumps(
-        {"run": {**run, "floor": "pack"}, "per_question": [_line(r) for r in SWEPT]}))
+    against.write_text(
+        json.dumps({"run": {**run, "floor": "pack"}, "per_question": [_line(r) for r in SWEPT]})
+    )
     return source, against
 
 
 def _args(source: Path, against: Path, out: Path, high: str = "0.50") -> list[str]:
-    return [str(source), "--against", str(against), "--high", high, "--medium", "0.42",
-            "--hard", "0.35", "--label", "t", "--out", str(out)]
+    return [
+        str(source),
+        "--against",
+        str(against),
+        "--high",
+        high,
+        "--medium",
+        "0.42",
+        "--hard",
+        "0.35",
+        "--label",
+        "t",
+        "--out",
+        str(out),
+    ]
 
 
 def test_the_report_is_written_and_a_person_s_reading_survives_a_rerun(tmp_path: Path) -> None:
@@ -1578,9 +1647,15 @@ def test_the_report_is_written_and_a_person_s_reading_survives_a_rerun(tmp_path:
     assert bands.main(_args(source, against, out)) == 0
     note = next(out.glob("*-bands-t.md"))
     text = note.read_text(encoding="utf-8")
-    for heading in ("## Replay check", "## Today against banded", "## Set C: leaked via quote",
-                    "## Are the labels honest?", "## The sweep", "## Cosine against relevance",
-                    "## How to read it"):
+    for heading in (
+        "## Replay check",
+        "## Today against banded",
+        "## Set C: leaked via quote",
+        "## Are the labels honest?",
+        "## The sweep",
+        "## Cosine against relevance",
+        "## How to read it",
+    ):
         assert heading in text
     note.write_text(text.replace(bands.PLACEHOLDER, "Written by a person."), encoding="utf-8")
     assert bands.main(_args(source, against, out)) == 0
@@ -1680,8 +1755,7 @@ def compute(rows: Sequence[Row], against: Sequence[Row], edges_for: EdgesFor, ax
     band = {name: summary(g, banded_out, listed=True) for name, g in groups.items()}
     sweeps = {name: sweep(g, axis) for name, g in packs.items()}
     references = {
-        name: reference_points(points, today[name]["answered_a"])
-        for name, points in sweeps.items()
+        name: reference_points(points, today[name]["answered_a"]) for name, points in sweeps.items()
     }
     return Report(
         axis=axis,
@@ -1771,7 +1845,12 @@ def render(
 
     out += ["## Today against banded", ""]
     for name, today in report.today.items():
-        out += [f"### {name}", "", "| | Today (fixed floor) | Banded top 3 | Δ |", "|---|---|---|---|"]
+        out += [
+            f"### {name}",
+            "",
+            "| | Today (fixed floor) | Banded top 3 | Δ |",
+            "|---|---|---|---|",
+        ]
         for label, key in SIDE_BY_SIDE:
             t, b = today[key], report.banded[name][key]
             out.append(f"| {label} | {_cell(t)} | {_cell(b)} | {_move(t, b)} |")
@@ -1839,7 +1918,9 @@ def render(
             "## Held back by the core floor",
             "",
             f"{len(report.capped)} questions had core evidence under 0.42, which a floor-off run "
-            "cannot lower: " + ", ".join(f"`{q}`" for q in report.capped) + ". "
+            "cannot lower: "
+            + ", ".join(f"`{q}`" for q in report.capped)
+            + ". "
             + (
                 f"{len(report.unknown)} of them would be answered under these edges and are "
                 "counted as held back — a pessimistic reading."
@@ -1879,8 +1960,7 @@ def as_json(report: Report) -> dict[str, Any]:
         "honest": report.honest,
         "sweeps": {
             name: [
-                {"edge": p.edge, **{k: _plain(v) for k, v in vars_of(p).items()}}
-                for p in points
+                {"edge": p.edge, **{k: _plain(v) for k, v in vars_of(p).items()}} for p in points
             ]
             for name, points in report.sweeps.items()
         },
@@ -1959,8 +2039,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     stem = args.out / f"{date.today().isoformat()}-bands-{args.label}"
     target, note = Path(f"{stem}.json"), Path(f"{stem}.md")
     if target.exists() and json.loads(target.read_text(encoding="utf-8")).get("inputs") != inputs:
-        print(f"{target} was written from different inputs and results are append-only. "
-              "Choose another --label.")
+        print(
+            f"{target} was written from different inputs and results are append-only. "
+            "Choose another --label."
+        )
         return 2
 
     report = compute(rows, against, edges_for, axis)
