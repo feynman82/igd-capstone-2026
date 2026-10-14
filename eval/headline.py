@@ -107,6 +107,11 @@ def read(
             held = rebuilt_held_back(str(line.get("outcome") or ""), text)
         else:
             held = None
+        said = claims_in(text)
+        if question.expected.kind == "fact":
+            # A sentence that states the value is not saying it is missing — "there is no waiting
+            # period; the excess is stated as SGD 750" — so it cannot be a false "not on file".
+            said = [s for s in said if not score.mentions(s, question.expected.value)]
         rows.append(
             Row(
                 id=question.id,
@@ -118,7 +123,7 @@ def read(
                 and score.mentions(text, question.expected.value),
                 cited=bool(line.get("cited")),
                 shown=bool(line.get("shown")),
-                absent=score.says_absent(claims_in(text)),
+                absent=score.says_absent(said),
                 leaked=tuple(score.leaked_in(text, question.must_not_say)),
             )
         )
@@ -323,14 +328,19 @@ def movement(columns: Sequence[tuple[str, str, Headline]]) -> str:
     return "\n".join(out)
 
 
-def previous_run(results: Path, *, before: Path) -> Headline | None:
-    """The headline of the latest run file in `results` written before `before`, if it has one."""
+def previous_run(results: Path, *, before: Path, corpus: str) -> Headline | None:
+    """The headline of the latest run file in `results` written before `before` on the same
+    corpus (`corpus` is its manifest sha), if it has one. A run on another corpus is skipped,
+    and so is one with no recorded sha: a change is only read between runs on one corpus."""
     for path in sorted(results.glob("*.json"), reverse=True):
         if path.name >= before.name:
             continue
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
+            continue
+        run_corpus = str((data.get("run") or {}).get("corpus_manifest_sha") or "")
+        if not corpus or run_corpus != corpus:
             continue
         if "per_question" in data and isinstance(data.get("headline"), dict):
             return from_json(data["headline"])

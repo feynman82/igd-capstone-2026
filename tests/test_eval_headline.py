@@ -99,6 +99,30 @@ def test_a_passage_question_counts_on_its_citation() -> None:
     assert head.right_and_cited == Count(1, 1)
 
 
+def test_prose_that_states_the_value_is_not_a_false_absence() -> None:
+    head = _compute(
+        [
+            _line(
+                "a-1",
+                "There is no waiting period; the excess is stated as SGD 750.00. "
+                "[b1-0001.pdf, page 1]",
+            )
+        ],
+        _fact("a-1", "750.00"),
+    )
+    assert head.right_and_cited == Count(1, 1)
+    assert head.claims == []
+
+
+def test_prose_that_says_it_is_not_listed_is_a_false_absence() -> None:
+    head = _compute(
+        [_line("a-1", "The excess is not listed in the documents. [b1-0001.pdf, page 1]")],
+        _fact("a-1", "750.00"),
+    )
+    claim = next(c for c in head.claims if c.id == "a-1")
+    assert claim.reasons == ("wrong_value", "false_absence")
+
+
 # ------------------------------------------------------------------------------- 2
 
 
@@ -276,3 +300,19 @@ def test_the_cli_refuses_a_file_that_is_not_a_run(tmp_path: Path) -> None:
     other = tmp_path / "bands.json"
     other.write_text(json.dumps({"inputs": {}}), encoding="utf-8")
     assert headline.main([str(other)]) == 2
+
+
+def test_the_previous_run_is_the_latest_on_the_same_corpus(tmp_path: Path) -> None:
+    head = _compute([_line("a-1", "750.00 [b1-0001.pdf, page 1]")], _fact("a-1", "750.00"))
+    stored = {"headline": headline.as_json(head), "per_question": []}
+    for name, corpus in [
+        ("2026-10-01-a.json", "x"),
+        ("2026-10-02-b.json", "y"),
+    ]:
+        body = {**stored, "run": {"corpus_manifest_sha": corpus}}
+        (tmp_path / name).write_text(json.dumps(body), encoding="utf-8")
+    current = tmp_path / "2026-10-03-c.json"
+    current.write_text(json.dumps({"per_question": []}), encoding="utf-8")
+    found = headline.previous_run(tmp_path, before=current, corpus="x")
+    assert isinstance(found, headline.Headline)
+    assert headline.previous_run(tmp_path, before=current, corpus="z") is None
