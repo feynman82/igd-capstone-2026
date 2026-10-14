@@ -24,7 +24,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from eval.score import F1, TypeScore, extraction_by_type, unjoined
+from eval.score import F1, TypeScore, extraction_by_type, unjoined, without_ground_truth
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = 0.90  # metric 6 in eval/README.md
@@ -43,6 +43,7 @@ class Provenance:
     quarantined: int  # documents the vault holds and did not extract
     catalogue: int  # document types core/documents.yaml defines
     in_register: int  # of those, the types the register actually fills
+    no_ground_truth: tuple[str, ...] = ()  # indexed, but the row records nothing to score
 
 
 def _cell(value: float | None) -> str:
@@ -128,6 +129,20 @@ def render(
             + ".",
             "",
         ]
+    if where.no_ground_truth:
+        lines += [
+            "## Indexed documents whose register row records nothing",
+            "",
+            f"{len(where.no_ground_truth)} document(s) are in the vault with a register row that "
+            "fills no printed field, so there is nothing to score them against and they are left "
+            "out of every count above. A row like this can only ever produce false claims — one "
+            "for each value the extractor reads — so including it would make the score fall as "
+            "the extractor got better. `corpus/register/batch3.csv` says why its rows are like "
+            'this: "Set C grades refusal behavior, not planted values." '
+            + ", ".join(f"`{name}`" for name in where.no_ground_truth)
+            + ".",
+            "",
+        ]
     if unjoined:
         total = sum(unjoined.values())
         lines += [
@@ -170,6 +185,7 @@ def collect(root: Path) -> tuple[list[TypeScore], F1, list[str], Provenance, dic
         statuses = _statuses(conn)
     scores = extraction_by_type(register, facts, indexed)
     overall = _overall(scores)
+    blank = tuple(without_ground_truth(register, indexed))
     types = {score.doc_type for score in scores}
     filled = {row.get("doc_type") or "unknown" for row in register}
     where = Provenance(
@@ -182,6 +198,7 @@ def collect(root: Path) -> tuple[list[TypeScore], F1, list[str], Provenance, dic
         quarantined=statuses.get("quarantined", 0),
         catalogue=len(MODELS),
         in_register=len(filled),
+        no_ground_truth=blank,
     )
     return scores, overall, sorted(filled - types), where, unjoined(register, facts)
 
