@@ -75,6 +75,33 @@ def test_a_question_filed_under_the_wrong_set_is_refused(tmp_path: Path) -> None
         load_set(root, "A")
 
 
+def test_phrasing_loads_and_defaults_to_formal(tmp_path: Path) -> None:
+    fact = (
+        '"expected": {"kind": "fact", "key": "excess", "value": "750.00"}, '
+        '"must_cite_doc": "b1-0001", "must_cite_page": 1'
+    )
+    root = _write(
+        tmp_path,
+        "answerable",
+        '{"id": "a-1", "set": "A", "lane": "x", "question": "q", ' + fact + "}",
+        '{"id": "a-2", "set": "A", "lane": "x", "question": "q", "phrasing": "casual", '
+        + fact
+        + "}",
+    )
+    assert [q.phrasing for q in load_set(root, "A")] == ["formal", "casual"]
+
+
+def test_an_unknown_phrasing_is_refused(tmp_path: Path) -> None:
+    root = _write(
+        tmp_path,
+        "hard_negatives",
+        '{"id": "b-1", "set": "B", "lane": "x", "question": "q", "phrasing": "singlish", '
+        '"expected": {"kind": "abstain"}}',
+    )
+    with pytest.raises(MalformedQuestion, match="phrasing must be casual or formal"):
+        load_set(root, "B")
+
+
 def test_subset_is_stable_and_spread_across_lanes() -> None:
     questions = [
         _question(f"q{i}", lane=("packs", "retrieval", "governance")[i % 3]) for i in range(30)

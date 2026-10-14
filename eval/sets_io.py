@@ -19,9 +19,11 @@ from typing import Any, Literal, cast
 
 SetId = Literal["A", "B", "C"]
 Kind = Literal["fact", "passage", "abstain"]
+Phrasing = Literal["casual", "formal"]
 
 SET_FOLDERS: dict[SetId, str] = {"A": "answerable", "B": "hard_negatives", "C": "adversarial"}
 KINDS: tuple[Kind, ...] = ("fact", "passage", "abstain")
+PHRASINGS: tuple[Phrasing, ...] = ("casual", "formal")
 
 # The `Answer` flags a run can come back with, in the precedence `eval.score.outcome_of` reports
 # them in. They are the vocabulary of the question files as well as of the code, which is why they
@@ -70,6 +72,10 @@ class Question:
     expected_outcome: str = ""  # one of OUTCOMES
     expected_refusal: str = ""  # what a good refusal says; for the write-up, not for scoring
     must_not_say: tuple[str, ...] = ()  # appearing in the answer is a failure on its own
+    # How the question is worded: "casual" for the way a person types it — "my car insurance
+    # expire when ah?" — and "formal" for everything else. The headline's casual-phrasing gap
+    # is the difference between the two.
+    phrasing: Phrasing = "formal"
 
     @property
     def gradeable_citation(self) -> bool:
@@ -145,7 +151,16 @@ def _question(raw: Any, where: str) -> Question:
         expected_outcome=_outcome(raw.get("expected_outcome"), where),
         expected_refusal=str(raw.get("expected_refusal") or ""),
         must_not_say=_must_not_say(raw.get("must_not_say"), where),
+        phrasing=_phrasing(raw.get("phrasing"), where),
     )
+
+
+def _phrasing(raw: Any, where: str) -> Phrasing:
+    if raw is None or raw == "":
+        return "formal"
+    if raw not in PHRASINGS:
+        raise MalformedQuestion(f"{where}: phrasing must be casual or formal, not {raw!r}")
+    return cast(Phrasing, raw)
 
 
 def _outcome(raw: Any, where: str) -> str:
