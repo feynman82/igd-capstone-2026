@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Central Savings Board - Annual Statement</title>
+<!-- Merge fields: {{doc_ref}} {{statement_date}} {{member}} {{id_masked}} {{address_1}} {{address_2}}
+     {{employer}} {{statement_year}} {{total_contributions}} {{ordinary_account_balance}}
+     {{tot_ow_subject}} {{tot_aw_subject}} {{tot_employer}} {{tot_employee}} {{aw_ceiling}}
+     and for each month NN = 01..12: {{mNN_month}} {{mNN_ow}} {{mNN_aw}} {{mNN_er}} {{mNN_emp}} {{mNN_total}} -->
+<style>
+  @page { size: A4 portrait; margin: 16mm 15mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9.5pt; line-height: 1.35; color: #222; margin: 0; background: #fff; }
+  .watermark { position: fixed; top: 42%; left: -8%; width: 116%; text-align: center; transform: rotate(-30deg);
+    font-size: 22pt; font-weight: 700; letter-spacing: 1px; color: rgba(160, 30, 30, 0.13); z-index: 0; }
+  .content { position: relative; z-index: 1; }
+  .header { width: 100%; border-collapse: collapse; border-bottom: 2px solid #0f4c5c; margin-bottom: 14px; }
+  .header td { padding-bottom: 10px; vertical-align: top; }
+  .issuer { font-size: 16pt; font-weight: 700; color: #0f4c5c; letter-spacing: 0.4px; }
+  .issuer-meta { font-size: 8.5pt; color: #555; margin-top: 3px; }
+  .ref { text-align: right; font-size: 9pt; color: #444; }
+  .title { text-align: center; background: #f2f7f8; border-top: 1px solid #d7e3e6; border-bottom: 1px solid #d7e3e6; padding: 7px 0; margin-bottom: 14px; }
+  .title h1 { font-size: 13pt; margin: 0; color: #0f4c5c; text-transform: uppercase; letter-spacing: 0.5px; }
+  .title p { margin: 2px 0 0; font-size: 9.5pt; color: #444; }
+  .member { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  .member td { padding: 2px 0; vertical-align: top; }
+  .label { color: #666; width: 30%; }
+  .summary { width: 100%; border-collapse: collapse; margin: 6px 0 14px; }
+  .summary td { width: 50%; padding: 10px 12px; background: #f2f7f8; border: 1px solid #d7e3e6; }
+  .summary .k { font-size: 8.5pt; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+  .summary .v { font-size: 14pt; font-weight: 700; color: #0f4c5c; }
+  h2 { font-size: 10pt; color: #0f4c5c; text-transform: uppercase; border-bottom: 1px solid #d7e3e6; padding-bottom: 4px; margin: 12px 0 6px; }
+  table.figures { width: 100%; border-collapse: collapse; }
+  table.figures th, table.figures td { padding: 4px 6px; border-bottom: 1px solid #e6eef0; }
+  table.figures th { background: #f2f7f8; font-size: 8.5pt; color: #333; text-align: right; }
+  table.figures th:first-child, table.figures td:first-child { text-align: left; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .total-row td { font-weight: 700; border-top: 1.5px solid #0f4c5c; border-bottom: none; }
+  .note { font-size: 8.5pt; color: #555; margin-top: 12px; line-height: 1.5; }
+  .footer { margin-top: 18px; padding-top: 8px; border-top: 1px solid #d7e3e6; font-size: 8pt; color: #777; text-align: center; }
+</style>
+</head>
+<body>
+<div class="watermark">PROJECT PARROT · SYNTHETIC TEST RECORD · NOT A REAL DOCUMENT</div>
+<div class="content">
+
+<table class="header"><tr>
+  <td><div class="issuer">CENTRAL SAVINGS BOARD</div>
+      <div class="issuer-meta">Member Services · Statement of contributions</div></td>
+  <td class="ref">Statement date: <strong>{{statement_date}}</strong><br>Reference: {{doc_ref}}</td>
+</tr></table>
+
+<div class="title">
+  <h1>Annual Statement of Account</h1>
+  <p>Contributions for the year <strong>{{statement_year}}</strong></p>
+</div>
+
+<table class="member">
+  <tr><td class="label">Member name</td><td><strong>{{member}}</strong></td></tr>
+  <tr><td class="label">Identity number</td><td>{{id_masked}}</td></tr>
+  <tr><td class="label">Mailing address</td><td>{{address_1}}, {{address_2}}</td></tr>
+  <tr><td class="label">Employer</td><td>{{employer}}</td></tr>
+</table>
+
+<table class="summary"><tr>
+  <td><div class="k">Total contributions, {{statement_year}}</div><div class="v">SGD {{total_contributions}}</div></td>
+  <td><div class="k">Ordinary Account balance at 31 Dec {{statement_year}}</div><div class="v">SGD {{ordinary_account_balance}}</div></td>
+</tr></table>
+
+<h2>Contributions by wage month</h2>
+<table class="figures">
+  <tr><th>Wage month</th><th>Ordinary wages subject to CPF</th><th>Additional wages subject to CPF</th><th>Employer share</th><th>Employee share</th><th>Total</th></tr>
+  <tr><td>{{m01_month}}</td><td class="num">{{m01_ow}}</td><td class="num">{{m01_aw}}</td><td class="num">{{m01_er}}</td><td class="num">{{m01_emp}}</td><td class="num">{{m01_total}}</td></tr>
+  <tr><td>{{m02_month}}</td><td class="num">{{m02_ow}}</td><td class="num">{{m02_aw}}</td><td class="num">{{m02_er}}</td><td class="num">{{m02_emp}}</td><td class="num">{{m02_total}}</td></tr>
+  <tr><td>{{m03_month}}</td><td class="num">{{m03_ow}}</td><td class="num">{{m03_aw}}</td><td class="num">{{m03_er}}</td><td class="num">{{m03_emp}}</td><td class="num">{{m03_total}}</td></tr>
+  <tr><td>{{m04_month}}</td><td class="num">{{m04_ow}}</td><td class="num">{{m04_aw}}</td><td class="num">{{m04_er}}</td><td class="num">{{m04_emp}}</td><td class="num">{{m04_total}}</td></tr>
+  <tr><td>{{m05_month}}</td><td class="num">{{m05_ow}}</td><td class="num">{{m05_aw}}</td><td class="num">{{m05_er}}</td><td class="num">{{m05_emp}}</td><td class="num">{{m05_total}}</td></tr>
+  <tr><td>{{m06_month}}</td><td class="num">{{m06_ow}}</td><td class="num">{{m06_aw}}</td><td class="num">{{m06_er}}</td><td class="num">{{m06_emp}}</td><td class="num">{{m06_total}}</td></tr>
+  <tr><td>{{m07_month}}</td><td class="num">{{m07_ow}}</td><td class="num">{{m07_aw}}</td><td class="num">{{m07_er}}</td><td class="num">{{m07_emp}}</td><td class="num">{{m07_total}}</td></tr>
+  <tr><td>{{m08_month}}</td><td class="num">{{m08_ow}}</td><td class="num">{{m08_aw}}</td><td class="num">{{m08_er}}</td><td class="num">{{m08_emp}}</td><td class="num">{{m08_total}}</td></tr>
+  <tr><td>{{m09_month}}</td><td class="num">{{m09_ow}}</td><td class="num">{{m09_aw}}</td><td class="num">{{m09_er}}</td><td class="num">{{m09_emp}}</td><td class="num">{{m09_total}}</td></tr>
+  <tr><td>{{m10_month}}</td><td class="num">{{m10_ow}}</td><td class="num">{{m10_aw}}</td><td class="num">{{m10_er}}</td><td class="num">{{m10_emp}}</td><td class="num">{{m10_total}}</td></tr>
+  <tr><td>{{m11_month}}</td><td class="num">{{m11_ow}}</td><td class="num">{{m11_aw}}</td><td class="num">{{m11_er}}</td><td class="num">{{m11_emp}}</td><td class="num">{{m11_total}}</td></tr>
+  <tr><td>{{m12_month}}</td><td class="num">{{m12_ow}}</td><td class="num">{{m12_aw}}</td><td class="num">{{m12_er}}</td><td class="num">{{m12_emp}}</td><td class="num">{{m12_total}}</td></tr>
+  <tr class="total-row"><td>Total {{statement_year}}</td><td class="num">{{tot_ow_subject}}</td><td class="num">{{tot_aw_subject}}</td><td class="num">{{tot_employer}}</td><td class="num">{{tot_employee}}</td><td class="num">{{total_contributions}}</td></tr>
+</table>
+
+<p class="note">Ordinary wages attract contributions up to $7,400 a month. Additional wages attract contributions
+up to the {{statement_year}} additional wage ceiling of ${{aw_ceiling}}; additional wages above it are shown at the
+amount subject to CPF. Rates applied: 37% total, of which 20% is the employee share.</p>
+
+<div class="footer">Issued by Central Savings Board, an invented issuer used for Project Parrot evaluation.
+This record is synthetic and does not describe any real person or account.</div>
+</div>
+</body>
+</html>
