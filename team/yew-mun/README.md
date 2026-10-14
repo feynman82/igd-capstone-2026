@@ -77,7 +77,7 @@ Desmond's register. That is what makes the set gradeable without a human in the 
 
 ---
 
-## Targets
+## Headline and diagnostics
 
 The report leads with five numbers, one for each aim, scored by code — proposed, awaiting DY.
 The full definitions are in [`eval/README.md`](../../eval/README.md#the-headline--proposed-awaiting-dy);

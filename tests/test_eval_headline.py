@@ -123,6 +123,74 @@ def test_prose_that_says_it_is_not_listed_is_a_false_absence() -> None:
     assert claim.reasons == ("wrong_value", "false_absence")
 
 
+def test_an_honest_aside_does_not_make_a_correct_answer_a_false_absence() -> None:
+    head = _compute(
+        [
+            _line(
+                "a-1",
+                "The policy expiry date is 11 April 2027. [b1-0001.pdf, page 1] "
+                "The premium for next year is not stated in the documents. [b1-0001.pdf, page 1]",
+            )
+        ],
+        _fact("a-1", "2027-04-11"),
+    )
+    assert head.right_and_cited == Count(1, 1)
+    assert head.claims == []
+
+
+def test_the_code_written_absence_line_counts_even_when_it_contains_the_value() -> None:
+    question = Question(
+        "a-1",
+        "A",
+        "retrieval",
+        "q",
+        Expected("fact", "insured", "insured", "Marcus Lim Jun Wei"),
+        "b1-0001",
+        1,
+    )
+    head = _compute(
+        [
+            _line(
+                "a-1",
+                "None of the 11 policies on file for Marcus Lim Jun Wei is a car policy. "
+                "[b.pdf, page 1] The insured is Marcus Lim Jun Wei. [b1-0001.pdf, page 1]",
+            )
+        ],
+        question,
+    )
+    assert "false_absence" in next(c for c in head.claims if c.id == "a-1").reasons
+
+
+def test_a_prose_not_stated_counts_when_the_answer_held_back() -> None:
+    head = _compute(
+        [
+            _line(
+                "a-1",
+                "The excess is 750.00 but this is not stated clearly. [b1-0001.pdf, page 1]",
+                held_back=True,
+                outcome="abstained",
+            )
+        ],
+        _fact("a-1", "750.00"),
+    )
+    assert [c.reasons for c in head.claims] == [("false_absence",)]
+
+
+def test_false_absence_applies_only_to_a_question_whose_document_is_indexed() -> None:
+    line = _line("a-1", f"{ABSENT} [b1-0001.pdf, page 1]", held_back=True)
+    question = _fact("a-1", "750.00")  # must_cite_doc "b1-0001"
+    questions = {question.id: question}
+
+    def run(indexed: set[str] | None) -> Any:
+        return headline.compute(
+            [line], questions, extraction_f1=0.9, rebuild=False, indexed=indexed
+        )
+
+    assert run({"b1-0002"}).claims == []
+    assert [c.reasons for c in run({"b1-0001"}).claims] == [("false_absence",)]
+    assert [c.reasons for c in run(None).claims] == [("false_absence",)]
+
+
 # ------------------------------------------------------------------------------- 2
 
 
@@ -190,6 +258,20 @@ def test_held_back_with_the_page_read_is_over_caution_and_without_it_a_miss() ->
     assert head.over_caution == Count(1, 3)
     assert head.over_cautious == ["a-1"]
     assert head.retrieval_miss == ["a-2"]
+
+
+def test_the_table_shows_retrieval_misses() -> None:
+    lines = [
+        _line("a-1", "I can't answer that.", held_back=True, shown=True, outcome="abstained"),
+        _line("a-2", "I can't answer that.", held_back=True, shown=False, outcome="abstained"),
+        _line("a-3", "The excess is 750.00. [b1-0001.pdf, page 1]"),
+    ]
+    head = _compute(lines, *(_fact(f"a-{i}", "750.00") for i in range(1, 4)))
+    row = next(r for r in headline.table(head).splitlines() if "Retrieval misses" in r)
+    assert "0.333 (1/3)" in row
+    blank = _compute([_line("a-1", "x", held_back=None)], _fact("a-1", "750.00"))
+    row = next(r for r in headline.table(blank).splitlines() if "Retrieval misses" in r)
+    assert "—" in row
 
 
 # ------------------------------------------------------------------------------- 4

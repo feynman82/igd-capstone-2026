@@ -251,6 +251,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         {q.id: q for q in questions},
         extraction_f1=metrics.get("extraction_f1"),
         rebuild=False,
+        indexed=indexed,
     )
     result = {
         "run": {
@@ -294,6 +295,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.out, before=target, corpus=result["run"]["corpus_manifest_sha"]
     )
     print(headline.table(head, previous))
+    if previous is None:
+        print("(no earlier run on this corpus to compare with)")
     print()
     print(_table(metrics, why))
     print(f"\nwrote {target}")

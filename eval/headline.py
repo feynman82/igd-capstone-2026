@@ -19,8 +19,9 @@ judge model, so the numbers the report leads with cannot be argued with:
 `eval.run` puts them in every result file. This module also scores result files written before
 it existed: it writes a companion `<run>-headline.json` and `.md` beside each and never touches
 the run file. Older runs do not record `held_back`, so it is rebuilt from the recorded answer —
-and the rebuild is used only when it agrees, on every question, with every run that does record
-it. Design: `docs/superpowers/specs/2026-10-15-aim-headline-metrics-design.md`.
+and the rebuild is used only when it agrees, on every question, with every run given on the same
+command line that records it. Design:
+`docs/superpowers/specs/2026-10-15-aim-headline-metrics-design.md`.
 """
 
 from __future__ import annotations
@@ -28,7 +29,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
-from collections.abc import Mapping, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -86,13 +87,19 @@ class Row:
     cited: bool  # the page that prints it is cited
     shown: bool  # that page was among the passages read
     absent: bool  # some sentence says the thing is not on file
+    indexed: bool  # the question's document is in the vault (True when the run cannot say)
     leaked: tuple[str, ...]
 
 
 def read(
-    lines: Sequence[Mapping[str, Any]], questions: Mapping[str, Question], *, rebuild: bool
+    lines: Sequence[Mapping[str, Any]],
+    questions: Mapping[str, Question],
+    *,
+    rebuild: bool,
+    indexed: Collection[str] | None = None,
 ) -> tuple[list[Row], list[str]]:
-    """One row per scored question, and the ids no question file holds any longer."""
+    """One row per scored question, and the ids no question file holds any longer. `indexed` is
+    the set of documents the run's vault held; None when a result file does not say."""
     rows: list[Row] = []
     gone: list[str] = []
     for line in lines:
@@ -107,23 +114,28 @@ def read(
             held = rebuilt_held_back(str(line.get("outcome") or ""), text)
         else:
             held = None
+        kind = question.expected.kind
+        stated = kind == "fact" and score.mentions(text, question.expected.value)
         said = claims_in(text)
-        if question.expected.kind == "fact":
-            # A sentence that states the value is not saying it is missing — "there is no waiting
-            # period; the excess is stated as SGD 750" — so it cannot be a false "not on file".
-            said = [s for s in said if not score.mentions(s, question.expected.value)]
+        # The code's own absence line always says "not on file". A model's "not stated" sentence
+        # counts only when the answer held back or never gave the value: a false claim on the
+        # headline is worse than a missed one, and an aside ("the premium for next year is not
+        # stated") is not a claim that the thing asked about is missing.
+        code_absent = any(score.ABSENCE_LINE.match(s) for s in said)
+        prose_absent = score.says_absent([s for s in said if not score.ABSENCE_LINE.match(s)])
+        absent = code_absent or (prose_absent and (held is True or (kind == "fact" and not stated)))
         rows.append(
             Row(
                 id=question.id,
                 set=question.set,
-                kind=question.expected.kind,
+                kind=kind,
                 phrasing=question.phrasing,
                 held_back=held,
-                stated=question.expected.kind == "fact"
-                and score.mentions(text, question.expected.value),
+                stated=stated,
                 cited=bool(line.get("cited")),
                 shown=bool(line.get("shown")),
-                absent=score.says_absent(said),
+                absent=absent,
+                indexed=indexed is None or question.must_cite_doc in indexed,
                 leaked=tuple(score.leaked_in(text, question.must_not_say)),
             )
         )
@@ -141,7 +153,7 @@ def reasons(row: Row) -> tuple[str, ...]:
     found: list[str] = []
     if row.set == "A" and row.kind == "fact" and row.held_back is False and not row.stated:
         found.append("wrong_value")
-    if row.set == "A" and row.absent:
+    if row.set == "A" and row.absent and row.indexed:
         found.append("false_absence")
     if row.set == "B" and row.held_back is False:
         found.append("claimed")
@@ -191,8 +203,9 @@ def compute(
     *,
     extraction_f1: float | None,
     rebuild: bool,
+    indexed: Collection[str] | None = None,
 ) -> Headline:
-    rows, gone = read(lines, questions, rebuild=rebuild)
+    rows, gone = read(lines, questions, rebuild=rebuild, indexed=indexed)
     a = [row for row in rows if row.set == "A"]
     measurable = all(row.held_back is not None for row in rows)
     recorded = all("held_back" in line for line in lines)
@@ -275,6 +288,14 @@ def table(head: Headline, previous: Headline | None = None) -> str:
         value = getattr(head, key)
         moved = f"  {change(getattr(previous, key), value)}" if previous is not None else ""
         lines.append(f"{label:<34} {_cell(value):>16}  {direction}{moved}")
+    misses = (
+        None
+        if head.right_and_cited is None
+        else Count(len(head.retrieval_miss), head.right_and_cited.n)
+    )
+    lines.insert(
+        4, f"{'Retrieval misses (Set A)':<34} {_cell(misses):>16}  the page was never retrieved"
+    )
     f1 = "—" if head.extraction_f1 is None else f"{head.extraction_f1:.4f}"
     lines.append(f"{'Filed correctly (extraction F1)':<34} {f1:>16}  line 0.90")
     if head.held_back_from != "recorded":

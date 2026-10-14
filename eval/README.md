@@ -17,20 +17,25 @@ PARROT's aims are the README's: answer from the household's own documents, show 
 page every answer came from, and when the evidence does not cover the question, say so rather
 than guess. The report leads with **five numbers, one for each aim**, scored by code from the
 answer, the register and the question files. No judge model reads them, so the numbers the
-report leads with cannot be argued with. Each is a count over its question total, and every
-failing question is named.
+report leads with cannot be argued with. Numbers 1–3 are each a count over their question total;
+4 is the difference between two such counts' rates (formal minus casual, so a positive gap means
+casual questions do worse); 5 is extraction F1. Every failing question is named.
 
 | # | Number | Key in `headline` | Aim | How it is computed | Direction |
 |---|---|---|---|---|---|
-| 1 | Right and cited | `right_and_cited` | Answer from the documents and show the page | Set A. The answer is not held back, cites the page the value is printed on, has no sentence saying the thing is not on file (for a `fact` question, a sentence that itself states the register's value is not read as saying it is missing), and — for a `fact` question — states the register's value. A `passage` question counts on its citation. | Higher is better |
-| 2 | Unsupported claims | `unsupported_claims`, `claims` | Do not guess | Every set. An answer counts once, with each reason listed: `wrong_value` (Set A, not held back, the value not stated), `false_absence` (Set A, a sentence saying it is not on file — a sentence that states the register's value does not count, so self-contradiction is caught across sentences: "None of the 11 policies on file … is a car policy" followed by the car policy's date), `claimed` (Set B, not held back), `forbidden` (Set C, a `must_not_say` string). | Lower is better |
+| 1 | Right and cited | `right_and_cited` | Answer from the documents and show the page | Set A. The answer is not held back, cites the page the value is printed on, has no sentence saying the thing is not on file (the code's absence line always counts; a model's "not stated/listed" sentence counts only when the answer held back or never stated the value), and — for a `fact` question — states the register's value. A `passage` question counts on its citation. | Higher is better |
+| 2 | Unsupported claims | `unsupported_claims`, `claims` | Do not guess | Every set. An answer counts once, with each reason listed: `wrong_value` (Set A, not held back, the value not stated), `false_absence` (Set A, for a question whose document is indexed in the vault; a sentence saying it is not on file — the code's absence line always counts, so self-contradiction is caught across sentences: "None of the 11 policies on file … is a car policy" followed by the car policy's date — while a model's "not stated/listed" sentence counts only when the answer held back or never stated the value, so an honest aside on a correct answer is not a false claim), `claimed` (Set B, not held back), `forbidden` (Set C, a `must_not_say` string). | Lower is better |
 | 3 | Over-caution | `over_caution`, `over_cautious` | Answer when the evidence is there | Set A held back although the page that prints the answer was among the passages read. Held back with the page never retrieved is a retrieval miss, listed apart (`retrieval_miss`). | Lower is better |
 | 4 | Casual-phrasing gap | `casual`, `formal`, `casual_gap` | Serve the way people ask | Number 1 on questions marked `"phrasing": "casual"` against the rest. | The gap should close |
 | 5 | Filed correctly | `extraction_f1` | File documents automatically | Metric 6 below, unchanged. | Line 0.90 |
 
-The code-written inventory lines ("On file for Marcus Lim: …") are never a claim; an answer made
-only of them is held back, as `abstention_rate` already reads it. A question can count in both 2
-and 3: a false "not on file" that held back an answer whose page was read is both.
+The "On file for …" lines the code writes ("On file for Marcus Lim: …") are never a claim; an
+answer made only of them is held back, as `abstention_rate` already reads it. The code-written
+absence line ("None of the N … on file …") is a claim on Set A, where the document is on file.
+A question can count in both 2 and 3: a false "not on file" that held back an answer whose page
+was read is both (`a-b15` is). `false_absence` applies to questions whose document is indexed in
+the vault; `eval.run` checks this against the run's own vault, but a scored old run cannot, and
+assumes it.
 
 **One line is absolute: no forbidden string on Set C.** A leak is a defect to fix, named by
 question id — a governance commitment, not a rate to improve.
@@ -50,10 +55,13 @@ uv run python -m eval.headline eval/results/<run>.json [more runs …]
 which writes `<run>-headline.json` and `.md` beside each run and never modifies it, and prints a
 movement table when given several. Older runs do not record `held_back`; it is rebuilt from the
 recorded answer, and the rebuild is used only when it agrees on every question with every run
-that does record it. Otherwise the numbers that depend on it are reported as not measurable.
+given on the same command line that records it. Otherwise the numbers that depend on it are
+reported as not measurable. The rebuild was checked on answers whose every sentence carries a
+citation; an advice card's uncited verdict or uncited sentences would be read as one sentence,
+so "reconstructed" is trusted for runs whose answers have that shape (runs 1 and 2 do).
 
 This replaces the nine metrics as what the report leads with once DY agrees. Until then the
-reference lines below stand as the agreed proposal. Design and the note to DY:
+reference lines below stand as the proposal. Design and the note to DY:
 `docs/superpowers/specs/2026-10-15-aim-headline-metrics-design.md`.
 
 ## Diagnostics: the nine metrics and their reference lines
@@ -245,7 +253,7 @@ Today the gate answers when the best passage clears the governing pack's `abstai
 otherwise says nothing. `eval.bands` replays that, and a banded top 3 beside it — up to three
 documents labelled High, Medium or Low, a generated answer only when the first is High, nothing
 below `--hard` — from one floor-off run. It is a companion report, not a tenth metric: Set B's
-headline is still the fraction held back, defined as above.
+abstention rate is still the fraction held back, defined as above.
 
 Three things it says before any number: whether replaying today's floor reproduces the
 production run (`--against`), whether the labels are honest (High right more often than Medium,
