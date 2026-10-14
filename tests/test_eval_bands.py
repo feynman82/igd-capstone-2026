@@ -264,3 +264,55 @@ def test_one_question_apart_is_a_tie() -> None:
     assert bands.delta(bands.Count(24, 25), bands.Count(23, 25)) == "tied (-1 q)"
     assert bands.delta(bands.Count(20, 25), bands.Count(23, 25)) == "+3 q (+0.120)"
     assert bands.delta(bands.Count(0, 0), bands.Count(1, 2)) == "—"
+
+
+# ------------------------------------------------------------------------------- the sweep
+
+SWEPT = [
+    _row("a-1", "A", _item("b1-0001", 0.55, relevance=0.9)),
+    _row("a-2", "A", _item("b1-0001", 0.44, relevance=0.6)),
+    _row("a-3", "A", _item("b1-0001", 0.36, relevance=0.3)),
+    _row("b-1", "B", _item("x-1", 0.50, relevance=0.2)),
+    _row("b-2", "B", _item("x-1", 0.33, relevance=0.1)),
+]
+
+
+def test_a_higher_edge_answers_less_and_declines_more() -> None:
+    points = bands.sweep(SWEPT, "cosine")
+    assert points[0].edge == 0.30 and points[-1].edge == 0.60 and len(points) == 31
+    answered = [p.answered_a.hits for p in points]
+    declined = [p.abstention_b.hits for p in points]
+    assert answered == sorted(answered, reverse=True)
+    assert declined == sorted(declined)
+    at = {p.edge: p for p in points}
+    assert at[0.44].answered_a == bands.Count(2, 3)  # 0.44 is on the edge: High
+    assert at[0.45].answered_a == bands.Count(1, 3)
+
+
+def test_the_reference_points_are_marked_not_chosen() -> None:
+    points = bands.sweep(SWEPT, "cosine")
+    keeps, meets = bands.reference_points(points, today_answered=bands.Count(2, 3))
+    assert keeps == 0.44  # the highest edge that still answers two of three
+    assert meets == 0.51  # the lowest edge that declines both hard negatives
+    assert bands.reference_points(points, bands.Count(4, 3)) == (None, 0.51)
+
+
+def test_rows_are_grouped_by_the_pack_that_governs_them() -> None:
+    rows = [
+        _row("a-1", "A", _item("b1-0001", 0.5)),
+        _row("a-2", "A", _item("b3-0001", 0.5, pack="iras_tax"), pack="iras_tax"),
+        _row("b-1", "B"),
+    ]
+    assert {k: [r.id for r in v] for k, v in bands.by_pack(rows).items()} == {
+        "insurance_agent": ["a-1"],
+        "iras_tax": ["a-2"],
+        "none": ["b-1"],
+    }
+
+
+def test_both_axes_are_compared_and_a_missing_one_says_so() -> None:
+    both = bands.axis_summary(SWEPT, bands.Count(2, 3))
+    assert both["cosine"] is not None and both["relevance"] is not None
+    assert both["cosine"]["keeps_today"] == 0.44
+    cosine_only = [_row("a-1", "A", _item("b1-0001", 0.5))]
+    assert bands.axis_summary(cosine_only, bands.Count(1, 1))["relevance"] is None

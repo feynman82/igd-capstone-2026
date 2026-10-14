@@ -343,3 +343,79 @@ def delta(today: Count, banded: Count) -> str:
     if abs(moved) <= 1:
         return f"tied ({moved:+d} q)"
     return f"{moved:+d} q ({(banded.rate or 0.0) - (today.rate or 0.0):+.3f})"
+
+
+# ------------------------------------------------------------------------------- the sweep
+
+
+@dataclass(frozen=True, slots=True)
+class Point:
+    """One edge, used as all three at once. Whether the model writes depends only on the High
+    edge and what is visible only on the hard edge, so one sweep answers both questions."""
+
+    edge: float
+    answered_a: Count
+    abstention_b: Count
+    top3_hit_a: Count
+    nothing_shown_a: Count
+    nothing_shown_b: Count
+
+
+def sweep(rows: Sequence[Row], axis: Axis) -> list[Point]:
+    start, stop, step = SWEEP[axis]
+    points: list[Point] = []
+    for i in range(round((stop - start) / step) + 1):
+        edge = round(start + i * step, 4)
+        edges_for = constant(Edges(edge, edge, edge))
+        outcomes = {row.id: banded(row, edges_for, axis) for row in rows}
+        s = summary(rows, outcomes, listed=True)
+        points.append(
+            Point(
+                edge,
+                s["answered_a"],
+                s["abstention_b"],
+                s["top3_hit_a"],
+                s["nothing_shown_a"],
+                s["nothing_shown_b"],
+            )
+        )
+    return points
+
+
+def reference_points(
+    points: Sequence[Point], today_answered: Count
+) -> tuple[float | None, float | None]:
+    """The highest edge that keeps today's Set A answered count, and the lowest that meets Set
+    B's target. Marked for a person to read; neither is chosen here."""
+    keeps = [p.edge for p in points if p.answered_a.n and p.answered_a.hits >= today_answered.hits]
+    meets = [p.edge for p in points if (p.abstention_b.rate or 0.0) >= B_TARGET]
+    return (max(keeps) if keeps else None, min(meets) if meets else None)
+
+
+def by_pack(rows: Sequence[Row]) -> dict[str, list[Row]]:
+    """Rows by the pack whose floor governs them; `none` for a question nothing was read for."""
+    groups: dict[str, list[Row]] = {}
+    for row in rows:
+        groups.setdefault(row.governing_pack or "none", []).append(row)
+    return groups
+
+
+def axis_summary(rows: Sequence[Row], today_answered: Count) -> dict[str, dict[str, Any] | None]:
+    """Cosine against relevance, at the same two reference points. `None` for an axis the run
+    did not record — relevance needs the cross-encoder."""
+    result: dict[str, dict[str, Any] | None] = {}
+    axes: tuple[Axis, ...] = ("cosine", "relevance")
+    for axis in axes:
+        if not any(item.score(axis) is not None for row in rows for item in row.items):
+            result[axis] = None
+            continue
+        points = sweep(rows, axis)
+        keeps, meets = reference_points(points, today_answered)
+        at = {p.edge: p for p in points}
+        result[axis] = {
+            "keeps_today": keeps,
+            "abstention_b_there": at[keeps].abstention_b if keeps is not None else None,
+            "meets_b": meets,
+            "answered_a_there": at[meets].answered_a if meets is not None else None,
+        }
+    return result
