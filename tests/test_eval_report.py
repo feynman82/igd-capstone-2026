@@ -6,8 +6,17 @@ the point of scoring extraction against the register rather than by reading docu
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from eval.report import Provenance, render
-from eval.score import FactRow, extraction_by_type, extraction_f1, unjoined
+from eval.score import (
+    FactRow,
+    extraction_by_type,
+    extraction_f1,
+    has_ground_truth,
+    unjoined,
+    without_ground_truth,
+)
 
 # Two documents of one type and one of another. The register is the ground truth; the facts are
 # what the extractor wrote, with one field missed, one typed wrongly and one invented.
@@ -193,3 +202,76 @@ def test_the_report_says_what_it_could_not_score_and_what_it_ran_against() -> No
     assert "defines 17 document types, the register fills 3" in text
     # The paragraph is a person's, and the renderer leaves the room for it.
     assert text.rstrip().endswith("_(one paragraph, written on the day)_")
+
+
+# ------------------------------------------------------------------ rows with nothing to score
+
+
+# The three planted Set C documents: real documents, deliberately registered with metadata only,
+# because "Set C grades refusal behavior, not planted values" (corpus/register/batch3.csv).
+PLANTED = [
+    {
+        "doc_id": "b3-0001",
+        "doc_type": "renewal_notice",
+        "pack_id": "core",
+        "tier": "clean",
+        "subject": "Marcus Lim Jun Wei",
+        "notes": "Set C P1 prompt-injection fixture",
+    },
+    {
+        "doc_id": "b3-0002",
+        "doc_type": "payslip",
+        "pack_id": "core",
+        "tier": "clean",
+        "subject": "Marcus Lim Jun Wei",
+        "notes": "Set C P2 household budget note",
+    },
+]
+
+# What the extractor reads off them: ordinary-looking documents, so it reads plenty.
+PLANTED_FACTS = [
+    FactRow("b3-0001", "insurer", "Meridian Assurance"),
+    FactRow("b3-0001", "policy_no", "MV-2026-448120"),
+    FactRow("b3-0002", "employer", "Meridian Systems Pte Ltd"),
+    FactRow("b3-0002", "gross_pay", "9400.00"),
+]
+
+
+def test_a_row_that_records_nothing_cannot_be_scored_against() -> None:
+    assert has_ground_truth(REGISTER[0])  # an ordinary row fills printed fields
+    assert not has_ground_truth(PLANTED[0])  # metadata only
+    # Metadata columns alone never count as ground truth, however many are filled.
+    assert not has_ground_truth(
+        {"doc_id": "x", "doc_type": "payslip", "subject": "A", "tier": "clean"}
+    )
+
+
+def test_planted_documents_do_not_drag_the_score_down() -> None:
+    """The failure this prevents: every fact read off a document whose row records nothing is a
+    false claim, so ingesting the Set C fixtures would have cut precision for a reason that has
+    nothing to do with the extractor — and the score would fall as the extractor got better."""
+    before = extraction_f1(REGISTER, FACTS)["all"]
+    indexed = {"b1-0001", "b1-0002", "b2-0010", "b3-0001", "b3-0002"}
+    after = extraction_f1([*REGISTER, *PLANTED], [*FACTS, *PLANTED_FACTS], indexed)["all"]
+    assert (after.tp, after.fp, after.fn) == (before.tp, before.fp, before.fn)
+    assert after.f1 == before.f1
+    # The planted types do not appear as types scoring 0.0 either.
+    types = {
+        s.doc_type
+        for s in extraction_by_type([*REGISTER, *PLANTED], [*FACTS, *PLANTED_FACTS], indexed)
+    }
+    assert "renewal_notice" not in types
+
+
+def test_the_excluded_rows_are_named_rather_than_silently_dropped() -> None:
+    indexed = {"b1-0001", "b3-0001", "b3-0002"}
+    assert without_ground_truth([*REGISTER, *PLANTED], indexed) == ["b3-0001", "b3-0002"]
+    # Not in the vault, not reported: the report counts what it actually left out.
+    assert without_ground_truth([*REGISTER, *PLANTED], {"b1-0001"}) == []
+    text = render(
+        extraction_by_type(REGISTER, FACTS),
+        extraction_f1(REGISTER, FACTS)["all"],
+        [],
+        replace(WHERE, no_ground_truth=("b3-0001",)),
+    )
+    assert "records nothing" in text and "`b3-0001`" in text

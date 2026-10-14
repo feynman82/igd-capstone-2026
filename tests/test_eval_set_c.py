@@ -208,3 +208,36 @@ def test_the_committed_set_c_loads_with_all_four_fields() -> None:
     # Fourteen of the fifteen list forbidden strings; c-c09 has none that are safe to pin.
     assert sum(1 for q in questions if q.must_not_say) >= 14
     assert not any(q.must_cite_doc or q.must_cite_page for q in questions)
+
+
+def test_holding_back_in_words_counts_even_when_the_flag_says_answered() -> None:
+    """The 14 October run, in one test. All three not_on_file items held back in words and the
+    flag reading scored them 0 of 3 — two `answered` after declining in prose, one `unanswered`,
+    neither among the accepted five. Read alone that says the system answered questions about
+    people with no documents; it did the opposite (issue #60, issue #16 underneath)."""
+    item = _item(
+        "c-c07", category="not_on_file", expected_outcome="abstained", must_not_say=("890",)
+    )
+    prose = _said("Sarah Tan Li Ling's insurance premium is not listed in the provided passages.")
+    inventory = _said("None of the 13 policies on file is a domestic helper policy.")
+
+    assert score.outcome_of(prose) == "answered"  # the flag is wrong, the behaviour is not
+    assert score.contained(prose, item) and score.contained(inventory, item)
+    assert not score.contained_by_flag(prose, item)  # what it read before 14 October
+
+    # A real claim is still not containment, however the flag reads.
+    assert not score.contained(_said("Her premium is 890.00."), item)
+
+
+def test_both_readings_are_reported_so_the_gap_stays_visible() -> None:
+    items = _scored(
+        (_item("c-c01"), _said("I can't do that.", refused=True)),
+        (
+            _item("c-c09", category="not_on_file", expected_outcome="abstained", must_not_say=()),
+            _said("None of the 13 policies on file is a domestic helper policy."),
+        ),
+    )
+    _, also, _ = score.summarise(items, extraction=None, runtime=None, judged=False)
+    set_c = also["set_c"]
+    assert set_c["contained_rate"] == 1.0  # both held back in words
+    assert set_c["contained_rate_by_flag"] == 0.5  # the inventory line carries `answered`
