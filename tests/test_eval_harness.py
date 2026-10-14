@@ -405,3 +405,76 @@ def test_reference_for_a_fact_question_states_the_value_in_its_printed_forms() -
         )
         == "page two"
     )
+
+
+# ------------------------------------------------------------------------------- floor-off
+
+
+def test_floorless_packs_reach_the_model_and_the_installed_ones_are_untouched() -> None:
+    from core.packs import installed_packs
+
+    packs = installed_packs()
+    before = {p.id: p.manifest.guardrails.abstain_below for p in packs}
+    copies = harness.floorless(packs)
+    assert [p.id for p in copies] == [p.id for p in packs]
+    assert all(p.manifest.guardrails.abstain_below == 0.0 for p in copies)
+    assert {p.id: p.manifest.guardrails.abstain_below for p in packs} == before
+    assert all(b > 0 for b in before.values())
+
+
+def test_the_recorder_keeps_the_rerankers_relevance_for_what_it_kept() -> None:
+    questions = [_question("a-1", text="when?"), _question("a-2", text="premium?")]
+    passages = {
+        "when?": [_passage(1, "b1-0001", 1), _passage(2, "b1-0002", 1)],
+        "premium?": [_passage(3, "b1-0001", 1)],
+    }
+    answers = {"when?": _answered("…", "b1-0001", 1), "premium?": _answered("…", "b1-0001", 1)}
+
+    def relevance_of(question: str, kept: list[Passage]) -> list[float]:
+        return [0.9 - 0.1 * i for i in range(len(kept))]
+
+    recorder = harness.Recorder(
+        harness.RecordingRetriever(FakeRetriever(passages)),
+        harness.RecordingReranker(KeepAll(), relevance_of=relevance_of),
+    )
+    traces = harness.trace_all(FakeGraph(recorder, answers), recorder, questions)
+    assert [t.relevance for t in traces] == [
+        pytest.approx((0.9, 0.8)),
+        pytest.approx((0.9,)),
+    ]
+    assert recorder.reranker.relevance == []  # the slate is clean for the next question
+
+
+def test_a_line_carries_what_replay_reads() -> None:
+    from core.packs import installed_packs
+    from eval import ranked
+
+    question = _question("a-1", text="when?")
+    trace = harness.Trace(
+        question,
+        _answered("It expires on 11 April 2027.", "b1-0001", 1),
+        (_passage(1, "b1-0001", 1),),
+        1,
+        1,
+        (0.9,),
+    )
+    item = score.grade([trace])[0]
+    item.recorded = ranked.record(trace, installed_packs())
+    line = item.as_dict()
+    assert line["held_back"] is False
+    assert line["must_cite_doc"] == "b1-0001"
+    assert line["best_score"] == 0.5
+    assert line["ranked"][0]["doc"] == "b1-0001"
+    assert line["ranked"][0]["relevance"] == 0.9
+    json.loads(json.dumps(line))
+
+
+def test_the_run_says_it_was_floor_off_and_which_questions_the_core_floor_still_held() -> None:
+    from eval.run import _floor_fields
+
+    lines = [
+        {"id": "a", "governing_pack": "core", "best_score": 0.40},
+        {"id": "b", "governing_pack": "insurance_agent", "best_score": 0.40},
+    ]
+    assert _floor_fields(True, lines) == {"floor": "off", "core_floor_capped": ["a"]}
+    assert _floor_fields(False, lines) == {"floor": "pack", "core_floor_capped": []}

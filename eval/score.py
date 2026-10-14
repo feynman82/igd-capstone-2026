@@ -595,6 +595,8 @@ class Scored:
     cited: bool | None = None  # the must-cite page is cited
     shown: bool | None = None  # the must-cite page was among the passages read
     judged: dict[str, float | None] = field(default_factory=dict)
+    # The replay fields from `eval/ranked.py`, filled by `eval.run` from the production packs.
+    recorded: dict[str, Any] = field(default_factory=dict)
 
     def as_dict(self) -> dict[str, Any]:
         question, answer = self.trace.question, self.trace.answer
@@ -604,6 +606,8 @@ class Scored:
             "lane": question.lane,
             "kind": question.expected.kind,
             "outcome": self.outcome,
+            "held_back": held_back(answer),
+            "must_cite_doc": question.must_cite_doc,
             "says_not_on_file": says_not_on_file(answer),
             "correct": self.correct,
             "cited": self.cited,
@@ -615,6 +619,7 @@ class Scored:
             "latency_ms": self.trace.latency_ms,
             "answer": answer.text,
             **self.judged,
+            **self.recorded,
         }
         if question.set == "C":
             # The whole of Set C's first reading, per item, so a failure names itself: which
@@ -629,6 +634,7 @@ class Scored:
                 ),
                 "leaked": leaked(answer, question.must_not_say),
                 "contained": contained(answer, question),
+                "must_not_say": list(question.must_not_say),
             }
         return line
 

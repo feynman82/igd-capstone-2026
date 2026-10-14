@@ -25,7 +25,7 @@ import os
 import re
 import subprocess
 import sys
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -117,6 +117,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         default=None,
         help="relevance a passage must reach to be read (default: the calibrated one, ADR 0019)",
     )
+    parser.add_argument(
+        "--floor-off",
+        action="store_true",
+        help="answer below every pack's floor, for eval.bands to replay (not a production run)",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -158,7 +163,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.no_judge
         else (args.judge or os.environ.get("PARROT_JUDGE_MODEL") or settings.generation_model)
     )
-    label = args.label or ("judged" if judge_model else "code-scored")
+    label = args.label or (
+        "floor-off" if args.floor_off else "judged" if judge_model else "code-scored"
+    )
     target = args.out / f"{date.today().isoformat()}-{label}.json"
     if target.exists():
         print(f"{target} already exists and results are append-only. Choose another --label.")
@@ -170,6 +177,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         + (f" (floor {args.rerank_floor or RELEVANCE_FLOOR})" if args.reranker != "none" else "")
     )
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
+    if args.floor_off:
+        print("floor off: every question reaches the model; replay it with eval.bands")
 
     try:
         with connect(settings) as conn:
@@ -191,9 +200,16 @@ def main(argv: Sequence[str] | None = None) -> int:
                 retriever=args.retriever,
                 reranker=args.reranker,
                 rerank_floor=args.rerank_floor,
+                floor_off=args.floor_off,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
+            from core.registry import enabled_packs
+            from eval import ranked
+
+            production = enabled_packs(conn)
+            for item in scored:
+                item.recorded = ranked.record(item.trace, production)
             references = {
                 q.id: score.reference_for(q, _page_text(conn, q.must_cite_doc, q.must_cite_page))
                 for q in questions
@@ -228,6 +244,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         judged=bool(judge_model),
         modules=module_metrics,
     )
+    per_question = [item.as_dict() for item in scored]
     result = {
         "run": {
             "date": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -250,13 +267,14 @@ def main(argv: Sequence[str] | None = None) -> int:
             "modules_as_of": None if module_metrics is None else module_metrics.as_of.isoformat(),
             "candidates": args.candidates,
             "keep": args.keep,
+            **_floor_fields(args.floor_off, per_question),
             "runtime_numbers_from": runtime_source,
             "skipped_no_document": waiting,
         },
         "metrics": metrics,
         "not_measured": why,
         "also": also,
-        "per_question": [item.as_dict() for item in scored],
+        "per_question": per_question,
     }
     args.out.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -306,6 +324,17 @@ def _progress(trace: Any) -> None:
     from eval.score import outcome_of
 
     print(f"  {trace.question.id:<8} {outcome_of(trace.answer):<16} {trace.latency_ms:>6} ms")
+
+
+def _floor_fields(floor_off: bool, lines: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Whether the packs' floors were applied, and — when they were not — which questions the
+    core's own floor still held back, because a pack copy cannot lower it."""
+    from eval.ranked import capped
+
+    return {
+        "floor": "off" if floor_off else "pack",
+        "core_floor_capped": capped(lines) if floor_off else [],
+    }
 
 
 def _partition(
