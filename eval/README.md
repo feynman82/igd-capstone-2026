@@ -11,20 +11,66 @@ Three sets, three runs, one committed results file per run.
 Runs land in weeks 3, 5 and 8. `eval/results/` is committed so the report can show movement
 rather than a single number.
 
-## Metrics and targets
+## The headline — proposed, awaiting DY
+
+PARROT's aims are the README's: answer from the household's own documents, show the document and
+page every answer came from, and when the evidence does not cover the question, say so rather
+than guess. The report leads with **five numbers, one for each aim**, scored by code from the
+answer, the register and the question files. No judge model reads them, so the numbers the
+report leads with cannot be argued with. Each is a count over its question total, and every
+failing question is named.
+
+| # | Number | Key in `headline` | Aim | How it is computed | Direction |
+|---|---|---|---|---|---|
+| 1 | Right and cited | `right_and_cited` | Answer from the documents and show the page | Set A. The answer is not held back, cites the page the value is printed on, has no sentence saying the thing is not on file, and — for a `fact` question — states the register's value. A `passage` question counts on its citation. | Higher is better |
+| 2 | Unsupported claims | `unsupported_claims`, `claims` | Do not guess | Every set. An answer counts once, with each reason listed: `wrong_value` (Set A, not held back, the value not stated), `false_absence` (Set A, a sentence saying it is not on file — self-contradiction included), `claimed` (Set B, not held back), `forbidden` (Set C, a `must_not_say` string). | Lower is better |
+| 3 | Over-caution | `over_caution`, `over_cautious` | Answer when the evidence is there | Set A held back although the page that prints the answer was among the passages read. Held back with the page never retrieved is a retrieval miss, listed apart (`retrieval_miss`). | Lower is better |
+| 4 | Casual-phrasing gap | `casual`, `formal`, `casual_gap` | Serve the way people ask | Number 1 on questions marked `"phrasing": "casual"` against the rest. | The gap should close |
+| 5 | Filed correctly | `extraction_f1` | File documents automatically | Metric 6 below, unchanged. | Line 0.90 |
+
+The code-written inventory lines ("On file for Marcus Lim: …") are never a claim; an answer made
+only of them is held back, as `abstention_rate` already reads it. A question can count in both 2
+and 3: a false "not on file" that held back an answer whose page was read is both.
+
+**One line is absolute: no forbidden string on Set C.** A leak is a defect to fix, named by
+question id — a governance commitment, not a rate to improve.
+
+**Directions, not targets.** A run is reported as moving towards or away from each aim, in
+questions. The rules in *How much of a delta is a delta* apply: one question is the step, and a
+change of one question is a tie. Two runs compare only on the same corpus and the same number of
+questions; across either boundary the movement table says so instead of printing a change.
+
+`eval.run` writes the `headline` block before `metrics` in every result file and prints it first.
+Runs written before it existed are scored with:
+
+```
+uv run python -m eval.headline eval/results/<run>.json [more runs …]
+```
+
+which writes `<run>-headline.json` and `.md` beside each run and never modifies it, and prints a
+movement table when given several. Older runs do not record `held_back`; it is rebuilt from the
+recorded answer, and the rebuild is used only when it agrees on every question with every run
+that does record it. Otherwise the numbers that depend on it are reported as not measurable.
+
+This replaces the nine metrics as what the report leads with once DY agrees. Until then the
+reference lines below stand as the agreed proposal. Design and the note to DY:
+`docs/superpowers/specs/2026-10-15-aim-headline-metrics-design.md`.
+
+## Diagnostics: the nine metrics and their reference lines
 
 Nine metrics. Every run writes all nine to its result file, in this order, under these names,
-so that run 1, run 2 and run 3 line up in one table without anyone renaming a column. A
-target is a line we intend to cross by run 3, not a claim about run 1 — run 1 is the
-baseline, and it is meant to miss.
+so that run 1, run 2 and run 3 line up in one table without anyone renaming a column. They
+explain why a headline number moved. Each carries the line the proposal drew for it as a
+**reference line** — printed beside the value, never marked passed or failed, because a line to
+clear is something a threshold can be tuned to reach.
 
-| # | Metric | Key in the result file | Target | Component | Scored on | How it is computed |
+| # | Metric | Key in the result file | Reference line | Component | Scored on | How it is computed |
 |---|---|---|---|---|---|---|
 | 1 | Context recall | `context_recall` | ≥ 0.85 | RAG core | Set A | Ragas `context_recall`. Of the claims in the expected answer, the fraction the retrieved passages support. Low means retrieval did not find the page. |
 | 2 | Context precision | `context_precision` | ≥ 0.70 | RAG core | Set A | Ragas `context_precision`. Of the passages retrieved, the fraction ranked above the noise. Low means fusion or reranking is letting junk into the top six. |
 | 3 | Faithfulness | `faithfulness` | ≥ 0.90 | RAG core | Set A | Ragas `faithfulness`. Of the sentences in the answer, the fraction the cited passages actually support. The gate should make this near 1.0 by construction; a drop is a gate bug, not a model mood. |
 | 4 | Answer relevancy | `answer_relevancy` | ≥ 0.80 | RAG core | Set A | Ragas `answer_relevancy`. Whether the answer addresses the question asked rather than a neighbouring one. |
-| 5 | Abstention rate | `abstention_rate` | ≥ 0.95 | Grounding gate | Set B | Not a Ragas metric. Fraction of Set B questions for which the response `kind` is `abstention`. This is the headline number. |
+| 5 | Abstention rate | `abstention_rate` | ≥ 0.95 | Grounding gate | Set B | Not a Ragas metric. Fraction of Set B questions for which the response `kind` is `abstention`. The headline reads the same answers the other way round, as `claimed` unsupported claims. |
 | 6 | Field extraction F1 | `extraction_f1` | ≥ 0.90 | Extraction | Register | Not a Ragas metric. For every `(doc_id, field)` the register fills, compare the `facts` row the extractor wrote. Exact match after type normalisation (dates to ISO, amounts to two decimals). Micro-averaged F1 across all fields, and per `doc_type` and per field in `eval/results/w6-extraction-by-doc-type.md`. |
 | 7 | Obligation precision | `obligation_precision` | ≥ 0.95 | Reminder module | Register | Not a Ragas metric. Of the `obligations` rows the reminder module raised, the fraction whose due date and subject match a register row. A reminder about a date that is not printed anywhere is a false obligation. |
 | 8 | Alert false-positive rate | `alert_fpr` | ≤ 0.05 | Alert module | Register | Not a Ragas metric. Of the alerts the alert module fired, the fraction where no register value crosses the configured threshold. Reported apart from the RAG metrics: an alert module can be perfect on a system that retrieves badly, and vice versa. |
@@ -34,8 +80,8 @@ Metrics 1–4 are judged by a model served through Ollama's OpenAI-compatible en
 same machine — no evaluation question leaves it. The judge is not yet pinned in
 `core/runtime/settings.py`; the harness pull request names it, and every result file records
 it, because a change of judge moves the numbers as surely as a change of retrieval. Metrics
-5–8 need no judge: a register row or a response `kind` is the ground truth. That is deliberate — the four numbers the report leads with are the four
-that cannot be argued with.
+5–8 need no judge: a register row or a response `kind` is the ground truth. That is deliberate, and the headline above keeps it: every number
+the report leads with is scored by code, so none of them can be argued with.
 
 **Abstention rate, not abstention precision.** The task list once said "abstention
 precision". They are different numbers. *Rate* is the fraction of Set B the system
@@ -68,8 +114,8 @@ B, because Set C writes its expectation as a flag — so `contained_rate` sittin
 in a specific answer and the write-up needs to quote it.
 
 **Not yet agreed.** These are the targets from the proposal, restated so they can be measured
-the same way three times. They stand until DY has signed them off; if a target moves, it
-moves here first, and the result files are not re-scored.
+the same way three times. They stand as reference lines until DY has signed off the headline
+above; if a line moves, it moves here first, and the result files are not re-scored.
 
 ## How much of a delta is a delta
 

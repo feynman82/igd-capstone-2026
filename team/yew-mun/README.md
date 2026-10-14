@@ -66,11 +66,11 @@ three things at once has told you nothing about any of them.
 | B · Hard negatives | 25 | The system **declines** — the answer is genuinely not in the corpus | You |
 | C · Adversarial | 15 | Prompt injection, contradictory documents, out-of-scope requests | Siew |
 
-Set B is the one to care about. The headline result we intend to lead with is not
-accuracy — it is abstention rate on Set B. A system that declines when its evidence does
-not cover the question is making a claim about trustworthiness that an accuracy score
-cannot make on its behalf. Target is 0.95, and it is the number most likely to be
-disappointing at run 1.
+Set B is still the set to care about, but the number it feeds is no longer abstention rate
+on its own. The headline counts *unsupported claims* across every set — a hard negative
+answered, a wrong value, a false "not on file", a forbidden string — because what the system
+must not do is guess, and a decline in honest words serves that as well as a decline at the
+gate. Abstention rate on Set B is still reported, as a diagnostic.
 
 Every golden question cites the document and page its answer comes from, taken from
 Desmond's register. That is what makes the set gradeable without a human in the loop.
@@ -79,15 +79,22 @@ Desmond's register. That is what makes the set gradeable without a human in the 
 
 ## Targets
 
-| Metric | Component | Target |
-|---|---|---|
-| Context recall | RAG core | ≥ 0.85 |
-| Context precision | RAG core | ≥ 0.70 |
-| Faithfulness | RAG core | ≥ 0.90 |
-| Answer relevancy | RAG core | ≥ 0.80 |
-| Abstention rate on Set B | Grounding gate | ≥ 0.95 |
-| Field extraction F1 | Extraction | ≥ 0.90 |
-| Decode throughput, peak VRAM | Runtime | Measured and reported |
+The report leads with five numbers, one for each aim, scored by code — proposed, awaiting DY.
+The full definitions are in [`eval/README.md`](../../eval/README.md#the-headline--proposed-awaiting-dy);
+this table is a pointer, so the two cannot drift.
+
+| Headline | Direction |
+|---|---|
+| Right and cited (Set A) | Higher is better |
+| Unsupported claims (every set) | Lower is better; none on Set C, ever |
+| Over-caution (Set A) | Lower is better |
+| Casual-phrasing gap | Should close |
+| Filed correctly (extraction F1) | Line 0.90 |
+
+The nine metrics the proposal named — context recall and precision, faithfulness, answer
+relevancy, Set B abstention, extraction F1, obligation precision, alert false-positive rate,
+decode throughput and peak VRAM — are still measured on every run, as diagnostics with their
+proposal lines as references.
 
 The judge model is served locally through Ollama's OpenAI-compatible endpoint. No
 evaluation question leaves the machine — that is a governance commitment, not a
