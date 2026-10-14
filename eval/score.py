@@ -218,8 +218,10 @@ def mentions(text: str, value: str) -> bool:
 def _contains(haystack: str, needle: str) -> bool:
     if needle[0].isdigit() or needle[0] == "-":
         # A number must stand alone: "1284" is not found in "12840" or "1284.50", but a full
-        # stop after it is just the end of the sentence.
-        pattern = rf"(?<!\d)(?<!\d\.){re.escape(needle)}(?!\d|\.\d)"
+        # stop after it is just the end of the sentence. A thousands group belongs to the number
+        # it groups, so "500.00" is not found in "3,500.00" and "500" not in "500,000"; a comma
+        # followed by a space is punctuation, not grouping.
+        pattern = rf"(?<!\d)(?<!\d\.)(?<!\d,){re.escape(needle)}(?!\d|\.\d|,\d)"
         return re.search(pattern, haystack) is not None
     return needle in haystack
 

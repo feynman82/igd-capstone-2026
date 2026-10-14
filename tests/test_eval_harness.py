@@ -101,6 +101,12 @@ def test_subset_is_stable_and_spread_across_lanes() -> None:
         ("1284.00", "premium payable: 1284", True),
         ("1284.00", "sum insured 12840.00", False),
         ("40000.00", "insured for S$40,000", True),
+        # A thousands group is part of the number before it: a-b22 on 14 October was marked
+        # correct for "SGD 3,500.00" when the excess is 500.00.
+        ("500.00", "an annual deductible of SGD 3,500.00", False),
+        ("500.00", "covered up to 500,000", False),
+        ("500.00", "the excess is SGD 500.00, as printed", True),
+        ("500.00", "excess: 500, then 20% co-payment", True),
         ("Meridian Assurance", "Issued by MERIDIAN  Assurance Ltd.", True),
         ("Meridian Assurance", "Issued by Lionhead Life Assurance.", False),
     ],
