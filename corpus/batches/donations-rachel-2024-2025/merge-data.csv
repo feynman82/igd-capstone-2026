@@ -1,0 +1,4 @@
+file,donor,id_masked,address_1,address_2,tax_deductible_text,charity,receipt_no,issued_date,donation_date,donation_amount,amount_words,payment_mode
+donation-2024-02-29-rachel-ng-good-luck-vwo,Rachel Ng Hui Shan,SXXXX156F,Blk 45B Tampines Ave 8 #07-21,Singapore 521045,Yes — this donation qualifies for tax deduction,Good Luck VWO,GLV-2024-00229,29 Feb 2024,29 Feb 2024,500.00,Five hundred dollars only,PayNow
+donation-2024-06-15-rachel-ng-lionsbefriender,Rachel Ng Hui Shan,SXXXX156F,Blk 45B Tampines Ave 8 #07-21,Singapore 521045,Yes — this donation qualifies for tax deduction,LionsBefriender,LBF-2024-01873,15 Jun 2024,15 Jun 2024,"1,000.00",One thousand dollars only,Credit card
+donation-2025-11-15-rachel-ng-givesg,Rachel Ng Hui Shan,SXXXX156F,Blk 45B Tampines Ave 8 #07-21,Singapore 521045,Yes — this donation qualifies for tax deduction,GiveSG,GSG-2025-11506,15 Nov 2025,15 Nov 2025,300.00,Three hundred dollars only,PayNow

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>National Revenue Board - Notice of Assessment</title>
+<!-- Merge fields: {{doc_ref}} {{notice_date}} {{taxpayer}} {{id_masked}} {{address_1}} {{address_2}} {{assessment_year}}
+     {{income_year}} {{employer}} {{employment_income}} {{donation_rows}} {{assessable_income}} {{relief_rows}}
+     {{total_reliefs}} {{chargeable_income}} {{gross_tax}} {{rebate}} {{tax_payable}} {{payment_due_date}} -->
+<style>
+  @page { size: A4 portrait; margin: 16mm 16mm; }
+  * { box-sizing: border-box; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 9.5pt; line-height: 1.4; color: #222; margin: 0; background: #fff; }
+  .watermark { position: fixed; top: 42%; left: -8%; width: 116%; text-align: center; transform: rotate(-30deg);
+    font-size: 22pt; font-weight: 700; letter-spacing: 1px; color: rgba(160, 30, 30, 0.13); z-index: 0; }
+  .content { position: relative; z-index: 1; }
+  .header { width: 100%; border-collapse: collapse; border-bottom: 2px solid #8a1c1c; margin-bottom: 14px; }
+  .header td { padding-bottom: 10px; vertical-align: top; }
+  .issuer { font-size: 16pt; font-weight: 700; color: #8a1c1c; letter-spacing: 0.4px; }
+  .issuer-meta { font-size: 8.5pt; color: #555; margin-top: 3px; }
+  .ref { text-align: right; font-size: 9pt; color: #444; }
+  .title { text-align: center; background: #faf3f3; border-top: 1px solid #ecdcdc; border-bottom: 1px solid #ecdcdc; padding: 7px 0; margin-bottom: 14px; }
+  .title h1 { font-size: 13pt; margin: 0; color: #8a1c1c; text-transform: uppercase; letter-spacing: 0.5px; }
+  .title p { margin: 2px 0 0; font-size: 9.5pt; color: #444; }
+  .who { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  .who td { padding: 2px 0; vertical-align: top; }
+  .label { color: #666; width: 30%; }
+  .due { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+  .due td { width: 50%; padding: 10px 12px; background: #faf3f3; border: 1px solid #ecdcdc; }
+  .due .k { font-size: 8.5pt; color: #555; text-transform: uppercase; letter-spacing: 0.3px; }
+  .due .v { font-size: 14pt; font-weight: 700; color: #8a1c1c; }
+  h2 { font-size: 10pt; color: #8a1c1c; text-transform: uppercase; border-bottom: 1px solid #ecdcdc; padding-bottom: 4px; margin: 12px 0 6px; }
+  table.calc { width: 100%; border-collapse: collapse; }
+  table.calc td { padding: 4px 6px; border-bottom: 1px solid #f2e8e8; }
+  table.calc td.indent { padding-left: 22px; color: #333; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .sub td { font-weight: 700; border-top: 1px solid #c9a9a9; }
+  .total td { font-weight: 700; font-size: 10.5pt; border-top: 1.5px solid #8a1c1c; border-bottom: none; }
+  .note { font-size: 8.5pt; color: #555; margin-top: 12px; line-height: 1.5; }
+  .footer { margin-top: 16px; padding-top: 8px; border-top: 1px solid #ecdcdc; font-size: 8pt; color: #777; text-align: center; }
+</style>
+</head>
+<body>
+<div class="watermark">PROJECT PARROT · SYNTHETIC TEST RECORD · NOT A REAL DOCUMENT</div>
+<div class="content">
+<table class="header"><tr>
+  <td><div class="issuer">NATIONAL REVENUE BOARD</div><div class="issuer-meta">Individual Income Tax</div></td>
+  <td class="ref">Date of notice: <strong>{{notice_date}}</strong><br>Reference: {{doc_ref}}</td>
+</tr></table>
+
+<div class="title"><h1>Notice of Assessment</h1>
+  <p>Year of Assessment <strong>{{assessment_year}}</strong> · income earned in {{income_year}}</p></div>
+
+<table class="who">
+  <tr><td class="label">Taxpayer</td><td><strong>{{taxpayer}}</strong></td></tr>
+  <tr><td class="label">Tax reference no.</td><td>{{id_masked}}</td></tr>
+  <tr><td class="label">Address</td><td>{{address_1}}, {{address_2}}</td></tr>
+</table>
+
+<table class="due"><tr>
+  <td><div class="k">Tax payable, YA {{assessment_year}}</div><div class="v">SGD {{tax_payable}}</div></td>
+  <td><div class="k">Pay by</div><div class="v">{{payment_due_date}}</div></td>
+</tr></table>
+
+<h2>Tax computation (SGD)</h2>
+<table class="calc">
+  <tr><td>Employment income — {{employer}}</td><td class="num">{{employment_income}}</td></tr>
+  {{donation_rows}}
+  <tr class="sub"><td>Assessable income</td><td class="num">{{assessable_income}}</td></tr>
+  <tr><td>Less: personal reliefs</td><td class="num"></td></tr>
+  {{relief_rows}}
+  <tr class="sub"><td>Total personal reliefs</td><td class="num">({{total_reliefs}})</td></tr>
+  <tr class="sub"><td>Chargeable income</td><td class="num">{{chargeable_income}}</td></tr>
+  <tr><td>Tax on chargeable income at resident rates</td><td class="num">{{gross_tax}}</td></tr>
+  <tr><td>Less: Personal Income Tax Rebate (60%, capped at $200)</td><td class="num">({{rebate}})</td></tr>
+  <tr class="total"><td>Tax payable</td><td class="num">{{tax_payable}}</td></tr>
+</table>
+
+<p class="note">Please pay the tax payable by {{payment_due_date}}. If you disagree with this assessment, you may
+object within 30 days of the date of this notice.</p>
+<div class="footer">Issued by National Revenue Board, an invented authority used for Project Parrot evaluation.
+This record is synthetic and does not describe any real person or tax account.</div>
+</div>
+</body>
+</html>
