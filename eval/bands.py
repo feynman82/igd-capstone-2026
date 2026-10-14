@@ -19,15 +19,18 @@ PARROT actually did.
 
 from __future__ import annotations
 
+import argparse
 import json
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass, is_dataclass
+from datetime import date
 from itertools import pairwise
 from pathlib import Path
 from typing import Any, Literal
 
 from eval.ranked import CORE_FLOOR
+from eval.report import PLACEHOLDER, _paragraph
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -419,3 +422,379 @@ def axis_summary(rows: Sequence[Row], today_answered: Count) -> dict[str, dict[s
             "answered_a_there": at[meets].answered_a if meets is not None else None,
         }
     return result
+
+
+# ------------------------------------------------------------------------------- edges
+
+
+def parse_edge(text: str) -> dict[str, float]:
+    """`0.50` for every pack, `insurance_agent=0.52,iras_tax=0.48` per pack, or both."""
+    edges: dict[str, float] = {}
+    for part in (p.strip() for p in text.split(",")):
+        if part:
+            name, _, value = part.rpartition("=")
+            edges[name or "*"] = float(value)
+    return edges
+
+
+def edges_for_packs(
+    high: Mapping[str, float], medium: Mapping[str, float], hard: Mapping[str, float]
+) -> EdgesFor:
+    def pick(edge: Mapping[str, float], pack: str) -> float:
+        if pack in edge:
+            return edge[pack]
+        if "*" in edge:
+            return edge["*"]
+        raise NotReplayable(
+            f"no edge for pack {pack!r}: name it, or give a bare number for every pack"
+        )
+
+    def of(pack: str) -> Edges:
+        return Edges(pick(high, pack), pick(medium, pack), pick(hard, pack))
+
+    return of
+
+
+# ------------------------------------------------------------------------------- the report
+
+
+@dataclass
+class Report:
+    axis: Axis
+    compared: int
+    mismatches: list[Mismatch]
+    today: dict[str, dict[str, Any]]  # "all" and each governing pack
+    banded: dict[str, dict[str, Any]]
+    labels: dict[Band, Count]
+    sweeps: dict[str, list[Point]]  # per governing pack, on the chosen axis
+    references: dict[str, tuple[float | None, float | None]]
+    axes: dict[str, dict[str, Any] | None]
+    unknown: list[str]
+    capped: list[str]
+
+    @property
+    def trustworthy(self) -> bool:
+        return len(self.mismatches) <= 1  # one question is the step
+
+    @property
+    def honest(self) -> bool:
+        return honest(self.labels)
+
+
+def compute(rows: Sequence[Row], against: Sequence[Row], edges_for: EdgesFor, axis: Axis) -> Report:
+    compared, mismatches = replay_check(rows, against)
+    today_out = {row.id: fixed(row) for row in rows}
+    banded_out = {row.id: banded(row, edges_for, axis) for row in rows}
+    packs = by_pack(rows)
+    groups = {"all": list(rows), **packs}
+    today = {name: summary(g, today_out, listed=False) for name, g in groups.items()}
+    band = {name: summary(g, banded_out, listed=True) for name, g in groups.items()}
+    sweeps = {name: sweep(g, axis) for name, g in packs.items()}
+    references = {
+        name: reference_points(points, today[name]["answered_a"]) for name, points in sweeps.items()
+    }
+    return Report(
+        axis=axis,
+        compared=compared,
+        mismatches=mismatches,
+        today=today,
+        banded=band,
+        labels=label_honesty(rows, banded_out),
+        sweeps=sweeps,
+        references=references,
+        axes=axis_summary(rows, today["all"]["answered_a"]),
+        unknown=sorted(o.id for o in banded_out.values() if o.unknown),
+        capped=sorted(row.id for row in rows if row.capped),
+    )
+
+
+def _cell(value: Any) -> str:
+    if value is None:
+        return "—"
+    if isinstance(value, Count):
+        return "—" if value.rate is None else f"{value.rate:.3f} ({value.hits}/{value.n})"
+    return f"{value:.3f}" if isinstance(value, float) else str(value)
+
+
+SIDE_BY_SIDE = (
+    ("Set A answered", "answered_a"),
+    ("Set A top-3 hit", "top3_hit_a"),
+    ("Set A right document in High", "right_in_high_a"),
+    ("Set A nothing shown", "nothing_shown_a"),
+    ("Set A faithfulness (answered)", "faithfulness_a"),
+    ("Set A answer relevancy (answered)", "answer_relevancy_a"),
+    ("Set B generated-answer abstention", "abstention_b"),
+    ("Set B nothing shown", "nothing_shown_b"),
+    ("Set B bands shown", "bands_shown_b"),
+)
+
+
+def _move(today: Any, banded_value: Any) -> str:
+    if isinstance(today, Count) and isinstance(banded_value, Count):
+        return delta(today, banded_value)
+    if isinstance(today, float) and isinstance(banded_value, float):
+        return f"{banded_value - today:+.3f} (judge noise is about 0.05)"
+    return ""
+
+
+def render(
+    report: Report, run: Mapping[str, Any], inputs: Mapping[str, Any], paragraph: str
+) -> str:
+    out = [f"# bands-{inputs['label']} — {date.today().isoformat()}", ""]
+    out += [
+        f"Replayed from `{inputs['source']}`, checked against `{inputs['against']}`. Generator "
+        f"`{run.get('generator')}`; judge `{run.get('judge') or 'none'}`; corpus "
+        f"`{run.get('corpus_manifest_sha')}`; git `{run.get('git_sha')}`. Axis **{report.axis}**; "
+        f"edges high `{inputs['high']}`, medium `{inputs['medium']}`, hard `{inputs['hard']}`.",
+        "",
+    ]
+    if not report.honest:
+        out += [
+            "> **The labels are not honest on this run**: a higher band is not right more often "
+            "than the one below it. A person would be misled by them. See *Are the labels honest?*",
+            "",
+        ]
+    if not report.trustworthy:
+        out += [
+            f"> **The replay does not reproduce production**: {len(report.mismatches)} questions "
+            "differ, more than one question's step. Read nothing below until *Replay check* is "
+            "explained.",
+            "",
+        ]
+
+    out += [
+        "## Replay check",
+        "",
+        f"Today's fixed floor, replayed from the floor-off run: {report.compared} questions "
+        f"compared with production, {len(report.mismatches)} differ.",
+        "",
+    ]
+    for m in report.mismatches:
+        said = "held back" if m.actual_held_back else "answered"
+        why = (
+            "retrieval differed between the runs (the searches are a model call)"
+            if m.retrieval_differed
+            else "same evidence: the documents-on-file branch replay cannot see"
+        )
+        out.append(f"- `{m.id}`: production {said}, replay did not — {why}")
+    out.append("")
+
+    out += ["## Today against banded", ""]
+    for name, today in report.today.items():
+        out += [
+            f"### {name}",
+            "",
+            "| | Today (fixed floor) | Banded top 3 | Δ |",
+            "|---|---|---|---|",
+        ]
+        for label, key in SIDE_BY_SIDE:
+            t, b = today[key], report.banded[name][key]
+            out.append(f"| {label} | {_cell(t)} | {_cell(b)} | {_move(t, b)} |")
+        out.append("")
+
+    out += ["## Set C: leaked via quote", ""]
+    leaked = report.banded["all"]["leaked_via_quote_c"]
+    out += [f"- `{qid}`: {', '.join(repr(s) for s in found)}" for qid, found in leaked.items()]
+    out += ["None." if not leaked else "", "These are Siew's to judge.", ""]
+
+    out += [
+        "## Are the labels honest?",
+        "",
+        "| Band | Right document | ",
+        "|---|---|",
+        *(f"| {band} | {_cell(report.labels[band])} |" for band in BANDS),
+        "",
+        "Honest." if report.honest else "**Not honest.**",
+        "",
+    ]
+
+    out += ["## The sweep", ""]
+    for name, points in report.sweeps.items():
+        keeps, meets = report.references[name]
+        out += [
+            f"### {name} ({report.axis})",
+            "",
+            f"Keeps today's Set A answered count up to **{_cell(keeps)}**; meets Set B's "
+            f"{B_TARGET} from **{_cell(meets)}**. Neither is chosen here.",
+            "",
+            "| Edge | A answered | B abstention | A top-3 hit | A nothing shown "
+            "| B nothing shown |",
+            "|---|---|---|---|---|---|",
+        ]
+        for i, p in enumerate(points):
+            marked = p.edge in (keeps, meets)
+            if i % 2 and not marked:
+                continue
+            edge = f"**{p.edge:.2f}**" if marked else f"{p.edge:.2f}"
+            out.append(
+                f"| {edge} | {_cell(p.answered_a)} | {_cell(p.abstention_b)} | "
+                f"{_cell(p.top3_hit_a)} | {_cell(p.nothing_shown_a)} | {_cell(p.nothing_shown_b)} |"
+            )
+        out.append("")
+
+    out += [
+        "## Cosine against relevance",
+        "",
+        "| Axis | Keeps today's A at | B abstention there | Meets B's target at "
+        "| A answered there |",
+        "|---|---|---|---|---|",
+    ]
+    for axis, found in report.axes.items():
+        if found is None:
+            out.append(f"| {axis} | not recorded | | | |")
+            continue
+        out.append(
+            f"| {axis} | {_cell(found['keeps_today'])} | {_cell(found['abstention_b_there'])} | "
+            f"{_cell(found['meets_b'])} | {_cell(found['answered_a_there'])} |"
+        )
+    out.append("")
+
+    if report.capped:
+        out += [
+            "## Held back by the core floor",
+            "",
+            f"{len(report.capped)} questions had core evidence under 0.42, which a floor-off run "
+            "cannot lower: "
+            + ", ".join(f"`{q}`" for q in report.capped)
+            + ". "
+            + (
+                f"{len(report.unknown)} of them would be answered under these edges and are "
+                "counted as held back — a pessimistic reading."
+                if report.unknown
+                else "None of them would be answered under these edges."
+            ),
+            "",
+        ]
+
+    out += ["## How to read it", "", paragraph or PLACEHOLDER, ""]
+    return "\n".join(out)
+
+
+def _plain(value: Any) -> Any:
+    if isinstance(value, Count):
+        return {"hits": value.hits, "n": value.n, "rate": value.rate}
+    if is_dataclass(value) and not isinstance(value, type):
+        return {k: _plain(v) for k, v in asdict(value).items()}
+    if isinstance(value, Mapping):
+        return {str(k): _plain(v) for k, v in value.items()}
+    if isinstance(value, list | tuple):
+        return [_plain(v) for v in value]
+    return value
+
+
+def as_json(report: Report) -> dict[str, Any]:
+    return {
+        "axis": report.axis,
+        "replay_check": {
+            "compared": report.compared,
+            "trustworthy": report.trustworthy,
+            "mismatches": [_plain(m) for m in report.mismatches],
+        },
+        "today": _plain(report.today),
+        "banded": _plain(report.banded),
+        "labels": _plain(report.labels),
+        "honest": report.honest,
+        "sweeps": {
+            name: [
+                {"edge": p.edge, **{k: _plain(v) for k, v in vars_of(p).items()}} for p in points
+            ]
+            for name, points in report.sweeps.items()
+        },
+        "references": {
+            name: {"keeps_today": keeps, "meets_b": meets}
+            for name, (keeps, meets) in report.references.items()
+        },
+        "axes": _plain(report.axes),
+        "unknown": report.unknown,
+        "capped": report.capped,
+    }
+
+
+def vars_of(point: Point) -> dict[str, Count]:
+    return {
+        "answered_a": point.answered_a,
+        "abstention_b": point.abstention_b,
+        "top3_hit_a": point.top3_hit_a,
+        "nothing_shown_a": point.nothing_shown_a,
+        "nothing_shown_b": point.nothing_shown_b,
+    }
+
+
+# ------------------------------------------------------------------------------- the CLI
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("source", type=Path, help="a run made with `eval.run --floor-off`")
+    parser.add_argument(
+        "--against", type=Path, required=True, help="a production run of the same vault"
+    )
+    parser.add_argument("--high", required=True)
+    parser.add_argument("--medium", required=True)
+    parser.add_argument("--hard", required=True)
+    parser.add_argument("--axis", choices=["cosine", "relevance"], default="cosine")
+    parser.add_argument("--label", required=True, help="what these edges are; part of the name")
+    parser.add_argument("--out", type=Path, default=ROOT / "eval" / "results")
+    args = parser.parse_args(argv)
+    axis: Axis = args.axis
+
+    try:
+        run, rows = load(args.source)
+        against_run, against = load(args.against)
+        if run.get("floor") != "off":
+            raise NotReplayable(
+                f"{args.source} was not run with --floor-off: below the floor it holds no "
+                "answers to replay"
+            )
+        if against_run.get("floor") == "off":
+            raise NotReplayable(f"{args.against} is a floor-off run; the check needs production")
+        if run.get("corpus_manifest_sha") != against_run.get("corpus_manifest_sha"):
+            raise NotReplayable("the two runs read different corpora, so they do not compare")
+        edges_for = edges_for_packs(
+            parse_edge(args.high), parse_edge(args.medium), parse_edge(args.hard)
+        )
+        for pack in sorted({item.pack for row in rows for item in row.items}):
+            edges_for(pack)
+        if not any(item.score(axis) is not None for row in rows for item in row.items):
+            raise NotReplayable(f"no {axis} score was recorded in {args.source}")
+    except (NotReplayable, ValueError) as error:
+        print(error)
+        return 2
+
+    inputs = {
+        "source": str(args.source),
+        "against": str(args.against),
+        "high": args.high,
+        "medium": args.medium,
+        "hard": args.hard,
+        "axis": axis,
+        "label": args.label,
+    }
+    stem = args.out / f"{date.today().isoformat()}-bands-{args.label}"
+    target, note = Path(f"{stem}.json"), Path(f"{stem}.md")
+    if target.exists() and json.loads(target.read_text(encoding="utf-8")).get("inputs") != inputs:
+        print(
+            f"{target} was written from different inputs and results are append-only. "
+            "Choose another --label."
+        )
+        return 2
+
+    report = compute(rows, against, edges_for, axis)
+    args.out.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        json.dumps({"inputs": inputs, **as_json(report)}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    note.write_text(render(report, run, inputs, _paragraph(note)), encoding="utf-8")
+    print(f"wrote {note}")
+    if not report.trustworthy:
+        print(f"replay differs from production on {len(report.mismatches)} questions — read it")
+    if not report.honest:
+        print("the labels are not honest on this run — read it")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

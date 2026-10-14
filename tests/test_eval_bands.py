@@ -316,3 +316,113 @@ def test_both_axes_are_compared_and_a_missing_one_says_so() -> None:
     assert both["cosine"]["keeps_today"] == 0.44
     cosine_only = [_row("a-1", "A", _item("b1-0001", 0.5))]
     assert bands.axis_summary(cosine_only, bands.Count(1, 1))["relevance"] is None
+
+
+# ------------------------------------------------------------------------------- the CLI
+
+
+def test_an_edge_can_be_given_for_every_pack_for_one_or_both() -> None:
+    assert bands.parse_edge("0.50") == {"*": 0.50}
+    assert bands.parse_edge("0.50,iras_tax=0.48") == {"*": 0.50, "iras_tax": 0.48}
+    edges_for = bands.edges_for_packs(
+        {"insurance_agent": 0.52}, {"insurance_agent": 0.45}, {"insurance_agent": 0.35}
+    )
+    assert edges_for("insurance_agent") == Edges(0.52, 0.45, 0.35)
+    with pytest.raises(bands.NotReplayable, match="iras_tax"):
+        edges_for("iras_tax")
+
+
+def _line(row: Row) -> dict[str, object]:
+    return {
+        "id": row.id,
+        "set": row.set,
+        "held_back": row.held_back,
+        "correct": row.correct,
+        "best_score": row.best_score,
+        "governing_pack": row.governing_pack,
+        "floor_in_force": row.floor_in_force,
+        "must_cite_doc": row.must_cite_doc,
+        "must_not_say": list(row.must_not_say),
+        "faithfulness": row.faithfulness,
+        "ranked": [
+            {
+                "doc": i.doc,
+                "page": i.page,
+                "cosine": i.cosine,
+                "relevance": i.relevance,
+                "pack": i.pack,
+                "quote": i.quote,
+            }
+            for i in row.items
+        ],
+    }
+
+
+def _files(tmp_path: Path) -> tuple[Path, Path]:
+    run = {"corpus_manifest_sha": "abc", "generator": "g", "judge": None, "git_sha": "s"}
+    source = tmp_path / "floor-off.json"
+    source.write_text(
+        json.dumps({"run": {**run, "floor": "off"}, "per_question": [_line(r) for r in SWEPT]})
+    )
+    against = tmp_path / "production.json"
+    against.write_text(
+        json.dumps({"run": {**run, "floor": "pack"}, "per_question": [_line(r) for r in SWEPT]})
+    )
+    return source, against
+
+
+def _args(source: Path, against: Path, out: Path, high: str = "0.50") -> list[str]:
+    return [
+        str(source),
+        "--against",
+        str(against),
+        "--high",
+        high,
+        "--medium",
+        "0.42",
+        "--hard",
+        "0.35",
+        "--label",
+        "t",
+        "--out",
+        str(out),
+    ]
+
+
+def test_the_report_is_written_and_a_person_s_reading_survives_a_rerun(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    note = next(out.glob("*-bands-t.md"))
+    text = note.read_text(encoding="utf-8")
+    for heading in (
+        "## Replay check",
+        "## Today against banded",
+        "## Set C: leaked via quote",
+        "## Are the labels honest?",
+        "## The sweep",
+        "## Cosine against relevance",
+        "## How to read it",
+    ):
+        assert heading in text
+    note.write_text(text.replace(bands.PLACEHOLDER, "Written by a person."), encoding="utf-8")
+    assert bands.main(_args(source, against, out)) == 0
+    assert "Written by a person." in note.read_text(encoding="utf-8")
+    saved = json.loads(next(out.glob("*-bands-t.json")).read_text(encoding="utf-8"))
+    assert saved["inputs"]["high"] == "0.50" and saved["replay_check"]["compared"] == 5
+
+
+def test_different_inputs_under_the_same_label_are_refused(tmp_path: Path) -> None:
+    source, against = _files(tmp_path)
+    out = tmp_path / "results"
+    assert bands.main(_args(source, against, out)) == 0
+    assert bands.main(_args(source, against, out, high="0.55")) == 2
+
+
+def test_a_production_run_is_not_replayed_and_a_floor_off_one_is_not_the_check(
+    tmp_path: Path,
+) -> None:
+    source, against = _files(tmp_path)
+    out = tmp_path / "results"
+    assert bands.main(_args(against, against, out)) == 2
+    assert bands.main(_args(source, source, out)) == 2

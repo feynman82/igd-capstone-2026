@@ -185,6 +185,30 @@ wrote nothing" must not be the one failure the metric cannot see. Facts from a d
 register row claims are counted and named, not scored: without a register row there is no ground
 truth, so they are neither hits nor misses.
 
+## Banded replay
+
+```
+uv run python -m eval.run --corpus all --floor-off --judge <judge> --label floor-off
+uv run python -m eval.run --corpus all --no-judge --label production
+uv run python -m eval.bands eval/results/<date>-floor-off.json \
+    --against eval/results/<date>-production.json \
+    --high 0.50 --medium 0.42 --hard 0.35 --axis cosine --label first-look
+```
+
+Today the gate answers when the best passage clears the governing pack's `abstain_below`, and
+otherwise says nothing. `eval.bands` replays that, and a banded top 3 beside it — up to three
+documents labelled High, Medium or Low, a generated answer only when the first is High, nothing
+below `--hard` — from one floor-off run. It is a companion report, not a tenth metric: Set B's
+headline is still the fraction held back, defined as above.
+
+Three things it says before any number: whether replaying today's floor reproduces the
+production run (`--against`), whether the labels are honest (High right more often than Medium,
+Medium than Low), and which forbidden Set C strings a *quote* now puts on screen. The sweep marks
+the edge that keeps today's Set A answered count and the edge that meets Set B's 0.95; it chooses
+neither. Edges fitted here are fitted to the golden sets, so the chosen ones are confirmed once on
+the holdout vault before anyone quotes them. Design:
+`docs/superpowers/specs/2026-10-14-banded-abstention-eval-design.md`.
+
 ## Writing questions
 
 Everyone writes questions for their own lane — it is the highest-value work with the lowest
