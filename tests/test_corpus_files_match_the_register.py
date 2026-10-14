@@ -100,8 +100,13 @@ def test_documents_that_claim_no_register_row_are_counted_not_hidden() -> None:
         for path in _tracked_documents()
         if not REGISTER_ID.match(path.stem) and path.stem not in registered
     ]
-    assert len(specimens) == 20, (
-        f"{len(specimens)} documents claim no register row (was 20). They are ingestible and "
+    # 20 capture-path specimens, plus 24 monthly CPF statements for 2025 that have no
+    # monthly fields to be scored against (corpus/batches/cpf-monthly-2025/README.md), plus
+    # 10 SRS statements for years with no register row (corpus/batches/srs-2020-2025/README.md),
+    # plus 2 YA2025 notices of assessment (corpus/batches/noa-ya2025/README.md) and 3 donation
+    # receipts (corpus/batches/donations-rachel-2024-2025/README.md).
+    assert len(specimens) == 59, (
+        f"{len(specimens)} documents claim no register row (was 59). They are ingestible and "
         "unscoreable — `eval.generate.unclaimed` names them. Update this number with the "
         "reason in the commit message."
     )
