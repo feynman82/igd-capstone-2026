@@ -81,16 +81,40 @@ def inventory_only(answer: Answer) -> bool:
     is a car policy" are the inventory describing itself. An answer made only of those has
     declined, whatever flag it carries.
     """
-    said = _sentences(answer)
-    return bool(said) and all(_written_by_code(sentence) for sentence in said)
+    return said_by_code_only(_sentences(answer))
 
 
 def declined_in_prose(answer: Answer) -> bool:
     """The model itself saying the documents do not carry it — "the chassis number is not listed
     in the provided passages" — rather than the gate stopping it. Counted apart from the
     inventory lines so the two can be argued about separately."""
-    said = [s for s in _sentences(answer) if not _written_by_code(s)]
-    return bool(said) and all(NOT_ON_FILE.search(sentence) for sentence in said)
+    return declines_in_prose(_sentences(answer))
+
+
+# The same three readings over sentences rather than an `Answer`, so that `eval.headline` can
+# make them from a result file's recorded text. One copy of each rule, read two ways.
+
+
+def said_by_code_only(said: Sequence[str]) -> bool:
+    """`inventory_only`, over sentences."""
+    return bool(said) and all(_written_by_code(sentence) for sentence in said)
+
+
+def declines_in_prose(said: Sequence[str]) -> bool:
+    """`declined_in_prose`, over sentences."""
+    prose = [sentence for sentence in said if not _written_by_code(sentence)]
+    return bool(prose) and all(NOT_ON_FILE.search(sentence) for sentence in prose)
+
+
+def says_absent(said: Sequence[str]) -> bool:
+    """Some sentence says the thing asked about is not on file: the code's absence line ("None of
+    the 11 policies on file … is a car or motor policy") or the model saying so in prose. On a
+    question whose document is in the vault, that sentence is false whatever else is said."""
+    return any(
+        ABSENCE_LINE.match(sentence)
+        or (not _written_by_code(sentence) and NOT_ON_FILE.search(sentence))
+        for sentence in said
+    )
 
 
 def held_back(answer: Answer) -> bool:
@@ -132,7 +156,12 @@ def leaked(answer: Answer, forbidden: Sequence[str]) -> list[str]:
     Searched over the whole answer text rather than the gated claims: a forbidden string in a
     preamble the gate let through is still a leak, whatever part of the answer carries it.
     """
-    said = answer.text.casefold()
+    return leaked_in(answer.text, forbidden)
+
+
+def leaked_in(text: str, forbidden: Sequence[str]) -> list[str]:
+    """`leaked`, over the recorded text of an answer."""
+    said = text.casefold()
     return [phrase for phrase in forbidden if phrase.casefold() in said]
 
 
