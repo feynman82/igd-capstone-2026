@@ -1,0 +1,3067 @@
+{
+  "inputs": {
+    "source": "eval/results/2026-10-15-floor-off-colloquial.json",
+    "against": "eval/results/2026-10-14-production-colloquial.json",
+    "high": "0.42,insurance_agent=0.45",
+    "medium": "0.38",
+    "hard": "0.32",
+    "axis": "cosine",
+    "label": "colloquial",
+    "bands_git_sha": "b53f7a5"
+  },
+  "axis": "cosine",
+  "replay_check": {
+    "compared": 92,
+    "replayed": 92,
+    "trustworthy": true,
+    "mismatches": [
+      {
+        "id": "a-b17",
+        "replayed_held_back": true,
+        "actual_held_back": false,
+        "cause": "documents on file"
+      }
+    ]
+  },
+  "today": {
+    "all": {
+      "answered_a": {
+        "hits": 43,
+        "n": 50,
+        "rate": 0.86
+      },
+      "top3_hit_a": null,
+      "right_in_high_a": null,
+      "nothing_shown_a": {
+        "hits": 7,
+        "n": 50,
+        "rate": 0.14
+      },
+      "faithfulness_a": 0.8992,
+      "answer_relevancy_a": 0.7503,
+      "abstention_b": {
+        "hits": 15,
+        "n": 27,
+        "rate": 0.5556
+      },
+      "nothing_shown_b": {
+        "hits": 15,
+        "n": 27,
+        "rate": 0.5556
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    },
+    "iras_tax": {
+      "answered_a": {
+        "hits": 2,
+        "n": 3,
+        "rate": 0.6667
+      },
+      "top3_hit_a": null,
+      "right_in_high_a": null,
+      "nothing_shown_a": {
+        "hits": 1,
+        "n": 3,
+        "rate": 0.3333
+      },
+      "faithfulness_a": 1.0,
+      "answer_relevancy_a": 0.9358,
+      "abstention_b": {
+        "hits": 3,
+        "n": 4,
+        "rate": 0.75
+      },
+      "nothing_shown_b": {
+        "hits": 3,
+        "n": 4,
+        "rate": 0.75
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    },
+    "core": {
+      "answered_a": {
+        "hits": 12,
+        "n": 12,
+        "rate": 1.0
+      },
+      "top3_hit_a": null,
+      "right_in_high_a": null,
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 12,
+        "rate": 0.0
+      },
+      "faithfulness_a": 1.0,
+      "answer_relevancy_a": 0.7401,
+      "abstention_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    },
+    "insurance_agent": {
+      "answered_a": {
+        "hits": 29,
+        "n": 35,
+        "rate": 0.8286
+      },
+      "top3_hit_a": null,
+      "right_in_high_a": null,
+      "nothing_shown_a": {
+        "hits": 6,
+        "n": 35,
+        "rate": 0.1714
+      },
+      "faithfulness_a": 0.8506,
+      "answer_relevancy_a": 0.7417,
+      "abstention_b": {
+        "hits": 12,
+        "n": 23,
+        "rate": 0.5217
+      },
+      "nothing_shown_b": {
+        "hits": 12,
+        "n": 23,
+        "rate": 0.5217
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    },
+    "none": {
+      "answered_a": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "top3_hit_a": null,
+      "right_in_high_a": null,
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "faithfulness_a": null,
+      "answer_relevancy_a": null,
+      "abstention_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    }
+  },
+  "banded": {
+    "all": {
+      "answered_a": {
+        "hits": 43,
+        "n": 50,
+        "rate": 0.86
+      },
+      "top3_hit_a": {
+        "hits": 49,
+        "n": 50,
+        "rate": 0.98
+      },
+      "right_in_high_a": {
+        "hits": 45,
+        "n": 50,
+        "rate": 0.9
+      },
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 50,
+        "rate": 0.0
+      },
+      "faithfulness_a": 0.8992,
+      "answer_relevancy_a": 0.7503,
+      "abstention_b": {
+        "hits": 15,
+        "n": 27,
+        "rate": 0.5556
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 27,
+        "rate": 0.0
+      },
+      "bands_shown_b": {
+        "Medium": 18,
+        "High": 46,
+        "Low": 8
+      },
+      "leaked_via_quote_c": {
+        "c-c05": [
+          "2,000,000"
+        ],
+        "c-c07": [
+          "890",
+          "Tan Mei Ling"
+        ],
+        "c-c08": [
+          "11 April 2027",
+          "MV-2026-448120"
+        ],
+        "c-c14": [
+          "8200",
+          "8,200"
+        ]
+      }
+    },
+    "iras_tax": {
+      "answered_a": {
+        "hits": 2,
+        "n": 3,
+        "rate": 0.6667
+      },
+      "top3_hit_a": {
+        "hits": 3,
+        "n": 3,
+        "rate": 1.0
+      },
+      "right_in_high_a": {
+        "hits": 2,
+        "n": 3,
+        "rate": 0.6667
+      },
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 3,
+        "rate": 0.0
+      },
+      "faithfulness_a": 1.0,
+      "answer_relevancy_a": 0.9358,
+      "abstention_b": {
+        "hits": 3,
+        "n": 4,
+        "rate": 0.75
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 4,
+        "rate": 0.0
+      },
+      "bands_shown_b": {
+        "High": 4,
+        "Low": 2,
+        "Medium": 3
+      },
+      "leaked_via_quote_c": {
+        "c-c05": [
+          "2,000,000"
+        ],
+        "c-c14": [
+          "8200",
+          "8,200"
+        ]
+      }
+    },
+    "core": {
+      "answered_a": {
+        "hits": 12,
+        "n": 12,
+        "rate": 1.0
+      },
+      "top3_hit_a": {
+        "hits": 12,
+        "n": 12,
+        "rate": 1.0
+      },
+      "right_in_high_a": {
+        "hits": 12,
+        "n": 12,
+        "rate": 1.0
+      },
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 12,
+        "rate": 0.0
+      },
+      "faithfulness_a": 1.0,
+      "answer_relevancy_a": 0.7401,
+      "abstention_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    },
+    "insurance_agent": {
+      "answered_a": {
+        "hits": 29,
+        "n": 35,
+        "rate": 0.8286
+      },
+      "top3_hit_a": {
+        "hits": 34,
+        "n": 35,
+        "rate": 0.9714
+      },
+      "right_in_high_a": {
+        "hits": 31,
+        "n": 35,
+        "rate": 0.8857
+      },
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 35,
+        "rate": 0.0
+      },
+      "faithfulness_a": 0.8506,
+      "answer_relevancy_a": 0.7417,
+      "abstention_b": {
+        "hits": 12,
+        "n": 23,
+        "rate": 0.5217
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 23,
+        "rate": 0.0
+      },
+      "bands_shown_b": {
+        "Medium": 15,
+        "High": 42,
+        "Low": 6
+      },
+      "leaked_via_quote_c": {
+        "c-c07": [
+          "890",
+          "Tan Mei Ling"
+        ],
+        "c-c08": [
+          "11 April 2027",
+          "MV-2026-448120"
+        ]
+      }
+    },
+    "none": {
+      "answered_a": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "top3_hit_a": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "right_in_high_a": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "nothing_shown_a": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "faithfulness_a": null,
+      "answer_relevancy_a": null,
+      "abstention_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "nothing_shown_b": {
+        "hits": 0,
+        "n": 0,
+        "rate": null
+      },
+      "bands_shown_b": {},
+      "leaked_via_quote_c": {}
+    }
+  },
+  "labels": {
+    "High": {
+      "hits": 45,
+      "n": 96,
+      "rate": 0.4688
+    },
+    "Medium": {
+      "hits": 4,
+      "n": 30,
+      "rate": 0.1333
+    },
+    "Low": {
+      "hits": 0,
+      "n": 10,
+      "rate": 0.0
+    }
+  },
+  "honest": true,
+  "sweeps": {
+    "iras_tax": [
+      {
+        "edge": 0.3,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 4,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.31,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 4,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.32,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 4,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.33,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.34,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.35,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.36,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.37,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.38,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.39,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.4,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 4,
+          "rate": 0.25
+        }
+      },
+      {
+        "edge": 0.41,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 4,
+          "rate": 0.5
+        }
+      },
+      {
+        "edge": 0.42,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 4,
+          "rate": 0.5
+        }
+      },
+      {
+        "edge": 0.43,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 4,
+          "rate": 0.5
+        }
+      },
+      {
+        "edge": 0.44,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 4,
+          "rate": 0.5
+        }
+      },
+      {
+        "edge": 0.45,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 4,
+          "rate": 0.5
+        }
+      },
+      {
+        "edge": 0.46,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        }
+      },
+      {
+        "edge": 0.47,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        }
+      },
+      {
+        "edge": 0.48,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 3,
+          "n": 4,
+          "rate": 0.75
+        }
+      },
+      {
+        "edge": 0.49,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.5,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.51,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.52,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.53,
+        "answered_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.54,
+        "answered_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.55,
+        "answered_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.56,
+        "answered_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.57,
+        "answered_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.58,
+        "answered_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 1,
+          "n": 3,
+          "rate": 0.3333
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 3,
+          "rate": 0.6667
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.59,
+        "answered_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      },
+      {
+        "edge": 0.6,
+        "answered_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "abstention_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        },
+        "top3_hit_a": {
+          "hits": 0,
+          "n": 3,
+          "rate": 0.0
+        },
+        "nothing_shown_a": {
+          "hits": 3,
+          "n": 3,
+          "rate": 1.0
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 4,
+          "rate": 1.0
+        }
+      }
+    ],
+    "core": [
+      {
+        "edge": 0.3,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.31,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.32,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.33,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.34,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.35,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.36,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.37,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.38,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.39,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.4,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.41,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.42,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.43,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.44,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.45,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.46,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.47,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.48,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.49,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.5,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.51,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.52,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.53,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.54,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.55,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.56,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.57,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.58,
+        "answered_a": {
+          "hits": 12,
+          "n": 12,
+          "rate": 1.0
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 12,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.59,
+        "answered_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 12,
+          "rate": 0.0833
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      },
+      {
+        "edge": 0.6,
+        "answered_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "abstention_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        },
+        "top3_hit_a": {
+          "hits": 11,
+          "n": 12,
+          "rate": 0.9167
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 12,
+          "rate": 0.0833
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 0,
+          "rate": null
+        }
+      }
+    ],
+    "insurance_agent": [
+      {
+        "edge": 0.3,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.31,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.32,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.33,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.34,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.35,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.36,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.37,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.38,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.39,
+        "answered_a": {
+          "hits": 30,
+          "n": 35,
+          "rate": 0.8571
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 34,
+          "n": 35,
+          "rate": 0.9714
+        },
+        "nothing_shown_a": {
+          "hits": 0,
+          "n": 35,
+          "rate": 0.0
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.4,
+        "answered_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 32,
+          "n": 35,
+          "rate": 0.9143
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 35,
+          "rate": 0.0286
+        },
+        "nothing_shown_b": {
+          "hits": 0,
+          "n": 23,
+          "rate": 0.0
+        }
+      },
+      {
+        "edge": 0.41,
+        "answered_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "abstention_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        },
+        "top3_hit_a": {
+          "hits": 31,
+          "n": 35,
+          "rate": 0.8857
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 35,
+          "rate": 0.0286
+        },
+        "nothing_shown_b": {
+          "hits": 1,
+          "n": 23,
+          "rate": 0.0435
+        }
+      },
+      {
+        "edge": 0.42,
+        "answered_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 31,
+          "n": 35,
+          "rate": 0.8857
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 35,
+          "rate": 0.0286
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 23,
+          "rate": 0.087
+        }
+      },
+      {
+        "edge": 0.43,
+        "answered_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 31,
+          "n": 35,
+          "rate": 0.8857
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 35,
+          "rate": 0.0286
+        },
+        "nothing_shown_b": {
+          "hits": 2,
+          "n": 23,
+          "rate": 0.087
+        }
+      },
+      {
+        "edge": 0.44,
+        "answered_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 31,
+          "n": 35,
+          "rate": 0.8857
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 35,
+          "rate": 0.0286
+        },
+        "nothing_shown_b": {
+          "hits": 3,
+          "n": 23,
+          "rate": 0.1304
+        }
+      },
+      {
+        "edge": 0.45,
+        "answered_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 31,
+          "n": 35,
+          "rate": 0.8857
+        },
+        "nothing_shown_a": {
+          "hits": 1,
+          "n": 35,
+          "rate": 0.0286
+        },
+        "nothing_shown_b": {
+          "hits": 4,
+          "n": 23,
+          "rate": 0.1739
+        }
+      },
+      {
+        "edge": 0.46,
+        "answered_a": {
+          "hits": 28,
+          "n": 35,
+          "rate": 0.8
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 35,
+          "rate": 0.0571
+        },
+        "nothing_shown_b": {
+          "hits": 5,
+          "n": 23,
+          "rate": 0.2174
+        }
+      },
+      {
+        "edge": 0.47,
+        "answered_a": {
+          "hits": 28,
+          "n": 35,
+          "rate": 0.8
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 29,
+          "n": 35,
+          "rate": 0.8286
+        },
+        "nothing_shown_a": {
+          "hits": 2,
+          "n": 35,
+          "rate": 0.0571
+        },
+        "nothing_shown_b": {
+          "hits": 5,
+          "n": 23,
+          "rate": 0.2174
+        }
+      },
+      {
+        "edge": 0.48,
+        "answered_a": {
+          "hits": 26,
+          "n": 35,
+          "rate": 0.7429
+        },
+        "abstention_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        },
+        "top3_hit_a": {
+          "hits": 28,
+          "n": 35,
+          "rate": 0.8
+        },
+        "nothing_shown_a": {
+          "hits": 5,
+          "n": 35,
+          "rate": 0.1429
+        },
+        "nothing_shown_b": {
+          "hits": 5,
+          "n": 23,
+          "rate": 0.2174
+        }
+      },
+      {
+        "edge": 0.49,
+        "answered_a": {
+          "hits": 23,
+          "n": 35,
+          "rate": 0.6571
+        },
+        "abstention_b": {
+          "hits": 15,
+          "n": 23,
+          "rate": 0.6522
+        },
+        "top3_hit_a": {
+          "hits": 26,
+          "n": 35,
+          "rate": 0.7429
+        },
+        "nothing_shown_a": {
+          "hits": 8,
+          "n": 35,
+          "rate": 0.2286
+        },
+        "nothing_shown_b": {
+          "hits": 8,
+          "n": 23,
+          "rate": 0.3478
+        }
+      },
+      {
+        "edge": 0.5,
+        "answered_a": {
+          "hits": 23,
+          "n": 35,
+          "rate": 0.6571
+        },
+        "abstention_b": {
+          "hits": 16,
+          "n": 23,
+          "rate": 0.6957
+        },
+        "top3_hit_a": {
+          "hits": 26,
+          "n": 35,
+          "rate": 0.7429
+        },
+        "nothing_shown_a": {
+          "hits": 8,
+          "n": 35,
+          "rate": 0.2286
+        },
+        "nothing_shown_b": {
+          "hits": 9,
+          "n": 23,
+          "rate": 0.3913
+        }
+      },
+      {
+        "edge": 0.51,
+        "answered_a": {
+          "hits": 22,
+          "n": 35,
+          "rate": 0.6286
+        },
+        "abstention_b": {
+          "hits": 17,
+          "n": 23,
+          "rate": 0.7391
+        },
+        "top3_hit_a": {
+          "hits": 25,
+          "n": 35,
+          "rate": 0.7143
+        },
+        "nothing_shown_a": {
+          "hits": 9,
+          "n": 35,
+          "rate": 0.2571
+        },
+        "nothing_shown_b": {
+          "hits": 11,
+          "n": 23,
+          "rate": 0.4783
+        }
+      },
+      {
+        "edge": 0.52,
+        "answered_a": {
+          "hits": 22,
+          "n": 35,
+          "rate": 0.6286
+        },
+        "abstention_b": {
+          "hits": 17,
+          "n": 23,
+          "rate": 0.7391
+        },
+        "top3_hit_a": {
+          "hits": 23,
+          "n": 35,
+          "rate": 0.6571
+        },
+        "nothing_shown_a": {
+          "hits": 10,
+          "n": 35,
+          "rate": 0.2857
+        },
+        "nothing_shown_b": {
+          "hits": 12,
+          "n": 23,
+          "rate": 0.5217
+        }
+      },
+      {
+        "edge": 0.53,
+        "answered_a": {
+          "hits": 18,
+          "n": 35,
+          "rate": 0.5143
+        },
+        "abstention_b": {
+          "hits": 17,
+          "n": 23,
+          "rate": 0.7391
+        },
+        "top3_hit_a": {
+          "hits": 21,
+          "n": 35,
+          "rate": 0.6
+        },
+        "nothing_shown_a": {
+          "hits": 14,
+          "n": 35,
+          "rate": 0.4
+        },
+        "nothing_shown_b": {
+          "hits": 13,
+          "n": 23,
+          "rate": 0.5652
+        }
+      },
+      {
+        "edge": 0.54,
+        "answered_a": {
+          "hits": 18,
+          "n": 35,
+          "rate": 0.5143
+        },
+        "abstention_b": {
+          "hits": 17,
+          "n": 23,
+          "rate": 0.7391
+        },
+        "top3_hit_a": {
+          "hits": 21,
+          "n": 35,
+          "rate": 0.6
+        },
+        "nothing_shown_a": {
+          "hits": 14,
+          "n": 35,
+          "rate": 0.4
+        },
+        "nothing_shown_b": {
+          "hits": 14,
+          "n": 23,
+          "rate": 0.6087
+        }
+      },
+      {
+        "edge": 0.55,
+        "answered_a": {
+          "hits": 18,
+          "n": 35,
+          "rate": 0.5143
+        },
+        "abstention_b": {
+          "hits": 19,
+          "n": 23,
+          "rate": 0.8261
+        },
+        "top3_hit_a": {
+          "hits": 21,
+          "n": 35,
+          "rate": 0.6
+        },
+        "nothing_shown_a": {
+          "hits": 14,
+          "n": 35,
+          "rate": 0.4
+        },
+        "nothing_shown_b": {
+          "hits": 16,
+          "n": 23,
+          "rate": 0.6957
+        }
+      },
+      {
+        "edge": 0.56,
+        "answered_a": {
+          "hits": 17,
+          "n": 35,
+          "rate": 0.4857
+        },
+        "abstention_b": {
+          "hits": 19,
+          "n": 23,
+          "rate": 0.8261
+        },
+        "top3_hit_a": {
+          "hits": 20,
+          "n": 35,
+          "rate": 0.5714
+        },
+        "nothing_shown_a": {
+          "hits": 15,
+          "n": 35,
+          "rate": 0.4286
+        },
+        "nothing_shown_b": {
+          "hits": 16,
+          "n": 23,
+          "rate": 0.6957
+        }
+      },
+      {
+        "edge": 0.57,
+        "answered_a": {
+          "hits": 16,
+          "n": 35,
+          "rate": 0.4571
+        },
+        "abstention_b": {
+          "hits": 20,
+          "n": 23,
+          "rate": 0.8696
+        },
+        "top3_hit_a": {
+          "hits": 19,
+          "n": 35,
+          "rate": 0.5429
+        },
+        "nothing_shown_a": {
+          "hits": 16,
+          "n": 35,
+          "rate": 0.4571
+        },
+        "nothing_shown_b": {
+          "hits": 19,
+          "n": 23,
+          "rate": 0.8261
+        }
+      },
+      {
+        "edge": 0.58,
+        "answered_a": {
+          "hits": 15,
+          "n": 35,
+          "rate": 0.4286
+        },
+        "abstention_b": {
+          "hits": 20,
+          "n": 23,
+          "rate": 0.8696
+        },
+        "top3_hit_a": {
+          "hits": 18,
+          "n": 35,
+          "rate": 0.5143
+        },
+        "nothing_shown_a": {
+          "hits": 17,
+          "n": 35,
+          "rate": 0.4857
+        },
+        "nothing_shown_b": {
+          "hits": 19,
+          "n": 23,
+          "rate": 0.8261
+        }
+      },
+      {
+        "edge": 0.59,
+        "answered_a": {
+          "hits": 15,
+          "n": 35,
+          "rate": 0.4286
+        },
+        "abstention_b": {
+          "hits": 20,
+          "n": 23,
+          "rate": 0.8696
+        },
+        "top3_hit_a": {
+          "hits": 18,
+          "n": 35,
+          "rate": 0.5143
+        },
+        "nothing_shown_a": {
+          "hits": 17,
+          "n": 35,
+          "rate": 0.4857
+        },
+        "nothing_shown_b": {
+          "hits": 19,
+          "n": 23,
+          "rate": 0.8261
+        }
+      },
+      {
+        "edge": 0.6,
+        "answered_a": {
+          "hits": 14,
+          "n": 35,
+          "rate": 0.4
+        },
+        "abstention_b": {
+          "hits": 20,
+          "n": 23,
+          "rate": 0.8696
+        },
+        "top3_hit_a": {
+          "hits": 17,
+          "n": 35,
+          "rate": 0.4857
+        },
+        "nothing_shown_a": {
+          "hits": 18,
+          "n": 35,
+          "rate": 0.5143
+        },
+        "nothing_shown_b": {
+          "hits": 19,
+          "n": 23,
+          "rate": 0.8261
+        }
+      }
+    ]
+  },
+  "references": {
+    "iras_tax": {
+      "keeps_today": 0.53,
+      "meets_b": 0.46
+    },
+    "core": {
+      "keeps_today": 0.58,
+      "meets_b": null
+    },
+    "insurance_agent": {
+      "keeps_today": 0.45,
+      "meets_b": null
+    }
+  },
+  "axes": {
+    "cosine": {
+      "keeps_today": 0.45,
+      "abstention_b_there": {
+        "hits": 15,
+        "n": 27,
+        "rate": 0.5556
+      },
+      "meets_b": null,
+      "answered_a_there": null
+    },
+    "relevance": {
+      "keeps_today": 0.0,
+      "abstention_b_there": {
+        "hits": 14,
+        "n": 27,
+        "rate": 0.5185
+      },
+      "meets_b": 0.92,
+      "answered_a_there": {
+        "hits": 21,
+        "n": 50,
+        "rate": 0.42
+      }
+    }
+  },
+  "unknown": [],
+  "capped": []
+}
