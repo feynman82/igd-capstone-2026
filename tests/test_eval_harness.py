@@ -16,7 +16,8 @@ import pytest
 
 from core.graph.answer import Answer, Citation, Cited
 from core.graph.ports import Passage
-from eval import harness, score
+from eval import harness, headline, score
+from eval.bands import Count
 from eval.run import _runtime_numbers, _table
 from eval.sets_io import MalformedQuestion, Question, load_set, subset
 
@@ -412,11 +413,19 @@ def test_the_code_scored_metrics_come_out_as_arithmetic_says(tmp_path: Path) -> 
 
     # The per-question lines and the table are plain data: they survive JSON and a terminal.
     lines = [s.as_dict() for s in scored]
+    head = headline.compute(
+        lines, {q.id: q for q in questions}, extraction_f1=metrics["extraction_f1"], rebuild=False
+    )
+    assert head.held_back_from == "recorded"
+    assert head.right_and_cited == Count(1, 3)  # a-2 cites the wrong page, a-3 held back
+    assert [c.id for c in head.claims] == ["b-2"]  # answered a hard negative
+    json.loads(json.dumps(headline.as_json(head)))
     json.loads(json.dumps(lines))
     assert lines[0]["contexts"] == ["document:1", "document:2"]
     assert lines[0]["citations"] == ["b1-0001.pdf, page 1"]
     printed = _table(metrics, why)
-    assert "abstention_rate" in printed and "✗" in printed and "✓" in printed
+    assert "abstention_rate" in printed and "ref >= 0.95" in printed
+    assert "✓" not in printed and "✗" not in printed  # reference lines, not lines to clear
 
 
 def test_runtime_numbers_are_read_from_the_benchmark_file_not_typed() -> None:

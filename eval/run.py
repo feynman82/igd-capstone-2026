@@ -36,8 +36,9 @@ if TYPE_CHECKING:
 ROOT = Path(__file__).resolve().parents[1]
 NOISY = ("httpx", "docling", "RapidOCR", "huggingface_hub", "filelock", "openai", "instructor")
 
-# The targets in eval/README.md, repeated here only so the terminal can show a number next to
-# the bar it has to clear. The README is the agreed list; this is a courtesy.
+# The reference lines in eval/README.md, repeated here only so the terminal can show a number
+# beside the line the proposal drew for it. They explain a headline number; none is a line to
+# clear, so the terminal prints them as text and marks nothing passed or failed.
 TARGETS: dict[str, tuple[str, float] | None] = {
     "context_recall": (">=", 0.85),
     "context_precision": (">=", 0.70),
@@ -135,7 +136,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     from core.runtime.db import DatabaseUnavailable, connect
     from core.runtime.ollama import ModelUnavailable, Ollama
     from core.runtime.settings import ConfigurationError, Settings
-    from eval import harness, score
+    from eval import harness, headline, score
     from eval import modules as eval_modules
     from eval.sets_io import MalformedQuestion, load_set, read_registers, subset
 
@@ -245,6 +246,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         modules=module_metrics,
     )
     per_question = [item.as_dict() for item in scored]
+    head = headline.compute(
+        per_question,
+        {q.id: q for q in questions},
+        extraction_f1=metrics.get("extraction_f1"),
+        rebuild=False,
+    )
     result = {
         "run": {
             "date": datetime.now(UTC).isoformat(timespec="seconds"),
@@ -271,6 +278,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "runtime_numbers_from": runtime_source,
             "skipped_no_document": waiting,
         },
+        "headline": headline.as_json(head),
         "metrics": metrics,
         "not_measured": why,
         "also": also,
@@ -281,6 +289,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     note = target.with_suffix(".md")
     if not note.exists():
         note.write_text(_note(result), encoding="utf-8")
+    print()
+    previous = headline.previous_run(
+        args.out, before=target, corpus=result["run"]["corpus_manifest_sha"]
+    )
+    print(headline.table(head, previous))
     print()
     print(_table(metrics, why))
     print(f"\nwrote {target}")
@@ -438,18 +451,15 @@ def _corpus_sha(root: Path) -> str:
 
 
 def _table(metrics: dict[str, float | None], why: dict[str, str]) -> str:
-    lines = [f"{'metric':<22} {'value':>8}  target"]
+    """The nine diagnostics, each beside its reference line. Nothing here is passed or failed."""
+    lines = [f"{'diagnostic':<22} {'value':>8}  reference"]
     for key, value in metrics.items():
         target = TARGETS.get(key)
-        bar = f"{target[0]} {target[1]:.2f}" if target else "measured"
+        bar = f"ref {target[0]} {target[1]:.2f}" if target else "measured"
         if value is None:
             lines.append(f"{key:<22} {'—':>8}  {bar}   ({why.get(key, '')})")
         else:
-            met = ""
-            if target:
-                ok = value >= target[1] if target[0] == ">=" else value <= target[1]
-                met = "  ✓" if ok else "  ✗"
-            lines.append(f"{key:<22} {value:>8.4g}  {bar}{met}")
+            lines.append(f"{key:<22} {value:>8.4g}  {bar}")
     return "\n".join(lines)
 
 
