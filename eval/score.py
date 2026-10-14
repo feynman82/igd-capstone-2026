@@ -303,6 +303,38 @@ class F1:
         }
 
 
+def has_ground_truth(row: Mapping[str, str]) -> bool:
+    """Whether a register row records any value a document could be scored against.
+
+    A row that fills no printed field at all cannot produce a true positive — only false
+    claims, one for every value the extractor reads off the page. Scoring it would measure how
+    much of the document was read rather than how accurately, and the number would fall as the
+    extractor got *better*.
+
+    Such rows exist on purpose. `corpus/register/batch3.csv` carries the three planted Set C
+    documents and says so in its own header: "These rows intentionally carry metadata only:
+    Set C grades refusal behavior, not planted values." `corpus.validate` already treats a row
+    like this as a problem ("no fields — this row carries no ground truth"), so the register's
+    own gate agrees it is not ordinary data; this keeps metric 6 agreeing too.
+    """
+    return any(
+        (value or "").strip() for key, value in row.items() if key not in REGISTER_META and key
+    )
+
+
+def without_ground_truth(
+    register: Sequence[Mapping[str, str]], indexed: Collection[str] | None = None
+) -> list[str]:
+    """Indexed documents whose register row records nothing to score them against, named so the
+    exclusion is visible in the report rather than silently shrinking the denominator."""
+    in_vault = set(indexed or ())
+    return sorted(
+        doc_id
+        for row in register
+        if (doc_id := (row.get("doc_id") or "").strip()) in in_vault and not has_ground_truth(row)
+    )
+
+
 def _outcomes(
     register: Sequence[Mapping[str, str]],
     facts: Iterable[FactRow],
@@ -334,7 +366,7 @@ def _outcomes(
     in_vault = set(extracted) | set(indexed or ())
     for row in register:
         doc_id = row.get("doc_id", "")
-        if doc_id not in in_vault:
+        if doc_id not in in_vault or not has_ground_truth(row):
             continue
         found = extracted.get(doc_id, {})  # `.get`, so a factless document is not inserted
         doc_type = row.get("doc_type") or "unknown"
