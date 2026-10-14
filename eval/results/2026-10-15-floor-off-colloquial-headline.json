@@ -1,0 +1,207 @@
+{
+  "source": "2026-10-15-floor-off-colloquial.json",
+  "headline": {
+    "held_back_from": "recorded",
+    "right_and_cited": {
+      "hits": 34,
+      "n": 50,
+      "rate": 0.68
+    },
+    "not_right": [
+      "a-gen-b2-0010-principal-printed",
+      "a-gen-b2-0011-principal-printed",
+      "a-gen-b2-0012-date_of_birth-spoken",
+      "a-gen-b2-0013-date_of_birth-spoken",
+      "a-b01",
+      "a-b02",
+      "a-b03",
+      "a-b13",
+      "a-b14",
+      "a-b15",
+      "a-b19",
+      "a-b21",
+      "a-b22",
+      "a-d10",
+      "a-gen-b1-0001-product_name-printed",
+      "a-gen-b1-0031-premium_payable-spoken"
+    ],
+    "unsupported_claims": {
+      "hits": 24,
+      "n": 92,
+      "rate": 0.2609
+    },
+    "claims": [
+      {
+        "id": "a-gen-b2-0010-principal-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0011-principal-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0012-date_of_birth-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0013-date_of_birth-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-b01",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b03",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b13",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b14",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b15",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b22",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b1-0001-product_name-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "b-b04",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b06",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b08",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b13",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b14",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b15",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b16",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b19",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b20",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b21",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b24",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b25",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-d01",
+        "reasons": [
+          "claimed"
+        ]
+      }
+    ],
+    "over_caution": {
+      "hits": 6,
+      "n": 50,
+      "rate": 0.12
+    },
+    "over_cautious": [
+      "a-b02",
+      "a-b15",
+      "a-b19",
+      "a-b21",
+      "a-d10",
+      "a-gen-b1-0031-premium_payable-spoken"
+    ],
+    "retrieval_miss": [],
+    "casual": {
+      "hits": 4,
+      "n": 10,
+      "rate": 0.4
+    },
+    "formal": {
+      "hits": 30,
+      "n": 40,
+      "rate": 0.75
+    },
+    "casual_gap": 0.35,
+    "extraction_f1": 0.9028,
+    "not_in_sets": []
+  }
+}
