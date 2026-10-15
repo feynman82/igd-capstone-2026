@@ -251,11 +251,12 @@ def test_the_reminder_cron_is_read_from_its_manifest_not_written_twice() -> None
     assert schedule.cron_expressions()["reminder"] == schedule.manifest("reminder").runs.cron
 
 
-def test_both_sweeps_are_scheduled_and_named_after_registered_tasks() -> None:
+def test_both_sweeps_and_the_digest_are_scheduled_and_named_after_registered_tasks() -> None:
     entries = schedule.beat_schedule()
     assert {str(entry["task"]) for entry in entries.values()} == {
         tasks.SWEEP_REMINDERS,
         tasks.SWEEP_ALERTS,
+        tasks.CALENDAR_DIGEST,
     }
 
 

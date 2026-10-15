@@ -14,10 +14,10 @@ answer, abstain or refuse, and a client should not have to guess from which fiel
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class Source(BaseModel):
@@ -34,7 +34,10 @@ class Source(BaseModel):
     text: str  # "policy.pdf, page 1" — already formatted, so a list renders without work
     # What the citation is evidence of: a page, a document on file, published guidance, a fact
     # read off a document, a published rule value, or a figure worked out from those.
-    kind: Literal["document", "inventory", "guidance", "fact", "rule", "calculation"] = "document"
+    # A calendar line (ADR 0020) cites the calendar on its date: `url` is that day's page.
+    kind: Literal[
+        "document", "inventory", "guidance", "fact", "rule", "calculation", "calendar"
+    ] = "document"
     publisher: str | None = None
     title: str | None = None
     dated: str | None = None  # as the publisher printed it: "26 September 2023"
@@ -221,6 +224,21 @@ class AdviceCardEvent(BaseModel):
     consent_version: str
 
 
+class DraftEvent(BaseModel):
+    """A calendar entry Parrot wrote down and did not save (ADR 0020). Confirming it is a separate
+    request a person makes, `POST /api/calendar/events`, so nothing here has happened yet."""
+
+    kind: Literal["draft"] = "draft"
+    title: str
+    starts_on: date
+    start_time: time | None = None
+    end_time: time | None = None
+    person_id: int | None = None
+    person: str | None = None
+    location: str = ""
+    note: str
+
+
 class ErrorEvent(BaseModel):
     """The stream broke after it began. A client cannot read an HTTP status by then."""
 
@@ -241,9 +259,11 @@ class AskResponse(BaseModel):
         "advice",
         "consent_required",
         "advice_withheld",
+        "draft",
     ]
     text: str
     verdict_text: str = ""  # the code-written verdict, when advice was given
+    draft: DraftEvent | None = None  # the entry to confirm, when `kind` is `draft`
     claims: list[Claim] = Field(default_factory=list)
     citations: list[Source] = Field(default_factory=list)
     disclaimer: str = ""
@@ -525,3 +545,94 @@ class ConsentRequest(BaseModel):
     pack_id: str = Field(min_length=1, max_length=64)
     version: str = Field(min_length=1, max_length=32)
     action: Literal["granted", "withdrawn"]
+
+
+# --------------------------------------------------------------------------------- calendar
+
+
+class CalendarEventIn(BaseModel):
+    """What a person sets on an entry. The same shape creates and replaces one: an edit is to the
+    whole series (ADR 0020), so there is no partial update to get half right."""
+
+    title: str = Field(min_length=1, max_length=200)
+    starts_on: date
+    ends_on: date | None = None  # last day, inclusive, of an entry spanning several
+    start_time: time | None = None  # none is all day
+    end_time: time | None = None
+    location: str | None = Field(default=None, max_length=200)
+    notes: str | None = Field(default=None, max_length=2000)
+    person_id: int | None = None  # none is the whole household
+    repeat: Literal["never", "daily", "weekly", "monthly", "yearly"] = "never"
+    repeat_until: date | None = None
+    # `ask` when a person confirmed a draft Parrot wrote; the audit of what Parrot proposed.
+    created_via: Literal["form", "ask"] = "form"
+
+    @model_validator(mode="after")
+    def _ordered(self) -> CalendarEventIn:
+        if not self.title.strip():
+            raise ValueError("an entry needs a title")
+        if self.ends_on is not None and self.ends_on < self.starts_on:
+            raise ValueError("an entry cannot end before it starts")
+        if self.end_time is not None and (
+            self.start_time is None or self.end_time <= self.start_time
+        ):
+            raise ValueError("an end time needs a start time before it")
+        if self.repeat_until is not None and self.repeat_until < self.starts_on:
+            raise ValueError("a repeat cannot stop before the entry starts")
+        return self
+
+
+class CalendarEvent(BaseModel):
+    """One stored entry, every date of it. Occurrences are `CalendarEntry` rows."""
+
+    id: int
+    title: str
+    starts_on: date
+    ends_on: date | None = None
+    start_time: time | None = None
+    end_time: time | None = None
+    location: str | None = None
+    notes: str | None = None
+    person_id: int | None = None
+    person: str | None = None
+    repeat: Literal["never", "daily", "weekly", "monthly", "yearly"]
+    repeat_until: date | None = None
+    created_via: str
+    source: str  # `local` today; a sync adapter would set `google` or `icloud`
+
+
+class CalendarEntry(BaseModel):
+    """One line on one day: an event's occurrence, or a deadline read off a document.
+
+    A deadline is never editable and always cited; an event is editable through `event_id` and
+    cites nothing, because nothing about it is a claim about a document."""
+
+    kind: Literal["event", "deadline"]
+    id: str  # "event:12:2026-10-17" or "obligation:3"
+    on: date
+    title: str
+    when: str  # "9:00 am to 10:00 am", "all day", "due"
+    start_time: time | None = None
+    person: str | None = None
+    location: str | None = None
+    event_id: int | None = None
+    pack_id: str | None = None
+    sources: list[Source] = Field(default_factory=list)
+
+
+class CalendarPerson(BaseModel):
+    id: int
+    display_name: str
+
+
+class CalendarResponse(BaseModel):
+    start: date
+    end: date
+    entries: list[CalendarEntry]
+    events: list[CalendarEvent]  # each series once, for the edit form
+    people: list[CalendarPerson]  # who an entry can be for
+
+
+class DeletedEvent(BaseModel):
+    id: int
+    title: str

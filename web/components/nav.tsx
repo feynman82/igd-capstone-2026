@@ -1,13 +1,14 @@
 "use client";
 
-import { Bell, Files, MessageSquare, Package } from "lucide-react";
+import { Bell, CalendarDays, Files, MessageSquare, Package } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 /**
- * Four destinations. The count is the design pack's, and it is deliberate: a fifth would need a
- * "more" menu, and a household tool that needs a "more" menu has already lost the people it was
- * built for.
+ * Five destinations. The design pack held it at four, on the ground that a fifth would need a
+ * "more" menu; the Calendar (ADR 0020) is the fifth, and it fits without one — five short words
+ * on a wide screen, five icons on a phone's bottom bar. A sixth would need the menu, and a
+ * household tool that needs a "more" menu has already lost the people it was built for.
  *
  * Capture is not here. Filing happens in Telegram and in a watched folder, outside the app
  * entirely, because asking an overloaded person to open an app in order to file something is how
@@ -19,13 +20,14 @@ import { usePathname } from "next/navigation";
 
 const SURFACES = [
   { href: "/today", label: "Today", Icon: Bell, hint: "What needs you" },
+  { href: "/calendar", label: "Calendar", Icon: CalendarDays, hint: "What the household has on" },
   { href: "/ask", label: "Ask", Icon: MessageSquare, hint: "A question about your documents" },
   { href: "/vault", label: "Vault", Icon: Files, hint: "Everything filed" },
   { href: "/packs", label: "Packs", Icon: Package, hint: "What this assistant knows about" },
 ] as const;
 
 /**
- * The four, as pills in the top bar, on a wide screen.
+ * The five, as pills in the top bar, on a wide screen.
  *
  * This was a left rail. It moved for one reason: a rail 13.5rem wide inside a 68rem shell pushes
  * the content column off centre, so the thing a person is actually reading sits to the right of
@@ -34,7 +36,7 @@ const SURFACES = [
  * which is what `--column` is.
  *
  * No icons here. In a rail an icon gives the eye something to land on down a vertical list; in a
- * horizontal row of four short words it is decoration beside a word that already says it. The
+ * horizontal row of five short words it is decoration beside a word that already says it. The
  * bottom bar below keeps them, because there the label is 11px and the icon is the target.
  */
 export function Tabs() {
@@ -69,7 +71,7 @@ export function Tabs() {
 }
 
 /**
- * The same four, at the bottom, on a phone. Bottom rather than top because this is opened
+ * The same five, at the bottom, on a phone. Bottom rather than top because this is opened
  * one-handed on the way out of the door, and the top of a phone is the part a thumb cannot
  * reach.
  */

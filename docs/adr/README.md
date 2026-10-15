@@ -29,6 +29,7 @@ the difference matters when a supervisor asks.
 | [0017](0017-a-pack-is-grounding-and-persona-the-core-owns-documents.md) | A pack is grounding and persona; the core owns documents | Accepted |
 | [0018](0018-the-reranker-runs-in-process-because-ollama-cannot-serve-a-cross-encoder.md) | The reranker runs in-process, because Ollama cannot serve a cross-encoder | Proposed |
 | [0019](0019-the-reranker-drops-what-does-not-answer-the-question.md) | A relevance floor on the reranker does not buy abstention, and the reason is not calibration | Rejected |
+| [0020](0020-the-household-calendar-is-local-and-parrot-drafts-entries.md) | The household calendar lives in Postgres, answers by code, and Parrot only ever drafts an entry | Accepted |
 
 Add a row when you add a record.
 
