@@ -292,6 +292,23 @@ FRONT_CHARS = 8000
 FULL_CHARS = 24000
 
 
+def field_lines(spec: DocumentTypeSpec) -> list[str]:
+    """Every field the catalogue declares, with its description, in declared order.
+
+    The decode schema holds the model to the field names, not to what they mean. Ollama turns
+    the schema into a grammar, so the model writes `"product_name": ` without ever reading
+    "Product name as printed at the head of the schedule, not a category". On 15 October it
+    filled that slot with the car schedule's "Coverage Type: Comprehensive Cover" line. It also
+    left out every policy's expiry date and excess, because optional keys come after the required
+    ones in the grammar, in alphabetical order, with nothing to say they matter. The descriptions
+    are written in `core/documents.yaml` for exactly this reader, so they are given to it.
+    """
+    return [
+        f"- {field.name}{'' if field.required else ' (if printed)'}: {field.description}"
+        for field in spec.fields
+    ]
+
+
 def extract(
     client: Ollama,
     documents: Catalog,
@@ -341,7 +358,8 @@ def _read(
     prompt = "\n".join(
         [
             f"This document is a {doc_type.replace('_', ' ')}: {spec.description}.",
-            "Report the fields defined by the schema, copying each value exactly as printed.",
+            "Report these fields, copying each value exactly as printed:",
+            *field_lines(spec),
             "Write amounts as plain numbers: 8900.00, not SGD 8,900.00.",
             "",
             "The document may run to many pages. The schedule table near the front is where these",
