@@ -4,7 +4,9 @@ import { ItemRow } from "@/components/today/item-row";
 import { EmptyState, ProblemState } from "@/components/states";
 import { OwnerForm } from "@/components/household/owner-form";
 import { WhoIsThis } from "@/components/household/who-is-this";
-import { household, quarantine, today, vault, type TodayItem } from "@/lib/api";
+import { Week } from "@/components/today/week";
+import { calendarRange, household, quarantine, today, vault, type TodayItem } from "@/lib/api";
+import { addDays, iso, parseDay } from "@/lib/days";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -59,11 +61,14 @@ export default async function TodayPage({
   const { as_of } = await searchParams;
   // The vault call is for one number — how many documents this is all drawn from — and it is
   // the claim in the footer. `limit=1` because the list itself is not wanted here.
-  const [result, waiting, filed, who] = await Promise.all([
+  // The week moves with `as_of` like everything else on this screen (ADR 0020).
+  const weekStart = as_of && /^\d{4}-\d{2}-\d{2}$/.test(as_of) ? as_of : iso(new Date());
+  const [result, waiting, filed, who, week] = await Promise.all([
     today(as_of),
     quarantine(),
     vault({ limit: "1" }),
     household(),
+    calendarRange(weekStart, iso(addDays(parseDay(weekStart), 6))),
   ]);
 
   // The setup step, and the reason it is here rather than on the unlock screen: the passphrase
@@ -162,6 +167,10 @@ export default async function TodayPage({
           ))}
         </Section>
       ) : null}
+
+      {/* After what needs you and before what is merely coming: the week is a glance, and a
+          failed read of it costs the week only — never the rest of the screen. */}
+      {week.ok ? <Week data={week.data} from={weekStart} /> : null}
 
       {later.length > 0 ? (
         <Section label="Coming up">

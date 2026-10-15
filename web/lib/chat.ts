@@ -3,6 +3,7 @@ import type {
   AdviceCardEvent,
   AdviceWithheldEvent,
   ConsentRequiredEvent,
+  DraftEvent,
   Source,
 } from "@/lib/api";
 
@@ -24,6 +25,7 @@ import type {
  *   advice → sentence* → finished         advice, worked out by code and then explained
  *   consent_required                      advice asked for before the owner agreed to it
  *   advice_withheld                       advice that needs a fact or rule not on file
+ *   draft                                 a calendar entry written down, waiting for Confirm
  *   …anything → error                     the stream broke after it began
  */
 export type ParrotMessage = UIMessage<
@@ -65,6 +67,12 @@ export type ParrotMessage = UIMessage<
 
     /** A worked result, written by code. Explaining sentences and `finished` follow it. */
     advice: Omit<AdviceCardEvent, "kind">;
+
+    /**
+     * A calendar entry Parrot wrote down from a request and did not save (ADR 0020). Nothing
+     * follows it, and nothing is on the calendar until a person presses Confirm on the card.
+     */
+    draft: Omit<DraftEvent, "kind">;
 
     /** The trace line under a finished answer, and the pack's disclaimer. */
     finished: {

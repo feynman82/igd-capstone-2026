@@ -40,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
     from core.advice_consent import HouseholdConsents
     from core.advice_records import HouseholdAdviceLog
     from core.graph.answer import AnswerGraph
+    from core.graph.calendar import HouseholdCalendar
     from core.graph.inventory import HouseholdInventory
     from core.graph.scope import HouseholdScope
     from core.registry import enabled_pack_ids, enabled_packs
@@ -77,6 +78,7 @@ def main(argv: list[str] | None = None) -> int:
                 adviser=ModuleAdviser(conn),
                 consents=HouseholdConsents(conn),
                 advice_log=HouseholdAdviceLog(conn),
+                calendar=HouseholdCalendar(conn),  # ADR 0020: the screen's calendar answers too
             )
             if args.question:
                 _ask(graph, " ".join(args.question), args.show_evidence)

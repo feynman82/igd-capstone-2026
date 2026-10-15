@@ -320,3 +320,32 @@ def _write_local_copy(inbox: Any, name: str, payload: bytes) -> None:
     folder = Path(inbox)
     folder.mkdir(parents=True, exist_ok=True)
     (folder / name).write_bytes(payload)
+
+
+def send(settings: TelegramSettings, text: str, *, transport: Any = None) -> int:
+    """Say `text` in every allowed chat. Returns how many took it.
+
+    Only the allow list is spoken to, and an empty allow list speaks to nobody: a bot that
+    messages whoever last wrote to it is the open door the governance drafts warn about. Used by
+    the morning digest (ADR 0020); capture keeps its own replies in `TelegramAdapter`.
+    """
+    if not settings.configured or not settings.allowed_chat_ids:
+        return 0
+    sent = 0
+    with httpx.Client(
+        base_url=f"{API}/bot{settings.token}",
+        timeout=30.0,
+        follow_redirects=False,
+        transport=transport,
+    ) as client:
+        for chat_id in sorted(settings.allowed_chat_ids):
+            try:
+                response = client.post("/sendMessage", json={"chat_id": chat_id, "text": text})
+            except httpx.HTTPError:
+                log.info("could not send the digest to chat %s", chat_id)
+                continue
+            if response.status_code == 200:
+                sent += 1
+            else:
+                log.info("the digest was refused in chat %s: %s", chat_id, response.status_code)
+    return sent

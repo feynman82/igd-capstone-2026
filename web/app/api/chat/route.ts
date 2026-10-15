@@ -6,6 +6,7 @@ import {
   type AdviceCardEvent,
   type AdviceWithheldEvent,
   type ConsentRequiredEvent,
+  type DraftEvent,
   type Source,
 } from "@/lib/api";
 import type { ParrotMessage } from "@/lib/chat";
@@ -33,6 +34,7 @@ type ParrotEvent =
   | ConsentRequiredEvent
   | AdviceWithheldEvent
   | AdviceCardEvent
+  | DraftEvent
   | { kind: "reading"; passages_read: number; person?: string | null }
   | { kind: "sentence"; text: string; chunk_ids: number[]; citations: Source[] }
   | {
@@ -163,6 +165,10 @@ export async function POST(request: Request) {
             break;
           case "advice":
             writer.write({ type: "data-advice", data: withoutKind(event) });
+            break;
+          // A calendar request, drafted and not done (ADR 0020). The whole answer, like a refusal.
+          case "draft":
+            writer.write({ type: "data-draft", data: withoutKind(event) });
             break;
           case "error":
             writer.write({ type: "data-error", data: { detail: event.detail } });

@@ -47,6 +47,7 @@ from dataclasses import dataclass, field, replace
 from datetime import date
 from typing import Any, TypedDict
 
+from core.calendar import Line, Reply
 from core.contracts import DEFAULT_DECLINE, AdviceShape
 from core.graph.advice import (
     AdviceLog,
@@ -59,6 +60,7 @@ from core.graph.advice import (
     kind_of,
     passages_for,
 )
+from core.graph.calendar import Drafted, HouseholdCalendar, draft, wants_entry
 from core.graph.gate import (
     Claim,
     check_advice,
@@ -493,6 +495,7 @@ Event = (
     | ConsentRequired
     | AdviceWithheld
     | AdviceCard
+    | Drafted
 )
 
 
@@ -518,6 +521,7 @@ class Answer:
     consent_required: bool = False  # advice was asked for before consent was given
     withheld: bool = False  # advice could not be worked out; `missing` says why
     verdict_text: str = ""  # the code-written verdict, when advice was given
+    draft: Drafted | None = None  # a calendar entry written down and not saved (ADR 0020)
 
     @property
     def grounded(self) -> bool:
@@ -528,6 +532,7 @@ class Answer:
             or self.declined
             or self.consent_required
             or self.withheld
+            or self.draft is not None
         )
 
 
@@ -915,6 +920,37 @@ def _advice_basis(
     return basis
 
 
+def _calendar_citation(line: Line) -> Citation:
+    """A deadline cites the page its date came from; an event cites the calendar on its day."""
+    if line.document_name:
+        return Citation(
+            line.document_id,
+            line.document_name,
+            line.page or 0,
+            f"{line.document_name}, page {line.page}" if line.page else line.document_name,
+        )
+    on = line.on
+    return Citation(
+        None,
+        "Calendar",
+        0,
+        f"Calendar, {on:%a} {on.day} {on:%b}" if on else "Calendar",
+        kind="calendar",
+        url=f"/calendar?d={on.isoformat()}" if on else "/calendar",
+    )
+
+
+def _calendar_events(reply: Reply) -> Iterator[Event]:
+    """A calendar answer as the stream every other answer is: read, sentences, finished."""
+    yield Reading(len(reply.lines))
+    cited: list[str] = []
+    for line in reply.lines:
+        citation = _calendar_citation(line)
+        cited.append(citation.text)
+        yield Sentence(line.text, (), [citation])
+    yield Finished(sorted(set(cited)), "", len(reply.lines), 0)
+
+
 def _as_sentence(text: str) -> str:
     """ "which age band applies" -> "Which age band applies.": a pack's wording and a calculator's
     fragment read alike when a terminal joins them."""
@@ -940,6 +976,7 @@ class AnswerGraph:
         adviser: Adviser | None = None,
         consents: ConsentBook | None = None,
         advice_log: AdviceLog | None = None,
+        calendar: HouseholdCalendar | None = None,
     ) -> None:
         self._today = today  # fixed for tests and the demonstration; otherwise the real date
         # The three advice ports (ADR 0016), injected because `core/` never imports the modules
@@ -964,6 +1001,9 @@ class AnswerGraph:
         # The documents on file, read from facts. `None` is a caller with no connection: nothing
         # is known to be on file, so "none on file" is never said and no passage is set aside.
         self._inventory = inventory
+        # The household calendar (ADR 0020). `None` is a caller with no connection, and then a
+        # calendar question is just a question: searched, and most likely abstained on.
+        self._calendar = calendar
         self._graph = self._build()
 
     def _packs(self) -> tuple[InstalledPack, ...]:
@@ -1559,6 +1599,19 @@ class AnswerGraph:
         router alone, to make a follow-up whole; it is never evidence, and nothing an earlier
         answer said can be cited by this one.
         """
+        # The calendar first, and in code (ADR 0020): its rows are the whole answer to "what's
+        # on", and a request to add an entry is drafted for a person to confirm, never refused
+        # by the router as an act and never done.
+        if self._calendar is not None:
+            day = self._today or date.today()
+            if wants_entry(question):
+                yield draft(self._client, question, day, self._calendar.people())
+                return
+            reply = self._calendar.answer(question, day)
+            if reply is not None:
+                yield from _calendar_events(reply)
+                return
+
         final: State = self._graph.invoke(
             {"question": question, "history": list(history)},
             {"configurable": {"thread_id": thread_id}},
@@ -1764,6 +1817,11 @@ class AnswerGraph:
         for event in self.stream(question, thread_id=thread_id, history=history):
             if isinstance(event, Refused):
                 return Answer(event.text, refused=True)
+            if isinstance(event, Drafted):
+                when = event.starts_on.strftime("%A %d %B").replace(" 0", " ")
+                return Answer(
+                    f"Draft calendar entry: {event.title}, {when}. {event.note}", draft=event
+                )
             if isinstance(event, Declined):
                 return Answer(
                     event.text, declined=True, disclaimer=event.disclaimer, offer=event.offer

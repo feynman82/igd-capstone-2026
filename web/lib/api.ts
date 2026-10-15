@@ -33,7 +33,7 @@ export type Source = {
    * A page of a document, a document on file (the inventory), published guidance, a fact read
    * off a document, a published rule value, or a figure Parrot worked out from those (ADR 0016).
    */
-  kind?: "document" | "inventory" | "guidance" | "fact" | "rule" | "calculation";
+  kind?: "document" | "inventory" | "guidance" | "fact" | "rule" | "calculation" | "calendar";
   /** A rule value's own citation: it has no page to open, only who published it, and when. */
   publisher?: string | null;
   title?: string | null;
@@ -67,7 +67,8 @@ export type AskResponse = {
     | "declined"
     | "advice"
     | "consent_required"
-    | "advice_withheld";
+    | "advice_withheld"
+    | "draft";
   text: string;
   claims: Claim[];
   citations: Source[];
@@ -274,6 +275,7 @@ const ALWAYS_EXISTS = [
   "/api/packs",
   "/api/quarantine",
   "/api/household",
+  "/api/calendar",
 ];
 
 async function get<T>(path: string): Promise<Result<T>> {
@@ -457,4 +459,125 @@ export type HouseholdResponse = {
 
 export function household(): Promise<Result<HouseholdResponse>> {
   return get<HouseholdResponse>("/api/household");
+}
+
+/* ---------------------------------------------------------------------------------- calendar
+ *
+ * ADR 0020. Two kinds of line: an event the household typed in, which can be changed here, and a
+ * deadline read off a document, which is cited and cannot. Writes go through the guarded proxy,
+ * so a locked screen cannot add to the calendar any more than it can read it.
+ */
+
+export type Repeat = "never" | "daily" | "weekly" | "monthly" | "yearly";
+
+/** One stored entry, every date of it. */
+export type CalendarEvent = {
+  id: number;
+  title: string;
+  starts_on: string;
+  ends_on: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  location: string | null;
+  notes: string | null;
+  person_id: number | null;
+  person: string | null;
+  repeat: Repeat;
+  repeat_until: string | null;
+  created_via: string;
+  source: string;
+};
+
+/** What a person sets. Creates and replaces alike: an edit is to the whole series. */
+export type CalendarEventIn = {
+  title: string;
+  starts_on: string;
+  ends_on?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  location?: string | null;
+  notes?: string | null;
+  person_id?: number | null;
+  repeat?: Repeat;
+  repeat_until?: string | null;
+  created_via?: "form" | "ask";
+};
+
+/** One line on one day. */
+export type CalendarEntry = {
+  kind: "event" | "deadline";
+  id: string;
+  on: string;
+  title: string;
+  /** "9:00 am to 10:00 am", "all day", "due" — already worded. */
+  when: string;
+  start_time: string | null;
+  person: string | null;
+  location: string | null;
+  event_id: number | null;
+  pack_id: string | null;
+  sources: Source[];
+};
+
+export type CalendarPerson = { id: number; display_name: string };
+
+export type CalendarResponse = {
+  start: string;
+  end: string;
+  entries: CalendarEntry[];
+  events: CalendarEvent[];
+  people: CalendarPerson[];
+};
+
+/** A calendar entry Parrot wrote down from a request in Ask and has not saved. */
+export type DraftEvent = {
+  kind: "draft";
+  title: string;
+  starts_on: string;
+  start_time: string | null;
+  end_time: string | null;
+  person_id: number | null;
+  person: string | null;
+  location: string;
+  note: string;
+};
+
+export function calendarRange(start: string, end: string): Promise<Result<CalendarResponse>> {
+  return get<CalendarResponse>(`/api/calendar?start=${start}&end=${end}`);
+}
+
+/** The same range, from the browser: the Ask draft card needs the household's names. */
+export async function calendarRangeInBrowser(
+  start: string,
+  end: string,
+): Promise<Result<CalendarResponse>> {
+  const outcome = await throughProxy<CalendarResponse>(
+    `/api/parrot/calendar?start=${start}&end=${end}`,
+    { method: "GET", headers: { accept: "application/json" } },
+  );
+  return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
+}
+
+/** Create, or with `id` replace, one entry. */
+export async function saveEvent(
+  body: CalendarEventIn,
+  id?: number,
+): Promise<Result<CalendarEvent>> {
+  const outcome = await throughProxy<CalendarEvent>(
+    id === undefined ? "/api/parrot/calendar/events" : `/api/parrot/calendar/events/${id}`,
+    {
+      method: id === undefined ? "POST" : "PUT",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
+}
+
+export async function deleteEvent(id: number): Promise<Result<{ id: number; title: string }>> {
+  const outcome = await throughProxy<{ id: number; title: string }>(
+    `/api/parrot/calendar/events/${id}`,
+    { method: "DELETE", headers: { accept: "application/json" } },
+  );
+  return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
 }

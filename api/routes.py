@@ -56,6 +56,11 @@ from api.models import (
     AdviceWithheldEvent,
     AskRequest,
     AskResponse,
+    CalendarEntry,
+    CalendarEvent,
+    CalendarEventIn,
+    CalendarPerson,
+    CalendarResponse,
     Claim,
     CloseRequest,
     ConfirmNameRequest,
@@ -64,6 +69,8 @@ from api.models import (
     CorrectionRequest,
     CorrectionResponse,
     DeclinedEvent,
+    DeletedEvent,
+    DraftEvent,
     EnabledRequest,
     ErrorEvent,
     FinishedEvent,
@@ -93,9 +100,11 @@ from api.models import (
     VaultResponse,
 )
 from core import advice_consent, corrections, household, registry, vault
+from core import calendar as household_calendar
 from core.advice_records import HouseholdAdviceLog
 from core.graph import answer as graph
 from core.graph.answer import Answer, AnswerGraph
+from core.graph.calendar import Drafted, HouseholdCalendar
 from core.graph.inventory import HouseholdInventory
 from core.graph.scope import HouseholdScope
 from core.ingest import quarantine, source
@@ -320,6 +329,7 @@ def build_router() -> APIRouter:
             adviser=ModuleAdviser(conn),
             consents=advice_consent.HouseholdConsents(conn),
             advice_log=HouseholdAdviceLog(conn),
+            calendar=HouseholdCalendar(conn),
         )
 
     @router.post("/ask", response_model=AskResponse)
@@ -850,10 +860,165 @@ def build_router() -> APIRouter:
             raise HTTPException(status_code=422, detail=str(error)) from error
         return _as_consent(conn, installed)
 
+    # ------------------------------------------------------------------------------ calendar
+    #
+    # ADR 0020. Events are the household's own entries and change here; deadlines are read off
+    # documents and change only when the document does. Every write commits on its own: an entry
+    # is one person's one action, not part of anything larger.
+
+    @router.get("/calendar", response_model=CalendarResponse)
+    def get_calendar(
+        conn: Conn,
+        start: Annotated[date, Query(description="YYYY-MM-DD, first day shown")],
+        end: Annotated[date, Query(description="YYYY-MM-DD, last day shown")],
+    ) -> CalendarResponse:
+        """Every entry from `start` to `end`, inclusive, ordered as a day is read.
+
+        * **400** `end` is before `start`, or the range is wider than a six-week month grid
+        """
+        if end < start or (end - start).days > household_calendar.MAX_RANGE_DAYS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"a range is 1 to {household_calendar.MAX_RANGE_DAYS + 1} days, start first",
+            )
+        return _calendar(conn, start, end)
+
+    @router.post("/calendar/events", response_model=CalendarEvent, status_code=201)
+    def create_event(body: CalendarEventIn, conn: Conn) -> CalendarEvent:
+        """A new entry. Also how a draft from Ask is confirmed, with `created_via: ask`.
+
+        * **422** the entry is for somebody who is not in the household
+        """
+        _known_person(conn, body.person_id)
+        created = household_calendar.create(conn, _fields(body), created_via=body.created_via)
+        conn.commit()
+        return _as_calendar_event(created)
+
+    @router.put("/calendar/events/{event_id}", response_model=CalendarEvent)
+    def replace_event(event_id: int, body: CalendarEventIn, conn: Conn) -> CalendarEvent:
+        """Every field of an entry, and so every date of a repeating one.
+
+        * **404** there is no such entry (it was deleted, perhaps on another screen)
+        * **422** the entry is for somebody who is not in the household
+        """
+        _known_person(conn, body.person_id)
+        changed = household_calendar.update(conn, event_id, _fields(body))
+        if changed is None:
+            raise HTTPException(status_code=404, detail="that entry is no longer on the calendar")
+        conn.commit()
+        return _as_calendar_event(changed)
+
+    @router.delete("/calendar/events/{event_id}", response_model=DeletedEvent)
+    def delete_event(event_id: int, conn: Conn) -> DeletedEvent:
+        """An entry and every date of it. A deadline cannot be deleted here: it is a document's,
+        and closing one is `POST /obligations/{id}/close`.
+
+        * **404** there is no such entry
+        """
+        existing = household_calendar.get(conn, event_id)
+        if existing is None or not household_calendar.delete(conn, event_id):
+            raise HTTPException(status_code=404, detail="that entry is no longer on the calendar")
+        conn.commit()
+        return DeletedEvent(id=event_id, title=existing.title)
+
     return router
 
 
 # ------------------------------------------------------------------------------- translation
+
+
+def _fields(body: CalendarEventIn) -> household_calendar.EventFields:
+    return household_calendar.EventFields(
+        title=body.title,
+        starts_on=body.starts_on,
+        ends_on=body.ends_on,
+        start_time=body.start_time,
+        end_time=body.end_time,
+        location=body.location,
+        notes=body.notes,
+        person_id=body.person_id,
+        repeat=body.repeat,
+        repeat_until=body.repeat_until,
+    )
+
+
+def _known_person(conn: Any, person_id: int | None) -> None:
+    if person_id is not None and person_id not in {p.id for p in household.roster(conn)}:
+        raise HTTPException(status_code=422, detail="that person is not in the household")
+
+
+def _as_calendar_event(event: household_calendar.Event) -> CalendarEvent:
+    return CalendarEvent(
+        id=event.id,
+        title=event.title,
+        starts_on=event.starts_on,
+        ends_on=event.ends_on,
+        start_time=event.start_time,
+        end_time=event.end_time,
+        location=event.location,
+        notes=event.notes,
+        person_id=event.person_id,
+        person=event.person,
+        repeat=event.repeat,
+        repeat_until=event.repeat_until,
+        created_via=event.created_via,
+        source=event.source,
+    )
+
+
+def _calendar(conn: Any, start: date, end: date) -> CalendarResponse:
+    """Events and deadlines for a range, interleaved by day. Today and the Calendar both read
+    this, so the week on Today and the same week on the Calendar cannot disagree."""
+    series = household_calendar.events_between(conn, start, end)
+    entries = [
+        CalendarEntry(
+            kind="event",
+            id=f"event:{o.event.id}:{o.on.isoformat()}",
+            on=o.on,
+            title=o.event.title,
+            when=household_calendar.when(o),
+            start_time=o.event.start_time if o.day == 1 else None,
+            person=o.event.person,
+            location=o.event.location,
+            event_id=o.event.id,
+        )
+        for o in household_calendar.expand(series, start, end)
+    ]
+    for due in household_calendar.deadlines(
+        conn, start, end, enabled=registry.enabled_pack_ids(conn)
+    ):
+        named = f"{due.document_name}, page {due.page}" if due.document_name and due.page else None
+        entries.append(
+            CalendarEntry(
+                kind="deadline",
+                id=f"obligation:{due.obligation_id}",
+                on=due.due_date,
+                title=due.label,
+                when="due",
+                pack_id=due.pack_id,
+                sources=[
+                    Source(
+                        document_id=str(due.document_id) if due.document_id else None,
+                        document_name=due.document_name,
+                        page=due.page,
+                        text=named or due.document_name or "no document behind this one",
+                    )
+                ],
+            )
+        )
+    # Deadlines first within a day: a date a document set is the one a person cannot move.
+    entries.sort(key=lambda e: (e.on, e.kind != "deadline"))
+    return CalendarResponse(
+        start=start,
+        end=end,
+        entries=entries,
+        events=[_as_calendar_event(event) for event in series],
+        people=[
+            CalendarPerson(id=p.id, display_name=p.display_name)
+            for p in household.roster(conn)
+            if not p.external
+        ],
+    )
 
 
 def _history(ask_request: AskRequest) -> list[tuple[str, str]]:
@@ -970,6 +1135,8 @@ def _as_event(event: graph.Event) -> Any:
         )
     if isinstance(event, graph.Refused):
         return RefusalEvent(text=event.text)
+    if isinstance(event, Drafted):
+        return _as_draft(event)
     if isinstance(event, graph.Declined):
         return DeclinedEvent(text=event.text, disclaimer=event.disclaimer, offer=event.offer)
     if isinstance(event, graph.ConsentRequired):
@@ -1016,8 +1183,23 @@ def _as_event(event: graph.Event) -> Any:
     )
 
 
+def _as_draft(event: Drafted) -> DraftEvent:
+    return DraftEvent(
+        title=event.title,
+        starts_on=event.starts_on,
+        start_time=event.start_time,
+        end_time=event.end_time,
+        person_id=event.person_id,
+        person=event.person,
+        location=event.location,
+        note=event.note,
+    )
+
+
 def _as_response(answer: Answer) -> AskResponse:
     """One `Answer` to one of the shapes a client has to handle."""
+    if answer.draft is not None:
+        return AskResponse(kind="draft", text=answer.text, draft=_as_draft(answer.draft))
     if answer.declined:
         return AskResponse(
             kind="declined", text=answer.text, disclaimer=answer.disclaimer, offer=answer.offer

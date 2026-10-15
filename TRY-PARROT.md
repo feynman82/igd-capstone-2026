@@ -64,6 +64,7 @@ uv sync --python 3.12 --extra dev
 docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot < db/migrations/0001_init.sql
 docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot < db/migrations/0002_household.sql
 docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot < db/migrations/0003_advice.sql
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot < db/migrations/0004_calendar.sql
 ```
 
 Then the screens:
@@ -75,7 +76,7 @@ cd ..
 ```
 
 Line by line: start the database, install the Python packages, create the tables (every file
-in `db/migrations/`, in order — there are three today), install the interface.
+in `db/migrations/`, in order — there are four today), install the interface.
 
 The migration lines use the database *inside* Docker, so you do not need to install `psql`
 yourself. On Windows run them from **Git Bash** or **WSL** rather than `cmd`, because `<` works
@@ -85,6 +86,7 @@ differently there. In PowerShell use this instead, once per migration file:
 Get-Content db/migrations/0001_init.sql | docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot
 Get-Content db/migrations/0002_household.sql | docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot
 Get-Content db/migrations/0003_advice.sql | docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot
+Get-Content db/migrations/0004_calendar.sql | docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot
 ```
 
 You do **not** need a `.env` file. The defaults already match the Docker setup. Copy

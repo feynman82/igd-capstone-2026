@@ -1,6 +1,7 @@
 "use client";
 
-import { Calculator, ExternalLink, FileWarning, ImageOff, X } from "lucide-react";
+import { Calculator, CalendarDays, ExternalLink, FileWarning, ImageOff, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { pageImage, type Source } from "@/lib/api";
 
@@ -31,6 +32,22 @@ export function SourceChip({ source }: { source: Source }) {
   const chip = useRef<HTMLButtonElement>(null);
 
   if (source.kind === "rule") return <RuleChip source={source} />;
+
+  // A calendar line (ADR 0020) cites the calendar on its day: an entry the household typed in,
+  // opened where it can be read in full and changed. Only an address inside the calendar is
+  // ever a link — it came from the API, but a chip should not be talked into leaving the app.
+  if (source.kind === "calendar") {
+    const href = source.url?.startsWith("/calendar") ? source.url : "/calendar";
+    return (
+      <Link
+        href={href}
+        className="inline-flex max-w-full items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline bg-surface px-[11px] py-[7px] text-meta font-medium text-ink-2 no-underline hover:bg-surface-2"
+      >
+        <CalendarDays aria-hidden size={13} strokeWidth={2} className="shrink-0" />
+        {source.text}
+      </Link>
+    );
+  }
 
   if (source.kind === "calculation") {
     return (

@@ -21,7 +21,8 @@ import { SESSION_COOKIE, isUnlocked } from "@/lib/lock";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED = new Set(["GET", "POST", "PATCH", "DELETE"]);
+// PUT is a calendar entry replaced whole (ADR 0020): an edit is to every date of a series.
+const ALLOWED = new Set(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 
 async function forward(request: Request, path: string[]): Promise<Response> {
   const jar = await cookies();
@@ -81,6 +82,10 @@ export async function GET(request: Request, context: Context) {
 }
 
 export async function POST(request: Request, context: Context) {
+  return forward(request, (await context.params).path);
+}
+
+export async function PUT(request: Request, context: Context) {
   return forward(request, (await context.params).path);
 }
 

@@ -3,8 +3,14 @@
 import { Ban, CircleSlash, FileQuestion, Scale } from "lucide-react";
 import { AdviceCard, AdviceWithheld } from "@/components/ask/advice-card";
 import { ConsentPrompt } from "@/components/ask/consent-prompt";
+import { DraftCard } from "@/components/ask/draft-card";
 import { SourceChip } from "@/components/source-chip";
-import type { AdviceCardEvent, AdviceWithheldEvent, ConsentRequiredEvent } from "@/lib/api";
+import type {
+  AdviceCardEvent,
+  AdviceWithheldEvent,
+  ConsentRequiredEvent,
+  DraftEvent,
+} from "@/lib/api";
 import type { ParrotMessage } from "@/lib/chat";
 
 /**
@@ -60,9 +66,29 @@ export function Turn({
   const withheld = parts.find((part) => part.type === "data-advice_withheld") as
     | { data: Omit<AdviceWithheldEvent, "kind"> }
     | undefined;
-  // A consent prompt and withheld advice are the whole answer: no `finished` follows, and the
-  // turn is over the moment either arrives.
-  const settled = Boolean(abstention || failure || declined || refusal || advice || consent || withheld);
+  // A calendar request (ADR 0020), drafted rather than done. The card is the whole answer.
+  const draft = parts.find((part) => part.type === "data-draft") as
+    | { data: Omit<DraftEvent, "kind"> }
+    | undefined;
+  // A consent prompt, withheld advice and a draft are the whole answer: no `finished` follows,
+  // and the turn is over the moment one arrives.
+  const settled = Boolean(
+    abstention || failure || declined || refusal || advice || consent || withheld || draft,
+  );
+
+  // A calendar answer (ADR 0020) is read off the rows by code; its footer must not claim a model.
+  const fromCalendar =
+    sentences.length > 0 &&
+    sentences.every((part) =>
+      (part as { data: { citations: { kind?: string }[] } }).data.citations.every(
+        (source) => source.kind === "calendar" || source.kind === "document",
+      ),
+    ) &&
+    sentences.some((part) =>
+      (part as { data: { citations: { kind?: string }[] } }).data.citations.some(
+        (source) => source.kind === "calendar",
+      ),
+    );
 
   // Whose answer this is, when the question was first-person and the evidence was narrowed to
   // one member of the household. Shown for exactly the reason a citation is shown: the defence
@@ -142,10 +168,11 @@ export function Turn({
         />
       ) : null}
       {withheld ? <AdviceWithheld withheld={withheld.data} /> : null}
+      {draft ? <DraftCard draft={draft.data} /> : null}
       {failure ? <Broken part={failure} /> : null}
 
       {finished && (sentences.length > 0 || advice) ? (
-        <Trace part={finished} advised={Boolean(advice)} />
+        <Trace part={finished} advised={Boolean(advice)} calendar={fromCalendar} />
       ) : null}
     </li>
   );
@@ -280,7 +307,16 @@ function Broken({ part }: { part: Part }) {
  * how many sentences it wrote and then refused to show. A reader who can see that number trusts
  * the ones that got through more, not less.
  */
-function Trace({ part, advised = false }: { part: Part; advised?: boolean }) {
+function Trace({
+  part,
+  advised = false,
+  calendar = false,
+}: {
+  part: Part;
+  advised?: boolean;
+  /** Every sentence was read off the calendar by code (ADR 0020): no passage, no model. */
+  calendar?: boolean;
+}) {
   const data = (
     part as {
       data: {
@@ -297,7 +333,9 @@ function Trace({ part, advised = false }: { part: Part; advised?: boolean }) {
     <div className="mt-[var(--s-4)] border-t border-hairline pt-[var(--s-3)]">
       <p className="text-meta text-ink-3">
         {/* After advice the "passages" are the card's own inputs, so the line says that. */}
-        {advised ? (
+        {calendar ? (
+          "read off your calendar by code, not written by a model"
+        ) : advised ? (
           "explained from the inputs on the card"
         ) : (
           <>
@@ -321,7 +359,7 @@ function Trace({ part, advised = false }: { part: Part; advised?: boolean }) {
             {data.quarantined === 1 ? "" : "s"} in quarantine not checked
           </>
         ) : null}
-        {" · local model, nothing left this computer"}
+        {calendar ? " · nothing left this computer" : " · local model, nothing left this computer"}
       </p>
       {/* Advice already shows its disclaimer on the card, where it cannot be missed. */}
       {data.disclaimer && !advised ? (

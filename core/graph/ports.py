@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal, Protocol
 
-Kind = Literal["document", "inventory", "guidance", "fact", "rule", "calculation"]
+Kind = Literal["document", "inventory", "guidance", "fact", "rule", "calculation", "calendar"]
 
 
 @dataclass(frozen=True, slots=True)

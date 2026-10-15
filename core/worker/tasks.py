@@ -40,6 +40,7 @@ RETRY = "parrot.retry_quarantined"
 RETRY_ONE = "parrot.retry_one_quarantined"
 SWEEP_REMINDERS = "parrot.sweep_reminders"
 SWEEP_ALERTS = "parrot.sweep_alerts"
+CALENDAR_DIGEST = "parrot.calendar_digest"
 
 
 # --------------------------------------------------------------------------- the work itself
@@ -163,6 +164,21 @@ def sweep_alerts_now(conn: Any, today: date | None = None) -> str:
     return f"{len(firing)} alert(s) fired"
 
 
+def send_digest_now(conn: Any, settings: Settings, today: date | None = None) -> str:
+    """This morning's calendar digest, to the household's Telegram chats (ADR 0020)."""
+    from core import calendar
+    from core.adapters import telegram
+    from core.registry import enabled_pack_ids
+
+    text = calendar.digest(conn, today or date.today(), enabled=enabled_pack_ids(conn))
+    if text is None:
+        return "nothing on the calendar this week; no digest sent"
+    sent = telegram.send(
+        telegram.TelegramSettings(settings.telegram_token, settings.telegram_chat_ids), text
+    )
+    return f"digest sent to {sent} chat(s)"
+
+
 # ------------------------------------------------------------------- what Celery actually runs
 #
 # Each of these opens its own connection and closes it. A worker process that holds a
@@ -222,6 +238,12 @@ def _run_alerts() -> str:
         return sweep_alerts_now(conn)
 
 
+def _run_digest() -> str:
+    settings = Settings.load(ROOT)
+    with connect(settings) as conn:
+        return send_digest_now(conn, settings)
+
+
 def register(app: Any) -> Any:
     """Attach the tasks to a Celery application and return it."""
     app.task(name=INGEST, bind=False)(_run_ingest)
@@ -229,6 +251,7 @@ def register(app: Any) -> Any:
     app.task(name=RETRY_ONE, bind=False)(_run_retry_one)
     app.task(name=SWEEP_REMINDERS, bind=False)(_run_reminders)
     app.task(name=SWEEP_ALERTS, bind=False)(_run_alerts)
+    app.task(name=CALENDAR_DIGEST, bind=False)(_run_digest)
     return app
 
 

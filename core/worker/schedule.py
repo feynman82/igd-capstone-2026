@@ -26,6 +26,9 @@ from core.contracts import ModuleManifest
 MODULES_DIR = Path(__file__).resolve().parents[2] / "modules"
 
 ALERT_FALLBACK_CRON = "5 7 * * *"  # not in the manifest; see the note above and ADR 0008
+# The calendar digest (ADR 0020) is not a module, so it has no manifest to read a cron from; this
+# line is its one place. After both sweeps, so it never races them for a connection.
+DIGEST_CRON = "10 7 * * *"
 
 
 def manifest(module_id: str) -> ModuleManifest:
@@ -65,5 +68,9 @@ def beat_schedule() -> dict[str, dict[str, Any]]:
         "alert-nightly": {
             "task": "parrot.sweep_alerts",
             "schedule": crontab_from(crons["alert"]),
+        },
+        "calendar-digest": {
+            "task": "parrot.calendar_digest",
+            "schedule": crontab_from(DIGEST_CRON),
         },
     }
