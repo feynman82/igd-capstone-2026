@@ -335,6 +335,14 @@ def test_a_document_question_is_left_to_the_graph(db: Any) -> None:
     _seed(db)
     assert calendar.answer(db, "When does my car insurance expire?", TODAY) is None
     assert calendar.answer(db, "What is the excess on my policy?", TODAY) is None
+    # The documents' own words, which a looser match took for the calendar: a policy schedule,
+    # a renewal "coming up", and what is printed on a page.
+    assert calendar.answer(db, "What does my policy schedule say about flood?", TODAY) is None
+    assert calendar.answer(db, "Which renewals are coming up?", TODAY) is None
+    assert calendar.answer(db, "What is on the renewal notice?", TODAY) is None
+    # And what is still a calendar question.
+    for asked in ("Anything on?", "What's on for Lucas this week?", "what is on Saturday"):
+        assert calendar.answer(db, asked, TODAY) is not None, asked
 
 
 def test_an_empty_period_says_so_rather_than_saying_nothing(db: Any) -> None:

@@ -384,11 +384,16 @@ def _deadline_line(deadline: Deadline) -> Line:
 
 # ------------------------------------------------------------------------------- questions
 
-# A question about the calendar names it, or asks what is on. Kept narrow on purpose: "plan" is
-# in a whole life policy's product name, and "event" in an insurance schedule's insured events.
+# A question about the calendar names it, or asks what is on *when*. Kept narrow on purpose,
+# because the documents' own words are close: "schedule" is a policy schedule, "plan" is in a
+# whole life policy's product name, "event" is an insured event, "what's coming up" is a renewal
+# question, and "what is on the renewal notice" asks about a page. So "on" counts only when a
+# time follows it or nothing does.
 _ABOUT = re.compile(
-    r"\b(calendar|schedule|diary|agenda|appointments?|what'?s on|what is on|anything on|"
-    r"coming up|am i free|are we free|busy)\b",
+    r"\b(calendar|diary|agenda|appointments?|am i free|are we free|busy)\b"
+    r"|\b(what'?s|what is|anything|is there anything)\s+on\b\s*"
+    r"(\?|$|(today|tonight|tomorrow|this|next|for|in|at|the weekend|"
+    r"monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b)",
     re.IGNORECASE,
 )
 _WHEN = re.compile(r"\b(when|what time|where|next|last)\b", re.IGNORECASE)
