@@ -188,6 +188,14 @@ metrics need a judge: `--judge MODEL` or `PARROT_JUDGE_MODEL`, served by the sam
 `--no-judge` writes the code-scored metrics alone. A result file is never overwritten. See the
 docstring in `eval/run.py` for every flag.
 
+`run.git_sha` and `run.corpus_manifest_sha` are read when the run **starts**, before any code is
+imported, because that is the code that ran. If either differs when the run finishes — a branch
+switched or a pull landed in the same checkout — the file also records `git_sha_at_end` or
+`corpus_manifest_sha_at_end` and the terminal warns; the numbers belong to the start. A commit
+ending in `-dirty` had uncommitted changes under `core/`, `eval/`, `packs/` or `modules/` (result
+files aside), so the run measured a working tree, not that commit. Run the harness from a
+checkout nobody else is switching.
+
 ## The module metrics
 
 ```

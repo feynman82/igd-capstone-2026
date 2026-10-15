@@ -18,7 +18,7 @@ from core.graph.answer import Answer, Citation, Cited
 from core.graph.ports import Passage
 from eval import harness, headline, score
 from eval.bands import Count
-from eval.run import _runtime_numbers, _table
+from eval.run import _dirty, _provenance, _runtime_numbers, _table
 from eval.sets_io import MalformedQuestion, Question, load_set, subset
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -436,6 +436,34 @@ def test_the_code_scored_metrics_come_out_as_arithmetic_says(tmp_path: Path) -> 
     printed = _table(metrics, why)
     assert "abstention_rate" in printed and "ref >= 0.95" in printed
     assert "✓" not in printed and "✗" not in printed  # reference lines, not lines to clear
+
+
+def test_a_run_is_stamped_with_the_code_it_loaded() -> None:
+    """15 October: a run loaded the code before #76, the checkout moved to #76 two seconds later,
+    and the file said #76 — the commit was read when the run finished. The start is what ran."""
+    start = {"git_sha": "29b55a9", "corpus_manifest_sha": "8f7e6c432f1f7497"}
+    same, quiet = _provenance(start, dict(start))
+    assert same == start and quiet == ""
+
+    moved, warning = _provenance(start, {**start, "git_sha": "0346ea0"})
+    assert moved["git_sha"] == "29b55a9"  # the code that was loaded, not the code at the end
+    assert moved["git_sha_at_end"] == "0346ea0"
+    assert "corpus_manifest_sha_at_end" not in moved
+    assert "29b55a9" in warning and "0346ea0" in warning and "start" in warning
+
+
+@pytest.mark.parametrize(
+    ("porcelain", "dirty"),
+    [
+        ("", False),
+        (" M core/ingest/extract.py\n", True),
+        ("M  eval/score.py\n", True),
+        ("?? eval/results/2026-10-15-x.json\n", False),  # untracked is not the code that ran
+        ("R  packs/a.yaml -> packs/b.yaml\n", True),
+    ],
+)
+def test_uncommitted_code_marks_the_run_dirty(porcelain: str, dirty: bool) -> None:
+    assert _dirty(porcelain) is dirty
 
 
 def test_runtime_numbers_are_read_from_the_benchmark_file_not_typed() -> None:
