@@ -45,9 +45,9 @@ b1-0012,benefit_illustration,core,2024-07-19,Lucas Lim Kai En,clean,Meridian Ass
 b1-0013,policy_anniversary_statement,core,2026-06-01,Marcus Lim Jun Wei,clean,Lionhead Life Assurance,LF-2015-330277,,,,,,,,,,,,,,,Marcus Lim Jun Wei,2026-06-01,300000.00,3600.00,24800.00,39600.00,,,,,,,,,,,,,,,,,,,,,,,,,latest of three
 b1-0014,policy_anniversary_statement,core,2025-06-02,Marcus Lim Jun Wei,clean,Lionhead Life Assurance,LF-2015-330277,,,,,,,,,,,,,,,Marcus Lim Jun Wei,2025-06-02,300000.00,3600.00,20100.00,36000.00,,,,,,,,,,,,,,,,,,,,,,,,,
 b1-0015,policy_anniversary_statement,core,2024-06-03,Marcus Lim Jun Wei,scanned,Lionhead Life Assurance,LF-2015-330277,,,,,,,,,,,,,,,Marcus Lim Jun Wei,2024-06-03,300000.00,3600.00,15600.00,32400.00,,,,,,,,,,,,,,,,,,,,,,,,,same policy three times: catches answering from one document
-b1-0016,payslip,core,2026-07-28,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Meridian Systems Pte Ltd,2026-07,9400.00,1200.00,8200.00,,,,,,,,,,,,,,,,,,,
-b1-0017,payslip,core,2026-08-28,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Meridian Systems Pte Ltd,2026-08,9400.00,1200.00,8200.00,,,,,,,,,,,,,,,,,,,
-b1-0018,payslip,core,2026-08-28,Rachel Ng Hui Shan,clean,,,,,,,,,,,,,,,,,,,,,,,Rachel Ng Hui Shan,Northlight Health Pte Ltd,2026-08,6250.00,1200.00,5050.00,,,,,,,,,,,,,,,,,,,
+b1-0016,payslip,core,2026-07-28,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Meridian Systems Pte Ltd,2026-07,9400.00,1600.00,7800.00,,,,,,,,,,,,,,,,,,,
+b1-0017,payslip,core,2026-08-28,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Meridian Systems Pte Ltd,2026-08,9400.00,1600.00,7800.00,,,,,,,,,,,,,,,,,,,
+b1-0018,payslip,core,2026-08-28,Rachel Ng Hui Shan,clean,,,,,,,,,,,,,,,,,,,,,,,Rachel Ng Hui Shan,Northlight Health Pte Ltd,2026-08,6250.00,1250.00,5000.00,,,,,,,,,,,,,,,,,,,
 b1-0019,donation_receipt,core,2026-03-11,Marcus Lim Jun Wei,clean,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Riverbend Community Trust,RCT-2026-04417,2026-03-11,500.00,true,,,,,,,,,,,,,
 b1-0020,donation_receipt,core,2026-06-22,Rachel Ng Hui Shan,clean,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Rachel Ng Hui Shan,Riverbend Community Trust,RCT-2026-05120,2026-06-22,250.00,true,,,,,,,,,,,,,
 b1-0021,donation_receipt,core,2025-11-30,Marcus Lim Jun Wei,scanned,,,,,,,,,,,,,,,,,,,,,,,,,,,,,Marcus Lim Jun Wei,Harbourlight Education Fund,HEF-2025-00883,2025-11-30,1000.00,false,,,,,,,,,,,,,deliberately not tax deductible: tests a false boolean
