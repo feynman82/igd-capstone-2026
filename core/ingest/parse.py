@@ -152,7 +152,7 @@ def _pages_from(document: object) -> list[ParsedPage]:
     there instead. A table carries its content in its cells rather than in `.text`, and is read
     through `_table_text`.
     """
-    by_page: dict[int, list[Block]] = {}
+    by_page: dict[int, list[tuple[Block, Box | None]]] = {}
     for item, _level in document.iterate_items():  # type: ignore[attr-defined]
         text = getattr(item, "text", None)
         kind = _kind(item)
@@ -163,11 +163,60 @@ def _pages_from(document: object) -> list[ParsedPage]:
             continue
         provenance = getattr(item, "prov", None) or []
         page_no = getattr(provenance[0], "page_no", 1) if provenance else 1
-        by_page.setdefault(int(page_no), []).append(Block(kind, str(text).strip()))
-    return [
-        ParsedPage(page, "\n".join(block.text for block in blocks), tuple(blocks))
-        for page, blocks in sorted(by_page.items())
-    ]
+        box = _box(provenance[0], document, int(page_no)) if provenance else None
+        by_page.setdefault(int(page_no), []).append((Block(kind, str(text).strip()), box))
+    pages: list[ParsedPage] = []
+    for page, found in sorted(by_page.items()):
+        blocks = tuple(reading_order(found))
+        pages.append(ParsedPage(page, "\n".join(block.text for block in blocks), blocks))
+    return pages
+
+
+# A block's place on its page: left, top, right, bottom, with the top of the page at 0.
+Box = tuple[float, float, float, float]
+
+
+def _box(provenance: object, document: object, page_no: int) -> Box | None:
+    """Where Docling found the item, measured from the top of the page, or None if unknown."""
+    bbox = getattr(provenance, "bbox", None)
+    if bbox is None:
+        return None
+    try:
+        page = getattr(document, "pages", {})[page_no]
+        height = float(page.size.height)
+        top_left = bbox.to_top_left_origin(page_height=height)
+        return (float(top_left.l), float(top_left.t), float(top_left.r), float(top_left.b))
+    except Exception:  # a page without a size, a box without coordinates: keep Docling's order
+        return None
+
+
+def reading_order(found: list[tuple[Block, Box | None]]) -> list[Block]:
+    """Docling's order, with any block it put after something printed below it moved up.
+
+    Docling orders a page by layout, and a centred title is what that gets wrong: on `b1-0001`
+    "Private Car Insurance Policy" sits under the letterhead and above "1. POLICY SCHEDULE", and
+    came out last, after section 8. Extraction is told the product name is printed "at the head
+    of the schedule", and the head was at the foot.
+
+    So a block moves only when Docling put something before it that is further down the same
+    span of the page — wholly below it and overlapping it from side to side — and it goes in
+    front of the first such block. Within a column Docling reads correctly, so nothing moves; a
+    second column sits beside the first rather than under it, so it is never pulled into it. A
+    block with no position stays where Docling put it.
+    """
+    ordered: list[tuple[Block, Box | None]] = []
+    for block, box in found:
+        under = [i for i, (_, other) in enumerate(ordered) if _under(other, box)]
+        ordered.insert(under[0] if under else len(ordered), (block, box))
+    return [block for block, _ in ordered]
+
+
+def _under(lower: Box | None, upper: Box | None) -> bool:
+    """`lower` starts at or under the line where `upper` ends, and they share some horizontal
+    span: it is further down the same column."""
+    if lower is None or upper is None:
+        return False
+    return lower[1] >= upper[3] and lower[0] < upper[2] and upper[0] < lower[2]
 
 
 _HEADING_LABELS = frozenset({"title", "section_header"})

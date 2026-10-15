@@ -802,6 +802,97 @@ def test_an_item_with_neither_text_nor_cells_is_still_skipped() -> None:
     assert [page.text for page in _pages_from(document)] == ["Meridian Assurance"]
 
 
+def _at(page: int, left: float, top: float, right: float, bottom: float) -> list[SimpleNamespace]:
+    """Provenance with a box measured, as Docling's PDFs are, from the bottom of an 842pt page."""
+    box = SimpleNamespace(
+        to_top_left_origin=lambda page_height: SimpleNamespace(
+            l=left, t=page_height - top, r=right, b=page_height - bottom
+        )
+    )
+    return [SimpleNamespace(page_no=page, bbox=box)]
+
+
+def _sized(*items: SimpleNamespace) -> SimpleNamespace:
+    return SimpleNamespace(
+        iterate_items=lambda: [(item, 0) for item in items],
+        pages={1: SimpleNamespace(size=SimpleNamespace(height=842.0))},
+    )
+
+
+def test_a_centred_title_docling_put_last_is_read_at_the_head() -> None:
+    """b1-0001, as Docling returned it on 15 October: the title under the letterhead came out
+    after section 8, so "the product name at the head of the schedule" was at the foot."""
+    from core.ingest.parse import _pages_from
+
+    document = _sized(
+        SimpleNamespace(text="MERIDIAN ASSURANCE", prov=_at(1, 46, 791, 202, 772)),
+        SimpleNamespace(text="1. POLICY SCHEDULE", prov=_at(1, 45, 708, 126, 698)),
+        SimpleNamespace(text="Coverage Type: Comprehensive Cover", prov=_at(1, 44, 695, 550, 475)),
+        SimpleNamespace(text="8. GENERAL CONDITIONS", prov=_at(1, 45, 66, 144, 56)),
+        SimpleNamespace(text="Private Car Insurance Policy", prov=_at(1, 221, 748, 374, 733)),
+        SimpleNamespace(text="POLICY CONTRACT & SCHEDULE", prov=_at(1, 235, 733, 360, 723)),
+    )
+
+    [page] = _pages_from(document)
+    assert page.text.splitlines() == [
+        "MERIDIAN ASSURANCE",
+        "1. POLICY SCHEDULE",
+        "Private Car Insurance Policy",
+        "POLICY CONTRACT & SCHEDULE",
+        "Coverage Type: Comprehensive Cover",
+        "8. GENERAL CONDITIONS",
+    ]
+
+
+def test_two_columns_read_one_after_the_other_are_left_alone() -> None:
+    """The right column starts higher than the end of the left one, but it is beside it, not
+    under it: nothing in it is further down the same span, so nothing moves."""
+    from core.ingest.parse import _pages_from
+
+    document = _sized(
+        SimpleNamespace(text="left top", prov=_at(1, 40, 800, 280, 780)),
+        SimpleNamespace(text="left bottom", prov=_at(1, 40, 400, 280, 380)),
+        SimpleNamespace(text="right top", prov=_at(1, 300, 800, 550, 780)),
+        SimpleNamespace(text="right bottom", prov=_at(1, 300, 400, 550, 380)),
+    )
+
+    [page] = _pages_from(document)
+    assert page.text.splitlines() == ["left top", "left bottom", "right top", "right bottom"]
+
+
+def test_blocks_on_one_line_and_a_block_with_no_position_keep_doclings_order() -> None:
+    """A label and its value side by side are on one line, not one under the other."""
+    from core.ingest.parse import _pages_from
+
+    document = _sized(
+        SimpleNamespace(text="Excess:", prov=_at(1, 40, 500, 120, 490)),
+        SimpleNamespace(text="SGD 750.00", prov=_at(1, 130, 502, 220, 488)),
+        SimpleNamespace(text="Annual Premium: SGD 1,284.00", prov=_at(1, 40, 480, 300, 470)),
+        SimpleNamespace(text="no box", prov=_on_page(1)),
+    )
+
+    [page] = _pages_from(document)
+    assert page.text.splitlines() == [
+        "Excess:",
+        "SGD 750.00",
+        "Annual Premium: SGD 1,284.00",
+        "no box",
+    ]
+
+
+def test_on_a_page_docling_gave_no_size_nothing_moves() -> None:
+    from core.ingest.parse import _pages_from
+
+    document = _sized(
+        SimpleNamespace(text="1. POLICY SCHEDULE", prov=_at(1, 45, 708, 126, 698)),
+        SimpleNamespace(text="Private Car Insurance Policy", prov=_at(1, 45, 748, 374, 733)),
+    )
+    document.pages = {}
+
+    [page] = _pages_from(document)
+    assert page.text.splitlines() == ["1. POLICY SCHEDULE", "Private Car Insurance Policy"]
+
+
 # ----------------------------------------------------------------------- the front first
 #
 # On a CPU-only machine on 2026-09-13 a four-page policy's extraction ran for three minutes and was
