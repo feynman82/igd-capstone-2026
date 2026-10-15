@@ -19,13 +19,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util
 import json
 import logging
 import os
 import re
 import subprocess
 import sys
-from collections.abc import Collection, Mapping, Sequence
+from collections.abc import Callable, Collection, Mapping, Sequence
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
@@ -179,6 +180,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.no_judge
         else (args.judge or os.environ.get("PARROT_JUDGE_MODEL") or settings.generation_model)
     )
+    # The judge is imported only when it is used, at the end of the run. Without the eval extras
+    # that is after every question has been asked, and the run writes nothing: check now.
+    if judge_model and (missing := _judge_missing()):
+        print(
+            f"The judge needs {', '.join(missing)}, which come with the eval extras: run "
+            "`uv sync --extra eval`, or pass --no-judge for the code-scored metrics alone."
+        )
+        return 2
     label = args.label or (
         "floor-off" if args.floor_off else "judged" if judge_model else "code-scored"
     )
@@ -509,6 +518,15 @@ def _git_sha() -> str:
 
 # The directories whose code a run executes or whose files it reads as its definition.
 CODE_DIRS = ("core", "eval", "packs", "modules")
+
+# What `score.RagasJudge` imports, and the eval extra provides (pyproject.toml).
+JUDGE_NEEDS = ("openai", "ragas")
+
+
+def _judge_missing(find: Callable[[str], object] = importlib.util.find_spec) -> list[str]:
+    """The judge's modules this environment does not have. Found, not imported: importing ragas
+    takes seconds, and the question is only whether it is there."""
+    return [name for name in JUDGE_NEEDS if find(name) is None]
 
 
 def _git(*args: str) -> str:

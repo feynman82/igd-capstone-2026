@@ -185,8 +185,10 @@ passages the model was shown, and writes `<date>-<label>.json` with the nine met
 per question, and a `not_measured` reason for every number it could not produce. The Ragas
 metrics need a judge: `--judge MODEL` or `PARROT_JUDGE_MODEL`, served by the same local Ollama
 (a larger model than the generator is better — a model marking its own work is generous), and
-`--no-judge` writes the code-scored metrics alone. A result file is never overwritten. See the
-docstring in `eval/run.py` for every flag.
+`--no-judge` writes the code-scored metrics alone. Without `--no-judge` the judge defaults to the
+generator, so a run needs the eval extras (`uv sync --extra eval`, for `ragas` and `openai`);
+without them `eval.run` stops before asking anything rather than after. A result file is never
+overwritten. See the docstring in `eval/run.py` for every flag.
 
 `run.git_sha` and `run.corpus_manifest_sha` are read when the run **starts**, before any code is
 imported, because that is the code that ran. If either differs when the run finishes — a branch

@@ -11,14 +11,16 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from core.graph.answer import Answer, Citation, Cited
 from core.graph.ports import Passage
 from eval import harness, headline, score
+from eval import run as eval_run
 from eval.bands import Count
-from eval.run import _dirty, _provenance, _runtime_numbers, _table
+from eval.run import _dirty, _judge_missing, _provenance, _runtime_numbers, _table
 from eval.sets_io import MalformedQuestion, Question, load_set, subset
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -436,6 +438,33 @@ def test_the_code_scored_metrics_come_out_as_arithmetic_says(tmp_path: Path) -> 
     printed = _table(metrics, why)
     assert "abstention_rate" in printed and "ref >= 0.95" in printed
     assert "✓" not in printed and "✗" not in printed  # reference lines, not lines to clear
+
+
+def test_the_judge_names_the_eval_extras_it_lacks() -> None:
+    def only(*present: str) -> Any:
+        return lambda name: object() if name in present else None
+
+    assert _judge_missing(only("openai", "ragas")) == []
+    assert _judge_missing(only("openai")) == ["ragas"]
+    assert _judge_missing(only()) == ["openai", "ragas"]
+
+
+def test_a_judged_run_without_the_extras_stops_before_asking_anything(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """14 October: the missing extras surfaced at the judging step, after every question had been
+    asked, and the run wrote nothing. It is now refused before the vault is opened."""
+    monkeypatch.setattr(eval_run, "_judge_missing", lambda: ["ragas"])
+
+    def no_vault(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("the vault was opened before the judge was checked")
+
+    monkeypatch.setattr("core.runtime.db.connect", no_vault)
+    code = eval_run.main(["--corpus", "a", "--judge", "some-judge", "--out", str(tmp_path)])
+    assert code == 2
+    said = capsys.readouterr().out
+    assert "uv sync --extra eval" in said and "ragas" in said and "--no-judge" in said
+    assert list(tmp_path.iterdir()) == []
 
 
 def test_a_run_is_stamped_with_the_code_it_loaded() -> None:
