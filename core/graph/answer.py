@@ -1157,8 +1157,15 @@ class AnswerGraph:
     ) -> Sentence | None:
         """ "None of the 5 policies on file is a dental plan." Written by code, never by the model:
         a 4B reader asked "do i have travel insurance?" once wrote "You have travel insurance."
-        The sentence cites every document it counted, so it is a claim about the vault only."""
-        if not on_file or not wanted:
+        The sentence cites every document it counted, so it is a claim about the vault only.
+
+        It is only sayable when every document it counts was read as some kind. A document whose
+        printed name names no category may be exactly the kind asked about: on 15 October the car
+        schedule's product name was extracted as its "Coverage Type: Comprehensive Cover" line, and
+        five car questions opened with "None of the 11 policies … is a car or motor policy" while
+        citing that schedule. Then nothing is said here, and the passages answer or the floor
+        abstains, as for any other question."""
+        if not on_file or not wanted or any(h.category is None for h in on_file):
             return None
         rules = [
             (declared.noun, rule.label)

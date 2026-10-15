@@ -765,6 +765,45 @@ def test_no_is_still_said_when_the_passages_are_too_weak_to_answer_from() -> Non
     )
 
 
+def test_no_is_not_said_over_a_document_whose_kind_could_not_be_read() -> None:
+    """15 October: the car schedule's product name was extracted as "Comprehensive Cover", which
+    names no category, and "None of the 11 policies … is a car or motor policy" was written while
+    citing it. A document read as no kind may be the kind asked about, so the passages answer."""
+    held = [
+        holding("b1-0001.pdf", "Comprehensive Cover", 501),
+        holding("b1-0032.pdf", "PrivateCare Hospital and Surgical Plan", 502),
+    ]
+    reply = {"sentences": [{"text": "The annual premium is SGD 1,248.90.", "supports": [1]}]}
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory(held),
+    )
+
+    got = list(graph.stream("how much is my car insurance premium?"))
+
+    said = [event.text for event in got if isinstance(event, Sentence)]
+    assert not any("on file" in text for text in said)
+    assert "The annual premium is SGD 1,248.90." in said
+
+
+def test_with_weak_passages_and_an_unread_kind_the_answer_is_an_abstention_not_a_no() -> None:
+    held = [holding("b1-0001.pdf", "Comprehensive Cover", 501)]
+    graph = AnswerGraph(
+        ScriptedOllama({"intent": "explain"}),
+        FixedRetriever([]),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory(held),
+    )
+
+    got = list(graph.stream("how much is my car insurance premium?"))
+
+    assert [type(event) for event in got] == [Abstained]
+
+
 def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
     car_id, hospital_id = uuid4(), uuid4()
     held = [
