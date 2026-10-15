@@ -245,6 +245,22 @@ def test_not_on_file_is_false_on_set_a_and_right_on_set_b() -> None:
     assert [c.id for c in head.claims] == ["a-1"]
 
 
+def test_the_one_document_absence_line_reads_like_the_many_document_one() -> None:
+    """Rebuilt from the text, as an old run would be: on Set A the line is a false absence, on
+    Set B it is an honest decline and not a claim."""
+    only = "The only document on file for Lucas Lim Kai En is not a car or motor policy."
+    head = _compute(
+        [
+            _line("a-1", f"{only} [b2-0006.pdf, page 1]", held_back=None),
+            _line("b-1", f"{only} [b2-0006.pdf, page 1]", held_back=None),
+        ],
+        _fact("a-1", "750.00"),
+        _hard("b-1"),
+        rebuild=True,
+    )
+    assert [(c.id, c.reasons) for c in head.claims] == [("a-1", ("false_absence",))]
+
+
 # ------------------------------------------------------------------------------- 3
 
 
