@@ -15,8 +15,16 @@ To score them, add monthly fields to the document type (Lane A) and give each fi
 
 | Member | Employer | Ordinary wages | Bonus |
 |---|---|---|---|
-| Marcus Lim Jun Wei | Meridian Systems Pte Ltd | 9,400 a month | 0.5 month (4,700) in June; 8 months (75,200) in December |
-| Rachel Ng Hui Shan | Northlight Health Pte Ltd | 5,200 Jan–Jun; 6,250 from July | 2 months (12,500) in December |
+| Marcus Lim Jun Wei | Meridian Systems Pte Ltd | 9,400 a month | none |
+| Rachel Ng Hui Shan | Northlight Health Pte Ltd | 6,250 a month | none |
+
+**Salary alone, so the CPF statements and the YA2026 notices agree** (issue #66). The first
+render paid bonuses — Marcus 4,700 in June and 75,200 in December, Rachel 12,500 in December,
+and Rachel on 5,200 until July — which contradicted both the canon (Rachel at 6,250 since
+2018) and the notices, which assess 2025 income at exactly twelve months' salary: 112,800.00
+for Marcus (`b1-0028`) and 75,000.00 for Rachel (`b1-0029`). "How much did Marcus earn in 2025"
+now has one answer. Ordinary Account balances (`b1-0022` 148,200.00, `b1-0023` 96,400.00) are
+unchanged: the statements print no opening balance, so nothing on any page contradicts them.
 
 ## Rules applied
 
@@ -27,7 +35,8 @@ share is the difference.
 
 | | Marcus | Rachel |
 |---|---|---|
-| Additional wage ceiling | 13,200 | 33,300 |
-| Employee share, year | 20,400 | 16,240 |
-| Employer share, year | 17,340 | 13,807 |
-| Total contributions, year | 37,740 | 30,047 |
+| Contribution a month | 2,738 (1,480 + 1,258) | 2,313 (1,250 + 1,063) |
+| Additional wage ceiling | 13,200 | 27,000 |
+| Employee share, year | 17,760 | 15,000 |
+| Employer share, year | 15,096 | 12,756 |
+| Total contributions, year | 32,856 | 27,756 |
