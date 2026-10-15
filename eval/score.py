@@ -59,8 +59,11 @@ NOT_ON_FILE = re.compile(
 # the inventory naming that nothing of the kind asked about is. Neither is a claim about the
 # question. They are matched by shape rather than by wording so that a prose decline written by
 # the model — which the generic pattern above also matches — stays a separate category.
-ON_FILE_LINE = re.compile(r"^On file for ", re.IGNORECASE)
-ABSENCE_LINE = re.compile(r"^None of the \d+ \w+ on file\b", re.IGNORECASE)
+# Each has two forms in `core/graph/answer.py`: "On file for Marcus Lim: …" or, with no person
+# named, "On file: …"; "None of the 6 policies on file …" or, with one document, "The only
+# document on file … is not …".
+ON_FILE_LINE = re.compile(r"^On file( for |: )", re.IGNORECASE)
+ABSENCE_LINE = re.compile(r"^(None of the \d+ \w+|The only document) on file\b", re.IGNORECASE)
 
 
 def _written_by_code(sentence: str) -> bool:

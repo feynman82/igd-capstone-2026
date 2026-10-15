@@ -189,6 +189,16 @@ def test_an_answer_that_said_nothing_of_its_own_is_held_back_whatever_flag_it_ca
     assert not score.held_back(claimed)
 
 
+def test_the_one_document_and_no_person_forms_are_code_lines_too() -> None:
+    """`AnswerGraph._absence` writes "The only document on file … is not …" when one document is
+    on file, and `_presence` writes "On file: …" when no person is named. Read as the model's own
+    prose, an honest decline on Set B would count as a claim."""
+    one = _said("The only document on file for Lucas Lim Kai En is not a car or motor policy.")
+    assert score.inventory_only(one) and score.held_back(one)
+    unnamed = _said("On file: Junior HealthProtect Plan (policy no CH-2024-339102).")
+    assert score.inventory_only(unnamed) and score.held_back(unnamed)
+
+
 def test_a_prose_decline_is_held_back_and_still_reported_apart() -> None:
     prose = _said(
         "None of the 6 policies on file is a car or motor policy.",
