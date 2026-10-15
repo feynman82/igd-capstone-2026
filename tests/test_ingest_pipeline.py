@@ -428,6 +428,21 @@ def test_the_generated_pydantic_model_is_the_decode_constraint(iras: Any) -> Non
     }
 
 
+def test_the_prompt_says_what_every_field_means_in_declared_order(insurance: Any) -> None:
+    """The decode schema names the fields; only the prompt can say what they mean. Without it,
+    product_name took a Coverage Type line and every optional date was left out (15 October)."""
+    client = FakeOllama([SCHEDULE_REPLY])
+    extract(client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9)  # type: ignore[arg-type]
+
+    prompt = client.prompts[0]
+    fields = insurance.spec("policy_schedule").fields
+    positions = [prompt.index(f"- {f.name}") for f in fields]
+    assert positions == sorted(positions), "listed in the order the catalogue declares them"
+    assert all(f.description in prompt for f in fields)
+    assert "- expiry_date (if printed): " in prompt
+    assert "- product_name: " in prompt
+
+
 def test_a_value_printed_on_no_page_is_dropped_not_stored(iras: Any) -> None:
     invented = {**PAYSLIP_REPLY, "employer": "Some Other Company Pte Ltd"}
     client = FakeOllama([invented])
@@ -808,7 +823,9 @@ def test_a_long_document_whose_front_is_enough_is_read_once(insurance: Any) -> N
     assert result.ok, result.reason
     assert len(client.prompts) == 1
     assert "LATE-PAGE-MARKER" not in client.prompts[0]
-    assert len(client.prompts[0]) < FRONT_CHARS + 2000, "the window, plus the instructions"
+    # The instructions include one described line per declared field: about 1,500 characters
+    # for a policy schedule's twelve.
+    assert len(client.prompts[0]) < FRONT_CHARS + 4000, "the window, plus the instructions"
 
 
 def test_a_long_document_whose_front_is_not_enough_is_read_in_full(insurance: Any) -> None:
