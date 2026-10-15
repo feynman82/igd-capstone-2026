@@ -132,6 +132,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
 
+    # Before anything below imports `core/` or `eval/`: the code a run executes is the code it
+    # loads now, and a checkout can move while forty minutes of questions are asked.
+    started = {"git_sha": _git_sha(), "corpus_manifest_sha": _corpus_sha(ROOT)}
+
     sys.path.insert(0, str(ROOT))
     logging.basicConfig(level=logging.WARNING, format="%(message)s")
     for name in NOISY:
@@ -265,12 +269,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         rebuild=False,
         indexed=indexed,
     )
+    provenance, moved = _provenance(
+        started, {"git_sha": _git_sha(), "corpus_manifest_sha": _corpus_sha(ROOT)}
+    )
     result = {
         "run": {
             "date": datetime.now(UTC).isoformat(timespec="seconds"),
             "label": label,
-            "git_sha": _git_sha(),
-            "corpus_manifest_sha": _corpus_sha(ROOT),
+            **provenance,
             "sets": list(sets),
             "subset": args.subset or None,
             "seed": args.seed,
@@ -311,13 +317,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         note.write_text(_note(result), encoding="utf-8")
     print()
     previous = headline.previous_run(
-        args.out, before=target, corpus=result["run"]["corpus_manifest_sha"]
+        args.out, before=target, corpus=provenance["corpus_manifest_sha"]
     )
     print(headline.table(head, previous))
     if previous is None:
         print("(no earlier run on this corpus to compare with)")
     print()
     print(_table(metrics, why))
+    if moved:
+        print(f"\nwarning: {moved}")
     print(f"\nwrote {target}")
     return 0
 
@@ -486,16 +494,51 @@ def _runtime_numbers(results: Path, context_tokens: int) -> tuple[dict[str, floa
 
 
 def _git_sha() -> str:
+    """The commit, with "-dirty" when the code a run executes has uncommitted changes — a run
+    made from a working tree is not a measurement of that commit. Result files are not code."""
     try:
-        return subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=ROOT,
-            capture_output=True,
-            text=True,
-            check=True,
-        ).stdout.strip()
+        sha = _git("rev-parse", "--short", "HEAD").strip()
+        status = _git(
+            "status", "--porcelain", "--untracked-files=no", "--",
+            *CODE_DIRS, ":(exclude)eval/results",
+        )  # fmt: skip
     except (OSError, subprocess.CalledProcessError):
         return ""
+    return f"{sha}-dirty" if _dirty(status) else sha
+
+
+# The directories whose code a run executes or whose files it reads as its definition.
+CODE_DIRS = ("core", "eval", "packs", "modules")
+
+
+def _git(*args: str) -> str:
+    return subprocess.run(
+        ["git", *args], cwd=ROOT, capture_output=True, text=True, check=True
+    ).stdout
+
+
+def _dirty(porcelain: str) -> bool:
+    """Tracked changes in `git status --porcelain` output; an untracked file never ran."""
+    return any(line.strip() and not line.startswith("??") for line in porcelain.splitlines())
+
+
+def _provenance(start: Mapping[str, str], end: Mapping[str, str]) -> tuple[dict[str, str], str]:
+    """What the run is stamped with, and a warning when the checkout moved underneath it.
+
+    The start is what ran: the code was imported then. If the commit or the corpus differs by
+    the end, both are kept — `git_sha_at_end`, `corpus_manifest_sha_at_end` — rather than one
+    picked, because on 15 October a run read the commit at the end and named code it never ran.
+    """
+    fields = dict(start)
+    moved = [key for key, value in start.items() if end.get(key, "") != value]
+    for key in moved:
+        fields[f"{key}_at_end"] = end.get(key, "")
+    if not moved:
+        return fields, ""
+    changes = ", ".join(f"{key} {start[key]} → {end.get(key, '')}" for key in moved)
+    return fields, (
+        f"the checkout changed during this run ({changes}); its numbers belong to the start"
+    )
 
 
 def _corpus_sha(root: Path) -> str:
