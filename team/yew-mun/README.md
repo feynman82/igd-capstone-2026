@@ -133,3 +133,11 @@ preference, and Siew's data inventory says so.
       why they moved
 - [ ] The change is one variable, not three
 - [ ] Results committed under `eval/results/`, never overwritten
+
+**Getting a pass count for the pull request.** `pyproject.toml` already passes `-q` to pytest,
+and a second `-q` on the command line suppresses the summary line, so the count never prints.
+Clear the configured options instead:
+
+```
+uv run pytest -o addopts="" -q tests/test_eval_headline.py tests/test_eval_harness.py
+```
