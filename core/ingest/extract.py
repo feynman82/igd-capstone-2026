@@ -184,13 +184,25 @@ def printed_date(value: str) -> str | None:
 
 
 def decode_schema(schema: dict[str, Any], fields: Sequence[FieldSpec]) -> dict[str, Any]:
-    """The pack's schema as the model is held to it while it writes: dates are plain strings.
+    """The pack's schema as the model is held to it while it writes: dates are plain strings,
+    and every field must be answered, with null for one that is not printed.
 
-    Only the decode constraint is loosened. The generated Pydantic model still requires a real
-    date, and `_prepare` converts what the model copied before that validation runs.
+    Only the decode constraint changes. The generated Pydantic model still requires a real date,
+    and `_prepare` converts what the model copied before that validation runs.
+
+    Every key is required here, and only here, because of what the grammar does with optional
+    ones. Ollama writes the required keys first and then offers the optional ones in one fixed,
+    alphabetical order, each skippable — and a key passed over cannot be come back to. On
+    15 October the 4B reader went from `product_name` straight to `sum_insured` on every policy
+    schedule, so `date_of_birth`, `excess`, `expiry_date` and `maturity_date` were never
+    written, although the prompt described them and the page printed them: 0 of 6 excesses, 4 of
+    11 expiry dates. Required, each key is reached; nullable, an unprinted field is still null,
+    and the generated model keeps it optional. A value invented to fill the slot is on no page
+    and is dropped there, as any other.
     """
     loosened = copy.deepcopy(schema)
     properties = loosened.get("properties", {})
+    loosened["required"] = list(properties)
     for field in fields:
         if field.type == "date" and field.name in properties:
             _drop_format(properties[field.name])
@@ -257,9 +269,27 @@ def _prepare(index: dict[str, FieldSpec], reported: dict[str, Any]) -> dict[str,
             ]
         elif spec.type in NUMERIC_TYPES and isinstance(value, str):
             prepared[name] = _CURRENCY.sub("", value).strip() or None
+        elif _undated(spec, value):
+            del prepared[name]
         elif spec.type == "date" and isinstance(value, str):
             prepared[name] = printed_date(value) or value
     return prepared
+
+
+def _undated(spec: FieldSpec, value: Any) -> bool:
+    """An optional date answered with words: "For the whole of life" on a whole-life policy's
+    expiry line. No date is printed there, so the field is not printed, and it is dropped and
+    named in `unplaced` rather than failing the document. A *required* date that cannot be read
+    still fails validation, as `printed_date` intends: never a plausible wrong date, and never a
+    missing one passed off as read. Before every key was required in the decode schema the
+    reader skipped this slot; now it must answer it, and it answers with what is printed."""
+    return (
+        spec.type == "date"
+        and not spec.required
+        and isinstance(value, str)
+        and value.strip().casefold() not in _ABSENT
+        and printed_date(value) is None
+    )
 
 
 def _coerce(spec: FieldSpec, raw: Any) -> tuple[str | None, Decimal | None, date | None] | None:
@@ -398,7 +428,11 @@ def _read(
         subject_value = str(raw_subject).strip() if raw_subject else None
 
     facts: list[ExtractedFact] = []
-    unplaced: list[str] = []
+    unplaced: list[str] = [
+        f"{name} {reported[name]!r} (not a date)"
+        for name, field_spec in index.items()
+        if _undated(field_spec, reported.get(name))
+    ]
     for name, field_spec in index.items():
         raw = getattr(validated, name, None)
         if raw is None:

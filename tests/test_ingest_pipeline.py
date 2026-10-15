@@ -443,6 +443,24 @@ def test_the_prompt_says_what_every_field_means_in_declared_order(insurance: Any
     assert "- product_name: " in prompt
 
 
+def test_every_field_must_be_answered_while_decoding_and_stays_optional_after(
+    insurance: Any,
+) -> None:
+    """15 October: with optional keys skippable in one fixed order, the reader jumped from
+    product_name to sum_insured on every policy and never wrote excess or expiry_date. In the
+    decode schema every key is required and an optional one may be null; the generated model
+    still lets an optional field be absent."""
+    client = FakeOllama([SCHEDULE_REPLY])
+    result = extract(client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9)  # type: ignore[arg-type]
+
+    schema = client.schemas[0]
+    assert set(schema["required"]) == set(schema["properties"])
+    assert {"type": "null"} in schema["properties"]["excess"]["anyOf"]
+    assert result.ok, "SCHEDULE_REPLY omits excess, and that is still a valid reading"
+    declared = insurance.models["policy_schedule"].model_json_schema()
+    assert "excess" not in declared["required"]
+
+
 def test_a_value_printed_on_no_page_is_dropped_not_stored(iras: Any) -> None:
     invented = {**PAYSLIP_REPLY, "employer": "Some Other Company Pte Ltd"}
     client = FakeOllama([invented])
@@ -719,12 +737,24 @@ def test_a_schedule_whose_dates_were_copied_as_printed_extracts(insurance: Any) 
     assert by_key["expiry_date"].page == 1, "the copied string is on the page exactly as printed"
 
 
-def test_a_date_that_cannot_be_read_still_quarantines(insurance: Any) -> None:
-    reply = {**SCHEDULE_REPLY, "expiry_date": "For the whole of life"}
+def test_a_required_date_that_cannot_be_read_still_quarantines(insurance: Any) -> None:
+    reply = {**SCHEDULE_REPLY, "cover_from": "From the date of first premium"}
     client = FakeOllama([reply])
     result = extract(client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9)  # type: ignore[arg-type]
     assert not result.ok
-    assert "expiry_date" in (result.reason or "")
+    assert "cover_from" in (result.reason or "")
+
+
+def test_an_optional_date_printed_as_words_is_not_printed_and_says_so(insurance: Any) -> None:
+    """b1-0031, a whole-life policy, prints "For the whole of life" on its expiry line. Once
+    every key had to be answered the reader copied it, and the whole document failed over a
+    field that is legitimately not a date."""
+    reply = {**SCHEDULE_REPLY, "expiry_date": "For the whole of life"}
+    client = FakeOllama([reply])
+    result = extract(client, insurance, "policy_schedule", POLICY_PAGES, confidence=0.9)  # type: ignore[arg-type]
+    assert result.ok, result.reason
+    assert "expiry_date" not in {fact.key for fact in result.facts}
+    assert "expiry_date 'For the whole of life' (not a date)" in (result.unplaced or [])
 
 
 # --------------------------------------------------------------------------------- tables
