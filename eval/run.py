@@ -123,6 +123,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         action="store_true",
         help="answer below every pack's floor, for eval.bands to replay (not a production run)",
     )
+    parser.add_argument(
+        "--vault",
+        default="",
+        help="score against this database instead of the development vault (eval.setc uses it)",
+    )
     parser.add_argument("--candidates", type=int, default=40)
     parser.add_argument("--keep", type=int, default=6)
     args = parser.parse_args(argv)
@@ -146,6 +151,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error(str(error))
     try:
         settings = Settings.load(ROOT)
+        if args.vault:
+            from eval.holdout import vault_url
+
+            settings = Settings.load(
+                ROOT, {**os.environ, "DATABASE_URL": vault_url(settings.database_url, args.vault)}
+            )
     except ConfigurationError as error:
         print(f"Configuration needs attention: {error}")
         return 2
@@ -184,6 +195,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         with connect(settings) as conn:
             indexed = _indexed(conn)
+            questions, untestable, contaminating = _fixture_guards(questions, indexed)
             questions, waiting = _partition(questions, indexed, score_missing=args.score_missing)
             if waiting:
                 print(
@@ -278,6 +290,13 @@ def main(argv: Sequence[str] | None = None) -> int:
             **_floor_fields(args.floor_off, per_question),
             "runtime_numbers_from": runtime_source,
             "skipped_no_document": waiting,
+            "vault": args.vault or None,
+            # Set C's injection items need the planted documents; scored without them they pass
+            # against nothing. Skipped and named rather than banked (eval/setc.py).
+            "skipped_no_fixture": untestable,
+            # The planted documents in a vault scoring Set A or B: they outrank real documents
+            # (eval/setc.py), so every number below is partly measuring them.
+            "fixtures_in_vault": contaminating,
         },
         "headline": headline.as_json(head),
         "metrics": metrics,
@@ -351,6 +370,46 @@ def _floor_fields(floor_off: bool, lines: Sequence[Mapping[str, Any]]) -> dict[s
         "floor": "off" if floor_off else "pack",
         "core_floor_capped": capped(lines) if floor_off else [],
     }
+
+
+def _fixture_guards(
+    questions: list[Any], indexed: Collection[str]
+) -> tuple[list[Any], list[str], list[str]]:
+    """Keep Set C's injection items honest, and keep Set C's planted documents out of A and B.
+
+    Returns the questions still worth running, the injection items skipped because the planted
+    documents are not in this vault, and the planted documents found in a vault that is scoring
+    Set A or B. Both lists are printed and recorded; neither is silently absorbed.
+
+    An injection item scored without its planted document passes against nothing — that is what
+    5 October's run did. A planted document in a vault scoring Set A outranks real documents —
+    that is what 14 October's run did. They need different vaults, and `eval.setc` provides
+    Set C's.
+    """
+    from eval.setc import NEEDS_FIXTURES, fixture_ids
+
+    fixtures = fixture_ids()
+    present = sorted(fixtures & set(indexed))
+    missing = bool(fixtures) and len(present) < len(fixtures)
+
+    untestable = [
+        q.id
+        for q in questions
+        if q.set == "C" and getattr(q, "category", "") in NEEDS_FIXTURES and missing
+    ]
+    if untestable:
+        print(
+            f"skipping {len(untestable)} injection item(s): the planted documents are not in this "
+            "vault, so they would pass against nothing. Run Set C with `python -m eval.setc`."
+        )
+    contaminating = present if any(q.set in ("A", "B") for q in questions) else []
+    if contaminating:
+        print(
+            f"WARNING: Set C's planted documents are in the vault scoring Set A/B "
+            f"({', '.join(contaminating)}). They outrank real documents, so these numbers are "
+            "partly measuring them. Remove them from this vault; Set C has its own (eval.setc)."
+        )
+    return [q for q in questions if q.id not in set(untestable)], untestable, contaminating
 
 
 def _partition(
