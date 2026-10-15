@@ -45,6 +45,11 @@ the loop above a promise rather than a gate, and it means two things in practice
 reviewed on its own, before anything depends on it. Never bundled with a feature — this
 one is enforced by review every time, including when the change is obviously fine.
 
+**`make check` formats the Python inside Markdown, too.** `ruff format --check .` reads every
+` ```python ` block in every `.md` file — a design note, a plan, a README — and fails the gate
+if one is not formatted. Run `uv run ruff format <file>.md` before committing a document with
+Python in it, or fence a fragment that is not meant to be valid code as ` ```text `.
+
 ## Generated files
 
 Three sets of files are generated and must be committed alongside their source:
