@@ -419,8 +419,8 @@ def test_cpf_is_this_years_payslips_per_employee(db: Any) -> None:
     load_register(db)
 
     assert by_subject(alert.cpf_contributions_ytd(db, date(2026, 9, 13))) == {
-        MARCUS: (Decimal("2400.00"), ["b1-0017.pdf, page 1", "b1-0016.pdf, page 1"]),
-        RACHEL: (Decimal("1200.00"), ["b1-0018.pdf, page 1"]),
+        MARCUS: (Decimal("3200.00"), ["b1-0017.pdf, page 1", "b1-0016.pdf, page 1"]),
+        RACHEL: (Decimal("1250.00"), ["b1-0018.pdf, page 1"]),
     }
     assert alert.cpf_contributions_ytd(db, date(2025, 12, 20)) == []
 

@@ -34,8 +34,8 @@ DOCUMENTS = [
             "employer": "Northlight Health Pte Ltd",
             "pay_period": "2026-07",
             "gross_salary": "6250.00",
-            "cpf_employee": "1200.00",
-            "net_pay": "5050.00",
+            "cpf_employee": "1250.00",
+            "net_pay": "5000.00",
         },
     },
     {
@@ -48,8 +48,8 @@ DOCUMENTS = [
             "employer": "Meridian Systems Pte Ltd",
             "pay_period": "2026-06",
             "gross_salary": "9400.00",
-            "cpf_employee": "1200.00",
-            "net_pay": "8200.00",
+            "cpf_employee": "1600.00",
+            "net_pay": "7800.00",
         },
     },
     {
