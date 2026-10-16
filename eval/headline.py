@@ -350,22 +350,43 @@ def movement(columns: Sequence[tuple[str, str, Headline]]) -> str:
 
 
 def previous_run(results: Path, *, before: Path, corpus: str) -> Headline | None:
-    """The headline of the latest run file in `results` written before `before` on the same
-    corpus (`corpus` is its manifest sha), if it has one. A run on another corpus is skipped,
-    and so is one with no recorded sha: a change is only read between runs on one corpus."""
-    for path in sorted(results.glob("*.json"), reverse=True):
-        if path.name >= before.name:
+    """The headline of the run in `results` that ran last before `before`, on the same corpus
+    (`corpus` is its manifest sha), if one has a headline. A run on another corpus is skipped,
+    and so is one with no recorded sha: a change is only read between runs on one corpus.
+
+    "Last" is the time each run recorded (`run.date`), not its file name: two runs on one day
+    sort by their labels, and a label says nothing about which ran first. A file with no
+    recorded time falls back to the date its name starts with."""
+    if not corpus:
+        return None
+    ceiling = _ran_at(_read(before), before) if before.exists() else "~"  # "~" sorts last
+    best: tuple[str, dict[str, Any]] | None = None
+    for path in results.glob("*.json"):
+        if path == before:
             continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        data = _read(path)
+        run = data.get("run") or {}
+        if str(run.get("corpus_manifest_sha") or "") != corpus:
             continue
-        run_corpus = str((data.get("run") or {}).get("corpus_manifest_sha") or "")
-        if not corpus or run_corpus != corpus:
+        if "per_question" not in data or not isinstance(data.get("headline"), dict):
             continue
-        if "per_question" in data and isinstance(data.get("headline"), dict):
-            return from_json(data["headline"])
-    return None
+        when = _ran_at(data, path)
+        if when < ceiling and (best is None or when > best[0]):
+            best = (when, data["headline"])
+    return None if best is None else from_json(best[1])
+
+
+def _read(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _ran_at(data: Mapping[str, Any], path: Path) -> str:
+    """When a run ran, as an ISO string that sorts in time order."""
+    return str((data.get("run") or {}).get("date") or path.name[:10])
 
 
 def from_json(raw: Mapping[str, Any]) -> Headline:
