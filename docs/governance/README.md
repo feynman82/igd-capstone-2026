@@ -17,7 +17,7 @@ report. They are produced as artefacts along the way, not written up as prose in
 ## The autonomy statement in one line
 
 Version 1 observes, retrieves and advises. It does not pay, book or file. The Actions
-module is specified and deliberately not built, and every pack manifest enforces the
+module is deliberately not built, and every pack manifest enforces the
 boundary with `never_acts: true` — a machine-checked flag, not a sentence in a policy
 document.
 

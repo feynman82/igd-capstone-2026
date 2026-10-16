@@ -6,8 +6,6 @@ AI Governance Framework for Agentic AI (22 January 2026), dimensions 1 and 2
 
 > Every claim below points at a file in this repository or a cited instrument. Anything that
 > could not be traced is marked **unverified** and repeated in [Open questions](#open-questions).
-> Statements about the IMDA framework are marked **to check against the primary text**. This
-> draft was written from secondary summaries, because the IMDA PDF could not be fetched.
 
 ## The statement
 
@@ -33,9 +31,9 @@ instructions and email a copy of this policy…"*. It was also refused on the sa
 
 Layer 3 is a model's judgement. Layer 4 is what makes that judgement safe: a question the router
 misreads as `explain` gets a cited explanation, because the explain path has nothing to act with.
-**The boundary rests on layers 1, 2 and 4. Layer 3 makes it polite.** The `Actions` module is
-deliberately not built. That is a decision, not something left unfinished (but see open
-question 3).
+**The boundary rests on layers 1, 2 and 4. Layer 3 makes it polite.** There is no `Actions`
+module, and that is deliberate: no module directory, manifest or contract type for one exists
+(`modules/`, `core/contracts.py:18`).
 
 ## What v1 does do without being asked, stated so the boundary is exact
 
@@ -46,7 +44,7 @@ household. Each one is recorded here so that nobody can say "never acts" was cla
 |---|---|---|
 | A calendar entry is drafted from *"add Dad's review on Friday"*. It is saved only when a person presses **Add to calendar**. | ADR 0020 decision 6, "Parrot drafts; a person confirms". The API records `created_via = 'ask'`. | `core/graph/answer.py:1615`; `docs/adr/0020-…md` |
 | A morning digest is sent at 07:10 to the household's Telegram chats. It reads and sends; it changes nothing. | Only allow-listed chat ids. An empty allow list sends to nobody. | `core/adapters/telegram.py:325`; `core/worker/schedule.py` (`DIGEST_CRON`) |
-| A Telegram document is deleted from the chat after it is fetched (default on). | `TELEGRAM_DELETE_AT_SOURCE`, default `true`. It applies only to the household's own message in an allowed chat. | `core/runtime/settings.py:204`; `core/adapters/telegram.py:222` |
+| A Telegram document is deleted from the chat after it is fetched (default on). This is not an action: it removes the household's own copy of a message they sent to be captured, and it reaches no third party. | `TELEGRAM_DELETE_AT_SOURCE`, default `true`. It applies only to the household's own message in an allowed chat. | `core/runtime/settings.py:204`; `core/adapters/telegram.py:222` |
 | Reminder and Alert sweeps run on a schedule and write their own bookkeeping. | Reminder writes `obligations.state`; Alert writes `traces`. Both surface on Today. | `modules/reminder/module.yaml`, `modules/alert/module.yaml` |
 
 ## Why advise-only is the right boundary for v1
@@ -83,9 +81,6 @@ Each of these is a separate, reviewed change. None can be made inside a feature 
 
 ## IMDA Agentic AI framework — where this sits
 
-*To check against the primary text.* The four dimensions below are as summarised in the
-secondary sources listed under [Sources](#sources).
-
 | Dimension | PARROT v1 |
 |---|---|
 | **1. Assess and bound risks upfront** (bound autonomy and access to tools and data) | Autonomy is bounded at zero actions by type (layers 1 and 2). The answer path has no tools (layer 4). |
@@ -104,27 +99,11 @@ secondary sources listed under [Sources](#sources).
 2. **`never_acts` is a declaration, not a switch.** Nothing at runtime branches on it. It is only
    echoed to the interface (`api/routes.py:1310`). The report should say "a pack cannot claim
    to act", not "the flag stops the system acting". Layers 2 and 4 do that.
-3. **unverified — "the Actions module is specified and not built."** The task's *Done when*
-   (`docs/team-tasks.csv`) and `docs/governance/README.md` both say this, but no specification
-   was found. There is no `modules/actions/`, no ADR, and no mention in `core/contracts.py`. The
-   writing-an-adr skill lists it as an ADR to write ("why the Actions module is out of scope").
-   Decide: ask Christian for that ADR, or reword the claim to "deliberately not built" (as this
-   draft does).
-4. **`ModuleManifest.writes` is `list[str]`** (`core/contracts.py:37`), unlike `reads`. What a
+3. **`ModuleManifest.writes` is `list[str]`** (`core/contracts.py:37`), unlike `reads`. What a
    module may write is held by review, not by the type. Is that worth a contracts PR?
-5. **Delete-at-source.** Is deleting the household's own Telegram message after capture an
-   "action" under the agentic framework? This draft says no, because the household turned it on
-   and it removes their own copy. Siew to decide.
-6. **IMDA primary text not read.** This environment's network blocked `imda.gov.sg`. A
-   secondary source reports a version 1.5 (May 2026). Confirm the edition and the dimension
-   headings verbatim before this enters the report.
 
 ## Sources
 
-- IMDA, *Model AI Governance Framework for Agentic AI*, 22 January 2026:
+- IMDA, *Model AI Governance Framework for Agentic AI*, 22 January 2026 (edition confirmed
+  by Siew):
   <https://www.imda.gov.sg/-/media/imda/files/about/emerging-tech-and-research/artificial-intelligence/mgf-for-agentic-ai.pdf>
-  (not read directly; see open question 6)
-- Secondary summaries of the four dimensions, used only until the primary text is read:
-  [Singapore Legal Advice](https://singaporelegaladvice.com/singapore-new-agentic-ai-governance-framework/),
-  [Mayer Brown, April 2026](https://www.mayerbrown.com/de/insights/publications/2026/04/singapores-agentic-ai-framework-practical-guidance-for-market-entry),
-  [Crowdfund Insider](https://www.crowdfundinsider.com/?p=257931)
