@@ -71,6 +71,7 @@ from core.graph.gate import (
 )
 from core.graph.inventory import Holding, Inventory
 from core.graph.knowledge import categories_asked, glossary, mentions, reworded
+from core.graph.period import asked_period, outside
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
 from core.graph.sentences import SentenceScanner
@@ -1724,6 +1725,13 @@ class AnswerGraph:
         scanner = SentenceScanner()
         dropped = said = 0
         truncated = False
+        # "Last year", "last month": a sentence must cite a document from then. See `period.py`.
+        when = asked_period(asked, self._today or date.today())
+        periods = (
+            self._inventory.periods([passage.document_id for passage in evidence])
+            if when is not None and self._inventory is not None
+            else {}
+        )
         deltas = self._client.constrained_stream(answer_system(installed), prompt, _ANSWER_SCHEMA)
         try:
             for delta in deltas:
@@ -1743,6 +1751,15 @@ class AnswerGraph:
                         )
                     ):
                         why = "says more than the documents on file"
+                    if (
+                        why is None
+                        and when is not None
+                        and self._inventory is not None
+                        and outside(
+                            when, (by_ref[ref].document_id for ref in claim.supports), periods
+                        )
+                    ):
+                        why = f"cites no document from {when}"
                     if why is not None:
                         if why != "empty":
                             dropped += 1
