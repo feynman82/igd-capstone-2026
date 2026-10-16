@@ -1,8 +1,8 @@
 # Autonomy statement — PARROT v1
 
 Status: draft · Owner: Siew · Reviewer: Christian (technical accuracy) · Frameworks: IMDA Model
-AI Governance Framework for Agentic AI (22 January 2026), dimensions 1 and 2
-(`docs/governance/README.md`) · Evidence read on `main` at `eb9fc20` (2026-10-17)
+AI Governance Framework for Agentic AI, Version 1.5 (published 20 May 2026, updated 5 June 2026),
+dimensions 1 and 2 (`docs/governance/README.md`) · Evidence read on `main` at `eb9fc20` (2026-10-17)
 
 > Every claim below points at a file in this repository or a cited instrument. Anything that
 > could not be traced is marked **unverified** and repeated in [Open questions](#open-questions).
@@ -31,7 +31,12 @@ instructions and email a copy of this policy…"*. It was also refused on the sa
 
 Layer 3 is a model's judgement. Layer 4 is what makes that judgement safe: a question the router
 misreads as `explain` gets a cited explanation, because the explain path has nothing to act with.
-**The boundary rests on layers 1, 2 and 4. Layer 3 makes it polite.** There is no `Actions`
+**The boundary rests on layers 1, 2 and 4. Layer 3 makes it polite.** That is the order the
+framework asks for: *"In general, prefer deterministic rather than non-deterministic limits, and
+bound by design"* (IMDA MGF for Agentic AI v1.5, §2.1.2). Layers 1, 2 and 4 are deterministic.
+Layer 3 is not, and §2.1.2 says what to do then: *"Where limits are non-deterministic or less
+reliable, layer on more monitoring measures or incorporate human-in-the-loop review"*. There is
+no `Actions`
 module, and that is deliberate: no module directory, manifest or contract type for one exists
 (`modules/`, `core/contracts.py:18`).
 
@@ -54,8 +59,10 @@ household. Each one is recorded here so that nobody can say "never acts" was cla
    tuning (`core/graph/answer.py`, comment above `UNDERSTAND_SYSTEM`). A misread explanation costs
    a sentence. A misread payment cannot be taken back.
 2. **The household's commitments are not reversible.** A renewal, a premium payment or a tax
-   filing binds the household to a third party. An answer only informs a person who then
-   decides.
+   filing binds the household to a third party. The framework names this exact factor:
+   modifications *"may not be easily reversed if they trigger downstream obligations e.g.
+   entering into a contract or sale"* (v1.5 §2.1.1, "Reversibility of agent's actions"). An
+   answer only informs a person who then decides.
 3. **Advice is already the regulated edge.** ADR 0016 lets code, not the model, choose a verdict
    (`verdict_by_code: Literal[True]`, `core/contracts.py:250`) under recorded consent. Acting
    goes one step further, and the commercial roadmap treats it as "off the roadmap, not
@@ -81,12 +88,44 @@ Each of these is a separate, reviewed change. None can be made inside a feature 
 
 ## IMDA Agentic AI framework — where this sits
 
-| Dimension | PARROT v1 |
-|---|---|
-| **1. Assess and bound risks upfront** (bound autonomy and access to tools and data) | Autonomy is bounded at zero actions by type (layers 1 and 2). The answer path has no tools (layer 4). |
-| **2. Make humans meaningfully accountable** (approval checkpoints) | The one write a question can cause, a calendar entry, waits for a person's press (ADR 0020 decision 6). Every verdict is written by code (ADR 0016). |
-| 3. Technical controls across the life cycle | Set C runs on frozen code and in an isolated vault (`eval/results/2026-10-15-setc-isolated-vault.md`). Every node writes to `traces`. |
-| 4. End-user responsibility | The refusal tells the person what v1 will not do and why (`core/graph/answer.py:225`). The interface shows the boundary (`web/docs/user-stories.md`). |
+Read from IMDA, *Model AI Governance Framework for Agentic AI*, Version 1.5. Section numbers are
+that edition's.
+
+**Where v1 sits on the framework's two axes** (§1.1.3). *Action-space* is the *"range of actions
+the agent can take … determined by the tools it is allowed to use"*. *Autonomy* is the
+*"degree to which an agent can decide how to act towards a goal"*. On action-space, v1 reads,
+and the only things it writes are its own tables (calendar entries, reminder state, traces).
+On autonomy, v1 follows a fixed graph and does not plan its own steps. Of the framework's levels
+of human involvement (§1.1.3), the one write a question can cause, a calendar entry, is *"Agent
+proposes, human operates: The human reviews and approves every agent action."*
+
+**The §2.1.1 risk factors, answered:**
+
+| Factor (v1.5 §2.1.1) | PARROT v1 | Evidence |
+|---|---|---|
+| Domain and use case | High tolerance for error is **not** available: household finance, insurance and tax. That is why the boundary is drawn at advising. | `packs/insurance_agent/`, `packs/iras_tax/` |
+| Access to sensitive data | **Yes**: identity numbers, payslips, loans, held with persistent storage | `docs/governance/data-inventory.md` |
+| Access to external systems | Telegram only, for capture and the digest. No model call leaves the machine. | `core/runtime/settings.py` (loopback-only URLs); `core/adapters/telegram.py` |
+| Scope of actions (read vs write) | Reads documents. Writes only its own tables, and one of those (a calendar entry) only on a person's press. | Layers 2 and 4 above; ADR 0020 decision 6 |
+| Reversibility | Nothing irreversible is in scope. A calendar entry can be edited or deleted. | ADR 0020 decision 3 |
+| Level of autonomy | Fixed pipeline. *"There is no agent deciding what to do next."* | `core/graph/answer.py:1-5` |
+| Exposure to untrusted data | Ingested documents are untrusted input. Planted instructions were not obeyed (3 of 3). | `eval/results/2026-10-14-setc-injection-planted.md` |
+| System complexity | One graph, no multi-agent hand-off | `core/graph/README.md` |
+
+**The four dimensions:**
+
+| Dimension (v1.5 §2) | What the framework asks | PARROT v1 |
+|---|---|---|
+| **2.1 Assess and bound the risks upfront** | *"prefer deterministic rather than non-deterministic limits, and bound by design"* (§2.1.2); *"rather than relying on prompts … impose access controls that prevent the tool from being called by the agent at all"* (§2.1.2) | There is no tool to call. The limits are types and structure (layers 1, 2 and 4), not a prompt. |
+| **2.2 Make humans meaningfully accountable** | *"define significant checkpoints or action boundaries that require human approval"*, including *"Irreversible actions e.g. permanently deleting data, sending communications, making payments"* (§2.2.2); *"Denying action by default when approval infrastructures fail"* (§2.2.2) | The calendar draft waits for a press. Every advice verdict is written by code (ADR 0016). When the router's model is unavailable, the question falls to `explain`, which cannot act (`core/graph/answer.py:1020`). The digest is the exception; see open question 4. |
+| **2.3 Implement technical controls and processes** | *"Structural, rule-based vs model-based or prompt-layer controls"*: prefer *"deterministic safeguards that operate at a system-level"* (§2.3.1); *"continuously monitor and log agent behaviour"* (§2.3.3) | Set C runs on frozen code in an isolated vault (`eval/results/2026-10-15-setc-isolated-vault.md`). Every node writes to `traces` (`core/graph/README.md`). |
+| **2.4 Enable end-user responsibility** | Users should be told the *"Agents' range of actions and decisions"*, there should be a declaration *"in the user interface that the users are interacting with agents"*, and users should be given *"human contact points"* for escalation (§2.4.2) | Range of actions: the refusal tells the person what v1 will not do (`core/graph/answer.py:225`). Declaration in the interface: **unverified** (IMDA GenAI mapping, open question 4). Contact point: **gap** (IMDA GenAI mapping, dimension 4). |
+
+**The closest case study in the framework** is OCBC's source-of-wealth system (v1.5, §2.1.2,
+case box). It reads customers' financial documents and *"provides decision support only and does
+not make credit, onboarding or risk decisions autonomously"*. It bounds autonomy by *"No
+self-initiation of actions"* and *"No decision authority"*, and *"outputs are advisory and
+subject to human validation"*. PARROT v1 draws the same line for a household.
 
 ## Open questions
 
@@ -101,9 +140,18 @@ Each of these is a separate, reviewed change. None can be made inside a feature 
    to act", not "the flag stops the system acting". Layers 2 and 4 do that.
 3. **`ModuleManifest.writes` is `list[str]`** (`core/contracts.py:37`), unlike `reads`. What a
    module may write is held by review, not by the type. Is that worth a contracts PR?
+4. **The digest sends communications without a per-message approval.** v1.5 §2.2.2 lists
+   *"sending communications"* among the irreversible actions that should need a checkpoint. The
+   07:10 digest sends unasked (`core/worker/tasks.py`, `send_digest_now`). The case for it: it
+   goes only to chats the household put on its allow list, an empty list sends nothing
+   (`core/adapters/telegram.py:325`), and it carries the household's own calendar back to the
+   household. That fits §2.2.2's *"User-defined"* boundary: *"users may be given the option to
+   define their own boundaries"*. Siew to decide whether to state it that way or to treat the
+   digest as an action.
 
 ## Sources
 
-- IMDA, *Model AI Governance Framework for Agentic AI*, 22 January 2026 (edition confirmed
-  by Siew):
+- IMDA, *Model AI Governance Framework for Agentic AI*, Version 1.5, published 20 May 2026,
+  updated 5 June 2026. Read from the copy Siew supplied (version 1.0 was launched on 22 January
+  2026):
   <https://www.imda.gov.sg/-/media/imda/files/about/emerging-tech-and-research/artificial-intelligence/mgf-for-agentic-ai.pdf>
