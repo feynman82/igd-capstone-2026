@@ -414,3 +414,25 @@ def test_the_previous_run_is_the_latest_on_the_same_corpus(tmp_path: Path) -> No
     found = headline.previous_run(tmp_path, before=current, corpus="x")
     assert isinstance(found, headline.Headline)
     assert headline.previous_run(tmp_path, before=current, corpus="z") is None
+
+
+def test_the_previous_run_is_the_one_that_ran_last_not_the_last_name(tmp_path: Path) -> None:
+    """Two runs on one day sort by label, not by time: `2026-10-15-beta` comes after
+    `2026-10-15-alpha` alphabetically even when it ran first. Each run records when it ran."""
+    head = _compute([_line("a-1", "750.00 [b1-0001.pdf, page 1]")], _fact("a-1", "750.00"))
+
+    def write(name: str, when: str, hits: int) -> Path:
+        stored = headline.as_json(head)
+        stored["right_and_cited"] = {"hits": hits, "n": 50, "rate": hits / 50}
+        run = {"corpus_manifest_sha": "x", "date": when}
+        body = {"run": run, "headline": stored, "per_question": []}
+        path = tmp_path / name
+        path.write_text(json.dumps(body), encoding="utf-8")
+        return path
+
+    write("2026-10-15-beta.json", "2026-10-15T09:00:00+00:00", 30)
+    write("2026-10-15-alpha.json", "2026-10-15T12:00:00+00:00", 40)  # the one that ran last
+    write("2026-10-15-zeta.json", "2026-10-15T11:00:00+00:00", 35)  # sorts after the current
+    current = write("2026-10-15-run3.json", "2026-10-15T13:00:00+00:00", 45)
+    found = headline.previous_run(tmp_path, before=current, corpus="x")
+    assert found is not None and found.right_and_cited == Count(40, 50)
