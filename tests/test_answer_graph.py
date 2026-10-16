@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import date
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -35,6 +36,7 @@ from core.graph.answer import (
 from core.graph.gate import Claim, check_one, precheck
 from core.graph.inventory import Holding
 from core.graph.knowledge import categorise
+from core.graph.period import Period
 from core.graph.ports import Passage
 from core.packs import InstalledPack, pack
 from core.runtime.ollama import Generated, ModelUnavailable
@@ -666,15 +668,24 @@ def holding(
 
 
 class FakeInventory:
-    def __init__(self, held: list[Holding], quarantined: int = 0) -> None:
+    def __init__(
+        self,
+        held: list[Holding],
+        quarantined: int = 0,
+        periods: dict[str, Period | None] | None = None,
+    ) -> None:
         self.held = held
         self._quarantined = quarantined
+        self._periods = periods or {}
 
     def holdings(self, packs: Any) -> list[Holding]:
         return self.held
 
     def quarantined(self) -> int:
         return self._quarantined
+
+    def periods(self, document_ids: Any) -> dict[str, Period | None]:
+        return {str(d): self._periods.get(str(d)) for d in document_ids}
 
 
 def test_a_request_for_a_recommendation_is_declined_before_anything_is_searched() -> None:
@@ -802,6 +813,49 @@ def test_with_weak_passages_and_an_unread_kind_the_answer_is_an_abstention_not_a
     got = list(graph.stream("how much is my car insurance premium?"))
 
     assert [type(event) for event in got] == [Abstained]
+
+
+def _last_year_graph(covers: Period | None) -> AnswerGraph:
+    reply = {"sentences": [{"text": "The annual premium was SGD 1,248.90.", "supports": [1]}]}
+    return AnswerGraph(
+        ScriptedOllama({"intent": "explain"}, reply),
+        FixedRetriever(PASSAGES),
+        PassThroughReranker(),
+        packs=[insurance()],
+        inventory=FakeInventory([], periods={str(DOC): covers}),
+        today=date(2026, 10, 17),
+    )
+
+
+def test_a_sentence_about_last_year_from_a_document_that_starts_this_year_is_dropped() -> None:
+    """17 October, b-b15: "the premium on the car policy last year was SGD 1,284.00", cited to
+    the one car schedule on file, which covers 12 April 2026 to 11 April 2027. The number is
+    printed; the year is not the one asked about."""
+    graph = _last_year_graph(Period(date(2026, 4, 12), date(2027, 4, 11)))
+
+    got = list(graph.stream("What was the annual premium last year?"))
+
+    assert [type(event) for event in got][-1] is Abstained
+    assert not any(isinstance(event, Sentence) for event in got)
+
+
+def test_a_sentence_about_last_year_from_a_document_that_covers_it_is_kept() -> None:
+    graph = _last_year_graph(Period(date(2025, 4, 12), date(2026, 4, 11)))
+
+    got = list(graph.stream("What was the annual premium last year?"))
+
+    said = [event.text for event in got if isinstance(event, Sentence)]
+    assert said == ["The annual premium was SGD 1,248.90."]
+
+
+def test_a_question_naming_no_period_is_not_checked_against_one() -> None:
+    graph = _last_year_graph(None)
+
+    got = list(graph.stream("What is the annual premium?"))
+
+    assert [event.text for event in got if isinstance(event, Sentence)] == [
+        "The annual premium was SGD 1,248.90."
+    ]
 
 
 def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:

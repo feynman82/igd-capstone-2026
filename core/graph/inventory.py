@@ -18,6 +18,7 @@ from typing import Any, Protocol
 
 from core.contracts import Category
 from core.graph.knowledge import categorise
+from core.graph.period import Period, document_period
 from core.graph.ports import Passage
 from core.packs import CORE, InstalledPack, catalog
 
@@ -33,6 +34,15 @@ SELECT d.id, d.original_name, d.doc_type, d.pack_id,
 """
 
 QUARANTINED = "SELECT count(*) FROM documents WHERE status = 'quarantined'"
+
+# Every dated, monthly or yearly fact of the documents a sentence cites, for `core/graph/period.py`.
+DOCUMENT_DATES = """
+SELECT d.id, d.doc_type, f.key, f.value_date, f.value_text, f.value_num
+  FROM documents d
+  JOIN facts f ON f.document_id = d.id
+ WHERE d.id = ANY(%(ids)s::uuid[])
+   AND d.doc_type IS NOT NULL
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -128,6 +138,8 @@ class Inventory(Protocol):
 
     def quarantined(self) -> int: ...
 
+    def periods(self, document_ids: Sequence[Any]) -> dict[str, Period | None]: ...
+
 
 @dataclass(frozen=True, slots=True)
 class HouseholdInventory:
@@ -149,3 +161,24 @@ class HouseholdInventory:
             cur.execute(QUARANTINED)
             found = cur.fetchone()
         return int(found[0]) if found else 0
+
+    def periods(self, document_ids: Sequence[Any]) -> dict[str, Period | None]:
+        """The span of time each document's printed dates cover; None for one that prints none."""
+        ids = sorted({str(document_id) for document_id in document_ids})
+        if not ids:
+            return {}
+        with self.conn.cursor() as cur:
+            cur.execute(DOCUMENT_DATES, {"ids": ids})
+            rows = cur.fetchall()
+        facts: dict[str, list[tuple[str, object]]] = {document_id: [] for document_id in ids}
+        types: dict[str, str] = {}
+        for document_id, doc_type, key, when, text, number in rows:
+            types[str(document_id)] = str(doc_type)
+            value = when if when is not None else (text if text is not None else number)
+            facts[str(document_id)].append((str(key), value))
+        return {
+            document_id: document_period(types[document_id], found)
+            if document_id in types
+            else None
+            for document_id, found in facts.items()
+        }
