@@ -190,8 +190,8 @@ result (`docs/report/07-commercialisation-roadmap.md`).
 3. **The model card quotes run 2 (30 September).** This page quotes the 15–17 October runs,
    which use different headline measures (judge `none`). The two need one set of figures before
    finalisation (W8).
-4. **Zee:** what does the Ask screen tell the user about the model on an ordinary answer?
-   (Dimensions 3 and 7.)
+4. **The Ask screen does not tell the user they are talking to an AI.** No disclosure was found
+   in `web/`. Raised with Christian as [feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90). (Dimensions 3 and 7.)
 5. **Incident reporting:** accept the gap as stated, or ask Christian for a minimal route, such
    as a "report this answer" control that writes to `traces`? That would be a code change.
 
