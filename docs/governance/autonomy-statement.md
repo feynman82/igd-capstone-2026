@@ -142,8 +142,16 @@ subject to human validation"*. PARROT v1 draws the same line for a household.
 2. **`never_acts` is a declaration, not a switch.** Nothing at runtime branches on it. It is only
    echoed to the interface (`api/routes.py:1310`). The report should say "a pack cannot claim
    to act", not "the flag stops the system acting". Layers 2 and 4 do that.
-3. **`ModuleManifest.writes` is `list[str]`** (`core/contracts.py:37`), unlike `reads`. What a
-   module may write is held by review, not by the type. Is that worth a contracts PR?
+3. **`ModuleManifest.writes` is `list[str]`** (`core/contracts.py:37`), unlike `reads` and
+   `surfaces`, so the docstring's promise that a module *"never writes to `facts`"* is held only
+   by a comment. **Proposed as a contracts PR:** type `writes` as a closed list
+   (`"obligations.state"`, `"traces"`), with a test that a manifest declaring `facts` is
+   rejected. Raised with Christian as
+   [feynman82/igd-capstone-2026#93](https://github.com/feynman82/igd-capstone-2026/issues/93).
+   Every real module's declaration already matches its queries, so nothing breaks. Once it
+   merges, layer 2 gains a second machine-checked limit. Stated limit: the type checks what a
+   module *declares*, not what its queries do. A database role per module would enforce that,
+   and is out of scope for v1.
 
 ## Sources
 
