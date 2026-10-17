@@ -90,7 +90,7 @@ question 5 (for Zee).
 **Gap.** A household has no route to report a wrong answer. There is no incident log, no
 severity scale, and no named person who receives a report. v1 is a single-household prototype
 on synthetic data, so the gap can be argued, but it must be stated and not covered with a
-sentence.
+sentence. A helpdesk support email is raised as [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91).
 
 ### 5. Testing and assurance
 
@@ -192,8 +192,8 @@ result (`docs/report/07-commercialisation-roadmap.md`).
    finalisation (W8).
 4. **The Ask screen does not tell the user they are talking to an AI.** No disclosure was found
    in `web/`. Raised with Christian as [feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90). (Dimensions 3 and 7.)
-5. **Incident reporting:** accept the gap as stated, or ask Christian for a minimal route, such
-   as a "report this answer" control that writes to `traces`? That would be a code change.
+5. **Incident reporting.** A helpdesk support email in the interface has been raised with
+   Christian as [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91). When it lands, dimension 4 names that address and the person who reads it.
 
 ## Sources
 
