@@ -1,7 +1,8 @@
 # Incident and data breach procedure
 
-> **Status: draft for Siew's approval and Christian's technical review.** Owner: Siew. Started
-> 2026-10-04.
+> **Status: approved by Siew, 2026-10-17, including the "same day" times in section 2.** For
+> Christian's technical review. Owner: Siew. Started 2026-10-04. Approval does not confirm the
+> statutory steps: everything marked **to confirm** below still is.
 >
 > This procedure answers the IMDA GenAI dimension "incident reporting", which until now had
 > nothing behind it (`imda-what-applies.md`). It also covers a personal data breach under the
@@ -120,7 +121,8 @@ work.
 
 ## Decisions for Siew
 
-1. Approve the procedure, and the proposed "same day" times in section 2.
+1. ~~Approve the procedure, and the proposed "same day" times in section 2.~~ **Approved
+   2026-10-17.**
 2. ~~Confirm the PDPA Part 6A steps.~~ **Recorded 2026-10-05** (section 3). Still to confirm:
    whether affected individuals must be notified, and the "significant scale" threshold.
 3. ~~Reconcile section 5 with the data inventory.~~ **Decided 2026-10-05:** option (a), two

@@ -134,7 +134,7 @@ subject to human validation"*. PARROT v1 draws the same line for a household.
 
 ## Residual risk
 
-*Proposed, for Siew to accept.* The framework asks each organisation to *"evaluate and determine
+*Accepted by Siew, 2026-10-17.* The framework asks each organisation to *"evaluate and determine
 if the residual risk for their agentic deployment is of a tolerable level and can be accepted"*
 (v1.5 §2.1.2, "Evaluating the residual risks", p 24). With the boundary above in place, these
 remain:
@@ -149,12 +149,14 @@ remain:
 
 ## Open questions
 
-1. **The refusal wording overclaims. Code change needed, raise with Christian.** `REFUSAL` says
+1. **The refusal wording overclaims. Raised with Christian as [feynman82/igd-capstone-2026#94](https://github.com/feynman82/igd-capstone-2026/issues/94).** `REFUSAL` says
    the boundary is *"enforced in the code, not left to my judgement"* (`core/graph/answer.py:225`).
    But the `act` route is a model call (`:1015`), and when the model is unavailable it defaults
-   to `explain` (`:1020`). The inability to act is in the code; the refusal is not. Suggested
-   wording: *"…I have no way to act on them: this version cannot pay, renew, book or file
-   anything."*
+   to `explain` (`:1020`). The inability to act is in the code; the refusal is not. Wording sent
+   to Christian: *"I can explain what your documents say, but I can't act on them. This version
+   has no way to pay, renew, book, file or send anything: nothing in it is able to. I can tell
+   you what a document says instead, such as a due date, an amount, or who to contact."* Until
+   it lands, the chapter should not quote the current refusal as accurate.
 2. **`never_acts` is a declaration, not a switch.** Nothing at runtime branches on it. It is only
    echoed to the interface (`api/routes.py:1310`). The report should say "a pack cannot claim
    to act", not "the flag stops the system acting". Layers 2 and 4 do that.

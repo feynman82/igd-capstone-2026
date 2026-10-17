@@ -23,7 +23,7 @@ task would produce. Where the two disagree, this page is the later reading.
 | 1 | Accountability | Lane ownership in `CODEOWNERS`, a named reviewer on every task, and ADRs that record who decided | Evidenced |
 | 2 | Data | The data inventory, provenance enforced as `NOT NULL`, and reviewed grounding sources | Evidenced, with known gaps |
 | 3 | Trusted development and deployment | The model card, and evaluation runs stamped with the code commit | Partial: what the user is told is unverified |
-| 4 | Incident reporting | A drafted incident procedure and an approved incident log; a helpdesk in the terms of use; the `traces` audit table | Partly: procedure not yet approved or exercised; helpdesk not yet in the interface |
+| 4 | Incident reporting | An approved incident procedure and incident log; a helpdesk in the terms of use; the `traces` audit table | Partly: procedure not yet exercised, PDPA steps to confirm; helpdesk not yet in the interface |
 | 5 | Testing and assurance | Sets A, B and C, with measured results in `eval/results/` | Partly: all testing is internal; there is no third-party testing |
 | 6 | Security | Loopback-only endpoints refused at start-up, screens bound to `127.0.0.1`, and the injection items in Set C | Evidenced, with known gaps |
 | 7 | Content provenance | Every sentence cites a passage, and every fact a document and page | Evidenced |
@@ -99,13 +99,14 @@ Notifying the PDPC is a PDPA duty, covered by the same procedure.
 
 | What exists | Evidence |
 |---|---|
-| A procedure: report, contain, record, assess, notify, learn | `docs/governance/incident-and-breach-procedure.md` (draft, awaiting Siew's approval) |
+| A procedure: report, contain, record, assess, notify, learn | `docs/governance/incident-and-breach-procedure.md` (approved by Siew, 2026-10-17; PDPA steps still to confirm) |
 | An incident log that never holds personal data | `docs/governance/incidents.md` (approved 2026-10-05; no incidents recorded) |
 | A contact point for the user | `terms-of-use.md` Clause D 3: the PARROT helpdesk at +65 9123 4567. The number is still to be confirmed as a staffed line (`terms-of-use.md`, "Status against the code"). |
 | Every graph node writes a row to `traces`: node, latency, model, and a payload with the retrieved ids and the gate's decision | `db/migrations/0001_init.sql` (`traces`); `core/graph/README.md` ("Rules") |
 | Failures found in evaluation become tracked issues, fixed and re-measured | e.g. [feynman82/igd-capstone-2026#48](https://github.com/feynman82/igd-capstone-2026/issues/48), re-measured in `eval/results/2026-10-14-setc-injection-planted.md` |
 
-**Partly.** The procedure is not yet approved or exercised. The helpdesk appears only in the
+**Partly.** The procedure is approved but not yet exercised, and its PDPA notification steps
+are still to confirm from the Act. The helpdesk appears only in the
 terms of use, not in the interface, and the user cannot reach it from a screen. A helpdesk
 contact in the interface is raised as
 [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91).
@@ -232,7 +233,7 @@ result (`docs/report/07-commercialisation-roadmap.md`).
 4. **The Ask screen does not tell the user they are talking to an AI.** Clause D says it, but no
    disclosure was found in `web/`. First requested of Zee on #51 (2026-10-05); raised with
    Christian as [feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90). (Dimensions 3 and 7.)
-5. **Incident reporting.** Approve `incident-and-breach-procedure.md`. Confirm the helpdesk in
+5. **Incident reporting.** `incident-and-breach-procedure.md` is approved (2026-10-17). Confirm the helpdesk in
    Clause D 3 is a real, staffed line. A helpdesk email in the interface is raised as
    [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91), and
    the interface and Clause D 3 should name the same contact.
