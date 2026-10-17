@@ -25,7 +25,7 @@ This document records it.
 | **Household members** | Rows in `people` with `relation` of `partner`, `child`, `parent` or `other`, created by the owner. Children are explicitly in scope: `birth_certificate` is a document type. | `0002_household.sql`; `core/documents.yaml` (`birth_certificate.child_name`) |
 | **Third parties named on a document** | Employers, lenders, insurers, charities and training providers are named by organisation. Some are **natural persons the household never agreed to hold**, for example "the ex-landlord on a tenancy agreement, a former employer, the other driver in a claim". These are kept with `external = true` "rather than discarded". | `0002_household.sql` (comment on `people.external`) |
 | **People printed on a page but in no field** | Whatever the page says is chunked and embedded, including values no field names. Examples are the parents' ID numbers on a birth certificate and the address on the back of an identity card. | `core/ingest/chunk.py` → `chunks.text` in `0001_init.sql` |
-| **Team members (holdout only)** | The 40-document real holdout. It is kept out of git by `.gitignore` (`corpus/holdout/`). The consent protocol that must govern it, `consent-and-redaction.md`, **does not exist yet**. | `.gitignore`; `docs/governance/README.md` |
+| **Team members (holdout only)** | The 40-document real holdout. It is kept out of git by `.gitignore` (`corpus/holdout/`). The consent protocol that governs it is `consent-and-redaction.md` (**draft, 2026-10-17, awaiting Siew's approval**); no document may be collected before it is approved. | `.gitignore`; `docs/governance/README.md` |
 
 ### Lawful basis: two capacities, and deemed consent
 
