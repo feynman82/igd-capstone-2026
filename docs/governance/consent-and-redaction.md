@@ -1,6 +1,6 @@
 # Consent and redaction protocol: the real-document holdout
 
-Status: draft for Siew's approval · Owner: Siew, with Desmond (collection) · Reviewers: Desmond
+Status: draft · **Exclusions (§3) approved by Siew, 2026-10-17**; deletion date (§8) awaiting Siew · Owner: Siew, with Desmond (collection) · Reviewers: Desmond
 (it must be workable), Christian (technical accuracy) · Evidence read on `main` at `eb9fc20`
 (2026-10-17)
 
@@ -54,9 +54,9 @@ servicing invoice, loan agreement or notice of assessment.
 | Excluded | Reason |
 |---|---|
 | A document mainly about another person (a parent's policy, a partner's payslip) | That person has not consented (R2). |
-| Anything about a child | Children cannot give the consent this protocol relies on. Siew decided children for the system in `data-inventory.md` §6, 5b; for the holdout the answer is simply none. |
-| Medical letters or reports stating a diagnosis | Health data carries the highest harm if exposed. The extraction gap can be measured without it. **Siew to confirm** this exclusion. |
-| Identity documents (NRIC, passport, birth certificate) | Almost every field on them is an identifier that §5 would redact, leaving nothing to score. It is also the data whose exposure does most harm. **To confirm against the PDPC's advisory guidelines on NRIC numbers.** |
+| Anything about a child | **Approved by Siew, 2026-10-17.** Children cannot give the consent this protocol relies on. Siew decided children for the system in `data-inventory.md` §6, 5b; for the holdout the answer is simply none. |
+| Medical letters or reports stating a diagnosis | Health data carries the highest harm if exposed. The extraction gap can be measured without it. **Approved by Siew, 2026-10-17**; medical documents are measured on the synthetic corpus only. |
+| Identity documents (NRIC, passport, birth certificate) | Almost every field on them is an identifier that §5 would redact, leaving nothing to score. It is also the data whose exposure does most harm. **Approved by Siew, 2026-10-17.** Its consistency with the PDPC's advisory guidelines on NRIC numbers is still to confirm. |
 | A document the contributor cannot redact cleanly | When in doubt, leave it out (§5.4). |
 
 **Spread.** The 40 should cover several document types, so that the gap is not a measure of one
@@ -237,7 +237,8 @@ cites them.
 
 ## Open questions
 
-1. **Siew:** approve the exclusions in §3 (children, diagnoses, identity documents).
+1. ~~**Siew:** approve the exclusions in §3 (children, diagnoses, identity documents).~~ **Approved
+   2026-10-17, all three as drafted.**
 2. **Siew:** decide the deletion date in §8.
 3. **Desmond:** is images-not-PDFs (§5.3) workable for each contributor, and is the 2026-10-20
    collection date still realistic with consent first?
