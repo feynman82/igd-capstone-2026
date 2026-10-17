@@ -11,17 +11,22 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `model-card.md` | IMDA GenAI, dimensions 1 and 5 | Siew with Yew Mun | W6 |
 | `iso-stage-process-map.md` | ISO/IEC 22989 stages against ISO/IEC 5338 processes | Siew | W7 |
 | `imda-genai-nine-dimensions.md` | IMDA GenAI (2024) | Siew | W8 |
-| `autonomy-statement.md` | IMDA Agentic AI (v1.5, May 2026), dimensions 1 and 2 | Siew with Christian | W8 |
+| `autonomy-statement.md` | MGF for Agentic AI (v1.5, May 2026): *Assess and bound the risks upfront* and *Make humans meaningfully accountable* | Siew with Christian | W8 |
 | `synthetic-data-case.md` | Why synthetic data, what it proves and what it does not | Siew with Desmond | W6 |
+| `imda-what-applies.md` | IMDA GenAI (2024) and MGF for Agentic AI (v1.5, May 2026) — extract, mapped to code | Siew | W1 |
+| `incident-and-breach-procedure.md` | IMDA GenAI incident reporting; PDPA Part 6A data breach notification | Siew with Christian | — |
+| `incidents.md` | The incident log (PDPA Accountability Obligation); never holds personal data | Siew | — |
+| `terms-of-use.md` | PDPA s 15 deemed consent — the contractual basis for one adult filing for another | Siew | — |
 
 ## The autonomy statement in one line
 
-Version 1 observes, retrieves and advises. It does not pay, book or file. The Actions
-module is deliberately not built, and every pack manifest enforces the
-boundary with `never_acts: true` — a machine-checked flag, not a sentence in a policy
-document.
+Version 1 observes, retrieves and advises. It does not act on the household's behalf: it
+does not pay, book or file anything, and it contacts no one outside the household. The Actions
+module is deliberately not built. No pack can declare that it acts (`never_acts: Literal[True]`)
+and no kind of module can act (`PrimitiveId`, `core/contracts.py`), so the boundary is
+machine-checked, not a sentence in a policy document.
 
-## The rule that governs all eight
+## The rule that governs all of them
 
 Ground every claim in a file in this repository or in a cited instrument. Where the
 evidence cannot be found, write `unverified` and raise it — an artefact that asserts

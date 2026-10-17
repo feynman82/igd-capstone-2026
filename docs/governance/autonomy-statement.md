@@ -53,7 +53,7 @@ household. Each one is recorded here so that nobody can say "never acts" was cla
 |---|---|---|
 | A calendar entry is drafted from *"add Dad's review on Friday"*. It is saved only when a person presses **Add to calendar**. | ADR 0020 decision 6, "Parrot drafts; a person confirms". The API records `created_via = 'ask'`. | `core/graph/answer.py:1615`; `docs/adr/0020-…md` |
 | A morning digest is sent at 07:10 to the household's Telegram chats. It carries the household's own calendar back to the household, and changes nothing. IMDA's §2.2.2 lists *"sending communications"* among the actions that need a checkpoint. Here the checkpoint is the allow list, which the household sets once. That is the *"User-defined"* boundary §2.2.2 provides for: *"users may be given the option to define their own boundaries"*. | Only allow-listed chat ids. An empty allow list sends to nobody. | `core/adapters/telegram.py:325`; `core/worker/schedule.py` (`DIGEST_CRON`) |
-| A Telegram document is deleted from the chat after it is fetched (default on). This is not an action: it removes the household's own copy of a message they sent to be captured, and it reaches no third party. | `TELEGRAM_DELETE_AT_SOURCE`, default `true`. It applies only to the household's own message in an allowed chat. | `core/runtime/settings.py:204`; `core/adapters/telegram.py:222` |
+| A Telegram document is deleted from the chat after it is fetched (default on). This is not an action: it removes the household's own copy of a message they sent to be captured, and it reaches no third party. | `TELEGRAM_DELETE_AT_SOURCE`, default `true`. It applies to a message the bot accepted. With `TELEGRAM_CHAT_IDS` set, that is only the household's chats. **With it empty, the bot accepts documents from any chat** (`core/runtime/settings.py`, `_chat_ids`), a known gap (`data-inventory.md` §5, gap 4). | `core/runtime/settings.py:204`; `core/adapters/telegram.py:222` |
 | Reminder and Alert sweeps run on a schedule and write their own bookkeeping. | Reminder writes `obligations.state`; Alert writes `traces`. Both surface on Today. | `modules/reminder/module.yaml`, `modules/alert/module.yaml` |
 
 ## Why advise-only is the right boundary for v1
@@ -93,7 +93,8 @@ Each of these is a separate, reviewed change. None can be made inside a feature 
 ## IMDA Agentic AI framework — where this sits
 
 Read from IMDA, *Model AI Governance Framework for Agentic AI*, Version 1.5. Section numbers are
-that edition's.
+that edition's. This section argues the boundary. The practice-by-practice mapping of all four
+dimensions, with page numbers, is in `imda-what-applies.md` (Agentic section).
 
 **Where v1 sits on the framework's two axes** (§1.1.3). *Action-space* is the *"range of actions
 the agent can take … determined by the tools it is allowed to use"*. *Autonomy* is the
@@ -123,13 +124,28 @@ proposes, human operates: The human reviews and approves every agent action."*
 | **2.1 Assess and bound the risks upfront** | *"prefer deterministic rather than non-deterministic limits, and bound by design"* (§2.1.2); *"rather than relying on prompts … impose access controls that prevent the tool from being called by the agent at all"* (§2.1.2) | There is no tool to call. The limits are types and structure (layers 1, 2 and 4), not a prompt. |
 | **2.2 Make humans meaningfully accountable** | *"define significant checkpoints or action boundaries that require human approval"*, including *"Irreversible actions e.g. permanently deleting data, sending communications, making payments"* (§2.2.2); *"Denying action by default when approval infrastructures fail"* (§2.2.2) | The calendar draft waits for a press. Every advice verdict is written by code (ADR 0016). When the router's model is unavailable, the question falls to `explain`, which cannot act (`core/graph/answer.py:1020`). The digest is sent within the allow list the household set, the *"User-defined"* boundary of §2.2.2. See "What v1 does do without being asked". |
 | **2.3 Implement technical controls and processes** | *"Structural, rule-based vs model-based or prompt-layer controls"*: prefer *"deterministic safeguards that operate at a system-level"* (§2.3.1); *"continuously monitor and log agent behaviour"* (§2.3.3) | Set C runs on frozen code in an isolated vault (`eval/results/2026-10-15-setc-isolated-vault.md`). Every node writes to `traces` (`core/graph/README.md`). |
-| **2.4 Enable end-user responsibility** | Users should be told the *"Agents' range of actions and decisions"*, there should be a declaration *"in the user interface that the users are interacting with agents"*, and users should be given *"human contact points"* for escalation (§2.4.2) | Range of actions: the refusal tells the person what v1 will not do (`core/graph/answer.py:225`). Declaration in the interface: **not built**; raised with Christian as [feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90). Contact point: **gap**; a helpdesk support email is raised with Christian as [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91). |
+| **2.4 Enable end-user responsibility** | Users should be told the *"Agents' range of actions and decisions"*, there should be a declaration *"in the user interface that the users are interacting with agents"*, and users should be given *"human contact points"* for escalation (§2.4.2) | **Range of actions:** `terms-of-use.md` Clause B says the System makes no payment, booking, renewal or filing, and the refusal tells the person the same at the point of asking (`core/graph/answer.py:225`). **Declaration in the interface:** Clause D 1 says answers are AI-generated, but no screen says it yet; raised as [feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90). **Contact point:** Clause D 3 names the PARROT helpdesk (number still to confirm), but no screen shows it; a helpdesk email in the interface is raised as [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91). |
 
 **The closest case study in the framework** is OCBC's source-of-wealth system (v1.5, §2.1.2,
 case box). It reads customers' financial documents and *"provides decision support only and does
 not make credit, onboarding or risk decisions autonomously"*. It bounds autonomy by *"No
 self-initiation of actions"* and *"No decision authority"*, and *"outputs are advisory and
 subject to human validation"*. PARROT v1 draws the same line for a household.
+
+## Residual risk
+
+*Proposed, for Siew to accept.* The framework asks each organisation to *"evaluate and determine
+if the residual risk for their agentic deployment is of a tolerable level and can be accepted"*
+(v1.5 §2.1.2, "Evaluating the residual risks", p 24). With the boundary above in place, these
+remain:
+
+| Residual risk | Why it is tolerable for v1, or what closes it |
+|---|---|
+| The router misreads a request to act as a question | Tolerable. The explain path has nothing to act with (layer 4), so the worst case is an explanation where a refusal was due. |
+| An instruction planted in a document | Tolerable for v1. Nothing can act on it, and 3 of 3 planted instructions were not obeyed. But no defence inspects documents for instructions (`eval/results/2026-10-14-setc-injection-planted.md`). |
+| A wrong answer, cited, is relied on | The main residual risk. 18 of 77 answers on the latest run made an unsupported claim (`eval/results/2026-10-17-time-scoped-claims.md`). The user is asked to check the cited page (`terms-of-use.md` Clause D 2), and the interface must say so ([feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90)). |
+| An empty Telegram allow list accepts documents from anyone | **Not tolerable as a default.** Closing it is a code change raised in `data-inventory.md` §5 (gap 4), for Christian. |
+| The digest and captured documents pass through Telegram's servers | Accepted by a household that turns Telegram on. It is off when `TELEGRAM_BOT_TOKEN` is unset (`core/runtime/capture.py`). |
 
 ## Open questions
 
