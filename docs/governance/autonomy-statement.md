@@ -10,8 +10,12 @@ dimensions 1 and 2 (`docs/governance/README.md`) · Evidence read on `main` at `
 ## The statement
 
 **PARROT v1 reads a household's documents, answers questions about them and advises. It does
-not act.** It does not pay, renew, book, file, cancel, sign or contact anyone on the household's
-behalf. That holds at four layers, and the first two are checked by the type system, not by
+not act on the household's behalf.** It does not pay, renew, book, file, cancel or sign
+anything, and it does not contact anyone outside the household. The one message it sends
+unasked, the morning digest, goes only to the household's own chats. It is sent within a
+boundary the household set itself (see below).
+
+The boundary holds at four layers, and the first two are checked by the type system, not by
 review:
 
 | # | Layer | What holds it | Where |
@@ -48,7 +52,7 @@ household. Each one is recorded here so that nobody can say "never acts" was cla
 | Behaviour | Bounded by | Where |
 |---|---|---|
 | A calendar entry is drafted from *"add Dad's review on Friday"*. It is saved only when a person presses **Add to calendar**. | ADR 0020 decision 6, "Parrot drafts; a person confirms". The API records `created_via = 'ask'`. | `core/graph/answer.py:1615`; `docs/adr/0020-…md` |
-| A morning digest is sent at 07:10 to the household's Telegram chats. It reads and sends; it changes nothing. | Only allow-listed chat ids. An empty allow list sends to nobody. | `core/adapters/telegram.py:325`; `core/worker/schedule.py` (`DIGEST_CRON`) |
+| A morning digest is sent at 07:10 to the household's Telegram chats. It carries the household's own calendar back to the household, and changes nothing. IMDA's §2.2.2 lists *"sending communications"* among the actions that need a checkpoint. Here the checkpoint is the allow list, which the household sets once. That is the *"User-defined"* boundary §2.2.2 provides for: *"users may be given the option to define their own boundaries"*. | Only allow-listed chat ids. An empty allow list sends to nobody. | `core/adapters/telegram.py:325`; `core/worker/schedule.py` (`DIGEST_CRON`) |
 | A Telegram document is deleted from the chat after it is fetched (default on). This is not an action: it removes the household's own copy of a message they sent to be captured, and it reaches no third party. | `TELEGRAM_DELETE_AT_SOURCE`, default `true`. It applies only to the household's own message in an allowed chat. | `core/runtime/settings.py:204`; `core/adapters/telegram.py:222` |
 | Reminder and Alert sweeps run on a schedule and write their own bookkeeping. | Reminder writes `obligations.state`; Alert writes `traces`. Both surface on Today. | `modules/reminder/module.yaml`, `modules/alert/module.yaml` |
 
@@ -117,7 +121,7 @@ proposes, human operates: The human reviews and approves every agent action."*
 | Dimension (v1.5 §2) | What the framework asks | PARROT v1 |
 |---|---|---|
 | **2.1 Assess and bound the risks upfront** | *"prefer deterministic rather than non-deterministic limits, and bound by design"* (§2.1.2); *"rather than relying on prompts … impose access controls that prevent the tool from being called by the agent at all"* (§2.1.2) | There is no tool to call. The limits are types and structure (layers 1, 2 and 4), not a prompt. |
-| **2.2 Make humans meaningfully accountable** | *"define significant checkpoints or action boundaries that require human approval"*, including *"Irreversible actions e.g. permanently deleting data, sending communications, making payments"* (§2.2.2); *"Denying action by default when approval infrastructures fail"* (§2.2.2) | The calendar draft waits for a press. Every advice verdict is written by code (ADR 0016). When the router's model is unavailable, the question falls to `explain`, which cannot act (`core/graph/answer.py:1020`). The digest is the exception; see open question 4. |
+| **2.2 Make humans meaningfully accountable** | *"define significant checkpoints or action boundaries that require human approval"*, including *"Irreversible actions e.g. permanently deleting data, sending communications, making payments"* (§2.2.2); *"Denying action by default when approval infrastructures fail"* (§2.2.2) | The calendar draft waits for a press. Every advice verdict is written by code (ADR 0016). When the router's model is unavailable, the question falls to `explain`, which cannot act (`core/graph/answer.py:1020`). The digest is sent within the allow list the household set, the *"User-defined"* boundary of §2.2.2. See "What v1 does do without being asked". |
 | **2.3 Implement technical controls and processes** | *"Structural, rule-based vs model-based or prompt-layer controls"*: prefer *"deterministic safeguards that operate at a system-level"* (§2.3.1); *"continuously monitor and log agent behaviour"* (§2.3.3) | Set C runs on frozen code in an isolated vault (`eval/results/2026-10-15-setc-isolated-vault.md`). Every node writes to `traces` (`core/graph/README.md`). |
 | **2.4 Enable end-user responsibility** | Users should be told the *"Agents' range of actions and decisions"*, there should be a declaration *"in the user interface that the users are interacting with agents"*, and users should be given *"human contact points"* for escalation (§2.4.2) | Range of actions: the refusal tells the person what v1 will not do (`core/graph/answer.py:225`). Declaration in the interface: **not built**; raised with Christian as [feynman82/igd-capstone-2026#90](https://github.com/feynman82/igd-capstone-2026/issues/90). Contact point: **gap**; a helpdesk support email is raised with Christian as [feynman82/igd-capstone-2026#91](https://github.com/feynman82/igd-capstone-2026/issues/91). |
 
@@ -140,14 +144,6 @@ subject to human validation"*. PARROT v1 draws the same line for a household.
    to act", not "the flag stops the system acting". Layers 2 and 4 do that.
 3. **`ModuleManifest.writes` is `list[str]`** (`core/contracts.py:37`), unlike `reads`. What a
    module may write is held by review, not by the type. Is that worth a contracts PR?
-4. **The digest sends communications without a per-message approval.** v1.5 §2.2.2 lists
-   *"sending communications"* among the irreversible actions that should need a checkpoint. The
-   07:10 digest sends unasked (`core/worker/tasks.py`, `send_digest_now`). The case for it: it
-   goes only to chats the household put on its allow list, an empty list sends nothing
-   (`core/adapters/telegram.py:325`), and it carries the household's own calendar back to the
-   household. That fits §2.2.2's *"User-defined"* boundary: *"users may be given the option to
-   define their own boundaries"*. Siew to decide whether to state it that way or to treat the
-   digest as an action.
 
 ## Sources
 
