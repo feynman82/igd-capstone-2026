@@ -7,25 +7,28 @@
 > (updated 5 June 2026)**. Its terminology is used throughout the Agentic section, with page
 > numbers. Page numbers are the framework's own printed numbers.
 >
-> **The GenAI framework has still not been read.** Its dimension names come from the team's
-> architecture review (`docs/artefacts/architecture-review.html`, §10), and what each dimension
-> asks is not paraphrased. The W6 task (`imda-genai-nine-dimensions.md`) turns that section into
+>
+> **The GenAI dimension names have been read (2026-10-17)** from the AI Verify Foundation and
+> IMDA annex, *Nine dimensions of the proposed Model AI Governance Framework*. The architecture
+> review's list, used in the first version of this extract, was wrong in two places (below).
+> The names are corrected here; the full mapping is the W6 page. The W6 task (`imda-genai-nine-dimensions.md`) turns that section into
 > the full mapping.
 
 ## The two instruments
 
 | Instrument | Version and date | Dimensions | Source of the wording used here |
 |---|---|---|---|
-| IMDA, *Model AI Governance Framework for Generative AI* | May 2024 | Nine | Architecture review §10. Ninth dimension decided by Siew, see below. **Not read.** |
+| IMDA, *Model AI Governance Framework for Generative AI* | May 2024 (names from the annex to the proposed framework) | Nine | **The annex itself** (see `imda-genai-nine-dimensions.md`, Sources) |
 | IMDA, *Model AI Governance Framework for Agentic AI* ("MGF for Agentic AI") | **v1.5, published 20 May 2026, updated 5 June 2026.** v1.0 was launched on 22 January 2026 (architecture review). | Four | **The framework itself** |
 
-**The ninth GenAI dimension: decided (Siew, 2026-10-04).** The ninth GenAI dimension is
-**human oversight**, as the architecture review lists it. The nine are accountability, data
-governance, trusted development, incident reporting, testing and assurance, content provenance,
-safety and alignment, cybersecurity, and human oversight.
-*Note kept for the record:* the drafting author recalled the published ninth dimension as "AI
-for Public Good". The GenAI framework's text has not been read, so a check of the names against
-it remains worthwhile before the chapter cites them.
+**The ninth GenAI dimension: settled against the annex (2026-10-17).** It is **AI for Public
+Good**. The nine are Accountability, Data, Trusted Development and Deployment, Incident
+Reporting, Testing and Assurance, Security, Content Provenance, Safety and Alignment R&D, and
+AI for Public Good.
+*Superseded, kept for the record:* on 2026-10-04, before the text was read, Siew decided the
+ninth was "human oversight", as the architecture review lists it. That note asked for a check
+against the text, and the annex is that check. The architecture review also says
+"cybersecurity" where the annex says "Security".
 
 ---
 
@@ -105,7 +108,7 @@ For users who **interact with** agents (§2.4.2, pp 46–47):
 > **Superseded by `imda-genai-nine-dimensions.md` (W6, 2026-10-17).** That page maps each
 > dimension to an artefact or a measured result from the latest runs. This section is kept as
 > the W1 extract. Where the two disagree, the W6 page is the later reading. The ninth
-> dimension is reopened there (open question 1).
+> dimension is AI for Public Good, settled against the annex (see above).
 
 **Applies** means PARROT has something to show. **Partly** means it has some of it, and the
 gap is named. **Little** means the dimension is mainly addressed to model developers or to
@@ -121,7 +124,7 @@ government, and PARROT, as a deployer, has only a small part to play.
 | **Security** (the review: "cybersecurity") | Partly | Loopback-only services. Screens bound to `127.0.0.1`. The API refuses non-loopback hosts. **Gaps:** the screen lock does not encrypt, the API has no authentication for local callers, and an empty Telegram allow list accepts any chat. Prompt injection is covered by Set C's `injection` items (`eval/sets/adversarial/lane-c.jsonl`), drafted and not yet run. | `data-inventory.md` §3 and §5; `web/lib/lock.ts`; `api/main.py` |
 | **Content provenance** | Applies | **Read as showing where information came from (Siew, 2026-10-04).** One of PARROT's strongest dimensions. Every fact cites a document and a page (`NOT NULL`), so no fact can be written without its source. Every answer sentence must cite a retrieved passage, or the gate drops it. The user opens the cited page from a source chip. Every published source carries its publisher, URL, retrieval date and review-by date, and is cited only after a person signs it off. | `db/migrations/0001_init.sql` (`facts`); `core/graph/gate.py`; `web/components/source-chip.tsx`; `core/pages.py`; `db/migrations/0003_advice.sql` (`grounding_sources`) |
 | **Safety and alignment (R&D)** | Little | Mainly addressed to model developers. What PARROT does as a deployer: the model only explains, and code chooses the verdict. A pack can forbid phrases (`never_say`), and the gate refuses unsupported claims. | `core/contracts.py` (`verdict_by_code`, `AdviceShape.never_say`) |
-| **Human oversight** | Applies | The same evidence as Agentic dimension 2: people approve published rule values, confirm names before they scope answers, and correct facts. Only the owner may erase a person or reset. | See Agentic dimension 2 |
+| ~~Human oversight~~ **AI for Public Good** | Partly | *Corrected 2026-10-17: "human oversight" is not a GenAI dimension.* Its evidence stands under Agentic dimension 2. For AI for Public Good, see `imda-genai-nine-dimensions.md` §9. | `imda-genai-nine-dimensions.md` |
 
 ---
 
@@ -168,6 +171,6 @@ government, and PARROT, as a deployer, has only a small part to play.
 ## For Siew
 
 1. **Agentic framework:** check the statuses above against your reading. **GenAI framework:**
-   still to read, then confirm its dimension names and each "Applies?" judgement. *(The ninth
-   dimension is decided: human oversight.)*
+   names confirmed from the annex (2026-10-17); each "Applies?" judgement is superseded by
+   `imda-genai-nine-dimensions.md`. *(The ninth dimension is AI for Public Good.)*
 2. ~~Decide finding 5.~~ **Decided 2026-10-05:** an incident hold (`retention-and-erasure.md` A6).

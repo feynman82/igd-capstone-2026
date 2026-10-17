@@ -8,7 +8,7 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `data-inventory.md` | PDPA — what enters, where it rests, what crosses a boundary | Siew | W2 |
 | `consent-and-redaction.md` | PDPA — governs the real-document holdout; must exist **before** collection | Siew with Desmond | W2 |
 | `retention-and-erasure.md` | PDPA — including what "Reset Workspace" and `DELETE FROM documents` actually cascade to | Siew | W4 |
-| `model-card.md` | IMDA GenAI, dimensions 1 and 5 | Siew with Yew Mun | W6 |
+| `model-card.md` | IMDA GenAI, dimensions 3 and 5 | Siew with Yew Mun | W6 |
 | `iso-stage-process-map.md` | ISO/IEC 22989 stages against ISO/IEC 5338 processes | Siew | W7 |
 | `imda-genai-nine-dimensions.md` | IMDA GenAI (2024) | Siew | W8 |
 | `autonomy-statement.md` | MGF for Agentic AI (v1.5, May 2026): *Assess and bound the risks upfront* and *Make humans meaningfully accountable* | Siew with Christian | W8 |
