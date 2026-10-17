@@ -204,8 +204,10 @@ loopback (`core/runtime/settings.py`, `local_url`).
 ## 8. Retention and deletion
 
 **Decided by Siew, 2026-10-17:** delete the documents, the register, the holdout log and the
-consent records **by 31 December 2026**. That leaves time after the final report (the governance chapter is
-due 2026-11-10, W10, `docs/team-tasks.csv`). Desmond deletes; Siew confirms in writing. The
+consent records **by 31 December 2026, the end of the MVP** (Siew, 2026-10-17). The holdout is
+kept for as long as the MVP it measures, and no longer. That is after the final report, whose
+governance chapter is due 2026-11-10 (W10, `docs/team-tasks.csv`). Desmond deletes; Siew
+confirms in writing. The
 committed aggregate results stay, since they hold no personal data (§7).
 
 This fills the row that `retention-and-erasure.md` left open: *"The 40-document real holdout
