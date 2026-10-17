@@ -52,7 +52,7 @@ exist.** This policy says what it must do, and the policy cannot be met until it
 | The conversation | S8 | Not retained. It is held in process memory and lost when the API restarts (`MemorySaver`). **If the Postgres checkpointer is ever adopted, this rule must be decided again before it ships.** | Holds today |
 | Process log lines | S9 | Not retained by PARROT. No log file is written. | Holds today, `unverified` for every launcher |
 | Screen-lock verifier | S10 | Kept until the household changes or clears the passphrase. | **Decided** (Siew, 2026-10-02) |
-| The 40-document real holdout (team members) | — | Governed by `consent-and-redaction.md` §8: proposed deletion within 7 days of the final report's submission. | **Proposed** (protocol drafted 2026-10-17) |
+| The 40-document real holdout (team members) | Until 31 December 2026 | Governed by `consent-and-redaction.md` §8: documents, register, log and consent records deleted by 31 December 2026; only coded aggregate results stay. | **Decided** (Siew, 2026-10-17) |
 
 ### A2. What erasure means
 

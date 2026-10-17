@@ -1,6 +1,6 @@
 # Consent and redaction protocol: the real-document holdout
 
-Status: draft · **Exclusions (§3) approved by Siew, 2026-10-17**; deletion date (§8) awaiting Siew · Owner: Siew, with Desmond (collection) · Reviewers: Desmond
+Status: draft · **Siew's decisions taken 2026-10-17: exclusions (§3) and deletion date (§8)** · Owner: Siew, with Desmond (collection) · Reviewers: Desmond
 (it must be workable), Christian (technical accuracy) · Evidence read on `main` at `eb9fc20`
 (2026-10-17)
 
@@ -90,7 +90,7 @@ contributor keeps a copy.
 >    uploaded, never shared outside the team, and never used to tune or train anything.
 > 3. Only scores and coded ids (such as "H07") appear in the project's results. My name and
 >    my documents' contents do not.
-> 4. The documents and this record will be deleted by **[date from §8]**.
+> 4. The documents and this record will be deleted by **31 December 2026**.
 > 5. I may withdraw at any time by telling Desmond or Siew. My documents will then be deleted
 >    within 72 hours. If they have already been scored, the published aggregate score cannot be
 >    un-published, but nothing in it identifies me.
@@ -203,8 +203,8 @@ loopback (`core/runtime/settings.py`, `local_url`).
 
 ## 8. Retention and deletion
 
-**Proposed, for Siew to decide:** delete the documents, the register, the holdout log and the
-consent records **within 7 days of the final report's submission** (the governance chapter is
+**Decided by Siew, 2026-10-17:** delete the documents, the register, the holdout log and the
+consent records **by 31 December 2026**. That leaves time after the final report (the governance chapter is
 due 2026-11-10, W10, `docs/team-tasks.csv`). Desmond deletes; Siew confirms in writing. The
 committed aggregate results stay, since they hold no personal data (§7).
 
@@ -239,7 +239,7 @@ cites them.
 
 1. ~~**Siew:** approve the exclusions in §3 (children, diagnoses, identity documents).~~ **Approved
    2026-10-17, all three as drafted.**
-2. **Siew:** decide the deletion date in §8.
+2. ~~**Siew:** decide the deletion date in §8.~~ **Decided 2026-10-17: by 31 December 2026.**
 3. **Desmond:** is images-not-PDFs (§5.3) workable for each contributor, and is the 2026-10-20
    collection date still realistic with consent first?
 4. **Christian:** which machine is the integration machine, and confirm that `eval.holdout`
