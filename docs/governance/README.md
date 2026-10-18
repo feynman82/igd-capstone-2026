@@ -17,6 +17,7 @@ report. They are produced as artefacts along the way, not written up as prose in
 | `incident-and-breach-procedure.md` | IMDA GenAI incident reporting; PDPA Part 6A data breach notification | Siew with Christian | — |
 | `incidents.md` | The incident log (PDPA Accountability Obligation); never holds personal data | Siew | — |
 | `terms-of-use.md` | PDPA s 15 deemed consent — the contractual basis for one adult filing for another | Siew | — |
+| `grounding-sources-basis.md` | Copyright Act 2021 s 244 — what third-party guidance the packs index and on what basis | Siew | — |
 
 ## The autonomy statement in one line
 
