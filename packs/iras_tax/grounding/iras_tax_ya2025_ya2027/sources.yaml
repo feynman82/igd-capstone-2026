@@ -4,7 +4,7 @@ corpus_id: iras_tax_ya2025_ya2027
 applies_to: Singapore individual income tax, Years of Assessment 2025 to 2027
 maintained_by: Zee
 reviewed_by: Siew
-reviewed_on: null                 # set the date Siew signs off
+reviewed_on: 2026-10-18
 # Removed 2026-10-18 by Siew: IRAS e-Tax Guide "Tax Deductibility of Donations". Nothing depended
 # on it (the 250% rate is cited from iras-donations-and-tax-deductions.md), and its copyright
 # notice names storage in a retrieval system expressly, so it is left out rather than kept under
@@ -20,8 +20,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: Resident and non-resident tax rates, YA2024 onwards (YA2025 to YA2027)
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of the `tax_rate` values. Every band of the YA2024-onwards resident table was checked: each cumulative gross tax payable equals the previous one plus that band's tax, so no digit was misread. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-srs-contributions-and-tax-relief.md
@@ -33,8 +33,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: SRS contribution caps and SRS relief, YA2025 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of `srs_contribution_cap`. The caps ($15,300 for citizens and PRs, $35,700 for foreigners) were checked against the page image. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-cpf-cash-top-up-relief.md
@@ -46,8 +46,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: CPF cash top-up relief, YA2025 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-cpf-cash-top-up-relief-factsheet.md
@@ -59,8 +59,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: CPF cash top-up relief amounts from YA2023 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     Supplied by Zee on 2026-10-03; a text PDF, so extracted verbatim, not by OCR. URL confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS PDF that prints no copyright line, so the IRAS website Terms of Use apply. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-tax-reliefs.md
@@ -72,8 +72,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: List of personal reliefs and the $80,000 relief cap, YA2025 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-personal-income-tax-rebate.md
@@ -85,8 +85,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: Personal income tax rebates for YA2024 and YA2025
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-donations-and-tax-deductions.md
@@ -98,8 +98,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: 250% deduction for qualifying donations to IPCs, YA2025 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. The print itself carries this URL and the date 3 October 2026. This page is where the 250% rate is printed. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-understanding-my-tax-assessment.md
@@ -111,8 +111,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: What a Notice of Assessment shows, YA2025 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 - file: iras-basic-guide-for-new-individual-taxpayers.md
@@ -124,8 +124,8 @@ documents:
   retrieved: 2026-10-03
   applies_to: Filing, the tax bill and paying, including GIRO, YA2025 onwards
   review_by: 2027-04-03
-  reviewed_by: null
-  reviewed_on: null
+  reviewed_by: Siew
+  reviewed_on: 2026-10-18
   note: >
     OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title, since the print does not carry it, and confirmed in a browser by Siew on 2026-10-18. Licence: an IRAS web page, ©2026 Government of Singapore. The IRAS Terms of Use reserve reproduction to IRAS's prior permission; this copy is kept under the computational data analysis exception (Copyright Act 2021, s 244) for indexing and retrieval in this private research prototype, and is not published or redistributed. Basis: docs/governance/grounding-sources-basis.md.
 

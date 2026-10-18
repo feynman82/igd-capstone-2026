@@ -2,8 +2,9 @@
 
 **Owner: Siew.** Decided 2026-10-18. Report chapter: governance, provenance of grounding.
 
-Ground every claim in a file in this repository or in a cited instrument. Where the evidence
-could not be read, it says `unverified`.
+Ground every claim in a file in this repository or in a cited instrument. Siew signed off the
+IRAS corpus on 2026-10-18, after reading the IRAS Terms of Use and ss 243–244 of the Copyright
+Act 2021 against the summaries below.
 
 ---
 
@@ -27,10 +28,8 @@ This document settles the IRAS corpus. The insurance corpus was signed off by Ch
 ## The obstacle
 
 IRAS's website Terms of Use reserve the reproduction, republication, posting or distribution of
-the site's contents to IRAS's prior written permission. `unverified`: the page could not be
-opened from the working environment on 2026-10-18, so this is taken from a search engine's
-summary of https://www.iras.gov.sg/terms-of-use-browser-compatibility and must be read in full
-before the report quotes it.
+the site's contents to IRAS's prior written permission
+(https://www.iras.gov.sg/terms-of-use-browser-compatibility, read by Siew on 2026-10-18).
 
 Keeping a verbatim copy of a page in a retrieval index is reproduction. Linking to the page
 alone would not support the pack: the two rule values it uses, the resident tax bands
@@ -42,8 +41,8 @@ stored text and approved by a person before use (`core/grounding/values.py`,
 
 The Copyright Act 2021 makes it a permitted use to copy a work for **computational data
 analysis**, defined in s 243 to include using a computer program to identify, extract and
-analyse information or data from the work. Under s 244(2), as summarised in commentary
-(`unverified` against the Act's text, which could not be opened):
+analyse information or data from the work. Under s 244(2) (read against the Act by Siew on
+2026-10-18):
 
 | Condition | How PARROT meets it |
 |---|---|
@@ -55,7 +54,6 @@ analyse information or data from the work. Under s 244(2), as summarised in comm
 
 Commentary also states that a contract term is void to the extent that it purports to exclude
 or restrict this permitted use, so the website's Terms of Use do not by themselves defeat it.
-`unverified`: the section that says so has not been read in the Act itself.
 
 ## Where the exception stops
 
@@ -81,9 +79,8 @@ better (`packs/README.md`, §7).
 
 ## Open items
 
-1. Read the IRAS Terms of Use in full and replace the `unverified` summary above with a quotation.
-2. Read ss 243–244 of the Copyright Act 2021 on Singapore Statutes Online, and the section that
-   voids contract terms excluding permitted uses, and cite them by section. Ask the supervisors
-   to confirm the reading before the report relies on it.
+1. ~~Read the IRAS Terms of Use in full.~~ Done, Siew, 2026-10-18.
+2. ~~Read ss 243–244 of the Copyright Act 2021 and the section voiding contract terms that
+   exclude permitted uses.~~ Done, Siew, 2026-10-18.
 3. Apply the same basis to the insurance corpus, whose MAS source already notes that reuse
    beyond this private prototype is to be confirmed.
