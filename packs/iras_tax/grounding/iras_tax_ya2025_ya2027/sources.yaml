@@ -5,26 +5,12 @@ applies_to: Singapore individual income tax, Years of Assessment 2025 to 2027
 maintained_by: Zee
 reviewed_by: Siew
 reviewed_on: null                 # set the date Siew signs off
+# Removed 2026-10-18 by Siew: IRAS e-Tax Guide "Tax Deductibility of Donations". Its copyright
+# notice requires IRAS's written permission before any part is stored in a retrieval system,
+# which indexing it would be. Nothing depended on it: the 250% rate is cited from
+# iras-donations-and-tax-deductions.md. Re-add only with that permission in writing.
 
 documents:
-- file: iras-etax-guide-tax-deductibility-of-donations.md
-  title: "IRAS e-Tax Guide: Tax Deductibility of Donations"
-  publisher: Inland Revenue Authority of Singapore
-  publisher_kind: regulator
-  url: https://www.iras.gov.sg/media/docs/default-source/e-tax/guidance-on-tax-deductible-donations.pdf?sfvrsn=d038d29d_26
-  published: 2026-01-30
-  retrieved: 2026-10-03
-  applies_to: Which contributions to an IPC or grant-maker are tax deductible donations, YA2025 onwards
-  review_by: 2027-10-03
-  reviewed_by: null
-  reviewed_on: null
-  note: >
-    Supplied by Zee as a PDF on 2026-10-03, because the session could not reach iras.gov.sg;
-    the URL was matched by title, not fetched. All 13 pages extracted verbatim, one page
-    marker each. The guide says donations get an enhanced deduction under section 37(3) ITA
-    but does not print the 250% rate, so that rate must not be cited from this source (iras-donations-and-tax-deductions.md prints it). Its
-    copyright notice forbids storing any part in a retrieval system without IRAS's written
-    permission; Siew to decide whether the private-repository research use is acceptable.
 - file: iras-individual-income-tax-rates.md
   title: "Individual Income Tax rates"
   publisher: Inland Revenue Authority of Singapore
@@ -37,7 +23,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of the `tax_rate` values. Every band of the YA2024-onwards resident table was checked: each cumulative gross tax payable equals the previous one plus that band's tax, so no digit was misread. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of the `tax_rate` values. Every band of the YA2024-onwards resident table was checked: each cumulative gross tax payable equals the previous one plus that band's tax, so no digit was misread. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-srs-contributions-and-tax-relief.md
   title: "SRS contributions and tax relief"
   publisher: Inland Revenue Authority of Singapore
@@ -50,7 +36,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of `srs_contribution_cap`. The caps ($15,300 for citizens and PRs, $35,700 for foreigners) were checked against the page image. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. Source of `srs_contribution_cap`. The caps ($15,300 for citizens and PRs, $35,700 for foreigners) were checked against the page image. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-cpf-cash-top-up-relief.md
   title: "Central Provident Fund (CPF) Cash Top-up Relief"
   publisher: Inland Revenue Authority of Singapore
@@ -63,7 +49,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-cpf-cash-top-up-relief-factsheet.md
   title: "CPF Cash Top-up Relief (factsheet)"
   publisher: Inland Revenue Authority of Singapore
@@ -76,7 +62,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    Supplied by Zee on 2026-10-03; a text PDF, so extracted verbatim, not by OCR.
+    Supplied by Zee on 2026-10-03; a text PDF, so extracted verbatim, not by OCR. Licence: an IRAS PDF that prints no copyright line, so the IRAS website Terms of Use apply; indexed for this private research prototype and not redistributed. Their wording is to be confirmed before sign-off.
 - file: iras-tax-reliefs.md
   title: "Tax reliefs"
   publisher: Inland Revenue Authority of Singapore
@@ -89,7 +75,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-personal-income-tax-rebate.md
   title: "Personal Income Tax Rebate"
   publisher: Inland Revenue Authority of Singapore
@@ -102,7 +88,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-donations-and-tax-deductions.md
   title: "Donations and tax deductions"
   publisher: Inland Revenue Authority of Singapore
@@ -115,7 +101,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. The print itself carries this URL and the date 3 October 2026. This page, not the e-Tax Guide, is where the 250% rate is printed.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. The print itself carries this URL and the date 3 October 2026. This page is where the 250% rate is printed. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-understanding-my-tax-assessment.md
   title: "Understanding my tax assessment"
   publisher: Inland Revenue Authority of Singapore
@@ -128,7 +114,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 - file: iras-basic-guide-for-new-individual-taxpayers.md
   title: "Basic guide for new individual taxpayers"
   publisher: Inland Revenue Authority of Singapore
@@ -141,7 +127,7 @@ documents:
   reviewed_by: null
   reviewed_on: null
   note: >
-    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it.
+    OCR (RapidOCR, run once outside the project's dependencies) of a browser print supplied by Zee on 2026-10-03, because the session could not reach iras.gov.sg. Site banner, breadcrumb noise, chat button and page counters cut; otherwise the OCR text as read, so expect small OCR slips in prose. URL matched by the page title; the print does not carry it. Licence: an IRAS web page, ©2026 Government of Singapore, under the IRAS website Terms of Use; indexed for this private research prototype and not redistributed. The Terms were not read at capture (iras.gov.sg was unreachable), so their wording is to be confirmed before sign-off.
 
 # Still to capture, if the pack is to answer on them: the individual relief pages (Parent
 # Relief, Course Fees Relief for YA2025, Earned Income Relief and the others the Tax reliefs
