@@ -346,9 +346,7 @@ def report_markdown(result: dict[str, Any]) -> str:
             lines += ["Not indexed:", ""]
             lines += [f"- `{d['path']}`: {d['status']} — {d['reason']}" for d in quarantined]
             lines += [""]
-    unregistered = [
-        f["path"] for f in result["manifest"]["files"] if f["role"] == "unregistered"
-    ]
+    unregistered = [f["path"] for f in result["manifest"]["files"] if f["role"] == "unregistered"]
     lines += [f"Unregistered specimens held out: {len(unregistered)}", ""]
     lines += ["Held out under the Set C protocol (`eval.setc` adds them to a copy):", ""]
     lines += [f"- `{path}`" for path in held] or ["- none"]
@@ -373,7 +371,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--replace", action="store_true", help="drop the vault if it exists")
     parser.add_argument("--dry-run", action="store_true", help="manifest and plan only")
     parser.add_argument(
-        "--include-unregistered", action="store_true",
+        "--include-unregistered",
+        action="store_true",
         help="explicitly ingest unregistered source specimens as well as scored documents",
     )
     parser.add_argument("--label", default="frozen-vault")
