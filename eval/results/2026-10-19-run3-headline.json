@@ -1,0 +1,221 @@
+{
+  "source": "2026-10-19-run3.json",
+  "headline": {
+    "held_back_from": "recorded",
+    "right_and_cited": {
+      "hits": 72,
+      "n": 93,
+      "rate": 0.7742
+    },
+    "not_right": [
+      "a-gen-b1-0024-total_contributions-printed",
+      "a-gen-b1-0027-statement_year-printed",
+      "a-gen-b1-0030-payment_due_date-printed",
+      "a-gen-b1-0023-total_contributions-spoken",
+      "a-gen-b2-0010-principal-printed",
+      "a-gen-b2-0011-lender-printed",
+      "a-gen-b2-0011-principal-printed",
+      "a-gen-b2-0012-date_of_birth-spoken",
+      "a-gen-b2-0013-date_of_birth-spoken",
+      "a-b05",
+      "a-b08",
+      "a-b21",
+      "a-b22",
+      "a-b23",
+      "a-d02",
+      "a-d05",
+      "a-d08",
+      "a-gen-b1-0004-expiry_date-printed",
+      "a-gen-b1-0007-policy_no-spoken",
+      "a-gen-b1-0010-life_assured-printed",
+      "a-gen-b1-0011-sum_assured-spoken"
+    ],
+    "unsupported_claims": {
+      "hits": 25,
+      "n": 118,
+      "rate": 0.2119
+    },
+    "claims": [
+      {
+        "id": "a-gen-b1-0024-total_contributions-printed",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-gen-b1-0027-statement_year-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0010-principal-printed",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0011-principal-printed",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0012-date_of_birth-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b2-0013-date_of_birth-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-b21",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-b22",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-b23",
+        "reasons": [
+          "false_absence"
+        ]
+      },
+      {
+        "id": "a-d05",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-d08",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b1-0004-expiry_date-printed",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "a-gen-b1-0011-sum_assured-spoken",
+        "reasons": [
+          "wrong_value"
+        ]
+      },
+      {
+        "id": "b-b04",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b06",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b08",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b12",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b14",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b16",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b17",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b18",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b21",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b22",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-b25",
+        "reasons": [
+          "claimed"
+        ]
+      },
+      {
+        "id": "b-d02",
+        "reasons": [
+          "claimed"
+        ]
+      }
+    ],
+    "over_caution": {
+      "hits": 6,
+      "n": 93,
+      "rate": 0.0645
+    },
+    "over_cautious": [
+      "a-gen-b1-0024-total_contributions-printed",
+      "a-gen-b1-0030-payment_due_date-printed",
+      "a-gen-b2-0010-principal-printed",
+      "a-gen-b2-0011-principal-printed",
+      "a-d02",
+      "a-gen-b1-0007-policy_no-spoken"
+    ],
+    "retrieval_miss": [
+      "a-b21",
+      "a-b23"
+    ],
+    "casual": {
+      "hits": 8,
+      "n": 10,
+      "rate": 0.8
+    },
+    "formal": {
+      "hits": 64,
+      "n": 83,
+      "rate": 0.7711
+    },
+    "casual_gap": -0.0289,
+    "extraction_f1": 0.9487,
+    "not_in_sets": []
+  }
+}
