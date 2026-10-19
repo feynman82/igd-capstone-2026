@@ -111,6 +111,11 @@ _RELATION_WORDS: dict[str, str] = {
         ),
         "grandparent",
     ),
+    # A sibling, which `people.relation` cannot record either, so the same abstention follows
+    # unless somebody is recorded under the word itself. Before this "brother" was only a
+    # someone-else word: "when does my brother's car insurance expire?" was left unscoped,
+    # answered from the whole vault, and on 19 October gave the owner's own car policy (#48).
+    **dict.fromkeys(("brother", "brothers", "sister", "sisters", "sibling", "siblings"), "sibling"),
     # People who work for a household rather than belong to it. No relation matches them, so a
     # question about "my maid's hospital bills" says Parrot does not know who that is rather than
     # answering from the owner's own hospital plan — which it did, on 13 September.
@@ -173,6 +178,11 @@ class Scoped:
     """The relationship word asked about when nobody in the household holds that relation — "son"
     in "my son's life insurance" when no child is recorded. The graph abstains on it rather than
     answering from the owner's documents."""
+
+    stranger: str | None = None
+    """A full name written possessively that shares a word with a household member's name but is
+    not theirs — "Sarah Tan Li Ling's" beside Tan Mei Ling. Somebody outside the household; the
+    graph abstains on it rather than answering from the member's documents."""
 
     someone_else: bool = False
     """Scoped to a household member the question named — "when does Rachel's policy renew?" —
@@ -270,6 +280,87 @@ def named_in(question: str, people: Sequence[Person]) -> list[Person]:
         if whole or possessive:
             named.append(person)
     return named
+
+
+# Words that start a question with a capital and are not part of the name after them: "Does
+# Rachel's cover include dengue?" is about Rachel, not somebody called "Does Rachel".
+_LEADING_WORDS = frozenset(
+    [
+        "what",
+        "when",
+        "where",
+        "who",
+        "whose",
+        "which",
+        "how",
+        "why",
+        "does",
+        "do",
+        "did",
+        "is",
+        "are",
+        "was",
+        "were",
+        "can",
+        "could",
+        "will",
+        "would",
+        "should",
+        "shall",
+        "may",
+        "might",
+        "has",
+        "have",
+        "had",
+        "show",
+        "tell",
+        "list",
+        "give",
+        "find",
+        "please",
+        "and",
+        "but",
+        "or",
+        "if",
+    ]
+)
+
+# A run of two or more capitalised words written possessively: a full name, "Sarah Tan Li Ling's".
+_POSSESSIVE_NAME = re.compile(r"(?<![\w'])((?:[A-Z][\w-]*\s+)+[A-Z][\w-]*)" + _POSSESSIVE)
+
+
+def stranger_named(question: str, people: Sequence[Person]) -> str | None:
+    """A full name the question writes possessively that is nobody in the household, though it
+    shares a word with somebody's name — or `None`.
+
+    `named_in` lets one exclusive name word, written possessively, name its person: "Rachel's" is
+    Rachel. That is also how "What is Sarah Tan Li Ling's insurance premium?" named Tan Mei Ling,
+    whose own "Ling" is nobody else's, and on 19 October it was answered with her premium. A
+    longer name is read whole: when its words are not all one person's, it is somebody else.
+
+    Only a near miss counts. A possessive name with no household word in it — "Meridian
+    Assurance's hotline" — is left alone: a company reads exactly like a person here, and nothing
+    in the household is being mistaken for it.
+    """
+    whose_word = _name_word_owners(people)
+    known = {" ".join(name.lower().split()) for person in people for name in _names(person)}
+    own = {
+        person.id: {word for name in _names(person) for word in _NAME_WORD.findall(name.lower())}
+        for person in people
+    }
+    for match in _POSSESSIVE_NAME.finditer(question):
+        parts = match.group(1).split()
+        while parts and parts[0].lower() in _LEADING_WORDS:
+            parts = parts[1:]
+        phrase = " ".join(parts)
+        if not phrase or phrase.lower() in known:
+            continue
+        words = set(_NAME_WORD.findall(phrase.lower()))
+        touched = {pid for word in words for pid in whose_word.get(word, set())}
+        if not touched or any(words <= own[pid] for pid in touched):
+            continue  # no household word in it, or every word is one member's
+        return phrase
+    return None
 
 
 # One statement, parameterised, per rule 1. Which people the documents behind a set of passages
@@ -371,6 +462,7 @@ class Subject:
     name: str
     about: str | None = None
     unknown_relation: str | None = None
+    stranger: str | None = None
     no_owner: bool = False
     someone_else: bool = False
     """Scoped to a household member the question named who is not the person asking — "is
@@ -418,6 +510,7 @@ class _Decision:
     name: str = ""
     about: str | None = None
     unknown_relation: str | None = None
+    stranger: str | None = None
     someone_else: bool = False
     fallthrough: Literal["none", "named_other", "someone_else", "impersonal"] = "none"
     relation_ambiguous: bool = False
@@ -471,6 +564,10 @@ def _decide(conn: Any, question: str) -> _Decision:
             # cannot honestly pick between, say, a father and a mother.
             relation_ambiguous=len(members) > 1,
         )
+
+    stranger = stranger_named(question, roster)
+    if stranger is not None:
+        return _Decision(owner=owner, stranger=stranger)
 
     # A question that names one person is theirs, "my" or not. The owner naming themselves —
     # "what is Marcus's premium?" — is the owner's; anybody else is scoped only when the
@@ -568,6 +665,8 @@ class HouseholdScope:
             return Scoped(passages, None)
         if decision.unknown_relation is not None:
             return Scoped(passages, None, unknown_relation=decision.unknown_relation)
+        if decision.stranger is not None:
+            return Scoped(passages, None, stranger=decision.stranger)
         if decision.fallthrough != "none":
             return Scoped(passages, None)
         return scope_to(
@@ -607,6 +706,8 @@ class HouseholdScope:
             return Subject(
                 person_ids=frozenset(), name="", unknown_relation=decision.unknown_relation
             )
+        if decision.stranger is not None:
+            return Subject(person_ids=frozenset(), name="", stranger=decision.stranger)
         if decision.relation_ambiguous or decision.fallthrough in ("named_other", "someone_else"):
             return Subject(person_ids=frozenset(), name="", ambiguous=True)
         if decision.fallthrough == "impersonal" and _names_a_member_impersonally(

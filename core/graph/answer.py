@@ -725,6 +725,22 @@ def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> Instal
     return next((p for p in packs if best.doc_type in p.manifest.answering.documents), None)
 
 
+def _stranger(name: str, disclaimer: str = "") -> Abstained:
+    """ "Who is Sarah Tan Li Ling?" A name that is nobody in the household, though it is close to
+    somebody's: answering would mean answering from that somebody's documents."""
+    return Abstained(
+        f"Parrot does not know who {name} is",
+        (
+            f"No one in your household is called {name}. If they should be, add them on the "
+            "Household page and their documents will answer questions about them."
+        ),
+        0,
+        0,
+        None,
+        disclaimer,
+    )
+
+
 def _unknown_relation(word: str, disclaimer: str = "") -> Abstained:
     """One wording for "who is your son?", shared by explaining and advising so they cannot drift.
     Advice signs it with the pack's advice disclaimer; an explanation leaves it unsigned, as it
@@ -1381,6 +1397,9 @@ class AnswerGraph:
         if subject.unknown_relation:
             yield _unknown_relation(subject.unknown_relation, disclaimer)
             return
+        if subject.stranger:
+            yield _stranger(subject.stranger, disclaimer)
+            return
         if subject.ambiguous or len(subject.person_ids) != 1:
             # A calculator adds up one person's documents. Two people's documents against one
             # person's guideline is a sum nobody could check, so the question is asked back. The
@@ -1646,6 +1665,9 @@ class AnswerGraph:
         scoped = final.get("scoped")
         if scoped is not None and scoped.unknown_relation:
             yield _unknown_relation(scoped.unknown_relation)
+            return
+        if scoped is not None and scoped.stranger:
+            yield _stranger(scoped.stranger)
             return
         person = scoped.person_name if scoped is not None and scoped.scoped else None
 

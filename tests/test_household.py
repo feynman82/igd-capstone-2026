@@ -409,6 +409,68 @@ def test_a_name_that_is_not_exactly_one_person_scopes_nothing(
     assert scoped.passages == EVERYONES
 
 
+TAN = household.Person(4, "Tan Mei Ling", "other", False, True, ("Tan Mei Ling",))
+
+
+def test_a_sibling_nobody_holds_is_an_unknown_relation_not_the_owners_policy(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """19 October, Set C c-c08: "my brother's car insurance" was a someone-else word only, so it
+    was answered from the whole vault — the owner's own car policy (#48)."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER)
+
+    for word in ("brother", "sister"):
+        scoped = scope.apply(f"when does my {word}'s car insurance expire?", EVERYONES)
+        assert scoped.unknown_relation == word
+        assert not scoped.scoped
+
+
+def test_a_full_name_close_to_a_members_is_a_stranger_not_that_member(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """19 October, Set C c-c07: "Ling's" is Tan Mei Ling's own name word, so "What is Sarah Tan Li
+    Ling's insurance premium?" named her and was answered with her premium."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER, TAN)
+
+    scoped = scope.apply("What is Sarah Tan Li Ling's insurance premium?", EVERYONES)
+
+    assert scoped.stranger == "Sarah Tan Li Ling"
+    assert not scoped.scoped
+
+
+@pytest.mark.parametrize(
+    ("question", "who"),
+    [
+        ("What is Tan Mei Ling's identity card number?", "Tan Mei Ling"),
+        ("Does Rachel's cover include dengue?", "Rachel Ng Hui Shan"),  # "Does" starts it
+        ("When is Lim Ah Kow's plan due?", "Lim Ah Kow"),
+        # Part of her name is not a stranger. It names nobody either, as before: "Ng" is too
+        # short to name anyone and "Rachel" is not the possessive word.
+        ("What is Rachel Ng's premium?", None),
+    ],
+)
+def test_a_members_own_name_written_possessively_is_still_them(
+    monkeypatch: pytest.MonkeyPatch, question: str, who: str | None
+) -> None:
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER, TAN)
+
+    scoped = scope.apply(question, EVERYONES)
+
+    assert scoped.stranger is None
+    assert scoped.person_name == who
+
+
+def test_a_possessive_name_with_no_household_word_is_left_alone(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A company reads exactly like a person here; nobody in the household is being mistaken."""
+    scope = _household_scope(monkeypatch, MARCUS, RACHEL, FATHER, TAN)
+
+    scoped = scope.apply("What is Meridian Assurance's hotline?", EVERYONES)
+
+    assert scoped.stranger is None
+
+
 def test_a_person_nobody_has_confirmed_is_not_named(monkeypatch: pytest.MonkeyPatch) -> None:
     """A model proposal is a question on Today, not a member yet — the same rule relations obey."""
     unconfirmed = household.Person(2, "Rachel Ng Hui Shan", "partner", False, False, ())
