@@ -117,9 +117,15 @@ def test_every_register_row_belongs_to_exactly_one_lane() -> None:
     assert rows, "the register is the ground truth; a run without it proves nothing"
     unclaimed = [row["doc_id"] for row in rows if lane_of(row) is None]
     assert not unclaimed, f"no lane claims {unclaimed}"
-    # A photographed claim letter is Desmond's; a photographed identity card is not.
-    photo_claim = next(r for r in rows if r["doc_type"] == "claim_letter" and r["tier"] == "photo")
-    assert lane_of(photo_claim) == "corpus"
+    # A scanned or photographed receipt or statement is Desmond's; a photographed identity card
+    # is not.
+    degraded = next(
+        r
+        for r in rows
+        if r["tier"] in ("scanned", "photo")
+        and r["doc_type"] not in ("identity_card", "passport", "birth_certificate")
+    )
+    assert lane_of(degraded) == "corpus"
     assert lane_of(next(r for r in rows if r["doc_type"] == "identity_card")) == "integration"
 
 
