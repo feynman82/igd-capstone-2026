@@ -40,7 +40,7 @@ jobs:
       - name: Verify pgvector and Redis
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector;"
-          python -c 'import redis; assert redis.Redis.from_url("redis://127.0.0.1:6379/0").ping()'
+          uv run python -c 'import redis; assert redis.Redis.from_url("redis://127.0.0.1:6379/0").ping()'
       - name: Verify frozen manifest and household without writes
         run: |
           mkdir -p "$RUNNER_TEMP/run3-cpu-preflight"
