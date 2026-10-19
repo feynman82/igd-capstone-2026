@@ -111,9 +111,14 @@ def corpus_files(commit: str, root: Path = ROOT) -> list[Entry]:
         entries.append(Entry(path, hashlib.sha256(payload).hexdigest(), len(payload), role(path)))
     registered = {row["doc_id"] for row in register_rows(commit, root)}
     return [
-        Entry(e.path, e.sha256, e.size,
-              "set_c" if e.role == "set_c" else
-              ("vault" if Path(e.path).stem in registered else "unregistered"))
+        Entry(
+            e.path,
+            e.sha256,
+            e.size,
+            "set_c"
+            if e.role == "set_c"
+            else ("vault" if Path(e.path).stem in registered else "unregistered"),
+        )
         for e in entries
     ]
 
@@ -385,8 +390,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         entries = corpus_files(commit)
         if args.include_unregistered:
             entries = [
-                Entry(e.path, e.sha256, e.size,
-                      "vault" if e.role == "unregistered" else e.role)
+                Entry(
+                    e.path,
+                    e.sha256,
+                    e.size,
+                    "vault" if e.role == "unregistered" else e.role,
+                )
                 for e in entries
             ]
         if not entries:
