@@ -72,6 +72,27 @@ repository. Humans should read it too — it is the shortest description of how 
 - Tests use the register in `corpus/register/` and the batches it describes, never live documents.
 - One vertical slice per PR. A PR should be demoable, not a layer.
 
+## The corpus household
+
+The synthetic corpus describes **one family, five people, and no one else** — the Lim
+household in Tampines. `corpus/canon.md` is the full record; this is what to keep in your head.
+
+| Person | Relation to Marcus (the owner) | Born |
+|---|---|---|
+| Marcus Lim Jun Wei | self, the owner | 1987-05-08 |
+| Rachel Ng Hui Shan | wife | 1989-02-17 |
+| Lucas Lim Kai En | son | 2019-06-14 |
+| Lim Ah Kow | father | 1958-10-12 |
+| Tan Mei Ling | mother | 1961-04-25 |
+
+- Rachel and Tan Mei Ling married in and kept their own surnames. A different surname is not a
+  different household.
+- **Anyone else is not in the corpus.** A synthetic document about another person, or one that
+  names another person as a family member (a different spouse, child or parent), is deleted, not
+  registered. Organisation staff who sign a letter are not people in this sense.
+- The real-document holdout is not the corpus. It is about team members, lives outside the
+  repository, and never enters `corpus/` or `inbox/`.
+
 ## Definition of done
 
 - [ ] `make check` passes (ruff, mypy, pytest, and the generated-files-in-sync gate)

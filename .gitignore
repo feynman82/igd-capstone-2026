@@ -10,16 +10,22 @@ web/.next/
 
 # inbox/ IS committed, so the team shares the same drop of synthetic specimens (PDFs, ID-card
 # and certificate images). Like corpus/batches/, everything in it is invented canon and carries
-# a SYNTHETIC marking. A real document never goes here: it goes to corpus/holdout/ below.
+# a SYNTHETIC marking. A real document never goes here, nor anywhere in this repository: the
+# holdout lives in ~/holdout on the integration machine (docs/governance/consent-and-redaction.md §6).
 
 # corpus/batches/ IS committed. Synthetic batches travel through git so Lane E can hand a
 # batch over by pushing it, rather than by a USB stick at the weekly session. Everything in
 # it is generated from an invented canon and carries a SYNTHETIC DOCUMENT footer.
 #
-# corpus/holdout/ is NOT, and must never be. It is 40 *real* documents from team members,
-# redacted under the consent protocol in docs/governance/. Committing one is not recoverable
-# by deleting it — git keeps it. See NOTICE.md.
+# The holdout is 40 *real* documents from team members, redacted under the consent protocol in
+# docs/governance/. It lives OUTSIDE the repository, in ~/holdout (eval/holdout.py refuses a
+# folder inside it). corpus/holdout/ stays ignored as a second lock. Committing one is not
+# recoverable by deleting it — git keeps it. See NOTICE.md.
 corpus/holdout/
+
+# temp/ is a personal scratch folder for documents on their way somewhere else. Real documents
+# were committed from it once (2026-10-19), so it is never tracked.
+temp/
 
 # Celery beat's record of when it last ran each sweep. Local state, not a decision.
 var/

@@ -1,12 +1,13 @@
 # Consent and redaction protocol: the real-document holdout
 
-Status: draft · **Siew's decisions taken 2026-10-17: exclusions (§3) and deletion date (§8)** · Owner: Siew, with Desmond (collection) · Reviewers: Desmond
+Status: **approved 2026-10-19, by Christian on behalf of Siew** · Siew's decisions taken 2026-10-17: exclusions (§3) and deletion date (§8) · Owner: Siew, with Desmond (collection) · Reviewers: Desmond
 (it must be workable), Christian (technical accuracy) · Evidence read on `main` at `eb9fc20`
 (2026-10-17)
 
 > **This protocol must be approved before a single real document is collected**
 > (`team/siew/README.md`, artefact 2). Collection is Desmond's task "Collect and redact the
-> holdout corpus", due 2026-10-20 (`docs/team-tasks.csv`).
+> holdout corpus", due 2026-10-20 (`docs/team-tasks.csv`). **Approved 2026-10-19**, so collection
+> may begin.
 >
 > Every claim points at a file. Anything that could not be traced is marked **unverified**.
 > Statements about the PDPA are marked **to confirm against the Act**. The environment this was
@@ -36,7 +37,7 @@ So it needs a lawful basis before collection, not after.
 | R4 | Redact before the document reaches any machine but the contributor's own (§5) | Only redacted copies ever exist in the project |
 | R5 | Hand over **page images, not PDFs** | A redaction box drawn on a PDF can leave the text readable underneath (§5.3) |
 | R6 | File names and ids are neutral codes: `H01.png` … `H40.png`, contributor `C1` … `C5` | The results file records each file name and is committed (§7) |
-| R7 | The holdout lives **outside the repository**, on the integration machine only | `eval/holdout.py` refuses any folder inside the repository, and `corpus/holdout/README.md` names the integration machine |
+| R7 | The holdout lives **outside the repository**, in `~/holdout` on the integration machine only | `eval/holdout.py` refuses any folder inside the repository, and `corpus/holdout/README.md` names the integration machine |
 | R8 | Nothing about a holdout document is committed except aggregate scores and coded ids | `.gitignore` (`corpus/holdout/`); `NOTICE.md` |
 | R9 | Used once, for scoring, never for tuning; deleted on the date in §8 | Purpose limitation and retention (**to confirm against the Act**) |
 | R10 | A contributor may withdraw at any time (§4.3) | **To confirm against the Act:** withdrawal of consent |
@@ -147,6 +148,10 @@ holdout, not a defect.
    black out the fields in §5.1 with **solid, opaque boxes** in an image editor.
 3. **Hand over the images** (`H07-p1.png`, `H07-p2.png`, or one multi-page file). Never hand
    over the PDF.
+4. **A contributor may choose to have an AI assistant redact their own documents.** It is their
+   data and their choice, recorded in their consent record. It means the unredacted content is
+   processed by that assistant's provider, so the contributor, not the team, makes that call, and
+   only for their own documents. The checks in §5.4 still apply to what comes out.
 
 Why images: a PDF often carries a text layer under the picture of the page. A box drawn over
 it hides the text from the eye but not from a reader, and **Docling, which PARROT uses to
@@ -170,13 +175,13 @@ If any check fails and cannot be fixed, the document is left out.
 
 | | Rule | Evidence |
 |---|---|---|
-| **Where** | One folder on the integration machine, **outside the repository**. | `corpus/holdout/README.md` (integration machine); `eval/holdout.py` (`check_outside_the_repository`) |
+| **Where** | `~/holdout` on the integration machine (Christian's workstation), **outside the repository**. | `corpus/holdout/README.md` (integration machine); `eval/holdout.py` (`check_outside_the_repository`) |
 | **Never** | In `inbox/`, which is watched and committed; in `corpus/`; on a shared drive; in chat or email attachments after handover. | `.gitignore` (`inbox/` is committed); `eval/holdout.py` docstring |
 | **Who** | Desmond (collects and registers) and whoever runs `eval.holdout` (Yew Mun). No one else needs to open the files. | `docs/team-tasks.csv` |
 | **Register** | `register.csv`, beside the documents and outside the repository. Built from the generated template (`corpus/register/batch.template.csv`); `doc_id` = the coded id; only visible values filled (§5.2). | `eval/holdout.py` (`--register`); `eval/sets_io.py` (`read_register`) |
 | **Holdout log** | A short note **in the same folder**: coded ids, document type, contributor code (`C1`…), date received, withdrawn or deleted. Names live only in the consent records. | — |
 
-### A contradiction in the repository, to fix
+### A contradiction in the repository — resolved 2026-10-19
 
 `.gitignore` says a real document *"goes to corpus/holdout/"*, and `NOTICE.md` describes that
 folder as where the holdout is kept. But `eval/holdout.py` refuses any holdout folder **inside
@@ -185,6 +190,10 @@ the development vault has seen is no longer a holdout."* `corpus/holdout/` is in
 repository, so this protocol follows the code (R7). The `.gitignore` comment, `NOTICE.md` and
 `corpus/holdout/README.md` should be brought into line (Christian, Desmond). The gitignore rule
 itself should stay as a second lock.
+
+**Resolved 2026-10-19:** `.gitignore` and `NOTICE.md` now say the holdout lives in `~/holdout`,
+outside the repository, and `temp/` is ignored too. `corpus/holdout/README.md` is still to be
+brought into line.
 
 ## 7. The run, and what may be committed
 
@@ -244,9 +253,10 @@ cites them.
 2. ~~**Siew:** decide the deletion date in §8.~~ **Decided 2026-10-17: by 31 December 2026.**
 3. **Desmond:** is images-not-PDFs (§5.3) workable for each contributor, and is the 2026-10-20
    collection date still realistic with consent first?
-4. **Christian:** which machine is the integration machine, and confirm that `eval.holdout`
-   will be run there with `--documents` outside the repository. Also bring `.gitignore`,
-   `NOTICE.md` and `corpus/holdout/README.md` into line with `eval/holdout.py` (§6).
+4. ~~**Christian:** which machine is the integration machine, and confirm that `eval.holdout`
+   will be run there with `--documents` outside the repository.~~ **Answered 2026-10-19:**
+   Christian's workstation, `--documents ~/holdout`. `.gitignore` and `NOTICE.md` are in line;
+   `corpus/holdout/README.md` is not yet (§6).
 5. **Yew Mun:** if retrieval questions are run on the holdout, their results file holds answer
    text (§7). Agree that it is written outside the repository.
 6. **unverified:** whether a policy or account number alone is personal data (§5.1). Redacting
