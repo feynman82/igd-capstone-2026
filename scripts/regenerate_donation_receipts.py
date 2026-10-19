@@ -6,6 +6,7 @@ Run from repository root:
 Requires jinja2 and a local Chromium/Chrome executable.
 This does not touch the development vault.
 """
+
 import csv
 import os
 import shutil
