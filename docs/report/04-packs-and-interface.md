@@ -12,7 +12,7 @@ It is the W10 task's chapter of about three pages, with the expansion model and 
 > for §4 after the freeze, so every fact below is tied to a file and should be re-checked then.
 > Facts that can still move:
 >
-> - the tax pack's review state;
+> - whether the tax corpus is indexed and its two rule values approved;
 > - the usability test of Ask, which has not happened yet;
 > - the surface list.
 >
@@ -93,7 +93,7 @@ hunting that bug, because it could not occur.
 | | Insurance and Coverage | Tax and Reliefs |
 |---|---|---|
 | Documents it speaks for | 5: schedule, renewal, claim, illustration, anniversary statement | 7: payslip, donation receipt, CPF, SRS, Notice of Assessment, CPF top-up, course fee |
-| Grounding | 20 MoneySense, MOH, CPF Board and LIA sources, reviewed 17 Sep | 10 IRAS sources for YA2025–2027, **not yet reviewed** |
+| Grounding | 20 MoneySense, MOH, CPF Board and LIA sources, reviewed 17 Sep | 9 IRAS sources for YA2025–2027, reviewed 18 Oct |
 | Values its calculators read | Protection multiples, MediShield Life premiums, DPS sums assured | SRS contribution cap, resident tax-rate bands |
 | Advice | Death/TPD and critical-illness gaps, and one coverage review | SRS room left, estimated SRS tax saving, and one "reduce my tax" review |
 | What it explains but does not calculate | — | Donations (250%), CPF top-ups: contract changes proposed in `packs/iras_tax/CONTRACT_REQUESTS.md` |
@@ -102,8 +102,16 @@ hunting that bug, because it could not occur.
 and no core code. Its new document types went through the core catalogue, as ADR 0017 requires.
 That is the "same core, two domains" claim, in the form the demonstration can show.
 
-**The honest qualifier for §4.1.** Until its sources are signed off, the tax pack advises from
-the household's documents but cites no IRAS page.
+**The review did its job.** Siew signed off the nine IRAS sources on 18 October, after confirming
+each URL and recording the copyright basis they are kept on
+(`docs/governance/grounding-sources-basis.md`). She removed a tenth, an e-Tax Guide whose notice
+forbids storing it in a retrieval system. Nothing depended on it: the 250% donation rate is
+cited from the IRAS donations page instead. A source left the corpus because of a rule, not a
+judgement call, which is the point of gating citation on review.
+
+**The honest qualifier for §4.1.** Until the corpus is indexed on the integration machine and
+the SRS cap and tax-rate values are approved, the tax pack cites no IRAS page and calculates
+nothing.
 
 ## 5 · The catalogue as the expansion model's evidence
 
@@ -158,6 +166,7 @@ sessions and people.
 - **That the interface is easy to use.** It has not been tested with anyone outside the team. The
   "Usability-test the Ask surface with two people who did not build it" task is not started.
   §4.4 should say so, or carry its result once it exists.
-- **That the tax pack cites IRAS today.** See §4: its sources are awaiting review.
+- **That the tax pack cites IRAS today.** See §4: its sources are reviewed, but the corpus is
+  not yet indexed and its two rule values are not yet approved.
 - **That any catalogue pack works.** "Specified" means named and checked against the contract.
   It does not mean built.
