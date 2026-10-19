@@ -71,6 +71,7 @@ from core.graph.gate import (
 )
 from core.graph.inventory import Holding, Inventory
 from core.graph.knowledge import categories_asked, glossary, mentions, reworded
+from core.graph.labels import label_supports, labelled_lines
 from core.graph.period import asked_period, outside
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
@@ -978,6 +979,7 @@ class AnswerGraph:
         consents: ConsentBook | None = None,
         advice_log: AdviceLog | None = None,
         calendar: HouseholdCalendar | None = None,
+        label_check: bool = False,
     ) -> None:
         self._today = today  # fixed for tests and the demonstration; otherwise the real date
         # The three advice ports (ADR 0016), injected because `core/` never imports the modules
@@ -1005,6 +1007,9 @@ class AnswerGraph:
         # The household calendar (ADR 0020). `None` is a caller with no connection, and then a
         # calendar question is just a question: searched, and most likely abstained on.
         self._calendar = calendar
+        # ADR 0021, proposed: a stated value checked against the label printed beside it, by one
+        # more call per sentence. Off until Sets A and B say it costs nothing it should not.
+        self._label_check = label_check
         self._graph = self._build()
 
     def _packs(self) -> tuple[InstalledPack, ...]:
@@ -1760,6 +1765,12 @@ class AnswerGraph:
                         )
                     ):
                         why = f"cites no document from {when}"
+                    if why is None and self._label_check:
+                        printed = labelled_lines(
+                            claim.text, [by_ref[ref] for ref in claim.supports]
+                        )
+                        if printed and not label_supports(self._client, claim.text, printed):
+                            why = f"the printed label does not say that: {printed}"
                     if why is not None:
                         if why != "empty":
                             dropped += 1

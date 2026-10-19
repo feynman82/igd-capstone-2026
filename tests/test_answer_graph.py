@@ -858,6 +858,74 @@ def test_a_question_naming_no_period_is_not_checked_against_one() -> None:
     ]
 
 
+LABELLED = [
+    Passage(
+        chunk_id=31,
+        document_id=DOC,
+        page=1,
+        text="Name of Insured: Lee Wen Hui\nAnnual Premium: SGD 1,560.00",
+        score=0.81,
+        document_name="schedule.pdf",
+        pack_id="insurance_agent",
+        doc_type="policy_schedule",
+    )
+]
+
+
+def _label_graph(*replies: dict[str, Any], label_check: bool) -> tuple[AnswerGraph, ScriptedOllama]:
+    client = ScriptedOllama({"intent": "explain"}, *replies)
+    graph = AnswerGraph(
+        client, FixedRetriever(LABELLED), PassThroughReranker(), label_check=label_check
+    )
+    return graph, client
+
+
+def _said(got: list[Any]) -> list[str]:
+    return [event.text for event in got if isinstance(event, Sentence)]
+
+
+DRIVER = {"sentences": [{"text": "The named driver is Lee Wen Hui.", "supports": [1]}]}
+
+
+def test_with_the_label_check_off_nothing_more_is_asked() -> None:
+    graph, client = _label_graph(DRIVER, label_check=False)
+
+    assert _said(list(graph.stream("who is the named driver?"))) == [
+        "The named driver is Lee Wen Hui."
+    ]
+    assert not any("The document prints:" in prompt for prompt in client.prompts), "no judge call"
+
+
+def test_a_value_its_printed_label_does_not_support_is_dropped() -> None:
+    """ADR 0021: `Name of Insured` is printed beside the name; the sentence calls it the named
+    driver."""
+    graph, client = _label_graph(DRIVER, {"supported": False}, label_check=True)
+
+    got = list(graph.stream("who is the named driver?"))
+
+    assert _said(got) == []
+    assert "Name of Insured: Lee Wen Hui" in client.prompts[-1]
+
+
+def test_a_value_its_printed_label_supports_is_kept() -> None:
+    reply = {"sentences": [{"text": "You pay SGD 1,560.00 a year.", "supports": [1]}]}
+    graph, _ = _label_graph(reply, {"supported": True}, label_check=True)
+
+    assert _said(list(graph.stream("how much do i pay a year?"))) == [
+        "You pay SGD 1,560.00 a year."
+    ]
+
+
+def test_a_sentence_repeating_no_labelled_value_is_not_checked() -> None:
+    reply = {"sentences": [{"text": "The schedule names one insured person.", "supports": [1]}]}
+    graph, client = _label_graph(reply, label_check=True)
+
+    assert _said(list(graph.stream("how many people are insured?"))) == [
+        "The schedule names one insured person."
+    ]
+    assert not any("The document prints:" in prompt for prompt in client.prompts)
+
+
 def test_passages_from_a_policy_of_another_kind_are_not_read() -> None:
     car_id, hospital_id = uuid4(), uuid4()
     held = [
