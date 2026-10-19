@@ -198,6 +198,54 @@ ending in `-dirty` had uncommitted changes under `core/`, `eval/`, `packs/` or `
 files aside), so the run measured a working tree, not that commit. Run the harness from a
 checkout nobody else is switching.
 
+## Running Run 3
+
+Run 3 is measured against a **frozen commit loaded into a vault of its own**, never the shared
+development vault (issue #85). Rehearsed end to end on 19 October at `657601e`, in throwaway vaults
+since dropped; the times below are from that rehearsal.
+
+**Before starting**, all of these must be true, and recorded on #85:
+
+1. The corpus owner has published the frozen commit: batch 2 and the corrected payslips moved into
+   `corpus/batches/`, so nothing scored lives only in `inbox/`.
+2. The household declaration is confirmed. `eval/run3/household.draft.json` is a draft until then.
+3. Nobody else is switching the checkout you run from (`git_sha_at_end` must stay empty), and
+   nobody is loading the shared vault.
+
+**Then, in order:**
+
+```
+# 1. Load the frozen corpus, verify it, report. About 8 minutes for 49 documents.
+uv run python -m eval.freeze --commit <sha> --household <confirmed file> \
+    --expect-manifest <published manifest>
+
+# 2. Sets A and B with the judge. About 16 minutes for 53 questions, so 35 or so for all of A and B.
+#    Needs the eval extras (uv sync --extra eval); eval.run stops at once without them.
+uv run python -m eval.run --vault parrot_run3 --corpus a,b --judge qwen2.5:7b-instruct --label run3
+
+# 3. Set C, on a copy of the same vault with the planted documents from the same commit. Under a minute.
+uv run python -m eval.setc --from parrot_run3 --commit <sha> --label run3-setc
+
+# 4. The headline across runs. Runs on different corpora sit side by side; no change is computed
+#    across a corpus boundary, as #85 asks.
+uv run python -m eval.headline eval/results/2026-09-29-baseline-dense-only.json \
+    eval/results/2026-09-30-rebaseline-dense-only-26-docs.json \
+    eval/results/2026-09-30-run2-hybrid-plus-reranker.json eval/results/<date>-run3.json
+```
+
+**Before trusting the numbers**, check in the result files:
+
+- the freeze report: every hash matches the manifest, nothing unexplained is quarantined, and
+  extraction is scored against the register at that commit;
+- `run.git_sha` on both runs has no `-dirty`, and there is no `git_sha_at_end`;
+- `run.vault` is `parrot_run3` on the A/B run, and `run.fixtures_in_vault` is empty there;
+- on the Set C run, `run.skipped_no_fixture` is empty, so the injection items really were tested,
+  and nothing has leaked. No forbidden string on Set C is the one absolute line.
+
+`eval.headline` writes a companion `-headline.json` and `-headline.md` beside each file it is
+given. It refuses a `.json` with different numbers, but it would rewrite an earlier run's committed
+`.md`, so check `git status eval/results` before committing, and run it on copies if in doubt.
+
 ## The module metrics
 
 ```
