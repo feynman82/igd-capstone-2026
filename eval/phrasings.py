@@ -319,6 +319,8 @@ LANES: dict[str, LaneSpec] = {
             "srs_statement",
             "notice_of_assessment",
             "donation_receipt",
+            "cpf_topup_receipt",
+            "course_fee_receipt",
         ),
     ),
 }
