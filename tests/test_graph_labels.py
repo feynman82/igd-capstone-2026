@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from core.graph.labels import SCHEMA, label_supports, labelled_lines
 from core.graph.ports import Passage
-from core.runtime.ollama import Generated
+from core.runtime.ollama import Generated, ModelUnavailable
 
 SCHEDULE = (
     "1. POLICY SCHEDULE\n"
@@ -82,3 +82,28 @@ def test_the_examples_come_from_no_document_parrot_holds() -> None:
     examples = judge.prompts[0].split("The document prints:")[0]
     for word in ("Marcus", "Meridian", "road tax", "named driver", "SLK"):
         assert word.lower() not in examples.lower()
+
+
+def test_a_value_the_question_names_is_a_reference_not_an_answer() -> None:
+    """19 October: "The lender on facility HP-2021-448190 is Crescent Bank Limited" was checked
+    against `Agreement No: HP-2021-448190` and the right answer dropped. The question had named
+    the facility; the sentence was only pointing at it."""
+    page = _page("Agreement No: WG-2022-118204\nLender: Westgate Finance")
+    sentence = "The lender on facility WG-2022-118204 is Westgate Finance."
+    assert labelled_lines(sentence, [page], "Who is the lender on facility WG-2022-118204?") == [
+        "Lender: Westgate Finance"
+    ]
+    assert labelled_lines(sentence, [page]) == [
+        "Agreement No: WG-2022-118204",
+        "Lender: Westgate Finance",
+    ]
+
+
+class Failing:
+    def constrained(self, *_: Any, **__: Any) -> Generated:
+        raise ModelUnavailable("the generator did not answer")
+
+
+def test_a_check_that_cannot_run_leaves_the_sentence_unchecked() -> None:
+    """19 October: a failed call ended a whole answer and took a right one with it."""
+    assert label_supports(Failing(), "You pay 1560 a year.", ["Annual Premium: SGD 1,560.00"])

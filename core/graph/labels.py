@@ -17,12 +17,16 @@ is not checked, and the sentence keeps its place.
 
 from __future__ import annotations
 
+import logging
 import re
 from collections.abc import Sequence
 from typing import Any, Protocol
 
 from core.graph.gate import _NUMBER, _normal
 from core.graph.ports import Passage
+from core.runtime.ollama import ModelUnavailable
+
+log = logging.getLogger(__name__)
 
 # A printed `label: value` line: a short label, a colon, the value. Long labels are prose that
 # happens to contain a colon ("Notify within 24 hours: ..."), not a field.
@@ -85,10 +89,17 @@ def _repeats(value: str, sentence: str, numbers: set[str]) -> bool:
     )
 
 
-def labelled_lines(sentence: str, cited: Sequence[Passage]) -> list[str]:
+def labelled_lines(sentence: str, cited: Sequence[Passage], question: str = "") -> list[str]:
     """The `label: value` lines, from the document passages a sentence cites, whose value the
-    sentence states — in the order they are printed, each once."""
+    sentence states — in the order they are printed, each once.
+
+    A value the question itself names is not one: "Who is the lender on facility
+    HP-2021-448190?" is answered "The lender on facility HP-2021-448190 is Crescent Bank
+    Limited", and the facility number there is the sentence pointing at what was asked about, not
+    its answer. On 19 October it was checked anyway, against `Agreement No:`, and the right answer
+    was dropped."""
     numbers = {_normal(figure) for figure in _NUMBER.findall(sentence)}
+    asked = {_normal(figure) for figure in _NUMBER.findall(question)}
     found: list[str] = []
     for passage in cited:
         if passage.kind != "document":
@@ -96,18 +107,31 @@ def labelled_lines(sentence: str, cited: Sequence[Passage]) -> list[str]:
         for match in _LINE.finditer(passage.text):
             label, value = match.group(1).strip(), match.group(2).strip()
             line = f"{label}: {value}"
-            if line not in found and _repeats(value, sentence, numbers):
+            if (
+                line not in found
+                and _repeats(value, sentence, numbers)
+                and not (question and _repeats(value, question, asked))
+            ):
                 found.append(line)
     return found
 
 
 def label_supports(judge: Judge, sentence: str, lines: Sequence[str]) -> bool:
-    """Ask the generator whether the printed labels say what the sentence says. One call."""
+    """Ask the generator whether the printed labels say what the sentence says. One call.
+
+    A call that fails leaves the sentence where it was: unchecked, not refused. On 19 October one
+    failed mid-answer and the failure ended the whole answer, taking a right one with it. The
+    check is an extra line of defence, and its own failure must not become a reason to say
+    nothing."""
     prompt = (
         f"{EXAMPLES}\n\nThe document prints:\n"
         + "\n".join(f"- {line}" for line in lines)
         + f"\n\nThe sentence: {sentence}\n\n"
         "Does a printed label say the value is what the sentence calls it?"
     )
-    reply = judge.constrained(SYSTEM, prompt, SCHEMA).json()
+    try:
+        reply = judge.constrained(SYSTEM, prompt, SCHEMA).json()
+    except (ModelUnavailable, ValueError) as error:  # no answer, or an answer that is not JSON
+        log.warning("label check could not run, sentence kept unchecked: %s", error)
+        return True
     return bool(reply.get("supported")) if isinstance(reply, dict) else False

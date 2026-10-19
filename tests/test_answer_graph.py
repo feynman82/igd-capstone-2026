@@ -916,6 +916,14 @@ def test_a_value_its_printed_label_supports_is_kept() -> None:
     ]
 
 
+def test_a_failed_label_check_keeps_the_sentence_and_the_rest_of_the_answer() -> None:
+    graph, _ = _label_graph(DRIVER, ModelUnavailable("no answer"), label_check=True)  # type: ignore[arg-type]
+
+    assert _said(list(graph.stream("who is the named driver?"))) == [
+        "The named driver is Lee Wen Hui."
+    ]
+
+
 def test_a_sentence_repeating_no_labelled_value_is_not_checked() -> None:
     reply = {"sentences": [{"text": "The schedule names one insured person.", "supports": [1]}]}
     graph, client = _label_graph(reply, label_check=True)

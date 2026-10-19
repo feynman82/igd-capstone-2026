@@ -1767,7 +1767,9 @@ class AnswerGraph:
                         why = f"cites no document from {when}"
                     if why is None and self._label_check:
                         printed = labelled_lines(
-                            claim.text, [by_ref[ref] for ref in claim.supports]
+                            claim.text,
+                            [by_ref[ref] for ref in claim.supports],
+                            f"{question}\n{asked}",
                         )
                         if printed and not label_supports(self._client, claim.text, printed):
                             why = f"the printed label does not say that: {printed}"
