@@ -19,9 +19,11 @@ ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "corpus/batches/donations-rachel-2024-2025"
 TEMPLATES = ROOT / "corpus/templates"
 BROWSER = os.environ.get("CHROME_BIN") or next(
-    (shutil.which(name) for name in (
-        "chromium", "chromium-browser", "google-chrome", "microsoft-edge"
-    ) if shutil.which(name)),
+    (
+        shutil.which(name)
+        for name in ("chromium", "chromium-browser", "google-chrome", "microsoft-edge")
+        if shutil.which(name)
+    ),
     None,
 )
 
@@ -29,9 +31,9 @@ BROWSER = os.environ.get("CHROME_BIN") or next(
 def main():
     if not BROWSER:
         raise SystemExit("No Chrome/Chromium found; set CHROME_BIN to its executable")
-    template = Environment(
-        loader=FileSystemLoader(TEMPLATES), autoescape=True
-    ).get_template("donation_receipt.html")
+    template = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True).get_template(
+        "donation_receipt.html"
+    )
     with (DEST / "merge-data.csv").open(newline="", encoding="utf-8-sig") as source:
         records = list(csv.DictReader(source))
     if len(records) != 3:
@@ -46,9 +48,14 @@ def main():
             html.write_text(template.render(**record), encoding="utf-8")
             pdf = DEST / (stem + ".pdf")
             command = [
-                BROWSER, "--headless", "--no-sandbox", "--disable-gpu",
-                "--disable-dev-shm-usage", "--no-pdf-header-footer",
-                f"--print-to-pdf={pdf}", html.as_uri(),
+                BROWSER,
+                "--headless",
+                "--no-sandbox",
+                "--disable-gpu",
+                "--disable-dev-shm-usage",
+                "--no-pdf-header-footer",
+                f"--print-to-pdf={pdf}",
+                html.as_uri(),
             ]
             result = subprocess.run(command, capture_output=True, text=True, timeout=90)
             if result.returncode or not pdf.exists() or pdf.stat().st_size < 100:
