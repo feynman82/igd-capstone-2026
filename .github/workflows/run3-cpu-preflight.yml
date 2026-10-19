@@ -1,0 +1,61 @@
+name: Run 3 CPU preflight
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/run3-cpu-preflight.yml"
+      - "eval/**"
+      - "corpus/**"
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_PASSWORD: parrot
+          POSTGRES_DB: parrot_cpu_preflight
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:parrot@127.0.0.1:5432/parrot_cpu_preflight
+      REDIS_URL: redis://127.0.0.1:6379/0
+      PARROT_LLM: fake
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-extras
+      - name: Verify pgvector and Redis
+        run: |
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          python -c 'import redis; assert redis.Redis.from_url("redis://127.0.0.1:6379/0").ping()'
+      - name: Verify frozen manifest and household without writes
+        run: |
+          mkdir -p "$RUNNER_TEMP/run3-cpu-preflight"
+          uv run python -m eval.freeze --commit "$GITHUB_SHA" --household eval/run3/household.draft.json --vault parrot_run3_cpu_preflight --label cpu-preflight --out "$RUNNER_TEMP/run3-cpu-preflight" --dry-run
+      - name: Run Python tests without a model
+        run: uv run pytest -q
+      - name: Record scope
+        if: always()
+        run: |
+          echo "### CPU preflight only" >> "$GITHUB_STEP_SUMMARY"
+          echo "Checks corpus manifest, household, database service, Redis and tests." >> "$GITHUB_STEP_SUMMARY"
+          echo "Does not run Ollama, ingest documents, score extraction or replace the full GPU Run 3." >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: run3-cpu-preflight-report
+          path: ${{ runner.temp }}/run3-cpu-preflight/
+          if-no-files-found: warn
