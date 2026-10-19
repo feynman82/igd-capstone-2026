@@ -132,6 +132,31 @@ def find_page(value: str, pages: list[ParsedPage]) -> int | None:
     return None
 
 
+def reading_page(field: FieldSpec, pages: list[ParsedPage]) -> int | None:
+    """The page a yes/no field was read from: the first that prints what the field is about.
+
+    `find_page` looks for the value itself, and a boolean is never printed as one. A receipt says
+    "This donation is eligible for tax deduction", the model rightly reports `tax_deductible` as
+    true, and no page contains "true". On 19 October every donation receipt's `tax_deductible`
+    was dropped as "on no page" for that reason. The page that names the field's subject is the
+    page the reading came from: each word of the field's name, cut to its stem ("deductible" to
+    "deduct"), must be on it. A page that names none of it supports no reading, and the field
+    is dropped as before.
+    """
+    stems = [
+        word if len(word) <= 4 else word[: max(4, len(word) - 4)]
+        for word in field.name.split("_")
+        if len(word) >= 3
+    ]
+    if not stems:
+        return None
+    for page in pages:
+        haystack = _normalise(page.text)
+        if all(stem in haystack for stem in stems):
+            return page.page
+    return None
+
+
 _MONTH_NUMBER: dict[str, int] = {}
 for _number, _name in enumerate(_MONTHS, start=1):
     _MONTH_NUMBER[_name.casefold()] = _number
@@ -492,7 +517,11 @@ def _read(
             unplaced.append(f"{name} (not a valid {field_spec.type})")
             continue
         printed = reported.get(name)
-        page = find_page(str(printed) if printed is not None else str(raw), pages)
+        page = (
+            reading_page(field_spec, pages)
+            if field_spec.type == "boolean"
+            else find_page(str(printed) if printed is not None else str(raw), pages)
+        )
         if page is None:
             unplaced.append(f"{name} (on no page)")
             log.info("dropping %s: no page in the document contains it", name)

@@ -776,6 +776,60 @@ def test_a_receipt_whose_date_line_caught_a_banner_word_still_extracts(iras: Any
     assert by_key["donation_date"].page == 1
 
 
+def _receipt_reply(**extra: Any) -> dict[str, Any]:
+    return {
+        "donor": "Rachel Ng Hui Shan",
+        "charity": "THYE HUA KWAN MORAL CHARITIES",
+        "receipt_no": "THK-2024-00291",
+        "donation_date": "29 Feb 2024",
+        "donation_amount": "300.00",
+        **extra,
+    }
+
+
+def test_a_yes_or_no_reading_is_placed_on_the_page_that_prints_its_subject(iras: Any) -> None:
+    """19 October: "This donation is eligible for tax deduction" was read as true, and dropped,
+    because no page contains the word "true". Every receipt lost its tax_deductible."""
+    page = (
+        "Receipt No: THK-2024-00291\nDate of donation: 29 Feb 2024\nAmount: SGD 300.00\n"
+        "This donation is eligible for tax deduction."
+    )
+    pages = [
+        ParsedPage(1, "Thye Hua Kwan Moral Charities\nDonor: Rachel Ng Hui Shan"),
+        ParsedPage(2, page),
+    ]
+    result = extract(
+        FakeOllama([_receipt_reply(tax_deductible=True)]),
+        iras,
+        "donation_receipt",
+        pages,
+        confidence=0.9,
+    )  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert by_key["tax_deductible"].page == 2
+    assert "tax_deductible" not in " ".join(result.unplaced or [])
+
+
+def test_a_yes_or_no_reading_no_page_speaks_to_is_still_dropped(iras: Any) -> None:
+    page = (
+        "Receipt No: THK-2024-00291\nDonor: Rachel Ng Hui Shan\nDate of donation: 29 Feb 2024\n"
+        "Amount: SGD 300.00\nTHYE HUA KWAN MORAL CHARITIES"
+    )
+    result = extract(
+        FakeOllama([_receipt_reply(tax_deductible=True)]),
+        iras,
+        "donation_receipt",
+        [ParsedPage(1, page)],
+        confidence=0.9,
+    )  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    assert "tax_deductible" not in {fact.key for fact in result.facts}
+    assert "tax_deductible (on no page)" in (result.unplaced or [])
+
+
 def test_a_schedule_whose_dates_were_copied_as_printed_extracts(insurance: Any) -> None:
     reply = {**SCHEDULE_REPLY, "cover_from": "12 April 2026", "expiry_date": "11 April 2027"}
     client = FakeOllama([reply])
