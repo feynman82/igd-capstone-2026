@@ -91,3 +91,25 @@ def test_a_sentence_is_outside_unless_some_cited_document_reaches_into_the_perio
     assert outside(last_year, ["car"], periods)
     assert outside(last_year, ["undated"], periods), "a claim placed nowhere is not placed then"
     assert not outside(last_year, ["car", "old"], periods)
+
+
+def test_a_loan_runs_on_from_its_agreement_date() -> None:
+    """b2-0010, a 2021 housing loan, is still being repaid: its letter's date is where it starts,
+    not all it covers. A loan signed after the period asked about still does not answer it."""
+    loan = document_period(
+        "loan_agreement",
+        [("agreement_date", date(2021, 1, 15)), ("monthly_repayment", Decimal("2234.50"))],
+    )
+    assert loan == Period(date(2021, 1, 15), date.max)
+    assert str(loan) == "15 Jan 2021 onwards"
+    last_year = Period(date(2025, 1, 1), date(2025, 12, 31))
+    assert not outside(last_year, ["loan"], {"loan": loan})
+    later = document_period("loan_agreement", [("agreement_date", date(2026, 3, 1))])
+    assert outside(last_year, ["later"], {"later": later})
+
+
+def test_a_receipt_is_still_its_one_day() -> None:
+    """Only standing types run on: a 2024 donation does not answer a question about 2025."""
+    receipt = document_period("donation_receipt", [("donation_date", date(2024, 6, 3))])
+    assert receipt == Period(date(2024, 6, 3), date(2024, 6, 3))
+    assert outside(Period(date(2025, 1, 1), date(2025, 12, 31)), ["r"], {"r": receipt})

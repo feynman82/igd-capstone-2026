@@ -37,8 +37,19 @@ class Period:
         return self.start <= other.end and other.start <= self.end
 
     def __str__(self) -> str:
+        if self.end == date.max:
+            return f"{self.start:%d %b %Y} onwards"
         return f"{self.start:%d %b %Y} to {self.end:%d %b %Y}"
 
+
+# Document types whose printed dates mark the start of an arrangement that then runs on, with no
+# end printed: a housing loan's letter is dated 2021 and the loan is still being repaid. Their span
+# runs from that start with no end, so a 2021 loan answers "last year" and a loan signed after it
+# does not. On 17 October `b2-0010` re-extracted with its agreement date and became a single day in
+# 2021, so "how much did I repay on my home loan last year?" would have been refused as being about
+# another year. This belongs in the catalogue, beside each type's fields — `core/documents.yaml` has
+# no place for it yet, and giving it one is a change to `core/contracts.py`, its own reviewed PR.
+STANDING = frozenset({"loan_agreement"})
 
 _LAST_YEAR = re.compile(r"\b(?:last|previous|past)\s+year'?s?\b", re.IGNORECASE)
 _LAST_MONTH = re.compile(r"\b(?:last|previous|past)\s+month'?s?\b", re.IGNORECASE)
@@ -90,7 +101,7 @@ def document_period(doc_type: str, facts: Iterable[tuple[str, object]]) -> Perio
       which assesses the income of the year before it — YA2026 is about 2025.
 
     The span runs from the earliest to the latest of these: a policy from its cover date to its
-    expiry, a receipt for its one day.
+    expiry, a receipt for its one day. A `STANDING` type runs from its earliest date with no end.
     """
     spec = catalog().documents.document_types.get(doc_type)
     if spec is None:
@@ -101,7 +112,8 @@ def document_period(doc_type: str, facts: Iterable[tuple[str, object]]) -> Perio
     ]
     if not found:
         return None
-    return Period(min(p.start for p in found), max(p.end for p in found))
+    start = min(p.start for p in found)
+    return Period(start, date.max if doc_type in STANDING else max(p.end for p in found))
 
 
 def _span(key: str, kind: str | None, value: object) -> Period | None:
