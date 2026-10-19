@@ -440,6 +440,8 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     questions = all_questions(ROOT)
     columns: list[tuple[str, str, Headline]] = []
+    planned: list[tuple[Path, str, Path, str]] = []
+    conflicts: list[Path] = []
     for path, data in runs:
         metrics = data.get("metrics") or {}
         head = compute(
@@ -453,12 +455,26 @@ def main(argv: Sequence[str] | None = None) -> int:
         body = {"source": path.name, "headline": as_json(head)}
         text = json.dumps(body, indent=2, ensure_ascii=False) + "\n"
         if companion.exists() and companion.read_text(encoding="utf-8") != text:
-            print(f"{companion} exists with different numbers and results are append-only")
-            return 2
-        companion.write_text(text, encoding="utf-8")
-        Path(f"{stem}-headline.md").write_text(render(path.name, head), encoding="utf-8")
+            conflicts.append(companion)
+        planned.append((companion, text, Path(f"{stem}-headline.md"), render(path.name, head)))
         corpus = str((data.get("run") or {}).get("corpus_manifest_sha") or "")
         columns.append((path.stem, corpus, head))
+
+    # Every file is checked before any is written, so a refusal leaves nothing half done. An
+    # existing companion with the same numbers is left exactly as it is — its `.md` included,
+    # which before this was rewritten every time, so building Run 3's table across committed
+    # runs would have edited their committed companions.
+    if conflicts:
+        for companion in conflicts:
+            print(f"{companion} exists with different numbers and results are append-only")
+        return 2
+    for companion, text, markdown, rendered in planned:
+        if companion.exists():
+            print(f"kept {companion}")
+            continue
+        companion.write_text(text, encoding="utf-8")
+        if not markdown.exists():
+            markdown.write_text(rendered, encoding="utf-8")
         print(f"wrote {companion}")
 
     if len(columns) > 1:

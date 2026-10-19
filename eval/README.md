@@ -242,9 +242,10 @@ uv run python -m eval.headline eval/results/2026-09-29-baseline-dense-only.json 
 - on the Set C run, `run.skipped_no_fixture` is empty, so the injection items really were tested,
   and nothing has leaked. No forbidden string on Set C is the one absolute line.
 
-`eval.headline` writes a companion `-headline.json` and `-headline.md` beside each file it is
-given. It refuses a `.json` with different numbers, but it would rewrite an earlier run's committed
-`.md`, so check `git status eval/results` before committing, and run it on copies if in doubt.
+`eval.headline` writes a companion `-headline.json` and `-headline.md` beside each run that has
+none. A run that already has one is left exactly as it is. If any companion holds different
+numbers, it refuses before writing anything. So step 4 adds Run 3's companions and changes no
+committed file; `git status eval/results` should show only Run 3's new files.
 
 ## The module metrics
 

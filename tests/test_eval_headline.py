@@ -394,6 +394,39 @@ def test_the_cli_refuses_to_overwrite_different_numbers(
     assert headline.main([str(run)]) == 2
 
 
+def test_an_existing_companion_with_the_same_numbers_is_left_exactly_as_it_is(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Run 3's table is built across committed runs. Their companion `.md` was rewritten every
+    time, whatever was committed; now an unchanged companion is not touched at all."""
+    monkeypatch.setattr(headline, "all_questions", lambda root: {"a-1": _fact("a-1", "750.00")})
+    run = _run_file(tmp_path, "2026-10-14-x.json", [_line("a-1", "750.00 [b1-0001.pdf, page 1]")])
+    assert headline.main([str(run)]) == 0
+    markdown = tmp_path / "2026-10-14-x-headline.md"
+    markdown.write_text("as committed, with a note added by hand\n", encoding="utf-8")
+
+    assert headline.main([str(run)]) == 0
+
+    assert markdown.read_text(encoding="utf-8") == "as committed, with a note added by hand\n"
+
+
+def test_a_refusal_writes_nothing_for_any_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Every companion is checked before any is written, so a refusal on the second run does not
+    leave the first one's companions behind."""
+    monkeypatch.setattr(headline, "all_questions", lambda root: {"a-1": _fact("a-1", "750.00")})
+    line = [_line("a-1", "750.00 [b1-0001.pdf, page 1]")]
+    first = _run_file(tmp_path, "2026-10-14-a.json", line)
+    second = _run_file(tmp_path, "2026-10-15-b.json", line)
+    (tmp_path / "2026-10-15-b-headline.json").write_text("{}\n", encoding="utf-8")
+
+    assert headline.main([str(first), str(second)]) == 2
+
+    assert not (tmp_path / "2026-10-14-a-headline.json").exists()
+    assert not (tmp_path / "2026-10-14-a-headline.md").exists()
+
+
 def test_the_cli_refuses_a_file_that_is_not_a_run(tmp_path: Path) -> None:
     other = tmp_path / "bands.json"
     other.write_text(json.dumps({"inputs": {}}), encoding="utf-8")
