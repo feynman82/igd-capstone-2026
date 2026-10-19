@@ -67,7 +67,7 @@ class Entry:
     path: str  # repository-relative, as Git names it
     sha256: str
     size: int
-    role: str  # "vault" is loaded; "set_c" is listed and held out for eval.setc
+    role: str  # "vault" loaded; "set_c" adversarial; "unregistered" held out
 
     @property
     def name(self) -> str:
@@ -109,7 +109,13 @@ def corpus_files(commit: str, root: Path = ROOT) -> list[Entry]:
     for path in paths:
         payload = blob(commit, path, root)
         entries.append(Entry(path, hashlib.sha256(payload).hexdigest(), len(payload), role(path)))
-    return entries
+    registered = {row["doc_id"] for row in register_rows(commit, root)}
+    return [
+        Entry(e.path, e.sha256, e.size,
+              "set_c" if e.role == "set_c" else
+              ("vault" if Path(e.path).stem in registered else "unregistered"))
+        for e in entries
+    ]
 
 
 def manifest_sha(entries: Iterable[Entry]) -> str:
@@ -335,6 +341,10 @@ def report_markdown(result: dict[str, Any]) -> str:
             lines += ["Not indexed:", ""]
             lines += [f"- `{d['path']}`: {d['status']} — {d['reason']}" for d in quarantined]
             lines += [""]
+    unregistered = [
+        f["path"] for f in result["manifest"]["files"] if f["role"] == "unregistered"
+    ]
+    lines += [f"Unregistered specimens held out: {len(unregistered)}", ""]
     lines += ["Held out under the Set C protocol (`eval.setc` adds them to a copy):", ""]
     lines += [f"- `{path}`" for path in held] or ["- none"]
     return "\n".join(lines) + "\n"
@@ -357,6 +367,10 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--vault", default=VAULT, help=f"database name (default {VAULT})")
     parser.add_argument("--replace", action="store_true", help="drop the vault if it exists")
     parser.add_argument("--dry-run", action="store_true", help="manifest and plan only")
+    parser.add_argument(
+        "--include-unregistered", action="store_true",
+        help="explicitly ingest unregistered source specimens as well as scored documents",
+    )
     parser.add_argument("--label", default="frozen-vault")
     parser.add_argument("--out", type=Path, default=ROOT / "eval" / "results")
     args = parser.parse_args(argv)
@@ -369,6 +383,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         commit = resolve(args.commit)
         people = household(args.household)
         entries = corpus_files(commit)
+        if args.include_unregistered:
+            entries = [
+                Entry(e.path, e.sha256, e.size,
+                      "vault" if e.role == "unregistered" else e.role)
+                for e in entries
+            ]
         if not entries:
             raise FreezeRefused(f"No documents under {BATCHES} at {commit}.")
         if args.expect_manifest:
@@ -389,7 +409,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"{target} already exists and results are append-only. Choose another --label.")
         return 2
     roles = Counter(entry.role for entry in entries)
-    print(f"commit {commit}: {roles['vault']} document(s) to load, {roles['set_c']} held for Set C")
+    print(
+        f"commit {commit}: {roles['vault']} registered document(s) to load, "
+        f"{roles['unregistered']} unregistered held out, "
+        f"{roles['set_c']} held for Set C"
+    )
     result: dict[str, Any] = {
         "run": {
             "date": datetime.now(UTC).isoformat(timespec="seconds"),
