@@ -31,7 +31,7 @@ all running on the user's machine:
 | **Generator**, and the quarantine image pass | `hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M` (Ollama digest `d46a930cafd8`) | MIT (AI Singapore model card); base model Qwen3-VL-4B-Instruct, Apache-2.0 | `infra/.env.example` `PARROT_GEN_MODEL`; `AGENTS.md` |
 | Embedding | `embeddinggemma:300m`, 768 dimensions | Gemma Terms of Use | `PARROT_EMBED_MODEL`; the `chunks` vector column is sized for it |
 | Reranker (cross-encoder) | `BAAI/bge-reranker-v2-m3`, in-process, not via Ollama | Apache-2.0 | `PARROT_RERANK_MODEL`; ADR 0018 |
-| Evaluation judge (not in the product) | `qwen2.5:7b-instruct` | **unverified** | header of each `eval/results/*.md` |
+| Evaluation judge (not in the product) | `qwen2.5:7b-instruct` | **unverified**: read it with `ollama show qwen2.5:7b-instruct --license` on the evaluation machine | header of each `eval/results/*.md` |
 
 Licences were read from each model's Hugging Face page on 2026-10-14. The GGUF quantisation is
 a third-party conversion (`mradermacher`), not AI Singapore's own release — see Open questions.
@@ -50,9 +50,13 @@ a third-party conversion (`mradermacher`), not AI Singapore's own release — se
 | Runtime | Ollama, loopback only |
 | Measured on | RTX 3080 10 GB: 130 tok/s decode, 7.4 GB peak VRAM at 16K context, 100% on GPU (`eval/results/w1-hardware.md`) |
 
-**Why this model.** **Unverified** — no ADR records the choice. `AGENTS.md` fixes it as part of
-the stack; the reasons (Singapore-developed, regional languages, vision, a 4B size that fits a
-consumer GPU) are plausible but are not written down anywhere in the repository.
+**Why this model.** No ADR records the choice or the alternatives considered. `AGENTS.md` fixes it
+as part of the stack, and ADR 0003 (2026-09-10) records the move to it from PaperBrain's
+`qwen2.5:14b-instruct` without giving a reason. Two reasons are written down: **vision**, which
+the two-stage quarantine needs to read a page image ("a capability the 4B SEA-LION swap bought
+us", `team/christian/README.md`; ADR 0006), and **fit**, since it runs entirely on a 10 GB
+consumer GPU (`eval/results/w1-hardware.md`). Being Singapore-developed and covering regional
+languages are **unverified** as reasons: plausible, but not recorded anywhere.
 
 ## 2. Intended use
 
@@ -166,9 +170,10 @@ For Yew Mun unless marked otherwise.
 1. Will a run 3 (or a run 2 re-run on the current corpus with `batch3` ingested) land before the
    W8 finalisation? This card should quote it, and it is the first real measure of injection.
 2. What is the licence of the judge `qwen2.5:7b-instruct`, and is it the same weights as the
-   Hugging Face release?
-3. Christian: is there a recorded reason for choosing Qwen-SEA-LION-v4-4B-VL? If not, should
-   there be an ADR?
+   Hugging Face release? *(Could not be read from this repository; run
+   `ollama show qwen2.5:7b-instruct --license` on the evaluation machine.)*
+3. Christian: two reasons are recorded (vision and fit, see "Why this model"), but no ADR
+   weighs the alternatives. Should there be one?
 4. Christian: does the `mradermacher` GGUF quantisation carry the same licence and weights as
    AI Singapore's release, and is there a reason not to use an official quantisation?
 5. Zee: what does the interface tell the user about the model and its limits?

@@ -72,15 +72,16 @@ code:
 | The review says | The code shows |
 |---|---|
 | Operation and monitoring: "the JSONL trace log" | Traces are a Postgres table, `traces` (`db/migrations/0001_init.sql`), not a JSONL file |
-| Retirement: "Pack uninstall removes its facts and jobs" | No uninstall was found. A pack is switched off with a flag, and its facts stay (`core/registry.py`). **unverified:** whether any job is removed. |
+| Retirement: "Pack uninstall removes its facts and jobs" | No uninstall was found. A pack is switched off with a flag (`SET_PACK_ENABLED`, `core/registry.py`), and its facts stay. **No job is removed**: the scheduled sweeps belong to modules, not packs, and keep running. The Reminder sweep and the morning digest skip a disabled pack's obligations (`core/worker/tasks.py`, `enabled_pack_ids`). The Alert sweep does not filter by pack at all, because alert thresholds belong to the core catalogue, "so no pack being switched off silences them" (`modules/alert/__init__.py`, `sweep`; ADR 0017). |
 | Retirement: "Reset Workspace purges indexes and embeddings" | No Reset Workspace exists in the code (`retention-and-erasure.md` Part B) |
-| Deployment: "Docker Compose stack" | True for Postgres and Redis (`infra/docker-compose.yml`). The application itself starts from `scripts/run_parrot.py`; whether it runs inside Compose is **unverified**. |
+| Deployment: "Docker Compose stack" | True for Postgres and Redis (`infra/docker-compose.yml`). **The application does not run inside Compose.** The compose file defines only `db` and `redis`, and says Ollama runs on the host. The API, worker and screens are started on the host by `scripts/run_parrot.py` (`make dev`, or `START.cmd` through `scripts/start_parrot.py`). |
 
 ## Open questions
 
 1. **Siew:** read the three clause numbers (6.4.7, 6.4.8, 6.4.14) and the stage names against the
    standards before the chapter cites them. The team has only the review's summary.
-2. **Christian:** confirm the deployment row (Compose, or the launcher), and the code freeze date.
+2. **Christian:** confirm the code freeze date. *(The deployment row is settled: the launcher, not
+   Compose, verified 2026-10-19.)*
 3. **Christian:** correct the four cells of the architecture review listed above, or note them as
    superseded by this map.
 4. **Yew Mun:** is a re-run trigger for model or pack changes in scope before W8? If not, the 6.4.14
