@@ -347,10 +347,30 @@ def _undated(spec: FieldSpec, value: Any) -> bool:
     )
 
 
+# A courtesy title printed before a name: "Mr Marcus Lim Jun Wei" on a renewal notice's address.
+_TITLE = re.compile(r"^(?:mr|mrs|ms|miss|mdm|madam|dr|prof|mx)\.?\s+(?=\S)", re.IGNORECASE)
+
+
+def without_title(name: str) -> str:
+    """A person's name with a leading courtesy title removed: what the household calls them.
+
+    A title is how a letter addresses somebody, not part of who they are, and the household
+    knows people by name. On 19 October Run 3's new renewal notices printed the insured as "Mr
+    Marcus Lim Jun Wei", the title stayed in the subject, and the subject matched nobody: both
+    alerts that fired reported his home and car policies uncovered, and one reminder went to the
+    wrong person. Only the stored value changes; the page is still found from the name as
+    printed, title and all. A value that is nothing but a title is left as it is.
+    """
+    stripped = _TITLE.sub("", name.strip(), count=1)
+    return stripped or name.strip()
+
+
 def _coerce(spec: FieldSpec, raw: Any) -> tuple[str | None, Decimal | None, date | None] | None:
     """Put the value in the one `facts` column its declared type maps to, or reject it."""
     column = FACT_COLUMN[spec.type]
     text = str(raw).strip()
+    if spec.type == "person":
+        text = without_title(text)
     if not text:
         return None
     if column == "value_num":
@@ -480,7 +500,7 @@ def _read(
     subject_value: str | None = None
     if subject_field:
         raw_subject = getattr(validated, subject_field, None)
-        subject_value = str(raw_subject).strip() if raw_subject else None
+        subject_value = without_title(str(raw_subject)) if raw_subject else None
 
     facts: list[ExtractedFact] = []
     unplaced: list[str] = [
