@@ -719,12 +719,61 @@ def test_a_printed_date_becomes_iso_in_code_not_in_the_model(printed: str, iso: 
 
 
 @pytest.mark.parametrize(
-    "printed", ["someday", "31 February 2026", "13/13/2026", "For the whole of life"]
+    "printed",
+    [
+        "someday",
+        "31 February 2026",
+        "13/13/2026",
+        "For the whole of life",
+        "01 March 2026 to 28 February 2027",  # two dates: which one was meant is a guess
+    ],
 )
 def test_something_that_is_not_a_date_is_not_turned_into_one(printed: str) -> None:
     from core.ingest.extract import printed_date
 
     assert printed_date(printed) is None
+
+
+@pytest.mark.parametrize(
+    ("printed", "expected"),
+    [
+        ("TEST 29 Feb 2024", "2024-02-29"),  # 19 October: a banner's word, read into the date
+        ("PAID 01/03/2026", "2026-03-01"),
+        ("29 Feb 2024 (29 Feb 2024)", "2024-02-29"),  # one date, printed twice
+    ],
+)
+def test_one_date_inside_other_words_is_that_date(printed: str, expected: str) -> None:
+    from core.ingest.extract import printed_date
+
+    assert printed_date(printed) == expected
+
+
+RECEIPT_PAGE = """THYE HUA KWAN MORAL CHARITIES
+ROJECT PARROT · SYNTHETIC TEST RECORD · NOT A REAL
+Receipt No: THK-2024-00291
+Donor: Rachel Ng Hui Shan
+Date issued: 29 Feb 2024
+Date of donation: TEST 29 Feb 2024
+Amount: SGD 300.00"""
+
+
+def test_a_receipt_whose_date_line_caught_a_banner_word_still_extracts(iras: Any) -> None:
+    """Rachel's three 2024-2025 receipts were quarantined on 19 October over "TEST 29 Feb 2024":
+    the date is required, and a value that is not wholly a date failed validation."""
+    reply = {
+        "donor": "Rachel Ng Hui Shan",
+        "charity": "THYE HUA KWAN MORAL CHARITIES",
+        "receipt_no": "THK-2024-00291",
+        "donation_date": "TEST 29 Feb 2024",
+        "donation_amount": "300.00",
+    }
+    pages = [ParsedPage(1, RECEIPT_PAGE)]
+    result = extract(FakeOllama([reply]), iras, "donation_receipt", pages, confidence=0.9)  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert str(by_key["donation_date"].value_date) == "2024-02-29"
+    assert by_key["donation_date"].page == 1
 
 
 def test_a_schedule_whose_dates_were_copied_as_printed_extracts(insurance: Any) -> None:

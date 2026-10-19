@@ -144,8 +144,24 @@ _MONTH_DAY_YEAR = re.compile(r"^\s*([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})\s*$")
 _NUMERIC_DAY_FIRST = re.compile(r"^\s*(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\s*$")
 
 
+# The same four notations, found inside a longer value rather than as the whole of it.
+_DATES_INSIDE = (
+    re.compile(r"(?<!\d)\d{4}-\d{2}-\d{2}(?!\d)"),
+    re.compile(r"(?<!\d)\d{1,2}\s+[A-Za-z]+\.?,?\s+\d{4}(?!\d)"),
+    re.compile(r"\b[A-Za-z]+\.?\s+\d{1,2},?\s+\d{4}(?!\d)"),
+    re.compile(r"(?<!\d)\d{1,2}[/.\-]\d{1,2}[/.\-]\d{4}(?!\d)"),
+)
+
+
 def printed_date(value: str) -> str | None:
     """A date as a document prints it, as YYYY-MM-DD, or None when it is not a date.
+
+    A value that is a date and something else — "TEST 29 Feb 2024" — gives its date when it holds
+    exactly one. On 19 October Rachel's three donation receipts were quarantined because a
+    synthetic-record banner crossing the "Date of donation" line put the word TEST into what was
+    read; a "PAID" or "COPY" stamp on a real receipt does the same. The date is printed whole, so
+    reading it is not inventing one. A value holding two different dates is still None: which one
+    was meant is a guess.
 
     The model copies the date and this converts it, because the conversion is where the model
     failed. With `format: date` in the decode schema Ollama builds a grammar that makes the model
@@ -159,6 +175,20 @@ def printed_date(value: str) -> str | None:
     "For the whole of life", 31 February — is None, so it fails validation and says so rather than
     becoming a plausible wrong date.
     """
+    whole = _whole_date(value)
+    if whole is not None:
+        return whole
+    inside = {
+        found
+        for pattern in _DATES_INSIDE
+        for match in pattern.finditer(value)
+        if (found := _whole_date(match.group(0))) is not None
+    }
+    return inside.pop() if len(inside) == 1 else None
+
+
+def _whole_date(value: str) -> str | None:
+    """The value as YYYY-MM-DD when the whole of it is one date in a notation read here."""
     patterns = (
         (_ISO_DATE, "ymd"),
         (_DAY_MONTH_YEAR, "dmy"),
