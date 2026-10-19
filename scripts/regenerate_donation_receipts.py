@@ -19,14 +19,19 @@ ROOT = Path(__file__).resolve().parents[1]
 DEST = ROOT / "corpus/batches/donations-rachel-2024-2025"
 TEMPLATES = ROOT / "corpus/templates"
 BROWSER = os.environ.get("CHROME_BIN") or next(
-    (shutil.which(name) for name in ("chromium", "chromium-browser", "google-chrome", "microsoft-edge") if shutil.which(name)), None
+    (shutil.which(name) for name in (
+        "chromium", "chromium-browser", "google-chrome", "microsoft-edge"
+    ) if shutil.which(name)),
+    None,
 )
 
 
 def main():
     if not BROWSER:
         raise SystemExit("No Chrome/Chromium found; set CHROME_BIN to its executable")
-    template = Environment(loader=FileSystemLoader(TEMPLATES), autoescape=True).get_template("donation_receipt.html")
+    template = Environment(
+        loader=FileSystemLoader(TEMPLATES), autoescape=True
+    ).get_template("donation_receipt.html")
     with (DEST / "merge-data.csv").open(newline="", encoding="utf-8-sig") as source:
         records = list(csv.DictReader(source))
     if len(records) != 3:
@@ -49,7 +54,7 @@ def main():
             if result.returncode or not pdf.exists() or pdf.stat().st_size < 100:
                 raise RuntimeError(f"PDF generation failed for {stem}: {result.stderr}")
             print(f"Generated {pdf.relative_to(ROOT)} ({pdf.stat().st_size} bytes)")
-    print("Re-run isolated eval.freeze and verify all three extracted donation dates before merging.")
+    print("Re-run isolated eval.freeze and verify the three donation dates before merging.")
 
 
 if __name__ == "__main__":
