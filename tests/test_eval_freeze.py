@@ -129,7 +129,7 @@ def test_default_freeze_loads_only_registered_documents() -> None:
     set_c = [entry for entry in entries if entry.role == "set_c"]
 
     assert vault, "the frozen vault must have registered documents to score"
-    assert len(unregistered) == 56, "update the specimen inventory and review the inclusion rule"
+    assert len(unregistered) == 39, "update the batch specimen inventory and review inclusion"
     assert len(set_c) == 3, "the adversarial Set C fixtures must stay held out"
     assert all(Path(entry.path).stem in registered for entry in vault)
     assert all(Path(entry.path).stem not in registered for entry in unregistered)
