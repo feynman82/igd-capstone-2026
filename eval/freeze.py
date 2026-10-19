@@ -228,9 +228,10 @@ def _mime(name: str) -> str:
 
 
 def load(
-    settings: Any, commit: str, entries: Sequence[Entry], root: Path = ROOT
+    settings: Any, commit: str, entries: Sequence[Entry], root: Path = ROOT, role: str = "vault"
 ) -> list[dict[str, Any]]:
-    """Register and read every `vault` document from the commit's bytes, one at a time."""
+    """Register and read every document of `role` from the commit's bytes, one at a time:
+    `vault` for the load itself, `set_c` when `eval.setc` adds the planted documents to a copy."""
     from core.ingest import register as reg
     from core.ingest.pipeline import process
     from core.runtime.db import connect
@@ -240,7 +241,7 @@ def load(
     out: list[dict[str, Any]] = []
     with connect(settings) as conn:
         for entry in entries:
-            if entry.role != "vault":
+            if entry.role != role:
                 continue
             payload = blob(commit, entry.path, root)
             row = reg.register_document(

@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from eval.run import _fixture_guards
 from eval.score import has_ground_truth
 from eval.setc import FIXTURE_REGISTER, NEEDS_FIXTURES, fixture_ids
@@ -71,3 +73,25 @@ def test_fixtures_are_not_flagged_when_only_set_c_is_scored() -> None:
 
 def test_only_injection_needs_the_fixtures() -> None:
     assert {"injection"} == NEEDS_FIXTURES
+
+
+def test_a_copy_onto_its_own_source_is_refused() -> None:
+    """`clone_vault` drops the target before copying: `--from parrot_run3 --vault parrot_run3`
+    would delete Run 3's vault."""
+    from eval.setc import check_vaults
+
+    with pytest.raises(RuntimeError, match="onto itself"):
+        check_vaults("parrot_run3", "parrot_run3")
+    with pytest.raises(RuntimeError, match="need a name"):
+        check_vaults("", "parrot_setc")
+    check_vaults("parrot_run3", "parrot_setc")
+
+
+def test_the_planted_documents_at_a_commit_are_the_ones_the_register_names() -> None:
+    """`--commit` reads them from Git; they must be the fixtures `eval.run` checks for."""
+    from eval.freeze import corpus_files, resolve
+
+    planted = {
+        e.name.removesuffix(".pdf") for e in corpus_files(resolve("HEAD")) if e.role == "set_c"
+    }
+    assert planted == FIXTURES
