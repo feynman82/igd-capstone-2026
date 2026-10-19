@@ -258,3 +258,24 @@ Stated here rather than in §8, where they would arrive too late to qualify the 
 | Relevance floor rejected | `docs/adr/0019-the-reranker-drops-what-does-not-answer-the-question.md` |
 | Retrieval implementation | `core/retrieve/hybrid.py`, `core/retrieve/rerank.py`, `core/retrieve/README.md` |
 | Open defects cited | issues #16, #19, #32 |
+
+**Since run 2, in date order.** A source for each finding the chapter will draw on, not yet
+written into it. In week 8 the body draws on these; each claim points at a committed file or a
+merged pull request, never at memory. Result files are under `eval/results/`.
+
+| Date | Claim | Source |
+|---|---|---|
+| 5 Oct | Set C's first reading: one genuine leak, and injection items passing against an empty vault | `2026-10-05-set-c-first-reading`, issue #48 |
+| 14 Oct | Set C read by behaviour (held back) rather than the Answer flag, which is kept as #16's tracker | `2026-10-14-setc-behaviour-reading`, `2026-10-14-setc-injection-planted`, #60 |
+| 14 Oct | Banded replay: no cosine edge up to 0.60 reaches 0.95 abstention without costing answerable questions | `2026-10-14-bands-first-look`, `2026-10-14-floor-off`, `docs/superpowers/specs/2026-10-14-banded-abstention-eval-design.md`, `eval/bands.py` |
+| 14 Oct | Ten casual questions: the old scorer passed 7, a person passes 4 | `2026-10-14-production-colloquial` and its `-headline` companion |
+| 15 Oct | The headline moves to five aim-based numbers; the nine metrics become diagnostics (proposed, awaiting DY) | `docs/superpowers/specs/2026-10-15-aim-headline-metrics-design.md`, `eval/headline.py`, `eval/README.md`, #67 |
+| 15 Oct | Set C's planted documents were distorting Sets A and B in both directions; they now get a vault of their own | `2026-10-15-fixtures-in-vault`, `2026-10-15-fixtures-removed`, `2026-10-15-setc-isolated-vault`, `eval/setc.py`, #71 |
+| 15 Oct | A false "none of the policies is a car policy", from one mis-extracted product name, caused 5 of 14 Set A misses | `2026-10-15-absence-needs-every-kind`, #76, issue #48 |
+| 15–17 Oct | Extraction: field descriptions never reached the model; optional fields were skipped by the decode grammar; reading order put a title last. Re-extraction 135/7/31 → 164/3/2 | #77, #79, #80 (offline measurements in their pull requests) |
+| 17 Oct | The vault rebuilt: extraction 0.875 → 0.976, and better chunks bring car hard negatives over the floor (ADR 0019's trade-off again) | `2026-10-17-vault-rebuilt`, #87 |
+| 17 Oct | Two hard negatives the corpus had since made answerable; one moved to Set A, one retired | `eval/sets/hard_negatives/lane-b.jsonl` (comment lines), #88 |
+| 17–19 Oct | "Last year" must cite a document from last year; a loan runs on from its signing | `2026-10-17-time-scoped-claims`, `2026-10-19-standing-before`, `2026-10-19-standing-after`, `core/graph/period.py`, #89, #97 |
+| 19 Oct | A printed value checked against its printed label: rejected at first (+3 over-caution), accepted on its own conditions after two fixes; reaches two of four car claims and catches one | `docs/adr/0021-a-printed-value-is-checked-against-the-label-printed-beside-it.md`, `2026-10-19-label-check-{off,on}`, `2026-10-19-label-check-{off,on}-2`, #98, #99 |
+| 19 Oct | Set C leaked twice (a near-miss name; "my brother's"); fixed to 15/15 with Sets A and B unchanged | `2026-10-19-setc-scope-before`, `2026-10-19-setc-scope-after`, `2026-10-19-scope-strangers`, #103 |
+| 19 Oct | Run 3 runs on a frozen commit in an isolated vault, never the shared one; rehearsed end to end | `eval/freeze.py`, `eval/setc.py --from`, `eval/README.md` "Running Run 3", issue #85, #100, #101, #102, #106, #107 |
