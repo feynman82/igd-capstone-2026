@@ -18,6 +18,9 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
+    env:
+      RUN3_VAULT: ${{ inputs.vault }}
+      RUN3_LABEL: ${{ inputs.label }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,8 +32,8 @@ jobs:
           uv run python -m eval.freeze \
             --commit "${{ github.sha }}" \
             --household eval/run3/household.draft.json \
-            --vault "${{ inputs.vault }}" \
-            --label "${{ inputs.label }}-dry" \
+            --vault "$RUN3_VAULT" \
+            --label "${RUN3_LABEL}-dry" \
             --out "${{ runner.temp }}/run3-results" \
             --dry-run
       - name: Build isolated vault and verify extraction
@@ -38,8 +41,8 @@ jobs:
           uv run python -m eval.freeze \
             --commit "${{ github.sha }}" \
             --household eval/run3/household.draft.json \
-            --vault "${{ inputs.vault }}" \
-            --label "${{ inputs.label }}" \
+            --vault "$RUN3_VAULT" \
+            --label "$RUN3_LABEL" \
             --out "${{ runner.temp }}/run3-results"
       - name: Upload verification and manifest
         if: always()
