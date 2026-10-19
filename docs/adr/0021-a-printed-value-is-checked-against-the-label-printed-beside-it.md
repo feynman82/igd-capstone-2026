@@ -24,8 +24,9 @@ Neither a similarity score nor a relevance score can tell these apart from a rig
 A sentence that states a value is checked against the **label printed beside that value**:
 
 1. **Code finds the label.** Docling's tables reach the passages as `label: value` lines
-   (`core/ingest/parse.py`), so for each number, date or identifier in the sentence that a cited
-   passage prints on such a line, the label is the text before the colon. A value printed with
+   (`core/ingest/parse.py`), so for each printed value the sentence repeats — a name, a date, an
+   amount however formatted — on such a line in a cited passage, the label is the text before
+   the colon. A value printed with
    no label — a letterhead, a sentence of prose — is not checked, and the sentence keeps its place.
 2. **The generator judges meaning.** One constrained call per checked sentence, with the sentence
    and its printed `label: value` lines, asking whether the label supports what the sentence calls
