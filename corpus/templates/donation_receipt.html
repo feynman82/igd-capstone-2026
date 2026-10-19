@@ -9,8 +9,9 @@
   @page { size: A5 landscape; margin: 12mm 14mm; }
   * { box-sizing: border-box; }
   body { font-family: "Helvetica Neue", Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #222; margin: 0; background: #fff; }
-  .watermark { position: fixed; top: 40%; left: -10%; width: 120%; text-align: center; transform: rotate(-18deg);
-    font-size: 18pt; font-weight: 700; letter-spacing: 1px; color: rgba(160, 30, 30, 0.13); z-index: 0; }
+  /* Keep the synthetic label out of the receipt fields: OCR otherwise merges TEST into the donation date. */
+  .watermark { position: fixed; bottom: 0; left: 0; width: 100%; text-align: center; transform: none;
+    font-size: 8pt; font-weight: 700; letter-spacing: 0.3px; color: #963737; z-index: 0; }
   .content { position: relative; z-index: 1; }
   .header { width: 100%; border-collapse: collapse; border-bottom: 2px solid #2f6b3a; margin-bottom: 12px; }
   .header td { padding-bottom: 8px; vertical-align: bottom; }
