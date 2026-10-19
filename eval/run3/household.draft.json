@@ -1,0 +1,34 @@
+{
+  "status": "DRAFT, not a decision. The corpus owner confirms or corrects it on issue #85 before Run 3 is loaded.",
+  "why": "The development vault's household was curated by hand and has drifted: its owner is 'Marcus Lim', a second person is also named 'Marcus Lim Jun Wei', 'Lim Ah Kow' and the joint borrowers are aliases of that second person, and every relation is 'other'. eval.freeze refuses a name that belongs to two people, so it could not be loaded as it stands.",
+  "people": [
+    {
+      "name": "Marcus Lim Jun Wei",
+      "relation": "self",
+      "owner": true,
+      "aliases": ["Marcus Lim"],
+      "evidence": "the insured on b1-0001 and the owner the question sets write 'my' for; the development vault's owner is 'Marcus Lim'"
+    },
+    {
+      "name": "Lim Ah Kow",
+      "relation": "parent",
+      "evidence": "Set C asks about 'my father's hospital plan', and the only hospital income plan on file (b1-0003) is his; core/household.py's place() names him as the owner's father"
+    },
+    {
+      "name": "Rachel Ng Hui Shan",
+      "relation": "other",
+      "evidence": "relation not stated anywhere in the repository; joint borrower on b2-0010. To confirm: partner?"
+    },
+    {
+      "name": "Lucas Lim Kai En",
+      "relation": "other",
+      "evidence": "relation not stated anywhere in the repository; insured on b2-0006 and named on a birth certificate. To confirm: child?"
+    },
+    {
+      "name": "Tan Mei Ling",
+      "relation": "other",
+      "external": true,
+      "evidence": "marked outside the household in the development vault; relation not stated anywhere in the repository"
+    }
+  ]
+}
