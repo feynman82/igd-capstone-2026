@@ -117,3 +117,21 @@ def test_a_household_that_cannot_be_true_is_refused(
     the owner's alias and a second person."""
     with pytest.raises(FreezeRefused, match=why):
         household(_declaration(tmp_path, people))
+
+
+def test_default_freeze_loads_only_registered_documents() -> None:
+    """Unregistered specimens remain hashed in the manifest, but cannot skew Run 3 scoring."""
+    commit = resolve("HEAD")
+    entries = corpus_files(commit)
+    registered = {row["doc_id"] for row in register_rows(commit)}
+    vault = [entry for entry in entries if entry.role == "vault"]
+    unregistered = [entry for entry in entries if entry.role == "unregistered"]
+    set_c = [entry for entry in entries if entry.role == "set_c"]
+
+    assert vault, "the frozen vault must have registered documents to score"
+    assert len(unregistered) == 39, "update the batch specimen inventory and review inclusion"
+    assert len(set_c) == 3, "the adversarial Set C fixtures must stay held out"
+    assert all(Path(entry.path).stem in registered for entry in vault)
+    assert all(Path(entry.path).stem not in registered for entry in unregistered)
+    assert all(entry.path.startswith("corpus/batches/batch3/") for entry in set_c)
+    assert len(entries) == len(vault) + len(unregistered) + len(set_c)
