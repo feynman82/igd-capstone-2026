@@ -62,6 +62,11 @@ Previous: Blk 210 Hougang Ave 1 #05-14 Singapore 530210 (until 2021-03-05)
 | Marcus Lim Jun Wei | Meridian Systems Pte Ltd | 2019-02-01 | — | 9400.00 |
 | Rachel Ng Hui Shan | Northlight Health Pte Ltd | 2018-08-01 | — | 6250.00 |
 
+Rachel's 6250.00 monthly gross is the **2025–2026** rate. Her 2024 gross was
+5200.00 monthly (62400.00 annually), as recorded in the YA2025 notice and
+`corpus/batches/noa-ya2025/README.md`; the salary increment took effect by
+January 2025. The employer and employment start date did not change.
+
 ## Vehicles
 | Plate | Make and model | Registered | Sold |
 |---|---|---|---|
@@ -80,7 +85,7 @@ Previous: Blk 210 Hougang Ave 1 #05-14 Singapore 530210 (until 2021-03-05)
 | PH-2024-912404 | private hospital and surgical, on Rachel | Meridian Assurance | 2024-03-01 | yes |
 | ES-2020-119284 | long-term care / ElderShield supplement, on Tan Mei Ling | Lionhead Life Assurance | 2020-04-10 | yes |
 | CH-2024-339102 | junior health and surgical, on Lucas | Meridian Assurance | 2024-08-01 | yes |
-| LF-2026-641205 | life plan with CI, early CI, TPD and hospital cash riders, on Marcus (b2-0019) | Lionhead Life Assurance | 2026-07-01 | yes |
+| LF-2026-641205 | life plan with CI, early CI, TPD and hospital cash riders, on Marcus (b2-0019, **not in the registered corpus**) | Lionhead Life Assurance | 2026-07-01 | unverified in Run 3 |
 
 A policy number is written identically everywhere it appears, and carries the same insurer
 and the same insured on every document. The validator enforces this.

@@ -12,7 +12,11 @@ tax-deductible outright cash donations by Rachel Ng Hui Shan.
 The two 2024 receipts are the donations deducted at 250% on Rachel's YA2025 notice
 (`../noa-ya2025/`).
 
-**Deliberately unregistered.** `tests/test_modules.py` asserts that no tax-deductible donation is
-on file for 2025 (`donations_ytd` on 20 Dec 2025 is empty, because Marcus's only 2025 receipt,
-`b1-0021`, is not deductible). Registering the 15 Nov 2025 receipt would change that story, so
-it needs a decision before it gets a row.
+**Deliberately unregistered for scoring.** `tests/test_modules.py` asserts that
+`donations_ytd` on 20 Dec 2025 is empty for the **registered** corpus: Marcus's
+registered 2025 receipt (`b1-0021`) is not deductible. This is **not** a claim
+that Rachel made no deductible donation in 2025: the 15 Nov 2025 GiveSG receipt
+above exists as an unregistered source fixture. Ingesting all files from this
+folder into the same household vault would make the empty household-wide
+assertion invalid. Keep these PDFs out of the registered-only evaluation slice
+until the test and registration policy are explicitly reconciled.
