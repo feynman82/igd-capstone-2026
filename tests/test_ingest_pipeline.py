@@ -830,6 +830,39 @@ def test_a_yes_or_no_reading_no_page_speaks_to_is_still_dropped(iras: Any) -> No
     assert "tax_deductible (on no page)" in (result.unplaced or [])
 
 
+@pytest.mark.parametrize(
+    ("printed", "name"),
+    [
+        ("Mr Marcus Lim Jun Wei", "Marcus Lim Jun Wei"),
+        ("MDM Tan Mei Ling", "Tan Mei Ling"),
+        ("Ms. Rachel Ng Hui Shan", "Rachel Ng Hui Shan"),
+        ("Dr Lim Ah Kow", "Lim Ah Kow"),
+        ("Mrinal Shah", "Mrinal Shah"),  # a name that starts like a title is not one
+        ("Marcus Lim Jun Wei", "Marcus Lim Jun Wei"),
+        ("Mr", "Mr"),  # nothing but a title: left as it is
+    ],
+)
+def test_a_courtesy_title_is_not_part_of_a_name(printed: str, name: str) -> None:
+    from core.ingest.extract import without_title
+
+    assert without_title(printed) == name
+
+
+def test_a_titled_insured_is_stored_and_attributed_without_the_title(insurance: Any) -> None:
+    """Run 3, 19 October: "Mr Marcus Lim Jun Wei" on the renewal notices matched nobody in the
+    household, so both alerts that fired were false and one reminder went to the wrong person."""
+    page = POLICY_PAGE.replace("Marcus Lim Jun Wei", "Mr Marcus Lim Jun Wei")
+    reply = {**SCHEDULE_REPLY, "insured": "Mr Marcus Lim Jun Wei"}
+    pages = [ParsedPage(1, page)]
+    result = extract(FakeOllama([reply]), insurance, "policy_schedule", pages, confidence=0.9)  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert by_key["insured"].value_text == "Marcus Lim Jun Wei"
+    assert by_key["insured"].page == 1, "still placed by the name as printed"
+    assert all(fact.subject == "Marcus Lim Jun Wei" for fact in result.facts)
+
+
 def test_a_schedule_whose_dates_were_copied_as_printed_extracts(insurance: Any) -> None:
     reply = {**SCHEDULE_REPLY, "cover_from": "12 April 2026", "expiry_date": "11 April 2027"}
     client = FakeOllama([reply])
