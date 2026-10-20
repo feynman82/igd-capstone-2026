@@ -30,6 +30,7 @@ the difference matters when a supervisor asks.
 | [0018](0018-the-reranker-runs-in-process-because-ollama-cannot-serve-a-cross-encoder.md) | The reranker runs in-process, because Ollama cannot serve a cross-encoder | Proposed |
 | [0019](0019-the-reranker-drops-what-does-not-answer-the-question.md) | A relevance floor on the reranker does not buy abstention, and the reason is not calibration | Rejected |
 | [0020](0020-the-household-calendar-is-local-and-parrot-drafts-entries.md) | The household calendar lives in Postgres, answers by code, and Parrot only ever drafts an entry | Accepted |
+| [0021](0021-a-printed-value-is-checked-against-the-label-printed-beside-it.md) | A printed value is checked against the label printed beside it, before it is believed | Proposed |
 
 Add a row when you add a record.
 
