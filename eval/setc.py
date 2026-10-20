@@ -25,6 +25,15 @@ So the two needs are met by two vaults:
   fixtures are read into the clone, Set C is scored against it, and the clone is dropped. The
   development vault is not written to.
 
+For Run 3 the vault to copy is not the development vault but the frozen one `eval.freeze` loaded
+(issue #85), and the planted documents come from the same frozen commit:
+
+    uv run python -m eval.setc --from parrot_run3 --commit <sha> --label run3-setc
+
+`--from` names the database to copy; it is only ever read. `--commit` reads the planted documents
+from that commit's bytes rather than from the working tree, so Set C is scored on exactly the
+corpus Sets A and B were. Without either, it behaves as before.
+
 `eval.run` also refuses to bank an injection item it cannot test: when the fixtures are not in
 the vault being scored, those items are skipped and counted in `run.skipped_no_fixture`, the same
 way a question whose document is missing is skipped rather than scored as a miss.
@@ -62,6 +71,17 @@ def fixture_ids(root: Path = ROOT) -> frozenset[str]:
         return frozenset(doc_id for row in rows if (doc_id := (row.get("doc_id") or "").strip()))
 
 
+def check_vaults(source: str, target: str) -> None:
+    """Refuse a copy onto its own source. `clone_vault` drops the target before it copies, so a
+    target that is the source would delete the vault it was meant to read."""
+    if not source or not target:
+        raise RuntimeError("Both the vault to copy and the vault to copy it into need a name.")
+    if source == target:
+        raise RuntimeError(
+            f"Copying {source} onto itself would drop it before copying. Give --vault another name."
+        )
+
+
 def clone_vault(admin_url: str, source: str, target: str) -> None:
     """Copy the development vault into `target`. Nothing is written to `source`.
 
@@ -88,6 +108,14 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--label", default="setc", help="part of the result file name")
     parser.add_argument("--vault", default=VAULT, help=f"database name (default {VAULT})")
     parser.add_argument("--keep", action="store_true", help="do not drop the clone at the end")
+    parser.add_argument(
+        "--from",
+        dest="source",
+        help="the vault to copy (default: the development vault); Run 3 copies parrot_run3",
+    )
+    parser.add_argument(
+        "--commit", help="read the planted documents from this commit, not the working tree"
+    )
     parser.add_argument("--out", type=Path, default=ROOT / "eval" / "results")
     args = parser.parse_args(argv)
 
@@ -101,15 +129,30 @@ def main(argv: Sequence[str] | None = None) -> int:
     except ConfigurationError as error:
         print(f"Configuration needs attention: {error}")
         return 2
+    from eval.freeze import FreezeRefused, corpus_files, load, resolve
+
     folder = ROOT / FIXTURE_BATCH
-    if not fixture_ids() or not folder.is_dir():
-        print(f"No Set C fixtures at {folder}. The injection items cannot be tested.")
+    commit = None
+    planted = []
+    try:
+        if args.commit:
+            commit = resolve(args.commit)
+            planted = [entry for entry in corpus_files(commit) if entry.role == "set_c"]
+            if not planted:
+                raise RuntimeError(f"No Set C fixtures under {FIXTURE_BATCH} at {commit}.")
+        elif not fixture_ids() or not folder.is_dir():
+            raise RuntimeError(
+                f"No Set C fixtures at {folder}. The injection items cannot be tested."
+            )
+        source = args.source or settings.database_url.rsplit("/", 1)[-1]
+        check_vaults(source, args.vault)
+    except (RuntimeError, FreezeRefused) as error:
+        print(error)
         return 2
 
-    source = settings.database_url.rsplit("/", 1)[-1]
     admin = vault_url(settings.database_url, "postgres")
     clone = vault_url(settings.database_url, args.vault)
-    print(f"copying vault {source} -> {args.vault} (the development vault is not written to)")
+    print(f"copying vault {source} -> {args.vault} ({source} is not written to)")
     try:
         clone_vault(admin, source, args.vault)
     except RuntimeError as error:
@@ -118,8 +161,14 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     try:
         isolated = Settings.load(ROOT, {**os.environ, "DATABASE_URL": clone})
-        print(f"reading the {len(fixture_ids())} planted documents into {args.vault}")
-        ingest(isolated, documents_in(folder))
+        if commit is not None:
+            print(
+                f"reading the {len(planted)} planted documents from {commit[:12]} into {args.vault}"
+            )
+            load(isolated, commit, planted, role="set_c")
+        else:
+            print(f"reading the {len(fixture_ids())} planted documents into {args.vault}")
+            ingest(isolated, documents_in(folder))
         return run.main(
             [
                 "--corpus",

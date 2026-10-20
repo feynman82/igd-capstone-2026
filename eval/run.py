@@ -125,6 +125,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         help="answer below every pack's floor, for eval.bands to replay (not a production run)",
     )
     parser.add_argument(
+        "--label-check",
+        action="store_true",
+        help="check each stated value against the label printed beside it (ADR 0021, proposed)",
+    )
+    parser.add_argument(
         "--vault",
         default="",
         help="score against this database instead of the development vault (eval.setc uses it)",
@@ -227,6 +232,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 reranker=args.reranker,
                 rerank_floor=args.rerank_floor,
                 floor_off=args.floor_off,
+                label_check=args.label_check,
             )
             traces = harness.trace_all(graph, recorder, questions, on_each=_progress)
             scored = score.grade(traces)
@@ -302,6 +308,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             "modules_as_of": None if module_metrics is None else module_metrics.as_of.isoformat(),
             "candidates": args.candidates,
             "keep": args.keep,
+            "label_check": args.label_check,
             **_floor_fields(args.floor_off, per_question),
             "runtime_numbers_from": runtime_source,
             "skipped_no_document": waiting,

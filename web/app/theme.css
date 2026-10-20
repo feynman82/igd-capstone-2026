@@ -357,9 +357,9 @@
   --radius: var(--r);
   --radius-pill: var(--r-pill);
 
-  --font-display: var(--font-outfit), "Segoe UI", system-ui, sans-serif;
-  --font-sans: var(--font-figtree), "Segoe UI", system-ui, sans-serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   --text-label: var(--fs-label);
   --text-label--line-height: var(--lh-flat);

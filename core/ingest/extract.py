@@ -132,6 +132,31 @@ def find_page(value: str, pages: list[ParsedPage]) -> int | None:
     return None
 
 
+def reading_page(field: FieldSpec, pages: list[ParsedPage]) -> int | None:
+    """The page a yes/no field was read from: the first that prints what the field is about.
+
+    `find_page` looks for the value itself, and a boolean is never printed as one. A receipt says
+    "This donation is eligible for tax deduction", the model rightly reports `tax_deductible` as
+    true, and no page contains "true". On 19 October every donation receipt's `tax_deductible`
+    was dropped as "on no page" for that reason. The page that names the field's subject is the
+    page the reading came from: each word of the field's name, cut to its stem ("deductible" to
+    "deduct"), must be on it. A page that names none of it supports no reading, and the field
+    is dropped as before.
+    """
+    stems = [
+        word if len(word) <= 4 else word[: max(4, len(word) - 4)]
+        for word in field.name.split("_")
+        if len(word) >= 3
+    ]
+    if not stems:
+        return None
+    for page in pages:
+        haystack = _normalise(page.text)
+        if all(stem in haystack for stem in stems):
+            return page.page
+    return None
+
+
 _MONTH_NUMBER: dict[str, int] = {}
 for _number, _name in enumerate(_MONTHS, start=1):
     _MONTH_NUMBER[_name.casefold()] = _number
@@ -144,8 +169,24 @@ _MONTH_DAY_YEAR = re.compile(r"^\s*([A-Za-z]+)\.?\s+(\d{1,2}),?\s+(\d{4})\s*$")
 _NUMERIC_DAY_FIRST = re.compile(r"^\s*(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{4})\s*$")
 
 
+# The same four notations, found inside a longer value rather than as the whole of it.
+_DATES_INSIDE = (
+    re.compile(r"(?<!\d)\d{4}-\d{2}-\d{2}(?!\d)"),
+    re.compile(r"(?<!\d)\d{1,2}\s+[A-Za-z]+\.?,?\s+\d{4}(?!\d)"),
+    re.compile(r"\b[A-Za-z]+\.?\s+\d{1,2},?\s+\d{4}(?!\d)"),
+    re.compile(r"(?<!\d)\d{1,2}[/.\-]\d{1,2}[/.\-]\d{4}(?!\d)"),
+)
+
+
 def printed_date(value: str) -> str | None:
     """A date as a document prints it, as YYYY-MM-DD, or None when it is not a date.
+
+    A value that is a date and something else — "TEST 29 Feb 2024" — gives its date when it holds
+    exactly one. On 19 October Rachel's three donation receipts were quarantined because a
+    synthetic-record banner crossing the "Date of donation" line put the word TEST into what was
+    read; a "PAID" or "COPY" stamp on a real receipt does the same. The date is printed whole, so
+    reading it is not inventing one. A value holding two different dates is still None: which one
+    was meant is a guess.
 
     The model copies the date and this converts it, because the conversion is where the model
     failed. With `format: date` in the decode schema Ollama builds a grammar that makes the model
@@ -159,6 +200,20 @@ def printed_date(value: str) -> str | None:
     "For the whole of life", 31 February — is None, so it fails validation and says so rather than
     becoming a plausible wrong date.
     """
+    whole = _whole_date(value)
+    if whole is not None:
+        return whole
+    inside = {
+        found
+        for pattern in _DATES_INSIDE
+        for match in pattern.finditer(value)
+        if (found := _whole_date(match.group(0))) is not None
+    }
+    return inside.pop() if len(inside) == 1 else None
+
+
+def _whole_date(value: str) -> str | None:
+    """The value as YYYY-MM-DD when the whole of it is one date in a notation read here."""
     patterns = (
         (_ISO_DATE, "ymd"),
         (_DAY_MONTH_YEAR, "dmy"),
@@ -292,10 +347,30 @@ def _undated(spec: FieldSpec, value: Any) -> bool:
     )
 
 
+# A courtesy title printed before a name: "Mr Marcus Lim Jun Wei" on a renewal notice's address.
+_TITLE = re.compile(r"^(?:mr|mrs|ms|miss|mdm|madam|dr|prof|mx)\.?\s+(?=\S)", re.IGNORECASE)
+
+
+def without_title(name: str) -> str:
+    """A person's name with a leading courtesy title removed: what the household calls them.
+
+    A title is how a letter addresses somebody, not part of who they are, and the household
+    knows people by name. On 19 October Run 3's new renewal notices printed the insured as "Mr
+    Marcus Lim Jun Wei", the title stayed in the subject, and the subject matched nobody: both
+    alerts that fired reported his home and car policies uncovered, and one reminder went to the
+    wrong person. Only the stored value changes; the page is still found from the name as
+    printed, title and all. A value that is nothing but a title is left as it is.
+    """
+    stripped = _TITLE.sub("", name.strip(), count=1)
+    return stripped or name.strip()
+
+
 def _coerce(spec: FieldSpec, raw: Any) -> tuple[str | None, Decimal | None, date | None] | None:
     """Put the value in the one `facts` column its declared type maps to, or reject it."""
     column = FACT_COLUMN[spec.type]
     text = str(raw).strip()
+    if spec.type == "person":
+        text = without_title(text)
     if not text:
         return None
     if column == "value_num":
@@ -425,7 +500,7 @@ def _read(
     subject_value: str | None = None
     if subject_field:
         raw_subject = getattr(validated, subject_field, None)
-        subject_value = str(raw_subject).strip() if raw_subject else None
+        subject_value = without_title(str(raw_subject)) if raw_subject else None
 
     facts: list[ExtractedFact] = []
     unplaced: list[str] = [
@@ -462,7 +537,11 @@ def _read(
             unplaced.append(f"{name} (not a valid {field_spec.type})")
             continue
         printed = reported.get(name)
-        page = find_page(str(printed) if printed is not None else str(raw), pages)
+        page = (
+            reading_page(field_spec, pages)
+            if field_spec.type == "boolean"
+            else find_page(str(printed) if printed is not None else str(raw), pages)
+        )
         if page is None:
             unplaced.append(f"{name} (on no page)")
             log.info("dropping %s: no page in the document contains it", name)

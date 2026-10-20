@@ -19,8 +19,10 @@ USB stick at the weekly session.
 
 The 40-document real-document holdout is different in kind. It is collected under the
 consent and redaction protocol in `docs/governance/`, is redacted before use, and **is never
-committed to this repository**. `corpus/holdout/` is gitignored, and `.graphifyignore`
-excludes both it and `corpus/batches/` from knowledge-graph extraction as a second lock.
+committed to this repository**. It is kept outside the repository, in `~/holdout` on the
+integration machine, where `eval/holdout.py` requires it to be. `corpus/holdout/` and `temp/`
+are gitignored as a second lock, and `.graphifyignore` excludes `corpus/holdout/` and
+`corpus/batches/` from knowledge-graph extraction.
 
 That distinction is the whole control, so it is worth stating why it is an ignore rule and
 not a convention: deleting a committed file does not remove it from the repository. It stays

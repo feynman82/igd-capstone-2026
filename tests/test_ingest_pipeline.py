@@ -719,12 +719,148 @@ def test_a_printed_date_becomes_iso_in_code_not_in_the_model(printed: str, iso: 
 
 
 @pytest.mark.parametrize(
-    "printed", ["someday", "31 February 2026", "13/13/2026", "For the whole of life"]
+    "printed",
+    [
+        "someday",
+        "31 February 2026",
+        "13/13/2026",
+        "For the whole of life",
+        "01 March 2026 to 28 February 2027",  # two dates: which one was meant is a guess
+    ],
 )
 def test_something_that_is_not_a_date_is_not_turned_into_one(printed: str) -> None:
     from core.ingest.extract import printed_date
 
     assert printed_date(printed) is None
+
+
+@pytest.mark.parametrize(
+    ("printed", "expected"),
+    [
+        ("TEST 29 Feb 2024", "2024-02-29"),  # 19 October: a banner's word, read into the date
+        ("PAID 01/03/2026", "2026-03-01"),
+        ("29 Feb 2024 (29 Feb 2024)", "2024-02-29"),  # one date, printed twice
+    ],
+)
+def test_one_date_inside_other_words_is_that_date(printed: str, expected: str) -> None:
+    from core.ingest.extract import printed_date
+
+    assert printed_date(printed) == expected
+
+
+RECEIPT_PAGE = """THYE HUA KWAN MORAL CHARITIES
+ROJECT PARROT · SYNTHETIC TEST RECORD · NOT A REAL
+Receipt No: THK-2024-00291
+Donor: Rachel Ng Hui Shan
+Date issued: 29 Feb 2024
+Date of donation: TEST 29 Feb 2024
+Amount: SGD 300.00"""
+
+
+def test_a_receipt_whose_date_line_caught_a_banner_word_still_extracts(iras: Any) -> None:
+    """Rachel's three 2024-2025 receipts were quarantined on 19 October over "TEST 29 Feb 2024":
+    the date is required, and a value that is not wholly a date failed validation."""
+    reply = {
+        "donor": "Rachel Ng Hui Shan",
+        "charity": "THYE HUA KWAN MORAL CHARITIES",
+        "receipt_no": "THK-2024-00291",
+        "donation_date": "TEST 29 Feb 2024",
+        "donation_amount": "300.00",
+    }
+    pages = [ParsedPage(1, RECEIPT_PAGE)]
+    result = extract(FakeOllama([reply]), iras, "donation_receipt", pages, confidence=0.9)  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert str(by_key["donation_date"].value_date) == "2024-02-29"
+    assert by_key["donation_date"].page == 1
+
+
+def _receipt_reply(**extra: Any) -> dict[str, Any]:
+    return {
+        "donor": "Rachel Ng Hui Shan",
+        "charity": "THYE HUA KWAN MORAL CHARITIES",
+        "receipt_no": "THK-2024-00291",
+        "donation_date": "29 Feb 2024",
+        "donation_amount": "300.00",
+        **extra,
+    }
+
+
+def test_a_yes_or_no_reading_is_placed_on_the_page_that_prints_its_subject(iras: Any) -> None:
+    """19 October: "This donation is eligible for tax deduction" was read as true, and dropped,
+    because no page contains the word "true". Every receipt lost its tax_deductible."""
+    page = (
+        "Receipt No: THK-2024-00291\nDate of donation: 29 Feb 2024\nAmount: SGD 300.00\n"
+        "This donation is eligible for tax deduction."
+    )
+    pages = [
+        ParsedPage(1, "Thye Hua Kwan Moral Charities\nDonor: Rachel Ng Hui Shan"),
+        ParsedPage(2, page),
+    ]
+    result = extract(
+        FakeOllama([_receipt_reply(tax_deductible=True)]),
+        iras,
+        "donation_receipt",
+        pages,
+        confidence=0.9,
+    )  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert by_key["tax_deductible"].page == 2
+    assert "tax_deductible" not in " ".join(result.unplaced or [])
+
+
+def test_a_yes_or_no_reading_no_page_speaks_to_is_still_dropped(iras: Any) -> None:
+    page = (
+        "Receipt No: THK-2024-00291\nDonor: Rachel Ng Hui Shan\nDate of donation: 29 Feb 2024\n"
+        "Amount: SGD 300.00\nTHYE HUA KWAN MORAL CHARITIES"
+    )
+    result = extract(
+        FakeOllama([_receipt_reply(tax_deductible=True)]),
+        iras,
+        "donation_receipt",
+        [ParsedPage(1, page)],
+        confidence=0.9,
+    )  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    assert "tax_deductible" not in {fact.key for fact in result.facts}
+    assert "tax_deductible (on no page)" in (result.unplaced or [])
+
+
+@pytest.mark.parametrize(
+    ("printed", "name"),
+    [
+        ("Mr Marcus Lim Jun Wei", "Marcus Lim Jun Wei"),
+        ("MDM Tan Mei Ling", "Tan Mei Ling"),
+        ("Ms. Rachel Ng Hui Shan", "Rachel Ng Hui Shan"),
+        ("Dr Lim Ah Kow", "Lim Ah Kow"),
+        ("Mrinal Shah", "Mrinal Shah"),  # a name that starts like a title is not one
+        ("Marcus Lim Jun Wei", "Marcus Lim Jun Wei"),
+        ("Mr", "Mr"),  # nothing but a title: left as it is
+    ],
+)
+def test_a_courtesy_title_is_not_part_of_a_name(printed: str, name: str) -> None:
+    from core.ingest.extract import without_title
+
+    assert without_title(printed) == name
+
+
+def test_a_titled_insured_is_stored_and_attributed_without_the_title(insurance: Any) -> None:
+    """Run 3, 19 October: "Mr Marcus Lim Jun Wei" on the renewal notices matched nobody in the
+    household, so both alerts that fired were false and one reminder went to the wrong person."""
+    page = POLICY_PAGE.replace("Marcus Lim Jun Wei", "Mr Marcus Lim Jun Wei")
+    reply = {**SCHEDULE_REPLY, "insured": "Mr Marcus Lim Jun Wei"}
+    pages = [ParsedPage(1, page)]
+    result = extract(FakeOllama([reply]), insurance, "policy_schedule", pages, confidence=0.9)  # type: ignore[arg-type]
+
+    assert result.ok, result.reason
+    by_key = {fact.key: fact for fact in result.facts}
+    assert by_key["insured"].value_text == "Marcus Lim Jun Wei"
+    assert by_key["insured"].page == 1, "still placed by the name as printed"
+    assert all(fact.subject == "Marcus Lim Jun Wei" for fact in result.facts)
 
 
 def test_a_schedule_whose_dates_were_copied_as_printed_extracts(insurance: Any) -> None:

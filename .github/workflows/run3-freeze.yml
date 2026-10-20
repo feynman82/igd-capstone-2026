@@ -1,0 +1,53 @@
+name: Run 3 frozen vault validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      vault:
+        description: "Isolated PostgreSQL database name (must not already exist)"
+        required: true
+        default: "parrot_run3"
+      label:
+        description: "Unique append-only report label"
+        required: true
+        default: "run3-validation"
+
+jobs:
+  frozen-vault:
+    runs-on: [self-hosted, gpu]
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    env:
+      RUN3_VAULT: ${{ inputs.vault }}
+      RUN3_LABEL: ${{ inputs.label }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --all-extras
+      - name: Verify frozen manifest and household without database writes
+        run: |
+          uv run python -m eval.freeze \
+            --commit "${{ github.sha }}" \
+            --household eval/run3/household.draft.json \
+            --vault "$RUN3_VAULT" \
+            --label "${RUN3_LABEL}-dry" \
+            --out "${{ runner.temp }}/run3-results" \
+            --dry-run
+      - name: Build isolated vault and verify extraction
+        run: |
+          uv run python -m eval.freeze \
+            --commit "${{ github.sha }}" \
+            --household eval/run3/household.draft.json \
+            --vault "$RUN3_VAULT" \
+            --label "$RUN3_LABEL" \
+            --out "${{ runner.temp }}/run3-results"
+      - name: Upload verification and manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run3-frozen-vault-report
+          path: ${{ runner.temp }}/run3-results/
+          if-no-files-found: warn

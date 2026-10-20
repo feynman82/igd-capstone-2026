@@ -1,0 +1,33 @@
+{
+  "status": "Confirmed by Christian 2026-10-19 for issue #85: the household is these five people and no one else (AGENTS.md, 'The corpus household'; corpus/canon.md).",
+  "why": "The development vault's household was curated by hand and has drifted: its owner is 'Marcus Lim', a second person is also named 'Marcus Lim Jun Wei', 'Lim Ah Kow' and the joint borrowers are aliases of that second person, and every relation is 'other'. eval.freeze refuses a name that belongs to two people, so it could not be loaded as it stands.",
+  "people": [
+    {
+      "name": "Marcus Lim Jun Wei",
+      "relation": "self",
+      "owner": true,
+      "aliases": ["Marcus Lim"],
+      "evidence": "the insured on b1-0001 and the owner the question sets write 'my' for; the development vault's owner is 'Marcus Lim'"
+    },
+    {
+      "name": "Rachel Ng Hui Shan",
+      "relation": "partner",
+      "evidence": "Marcus's wife (corpus/canon.md, family tree); joint borrower on b2-0010"
+    },
+    {
+      "name": "Lucas Lim Kai En",
+      "relation": "child",
+      "evidence": "Marcus and Rachel's son (corpus/canon.md); insured on b2-0006 and named on the birth certificate b2-0016"
+    },
+    {
+      "name": "Lim Ah Kow",
+      "relation": "parent",
+      "evidence": "Marcus's father (corpus/canon.md); Set C asks about 'my father's hospital plan', and the only hospital income plan on file (b1-0003) is his"
+    },
+    {
+      "name": "Tan Mei Ling",
+      "relation": "parent",
+      "evidence": "Marcus's mother, living with the household from 2021 (corpus/canon.md); insured on b2-0005"
+    }
+  ]
+}

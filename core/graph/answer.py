@@ -71,6 +71,7 @@ from core.graph.gate import (
 )
 from core.graph.inventory import Holding, Inventory
 from core.graph.knowledge import categories_asked, glossary, mentions, reworded
+from core.graph.labels import label_supports, labelled_lines
 from core.graph.period import asked_period, outside
 from core.graph.ports import Kind, Passage, Reranker, Retriever
 from core.graph.scope import HouseholdScope, Scoped, Subject
@@ -724,6 +725,22 @@ def _pack_for(passages: list[Passage], packs: Sequence[InstalledPack]) -> Instal
     return next((p for p in packs if best.doc_type in p.manifest.answering.documents), None)
 
 
+def _stranger(name: str, disclaimer: str = "") -> Abstained:
+    """ "Who is Sarah Tan Li Ling?" A name that is nobody in the household, though it is close to
+    somebody's: answering would mean answering from that somebody's documents."""
+    return Abstained(
+        f"Parrot does not know who {name} is",
+        (
+            f"No one in your household is called {name}. If they should be, add them on the "
+            "Household page and their documents will answer questions about them."
+        ),
+        0,
+        0,
+        None,
+        disclaimer,
+    )
+
+
 def _unknown_relation(word: str, disclaimer: str = "") -> Abstained:
     """One wording for "who is your son?", shared by explaining and advising so they cannot drift.
     Advice signs it with the pack's advice disclaimer; an explanation leaves it unsigned, as it
@@ -978,6 +995,7 @@ class AnswerGraph:
         consents: ConsentBook | None = None,
         advice_log: AdviceLog | None = None,
         calendar: HouseholdCalendar | None = None,
+        label_check: bool = False,
     ) -> None:
         self._today = today  # fixed for tests and the demonstration; otherwise the real date
         # The three advice ports (ADR 0016), injected because `core/` never imports the modules
@@ -1005,6 +1023,9 @@ class AnswerGraph:
         # The household calendar (ADR 0020). `None` is a caller with no connection, and then a
         # calendar question is just a question: searched, and most likely abstained on.
         self._calendar = calendar
+        # ADR 0021, proposed: a stated value checked against the label printed beside it, by one
+        # more call per sentence. Off until Sets A and B say it costs nothing it should not.
+        self._label_check = label_check
         self._graph = self._build()
 
     def _packs(self) -> tuple[InstalledPack, ...]:
@@ -1376,6 +1397,9 @@ class AnswerGraph:
         if subject.unknown_relation:
             yield _unknown_relation(subject.unknown_relation, disclaimer)
             return
+        if subject.stranger:
+            yield _stranger(subject.stranger, disclaimer)
+            return
         if subject.ambiguous or len(subject.person_ids) != 1:
             # A calculator adds up one person's documents. Two people's documents against one
             # person's guideline is a sum nobody could check, so the question is asked back. The
@@ -1642,6 +1666,9 @@ class AnswerGraph:
         if scoped is not None and scoped.unknown_relation:
             yield _unknown_relation(scoped.unknown_relation)
             return
+        if scoped is not None and scoped.stranger:
+            yield _stranger(scoped.stranger)
+            return
         person = scoped.person_name if scoped is not None and scoped.scoped else None
 
         # The interesting failure, and the one worth its own sentence: they asked about their
@@ -1760,6 +1787,14 @@ class AnswerGraph:
                         )
                     ):
                         why = f"cites no document from {when}"
+                    if why is None and self._label_check:
+                        printed = labelled_lines(
+                            claim.text,
+                            [by_ref[ref] for ref in claim.supports],
+                            f"{question}\n{asked}",
+                        )
+                        if printed and not label_supports(self._client, claim.text, printed):
+                            why = f"the printed label does not say that: {printed}"
                     if why is not None:
                         if why != "empty":
                             dropped += 1

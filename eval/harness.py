@@ -160,6 +160,7 @@ def build(
     reranker: RerankerName = "cross-encoder",
     rerank_floor: float | None = None,
     floor_off: bool = False,
+    label_check: bool = False,
 ) -> tuple[AnswerGraph, Recorder]:
     """The graph `scripts/ask.py` builds, with the recorder in the seam. Kept in step with that
     script by hand. `retriever="dense"` and `reranker="none"` are the stopgaps in
@@ -214,5 +215,6 @@ def build(
         adviser=ModuleAdviser(conn),
         consents=HouseholdConsents(conn),
         advice_log=HouseholdAdviceLog(conn),
+        label_check=label_check,
     )
     return graph, Recorder(retriever_rec, reranker_rec)
