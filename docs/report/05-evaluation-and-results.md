@@ -98,12 +98,17 @@ The naive baseline cleared recall and precision on six documents, which meant no
 the corpus to 26 documents, with no code change, cost 0.074 of recall and 0.101 of precision.** A
 retrieval score on a small corpus does not predict one on a realistic corpus.
 
-**Hybrid retrieval and a cross-encoder recovered both.** Dense search cannot reliably find a policy
-by its printed number, so dense and full-text rankings are fused (reciprocal rank fusion, *k* = 60),
-and `bge-reranker-v2-m3` keeps six of forty candidates. The largest movement in the project
-followed: **faithfulness, 0.810 → 0.967.** With the answering page reliably among the six, the model
-stopped reaching for a neighbouring document to say something. Faithfulness is as much a property
-of the context window as of the model.
+**Hybrid retrieval and a cross-encoder, added together, recovered both.** Dense search cannot
+reliably find a policy by its printed number, so dense and full-text rankings are fused (reciprocal
+rank fusion, *k* = 60), and `bge-reranker-v2-m3` keeps six of forty candidates. The largest movement
+in the project followed: **faithfulness, 0.810 → 0.967.** With the answering page reliably among the
+six, the model stopped reaching for a neighbouring document to say something. Faithfulness is as
+much a property of the context window as of the model.
+
+**The credit most likely belongs to the cross-encoder.** No run separates the two, but the full-text arm
+required every word of a question to be printed. On Run 3's vault it found nothing for 60 of the 93
+answerable questions. Matching any word, ranked by how many are shared (#126), added two right
+answers and removed a retrieval miss, with Sets B and C unchanged.
 
 By Run 3, retrieval is no longer where answers are lost: **19 of Set A's 21 misses had the answering
 page among the passages read.**
@@ -240,3 +245,5 @@ merged pull request, never at memory. Result files are under `eval/results/`.
 | 19 Oct | Run 3 runs on a frozen commit in an isolated vault, never the shared one; rehearsed end to end | `eval/freeze.py`, `eval/setc.py --from`, `eval/README.md` "Running Run 3", issue #85, #100, #101, #102, #106, #107 |
 | 19–20 Oct | **Run 3**: 93 documents from frozen commit `d45f12d`, all 118 Set A/B questions, judged; Set C 15/15; loaded on the CPU after a GPU crash | `2026-10-19-run3-freeze-all`, `2026-10-19-run3` and its `-headline` companion, `2026-10-20-run3-setc`, #119, issue #85 |
 | 20 Oct | A courtesy title in a name made both Run 3 alerts false; removing it, measured on Run 3's corpus | `2026-10-20-titles-ab`, `2026-10-20-titles-freeze`, #120 |
+| 20 Oct | The full-text arm needed every word and found nothing for 60 of 93 Set A questions; any word, ranked by how many: right and cited 72 → 74, Set C 15/15 | `2026-10-20-lexical-all-words`, `2026-10-20-lexical-any-word`, `2026-10-20-lexical-any-word-setc`, #126 |
+| 20 Oct | Four "not stated" answers whose value the extractor had stored | issue #125 |
