@@ -134,6 +134,14 @@ def test_the_query_is_asked_once_with_both_arms_and_the_pack_filter() -> None:
     assert "%(packs)s::text[] IS NULL" in sql  # a disabled pack stays invisible
 
 
+def test_the_lexical_arm_needs_any_word_and_ranks_by_how_many() -> None:
+    """Run 3, 20 October: joined with AND, the lexical arm found nothing for 60 of 93 answerable
+    questions, because one word the page does not print ("insured", "facility") silenced it."""
+    assert "' & ', ' | '" in HYBRID_SEARCH  # websearch's AND becomes OR
+    assert "'!', ''" in HYBRID_SEARCH  # and its NOT is read as the word
+    assert "ORDER BY shared DESC, density DESC, id" in HYBRID_SEARCH  # different words first
+
+
 def test_only_the_chunk_that_prints_the_number_is_lifted() -> None:
     rows = [
         _row(1, "Policy Number: MV-2026-448120", 0.41, 2, 1),  # both arms; prints it

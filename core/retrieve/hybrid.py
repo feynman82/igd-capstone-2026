@@ -18,6 +18,18 @@ of 0.95 means. The floor keeps its meaning and the near-miss number stays where 
 Postgres already parses a hyphenated identifier as a phrase (`'mv' <-> '-2026' <-> '-448120'`),
 so `websearch_to_tsquery` finds the exact policy number and nothing for the near-miss one; the
 boost is what lifts the exact hit over the floor, not what finds it.
+
+**The lexical arm needs any word of the question, not every word.** `websearch_to_tsquery` joins
+the words with AND, so a chunk had to print every one of them. On Run 3's vault that found nothing
+at all for 60 of the 93 answerable questions: "What is the chassis number of the insured vehicle?"
+needs "insured", which the hire-purchase agreement that prints the chassis number never says, and
+"the principal on facility HP-2021-448190" needs "facility", so even the agreement number went
+unfound. The words are now joined with OR, and a chunk is ranked by how many *different* words of
+the question it prints before how often, so one word repeated down a statement does not outrank a
+chunk that prints three of them. The identifier is still a phrase, so a near-miss number is still
+not matched as a number; it can only be matched by the ordinary words around it, which dense search
+was already finding. A leading `-`, which websearch reads as NOT, is read as the word itself: a
+person asking a question is not writing a search filter.
 """
 
 from __future__ import annotations
@@ -47,7 +59,12 @@ IDENTIFIER = re.compile(
 # ranks. Cosine similarity is then computed for every surviving row, whichever arm found it,
 # because it is the score the graph reads.
 HYBRID_SEARCH = """
-WITH dense AS (
+WITH asked AS (
+    SELECT replace(replace(websearch_to_tsquery('english', %(terms)s)::text, ' & ', ' | '), '!', '')
+             ::tsquery AS query,
+           tsvector_to_array(to_tsvector('english', %(terms)s)) AS words
+),
+dense AS (
     SELECT c.id, row_number() OVER (ORDER BY c.embedding <=> %(query)s::vector) AS rank
       FROM chunks c
       JOIN documents d ON d.id = c.document_id
@@ -59,20 +76,26 @@ WITH dense AS (
      ORDER BY c.embedding <=> %(query)s::vector
      LIMIT %(limit)s
 ),
-lexical AS (
+matched AS (
     SELECT c.id,
-           row_number() OVER (
-               ORDER BY ts_rank_cd(c.tsv, websearch_to_tsquery('english', %(terms)s)) DESC, c.id
-           ) AS rank
+           cardinality(ARRAY(
+               SELECT unnest(tsvector_to_array(c.tsv)) INTERSECT SELECT unnest(asked.words)
+           )) AS shared,
+           ts_rank_cd(c.tsv, asked.query) AS density
       FROM chunks c
       JOIN documents d ON d.id = c.document_id
+     CROSS JOIN asked
      WHERE d.status = 'indexed'
        AND c.embedding IS NOT NULL
-       AND c.tsv @@ websearch_to_tsquery('english', %(terms)s)
+       AND c.tsv @@ asked.query
        AND (%(packs)s::text[] IS NULL
             OR d.pack_id IS NULL
             OR d.pack_id = ANY(%(packs)s::text[]))
-     ORDER BY ts_rank_cd(c.tsv, websearch_to_tsquery('english', %(terms)s)) DESC, c.id
+),
+lexical AS (
+    SELECT id, row_number() OVER (ORDER BY shared DESC, density DESC, id) AS rank
+      FROM matched
+     ORDER BY shared DESC, density DESC, id
      LIMIT %(limit)s
 ),
 found AS (
