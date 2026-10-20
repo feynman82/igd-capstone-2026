@@ -36905,7 +36905,7 @@
       "node_kind": "heading",
       "norm_label": "5.10 what remains",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L330"
+      "source_location": "L196"
     },
     {
       "id": "docs_report_05_evaluation_and_results_5_1_the_claim",
@@ -36929,7 +36929,7 @@
       "node_kind": "heading",
       "norm_label": "5.2 what was measured, and what is reported first",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L38"
+      "source_location": "L32"
     },
     {
       "id": "docs_report_05_evaluation_and_results_5_3_the_three_run_spine",
@@ -36941,19 +36941,19 @@
       "node_kind": "heading",
       "norm_label": "5.3 the three-run spine",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L85"
+      "source_location": "L64"
     },
     {
-      "id": "docs_report_05_evaluation_and_results_5_4_retrieval_what_the_changes_bought",
-      "label": "5.4 Retrieval: what the changes bought",
+      "id": "docs_report_05_evaluation_and_results_5_4_retrieval",
+      "label": "5.4 Retrieval",
       "_origin": "ast",
       "community": 114,
       "community_name": "\u00a75 \u00b7 Evaluation and results",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "5.4 retrieval: what the changes bought",
+      "norm_label": "5.4 retrieval",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L131"
+      "source_location": "L95"
     },
     {
       "id": "docs_report_05_evaluation_and_results_5_5_abstention_the_finding",
@@ -36965,31 +36965,31 @@
       "node_kind": "heading",
       "norm_label": "5.5 abstention: the finding",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L173"
+      "source_location": "L116"
     },
     {
-      "id": "docs_report_05_evaluation_and_results_5_6_extraction_by_document_type",
-      "label": "5.6 Extraction, by document type",
+      "id": "docs_report_05_evaluation_and_results_5_6_extraction",
+      "label": "5.6 Extraction",
       "_origin": "ast",
       "community": 114,
       "community_name": "\u00a75 \u00b7 Evaluation and results",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "5.6 extraction, by document type",
+      "norm_label": "5.6 extraction",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L242"
+      "source_location": "L146"
     },
     {
-      "id": "docs_report_05_evaluation_and_results_5_7_the_two_module_metrics_and_the_lesson_in_them",
-      "label": "5.7 The two module metrics, and the lesson in them",
+      "id": "docs_report_05_evaluation_and_results_5_7_module_metrics",
+      "label": "5.7 Module metrics",
       "_origin": "ast",
       "community": 114,
       "community_name": "\u00a75 \u00b7 Evaluation and results",
       "file_type": "document",
       "node_kind": "heading",
-      "norm_label": "5.7 the two module metrics, and the lesson in them",
+      "norm_label": "5.7 module metrics",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L265"
+      "source_location": "L160"
     },
     {
       "id": "docs_report_05_evaluation_and_results_5_8_runtime",
@@ -37001,7 +37001,7 @@
       "node_kind": "heading",
       "norm_label": "5.8 runtime",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L291"
+      "source_location": "L175"
     },
     {
       "id": "docs_report_05_evaluation_and_results_5_9_limitations",
@@ -37013,7 +37013,7 @@
       "node_kind": "heading",
       "norm_label": "5.9 limitations",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L307"
+      "source_location": "L181"
     },
     {
       "id": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
@@ -37037,7 +37037,7 @@
       "node_kind": "heading",
       "norm_label": "sources in this repository",
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L341"
+      "source_location": "L206"
     },
     {
       "id": "packs_insurance_agent_grounding_sg_protection_guidance_moneysense_financial_advisory_process",
@@ -187414,18 +187414,29 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L341",
+      "source_location": "L206",
       "weight": 1.0
     },
     {
       "source": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
-      "target": "docs_report_05_evaluation_and_results_5_4_retrieval_what_the_changes_bought",
+      "target": "docs_report_05_evaluation_and_results_5_5_abstention_the_finding",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L131",
+      "source_location": "L116",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
+      "target": "docs_report_05_evaluation_and_results_5_6_extraction",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/report/05-evaluation-and-results.md",
+      "source_location": "L146",
       "weight": 1.0
     },
     {
@@ -187441,35 +187452,13 @@
     },
     {
       "source": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
-      "target": "docs_report_05_evaluation_and_results_5_5_abstention_the_finding",
+      "target": "docs_report_05_evaluation_and_results_5_7_module_metrics",
       "relation": "contains",
       "_origin": "ast",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L173",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
-      "target": "docs_report_05_evaluation_and_results_5_6_extraction_by_document_type",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L242",
-      "weight": 1.0
-    },
-    {
-      "source": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
-      "target": "docs_report_05_evaluation_and_results_5_7_the_two_module_metrics_and_the_lesson_in_them",
-      "relation": "contains",
-      "_origin": "ast",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L265",
+      "source_location": "L160",
       "weight": 1.0
     },
     {
@@ -187480,7 +187469,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L291",
+      "source_location": "L175",
       "weight": 1.0
     },
     {
@@ -187491,7 +187480,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L307",
+      "source_location": "L181",
       "weight": 1.0
     },
     {
@@ -187502,7 +187491,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L330",
+      "source_location": "L196",
       "weight": 1.0
     },
     {
@@ -187513,7 +187502,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L38",
+      "source_location": "L32",
       "weight": 1.0
     },
     {
@@ -187524,7 +187513,18 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "docs/report/05-evaluation-and-results.md",
-      "source_location": "L85",
+      "source_location": "L64",
+      "weight": 1.0
+    },
+    {
+      "source": "docs_report_05_evaluation_and_results_5_evaluation_and_results",
+      "target": "docs_report_05_evaluation_and_results_5_4_retrieval",
+      "relation": "contains",
+      "_origin": "ast",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "docs/report/05-evaluation-and-results.md",
+      "source_location": "L95",
       "weight": 1.0
     },
     {
@@ -252643,5 +252643,5 @@
     }
   ],
   "hyperedges": [],
-  "built_at_commit": "2b76b7f4316e2adf29c2098b4d90a8b5c0d67867"
+  "built_at_commit": "9e04792205ce3024daff4d3cb46e03d141a64ccc"
 }

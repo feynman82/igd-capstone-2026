@@ -1,7 +1,7 @@
 # Graph Report - igd-capstone-2026  (2026-10-20)
 
 ## Corpus Check
-- 379 files · ~850,863 words
+- 379 files · ~849,067 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 44 file(s) not represented in the graph (top: (none) 15, .jsonl 10, .csv 7)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `2b76b7f4`
+- Built from commit: `9e047922`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -810,7 +810,7 @@ Nodes (12): extract(), extract_docx(), extract_eml(), extract_image(), extract_p
 
 ### Community 114 - "§5 · Evaluation and results"
 Cohesion: 0.15
-Nodes (12): 5.10 What remains, 5.1 The claim, 5.2 What was measured, and what is reported first, 5.3 The three-run spine, 5.4 Retrieval: what the changes bought, 5.5 Abstention: the finding, 5.6 Extraction, by document type, 5.7 The two module metrics, and the lesson in them (+4 more)
+Nodes (12): 5.10 What remains, 5.1 The claim, 5.2 What was measured, and what is reported first, 5.3 The three-run spine, 5.4 Retrieval, 5.5 Abstention: the finding, 5.6 Extraction, 5.7 Module metrics (+4 more)
 
 ### Community 115 - "Financial advisory process"
 Cohesion: 0.12
@@ -1529,7 +1529,7 @@ Nodes (6): The code pass of the knowledge graph, Nobody edits core/contracts.py 
   NOTICE.md · relation: semantically_similar_to
 
 ## Knowledge Gaps
-- **1025 isolated node(s):** `5.1 The claim`, `5.2 What was measured, and what is reported first`, `5.3 The three-run spine`, `5.4 Retrieval: what the changes bought`, `5.5 Abstention: the finding` (+1020 more)
+- **1025 isolated node(s):** `5.1 The claim`, `5.2 What was measured, and what is reported first`, `5.3 The three-run spine`, `5.4 Retrieval`, `5.5 Abstention: the finding` (+1020 more)
   These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 2683 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
 - **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
