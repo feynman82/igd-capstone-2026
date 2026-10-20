@@ -18,8 +18,10 @@ it up. Nothing is ever silently dropped.
 from __future__ import annotations
 
 import logging
+import os
+import sys
 from dataclasses import dataclass, field
-from typing import Protocol
+from typing import Any, Protocol
 
 log = logging.getLogger(__name__)
 
@@ -97,6 +99,53 @@ class PlainTextParser:
         return ParsedDocument(True, self.name, [ParsedPage(1, text.strip())])
 
 
+def docling_device(
+    platform: str | None = None, environ: dict[str, str] | None = None
+) -> str | None:
+    """The device to ask Docling for, or None to let Docling choose.
+
+    On Apple machines, the CPU. Docling's automatic choice there is Apple's GPU (MPS), and on
+    19 October `srs-2021-marcus-lim.pdf` crashed it every time: a segmentation fault in native
+    code, which no `except` can catch, so it took the whole ingestion process down with it rather
+    than quarantining one document (issue #123). Run 3 loaded all 93 documents on the CPU in 14
+    minutes, so the GPU buys nothing this corpus needs.
+
+    `DOCLING_DEVICE` is Docling's own setting and still wins: set it to `mps` to try the GPU again
+    after an upgrade, and it is read by Docling exactly as before. Elsewhere — Windows with an
+    NVIDIA card, the tested path — Docling's automatic choice is kept.
+    """
+    environ = dict(os.environ) if environ is None else environ
+    if environ.get("DOCLING_DEVICE"):
+        return None
+    return "cpu" if (platform or sys.platform) == "darwin" else None
+
+
+def _converter() -> Any:
+    from docling.document_converter import DocumentConverter
+
+    device = docling_device()
+    if device is None:
+        return DocumentConverter()
+
+    from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import ImageFormatOption, PdfFormatOption
+
+    # One options object per format: Docling keeps the pipeline it builds for each.
+    def options() -> PdfPipelineOptions:
+        return PdfPipelineOptions(
+            accelerator_options=AcceleratorOptions(device=AcceleratorDevice(device))
+        )
+
+    return DocumentConverter(
+        format_options={
+            InputFormat.PDF: PdfFormatOption(pipeline_options=options()),
+            InputFormat.IMAGE: ImageFormatOption(pipeline_options=options()),
+        }
+    )
+
+
 class DoclingParser:
     """Docling, held at arm's length: imported on first use, and never at module import.
 
@@ -135,10 +184,9 @@ class DoclingParser:
         from io import BytesIO
 
         from docling.datamodel.base_models import DocumentStream
-        from docling.document_converter import DocumentConverter
         from docling_core.types.doc.document import DoclingDocument
 
-        converter = DocumentConverter()
+        converter = _converter()
         result = converter.convert(DocumentStream(name=original_name, stream=BytesIO(payload)))
         document: DoclingDocument = result.document
         return _pages_from(document)
