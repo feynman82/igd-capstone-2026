@@ -110,11 +110,11 @@ required every word of a question to be printed. On Run 3's vault it found nothi
 answerable questions. Matching any word, ranked by how many are shared (#126), added two right
 answers and removed a retrieval miss, with Sets B and C unchanged.
 
-**Two further fixes were measured and rejected.** Giving the reranker the question in the
+**Three further fixes were measured and rejected.** Giving the reranker the question in the
 documents' own words cost a right answer. Printing each document's reference number in every
 chunk's label answered both loan principals, but also answered a policy number that does not exist
-with the real policy's premium. Those values were already extracted; issue #125 asks the answer to
-use them.
+with the real policy's premium; those values were already extracted, and issue #125 asks the answer
+to use them. A different reranker raised abstention to 0.60 but lost seven right answers.
 
 By Run 3, retrieval is no longer where answers are lost: **19 of Set A's 21 misses had the answering
 page among the passages read.**
@@ -254,3 +254,4 @@ merged pull request, never at memory. Result files are under `eval/results/`.
 | 20 Oct | The full-text arm needed every word and found nothing for 60 of 93 Set A questions; any word, ranked by how many: right and cited 72 → 74, Set C 15/15 | `2026-10-20-lexical-all-words`, `2026-10-20-lexical-any-word`, `2026-10-20-lexical-any-word-setc`, #126 |
 | 20 Oct | Four "not stated" answers whose value the extractor had stored | issue #125 |
 | 20–21 Oct | Rejected: the reranker reading the documents' words (right and cited 74 → 73); the reference number in every chunk label (a near-miss policy number answered) | `2026-10-20-rerank-printed-words`, `2026-10-21-label-without-reference`, `2026-10-21-label-with-reference`, issue #125 |
+| 21 Oct | Four rerankers screened; `mxbai-rerank-large-v1` on the full sets: abstention 0.52 → 0.60, right and cited 74 → 71. Rejected | `2026-10-21-reranker-screen`, `2026-10-21-reranker-mxbai-large-v1` |
