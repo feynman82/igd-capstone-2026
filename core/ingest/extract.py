@@ -365,12 +365,24 @@ def without_title(name: str) -> str:
     return stripped or name.strip()
 
 
+def person_name(value: str) -> str:
+    """One person, as the household knows them: the first named, without a courtesy title.
+
+    A `person` field names one person, and a joint document prints two: on `b2-0010` the
+    borrower came back as "Marcus Lim Jun Wei & Rachel Ng Hui Shan", which matches nobody in the
+    household, as the titled name did on 19 October. Every `person` field's description already
+    says "the first named where there are two"; the model did not always do it, so code does.
+    """
+    first = value.split(" & ", 1)[0]
+    return without_title(first)
+
+
 def _coerce(spec: FieldSpec, raw: Any) -> tuple[str | None, Decimal | None, date | None] | None:
     """Put the value in the one `facts` column its declared type maps to, or reject it."""
     column = FACT_COLUMN[spec.type]
     text = str(raw).strip()
     if spec.type == "person":
-        text = without_title(text)
+        text = person_name(text)
     if not text:
         return None
     if column == "value_num":
@@ -500,7 +512,7 @@ def _read(
     subject_value: str | None = None
     if subject_field:
         raw_subject = getattr(validated, subject_field, None)
-        subject_value = without_title(str(raw_subject)) if raw_subject else None
+        subject_value = person_name(str(raw_subject)) if raw_subject else None
 
     facts: list[ExtractedFact] = []
     unplaced: list[str] = [

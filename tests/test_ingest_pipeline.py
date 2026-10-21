@@ -848,6 +848,22 @@ def test_a_courtesy_title_is_not_part_of_a_name(printed: str, name: str) -> None
     assert without_title(printed) == name
 
 
+@pytest.mark.parametrize(
+    ("printed", "name"),
+    [
+        ("Marcus Lim Jun Wei & Rachel Ng Hui Shan", "Marcus Lim Jun Wei"),
+        ("Mr Marcus Lim Jun Wei & Mrs Rachel Ng Hui Shan", "Marcus Lim Jun Wei"),
+        ("Marcus Lim Jun Wei", "Marcus Lim Jun Wei"),
+        ("Tan&Sons", "Tan&Sons"),  # only a spaced ampersand joins two people
+    ],
+)
+def test_a_person_field_is_the_first_named(printed: str, name: str) -> None:
+    """`b2-0010`, 21 October: a joint facility letter's borrower came back as both names."""
+    from core.ingest.extract import person_name
+
+    assert person_name(printed) == name
+
+
 def test_a_titled_insured_is_stored_and_attributed_without_the_title(insurance: Any) -> None:
     """Run 3, 19 October: "Mr Marcus Lim Jun Wei" on the renewal notices matched nobody in the
     household, so both alerts that fired were false and one reminder went to the wrong person."""

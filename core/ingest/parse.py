@@ -120,28 +120,68 @@ def docling_device(
     return "cpu" if (platform or sys.platform) == "darwin" else None
 
 
-def _converter() -> Any:
+def has_text_layer(payload: bytes) -> bool:
+    """Whether a PDF carries text of its own, rather than only pictures or outlines of text.
+
+    Sixteen committed PDFs carry none: their text was drawn as shapes, so every word is OCR.
+    Anything that is not a PDF, or that cannot be opened here, has none either as far as this is
+    concerned, and Docling still decides what to do with it.
+    """
+    if not payload.startswith(b"%PDF"):
+        return False
+    try:
+        import pypdfium2 as pdfium
+
+        pdf = pdfium.PdfDocument(payload)
+        try:
+            return any(page.get_textpage().count_chars() > 0 for page in pdf)
+        finally:
+            pdf.close()
+    except Exception:  # an unreadable PDF: leave Docling's default, which is what it had before
+        return True
+
+
+def drawn_pdf(payload: bytes) -> bool:
+    """A PDF whose text was drawn as shapes: the one kind of document read whole-page."""
+    return payload.startswith(b"%PDF") and not has_text_layer(payload)
+
+
+def _converter(full_page: bool = False) -> Any:
+    """Docling's converter, on the CPU on a Mac (`docling_device`), and reading a PDF's whole
+    page with OCR when the PDF has no text of its own.
+
+    Full-page OCR, because Docling's default reads such a page in fragments, and on `b1-0004`
+    one fragment came back as "to renew Your r so on u or on u o oo o o nri 2026" where the page
+    prints "Your current policy expires on 11 April 2026". The expiry date was not in the text,
+    so extraction took the letter's date. Read whole, the sentence is intact, and in a third of
+    the time. A PDF with a text layer keeps the default: its own text is exact, and OCR is not.
+    A photograph keeps it too: read whole, an identity card's "TAN MEI LING" lost a space.
+    """
     from docling.document_converter import DocumentConverter
 
     device = docling_device()
-    if device is None:
+    if device is None and not full_page:
         return DocumentConverter()
 
     from docling.datamodel.accelerator_options import AcceleratorDevice, AcceleratorOptions
     from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.datamodel.pipeline_options import OcrMode, PdfPipelineOptions
     from docling.document_converter import ImageFormatOption, PdfFormatOption
 
     # One options object per format: Docling keeps the pipeline it builds for each.
-    def options() -> PdfPipelineOptions:
-        return PdfPipelineOptions(
-            accelerator_options=AcceleratorOptions(device=AcceleratorDevice(device))
-        )
+    def options(whole: bool) -> PdfPipelineOptions:
+        chosen = PdfPipelineOptions()
+        if device is not None:
+            chosen.accelerator_options = AcceleratorOptions(device=AcceleratorDevice(device))
+        if whole:
+            # On whichever OCR engine Docling chose for this machine; only how much it reads.
+            chosen.ocr_options.mode = OcrMode.FULL_PAGE
+        return chosen
 
     return DocumentConverter(
         format_options={
-            InputFormat.PDF: PdfFormatOption(pipeline_options=options()),
-            InputFormat.IMAGE: ImageFormatOption(pipeline_options=options()),
+            InputFormat.PDF: PdfFormatOption(pipeline_options=options(full_page)),
+            InputFormat.IMAGE: ImageFormatOption(pipeline_options=options(False)),
         }
     )
 
@@ -186,7 +226,7 @@ class DoclingParser:
         from docling.datamodel.base_models import DocumentStream
         from docling_core.types.doc.document import DoclingDocument
 
-        converter = _converter()
+        converter = _converter(full_page=drawn_pdf(payload))
         result = converter.convert(DocumentStream(name=original_name, stream=BytesIO(payload)))
         document: DoclingDocument = result.document
         return _pages_from(document)
