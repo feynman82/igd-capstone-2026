@@ -204,7 +204,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         f"{len(questions)} questions ({_counts(questions)}); "
         f"retrieval {args.retriever}, reranker {args.reranker}"
-        + (f" (floor {args.rerank_floor or RELEVANCE_FLOOR})" if args.reranker != "none" else "")
+        + (
+            f" {settings.rerank_model} (floor {args.rerank_floor or RELEVANCE_FLOOR})"
+            if args.reranker != "none"
+            else ""
+        )
     )
     print(f"generator {settings.generation_model}; judge {judge_model or 'none'}")
     if args.floor_off:
@@ -300,6 +304,10 @@ def main(argv: Sequence[str] | None = None) -> int:
             "judge": judge_model or None,
             "retriever": args.retriever,
             "reranker": args.reranker,
+            # Which cross-encoder, since `PARROT_RERANK_MODEL` swaps it with no code change: on
+            # 21 October a run with mxbai-rerank-large-v1 wrote a file that said only
+            # "cross-encoder", and was told apart from the default only by its relevance scores.
+            "rerank_model": None if args.reranker == "none" else settings.rerank_model,
             "rerank_floor": (
                 None if args.reranker == "none" else args.rerank_floor or RELEVANCE_FLOOR
             ),
@@ -604,7 +612,9 @@ def _note(result: dict[str, Any]) -> str:
     return (
         f"# {run['label']} — {run['date'][:10]}\n\n"
         f"Sets {', '.join(run['sets'])}; retrieval {run['retriever']}, reranker "
-        f"{run['reranker']}; generator `{run['generator']}`; judge "
+        f"{run['reranker']}"
+        + (f" `{run['rerank_model']}`" if run.get("rerank_model") else "")
+        + f"; generator `{run['generator']}`; judge "
         f"`{run['judge'] or 'none'}`; corpus `{run['corpus_manifest_sha']}`; "
         f"code `{run['git_sha']}`.\n\n"
         f"{floor}"

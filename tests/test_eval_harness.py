@@ -608,3 +608,24 @@ def test_the_note_beside_a_floor_off_run_says_so_in_one_line() -> None:
     lines = [line for line in off.splitlines() if "floor" in line.lower()]
     assert len(lines) == 1 and "not a measurement of production" in lines[0]
     assert "floor" not in on.lower()
+
+
+def test_the_note_names_the_reranker_model() -> None:
+    """21 October: an mxbai run's note said only "cross-encoder", like a default run's."""
+    from eval.run import _note
+
+    run = {
+        "label": "x",
+        "date": "2026-10-21T00:00:00",
+        "sets": ["A"],
+        "retriever": "hybrid",
+        "reranker": "cross-encoder",
+        "rerank_model": "mixedbread-ai/mxbai-rerank-large-v1",
+        "generator": "g",
+        "judge": None,
+        "corpus_manifest_sha": "abc",
+        "git_sha": "s",
+    }
+    assert "reranker cross-encoder `mixedbread-ai/mxbai-rerank-large-v1`;" in _note({"run": run})
+    older = {k: v for k, v in run.items() if k != "rerank_model"}
+    assert "reranker cross-encoder; generator" in _note({"run": older}), "old files still render"
