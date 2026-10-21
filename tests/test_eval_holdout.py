@@ -13,10 +13,12 @@ from pathlib import Path
 import pytest
 
 from eval.holdout import (
+    BASELINE,
     ROOT,
     HoldoutRefused,
     check_outside_the_repository,
     documents_in,
+    gaps_by_type,
     main,
     migrations,
     synthetic_baseline,
@@ -75,24 +77,50 @@ def test_the_schema_is_read_from_the_committed_migrations() -> None:
     assert all(p.suffix == ".sql" for p in migrations())
 
 
-def test_the_gap_is_computed_from_the_newest_committed_synthetic_run(tmp_path: Path) -> None:
-    """The number that matters is the gap, so the synthetic side is read from the results rather
-    than typed into a slide."""
-    (tmp_path / "old.json").write_text(
+def test_the_gap_is_computed_from_one_named_synthetic_run(tmp_path: Path) -> None:
+    """The number that matters is the gap, so the synthetic side is read from a result file
+    rather than typed into a slide, and the file is named rather than found: on 21 October
+    "the newest result" was a reranker experiment from that morning."""
+    run = tmp_path / "run.json"
+    run.write_text(
         json.dumps(
-            {"run": {"date": "2026-09-29T00:00:00+00:00"}, "metrics": {"extraction_f1": 0.898}}
+            {
+                "run": {"git_sha": "d45f12d"},
+                "metrics": {"extraction_f1": 0.9487},
+                "also": {"extraction_by_doc_type": {"payslip": {"f1": 1.0, "tp": 6}}},
+            }
         ),
         encoding="utf-8",
     )
-    (tmp_path / "new.json").write_text(
-        json.dumps(
-            {"run": {"date": "2026-10-14T00:00:00+00:00"}, "metrics": {"extraction_f1": 0.9028}}
-        ),
+    (tmp_path / "newer.json").write_text(
+        json.dumps({"run": {"date": "2099-01-01"}, "metrics": {"extraction_f1": 0.5}}),
         encoding="utf-8",
     )
-    (tmp_path / "note.md").write_text("not a result", encoding="utf-8")
-    assert synthetic_baseline(tmp_path) == 0.9028
-    assert synthetic_baseline(tmp_path / "nothing-here") is None
+    assert synthetic_baseline(run) == {
+        "file": "run.json",
+        "git_sha": "d45f12d",
+        "extraction_f1": 0.9487,
+        "by_doc_type": {"payslip": 1.0},
+    }
+    assert synthetic_baseline(tmp_path / "nothing-here.json") is None
+
+
+def test_the_default_baseline_is_run_3() -> None:
+    baseline = synthetic_baseline(BASELINE)
+    assert baseline is not None and baseline["file"] == "2026-10-19-run3.json"
+    assert baseline["extraction_f1"] == 0.9487
+    assert "policy_schedule" in baseline["by_doc_type"]
+
+
+def test_the_gap_is_also_read_type_against_type() -> None:
+    """Six synthetic stand-ins showed a "gap" of 0.03 overall from their mix of types alone."""
+    holdout = {
+        "payslip": {"documents": 3, "f1": 0.8},
+        "passport": {"documents": 1, "f1": 1.0},
+    }
+    gaps = gaps_by_type(holdout, {"payslip": 1.0})
+    assert gaps["payslip"] == {"documents": 3, "holdout_f1": 0.8, "synthetic_f1": 1.0, "gap": 0.2}
+    assert gaps["passport"]["gap"] is None, "no synthetic score for the type: no gap, not zero"
 
 
 def test_a_dry_run_creates_nothing(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:

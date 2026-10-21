@@ -390,3 +390,34 @@ comes from that column, and a field the column does not name is taken to be on p
 Synthetic documents are cleaner and more consistent than real ones, so a score measured only
 on them overstates the system. The `holdout` corpus is 40 real documents from team members,
 redacted, never used for tuning, scored once in week 8. Report both numbers and the gap.
+
+### Running the holdout
+
+For whoever holds the documents. Rehearsed end to end on 21 October with six synthetic stand-ins
+(`h-0001` to `h-0006`, copies of committed documents), in 82 seconds on an M-series Mac.
+
+1. **A folder outside the repository.** `eval.holdout` refuses one inside it, because `inbox/` is
+   the watched folder and a document the development vault has read is no longer a holdout.
+2. **Name each file exactly as its `doc_id` in the register**, e.g. `h-0001.pdf`. Facts are matched
+   to register rows by file name, and the file names are the only thing about the documents the
+   result file records.
+3. **The register**, also outside the repository: a CSV with the columns of
+   `corpus/register/batch.template.csv`, one row per document. Only its SHA-256 is recorded.
+4. **Dry run first.** It must find every document and print `compared with 2026-10-19-run3.json`:
+
+   ```
+   uv run python -m eval.holdout --documents <folder> --register <folder>/register.csv --dry-run
+   ```
+
+5. **Then run it** without `--dry-run`. It creates its own database, reads each document straight
+   into it (never through `inbox/`), scores extraction against the register, and drops it.
+6. **Read the per-type table, not only the overall gap.** The overall gap compares a few real
+   documents against Run 3's average over every type, so the mix alone moves it: the six synthetic
+   stand-ins showed a "gap" of 0.03 with nothing real in them. A type with one document is a
+   sample of one.
+7. **Commit only the result file** (`eval/results/<date>-holdout.json`). It holds file names,
+   counts and scores, no extracted values. Its `run.git_sha` must not end in `-dirty`.
+
+**Not yet possible: retrieval and answer metrics on the holdout.** `eval.generate` reads only the
+registers in `corpus/register/`, and `eval.run` reads only questions in `eval/sets/`. Holdout
+questions must never be written there: their expected answers are real people's values.
