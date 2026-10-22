@@ -1,0 +1,1506 @@
+{
+  "run": {
+    "date": "2026-10-22T13:42:52+00:00",
+    "kind": "frozen-vault",
+    "label": "since-run3-freeze",
+    "commit": "d45f12d2fca5c147e0564d43bc57c3324754752c",
+    "vault": "parrot_since_run3",
+    "dry_run": false,
+    "household": "eval/run3/household.draft.json",
+    "people": 5,
+    "generator": "hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M",
+    "embedder": "embeddinggemma:300m"
+  },
+  "manifest": {
+    "commit": "d45f12d2fca5c147e0564d43bc57c3324754752c",
+    "manifest_sha256": "f23d5c4a292aaa879a4cf9dca496d333cce2d3ac9412791fe65cb47c13842083",
+    "files": [
+      {
+        "path": "corpus/batches/batch1/b1-0001.pdf",
+        "sha256": "1ab5f16e8049b97f63e3f482d19bce088aa397374f588330dbf44bebbb908e93",
+        "size": 33196,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0002.pdf",
+        "sha256": "f26e7befb2acaab1fb8ab3d639f181c712de29430039241f4544bf8c2eba8c37",
+        "size": 25334,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0003.pdf",
+        "sha256": "fddba2b6d88cfa8307b950c3179a5483ebc10212f2d234c5e740a0ea120d327a",
+        "size": 25552,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0004.pdf",
+        "sha256": "00bb7fa10c8429e14226e137e27bc692b8ef2d35911da26527d6e60f79e53996",
+        "size": 319463,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0005.pdf",
+        "sha256": "78c9766ea61b5d2779e7d4961a04236966493aec0910682c51a5b347d9bd3532",
+        "size": 291692,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0006.pdf",
+        "sha256": "59766a48550592e430e5bb173f2645451cd6076f3df7fe1ecc5ccc53c505068f",
+        "size": 303650,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0007.pdf",
+        "sha256": "a251b4636774a510eee0142d9ef03624a0f507a2811e7da5cc51b2c275083b35",
+        "size": 242644,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0008.pdf",
+        "sha256": "5b4d382208db69c6c6844a22f9c8eabf65f54de8d8f139821dc00295d6ea097e",
+        "size": 245200,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0009.pdf",
+        "sha256": "d1178d88702448d8e5b2cd1b25c6eb158b7534e44dbd46fcc2be7452ce3ae507",
+        "size": 245451,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0010.pdf",
+        "sha256": "a4a746eb4a97ddced15de841d0b14d9fbe93f58b3002b0c76e52b2f205f88943",
+        "size": 605004,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0011.pdf",
+        "sha256": "37d85ce6d425b08e2ac1f0001a17841e8270f7582aa3c86591380affa3724aee",
+        "size": 321841,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0012.pdf",
+        "sha256": "f4b108aa72d3a306f683e3b677c84f3ffd1b0b4866a130f8a9e6c5501363e47b",
+        "size": 315601,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0013.pdf",
+        "sha256": "2b25cd56816c15aff7d6d88fa12188cbe245289784d65100560a226b60f205ae",
+        "size": 313044,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0014.pdf",
+        "sha256": "461d3fa4e8a4ba7b29b6617217bcf6fbcdc6b4d2fae59cbd04a6a9d7d9b6a045",
+        "size": 312478,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0015.pdf",
+        "sha256": "5cb198103ab13e3731a47e38be6a424d9cc7ef179b46ca7841e2f46e530ec407",
+        "size": 312738,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0016.pdf",
+        "sha256": "e58829f32f34c48ea695a3d2d3932f5b736a862f714591e1e53861389346d9ed",
+        "size": 911,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0017.pdf",
+        "sha256": "44ff388533ab7fee9b7a62a6aafbe37cb38c9e925fa08fe29732dd66ed70916a",
+        "size": 911,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0018.pdf",
+        "sha256": "cf778098348229bbe8224f975ea85c302906dcca7995de939b83553db406246e",
+        "size": 912,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0019.pdf",
+        "sha256": "fe1209b9f9691213d9ccb4bf02c11ea0e1201f67eddb69148e9a7e8192067091",
+        "size": 231863,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0020.pdf",
+        "sha256": "185fe3ae46f922abf6837ae8d13b34cd1389508615f9d90f78382feef3e81fb0",
+        "size": 234576,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0021.png",
+        "sha256": "403cc133812921421e897a8e979d7a8f12078e82718a7cd5a72e28190d65542d",
+        "size": 851731,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0022.pdf",
+        "sha256": "498dbba6aa535e2e83ce5db7868d82380b16ff88895fa56bac4f855308d9faf8",
+        "size": 97475,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0023.pdf",
+        "sha256": "f9c8feed1e1c2efb7b5e182c8bda7393dc52cd0508ef705c1ffa4515f3824648",
+        "size": 97387,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0024.png",
+        "sha256": "1044653f01180097feabdc02dbbb753e7515eae4dfea78cfa53100b588da9d58",
+        "size": 897446,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0025.pdf",
+        "sha256": "eae80adc714cfa3ba18bfa65c025b42f9a4196fae76e6903d29f573145414e5d",
+        "size": 155665,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0026.pdf",
+        "sha256": "0e679a503d9fce1f72c82f76fbbb58a1c76d0ec6cfa110ee219b8960634bdbdc",
+        "size": 155109,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0027.png",
+        "sha256": "10ddd36df843bb71e72a6b92dd9bb7b549d2614e9c17aa4fdc5369ae8b155169",
+        "size": 397727,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0028.pdf",
+        "sha256": "beb9dbb0fcbc4f7faf0eee94b00e1abdd206ae39f0399e62450fa000c85afc3d",
+        "size": 171983,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0029.pdf",
+        "sha256": "6c65d7ce96dff4ed867c33f7aeec5969c8ada564cca7069ece0986d9bb1774aa",
+        "size": 173000,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0030.png",
+        "sha256": "387ffc1b978259e1c6caba4efe1357f04449553d7396983983f30947d0c7a072",
+        "size": 264450,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0031.pdf",
+        "sha256": "c3af21aafd647b97b6590b7b8d8f8d87a3b8894cec55b0463b94ff449e7fa02c",
+        "size": 49013,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0032.pdf",
+        "sha256": "c91555f70b1992177c50e89cf4ecb48af2da53a0221369c3c0e5aac322f1c8b6",
+        "size": 33225,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch1/b1-0033.pdf",
+        "sha256": "d410345142af9956826b8beb83af63b8724d4a0d1f18e7a153ff9b1eb7031acf",
+        "size": 48332,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0001.pdf",
+        "sha256": "402f23e21b118f2c4dd835050b174c45c0df03fd55a266d78e7607bc5636ee67",
+        "size": 912,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0002.pdf",
+        "sha256": "4cd70fb6997abdb69efebf354db455f59ea6843b4b52f9329af896b38a50170a",
+        "size": 911,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0003.pdf",
+        "sha256": "6b94ab994c5b64fe20e08be99b91b82225645e0e2ace5feff8853746b82ac250",
+        "size": 97278,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0004.pdf",
+        "sha256": "b722c4cd05940319c6c2816e64e5bdf440f078aa9296a38b4e3aacaa24f51429",
+        "size": 97732,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0005.pdf",
+        "sha256": "32118e209b0efba87f613743556afd95f0c8468b52f89913dac4359b8c14bb9f",
+        "size": 97233,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0006.pdf",
+        "sha256": "3cb02d47d98a3ab041abaf1922c59d5a725b967c85607e3605379b98f77a708f",
+        "size": 97356,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0007.pdf",
+        "sha256": "cffd87d15a0f31bbff9e4f32c5f1cd023b44252747d57f68cc5cdb30b3f0f869",
+        "size": 91063,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0008.pdf",
+        "sha256": "fe5a796373b17a720d5d3f3107a7c1280528a4d67552ab61b14ef75ddcdf46d0",
+        "size": 190300,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0009.pdf",
+        "sha256": "1c61cf824cfbd89b54bf73998808d1dbb3495160f736daf6081a3d11be7b9568",
+        "size": 143732,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0010.pdf",
+        "sha256": "76b846a1edc6ecf7c0283394467853b8bab96361fefafbfb2b798996ca900ad6",
+        "size": 153779,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0011.pdf",
+        "sha256": "65cabf8e4f2ffa8c67fb0fa2db0cdee886107ba513a7bc049ed22ded911e5515",
+        "size": 143646,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0012.jpg",
+        "sha256": "9d6c51ce975b6a5b22cf3ebf79e898f5acc0077e2956974ffae6fd9b3f372134",
+        "size": 3483131,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0013.jpg",
+        "sha256": "07be2a374e6b4485f272ee4098dbc5ce394587492d0ed410519db56357536b3b",
+        "size": 4339059,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0014.jpg",
+        "sha256": "d10bf67569de0965122455bf998ad4266571429440f78ae1d3483415d744ba6f",
+        "size": 3522389,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0015.jpg",
+        "sha256": "1818bddc40d7b1c68a6ec0d8a2c0bd87f3c6111634ad0b376114db3107ca87c2",
+        "size": 3551539,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0016.jpg",
+        "sha256": "ef704472b8365f31fd3ddfb24c8265021d171457eb683b4913900d4d7db8dc56",
+        "size": 4107002,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch2/b2-0020.jpg",
+        "sha256": "ff71a35035df6f250a18471b6723a9009878b1ebbade2b04c1bde2e791717e87",
+        "size": 922499,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch3/b3-0001.pdf",
+        "sha256": "62627c173f1ee9788fe6a5590a5f74e5cac0cfec3b32ae9754ed9c501224d937",
+        "size": 2308,
+        "role": "set_c"
+      },
+      {
+        "path": "corpus/batches/batch3/b3-0002.pdf",
+        "sha256": "41d537ec6020247eb64009eba8acd68bc22344b71354b05f276f23db45a9eb1d",
+        "size": 2200,
+        "role": "set_c"
+      },
+      {
+        "path": "corpus/batches/batch3/b3-0003.pdf",
+        "sha256": "2cbd0052a79ddbc8cc1e9c0b60ff5977d78196bd89496f19e265a5118efe6756",
+        "size": 3072,
+        "role": "set_c"
+      },
+      {
+        "path": "corpus/batches/batch4/b4-0001.pdf",
+        "sha256": "14f8e88531d6ae77b53cda2afb8d1ced3120f9c8c53c55a81b87b1c163d91ccf",
+        "size": 889,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch4/b4-0002.pdf",
+        "sha256": "ae8485c5748a37d62a9fd7d57dca6dc1c6fa4496ec7d29f0e9294969588a8a94",
+        "size": 889,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch4/b4-0003.pdf",
+        "sha256": "642ed583e98b97b4c755e593b97be32155859166b0b619e20dd08769bf9595fe",
+        "size": 955,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/batch4/b4-0004.pdf",
+        "sha256": "01bde35926d991637cac6410b52536965228756445d4a4f59a7e9810196deb38",
+        "size": 948,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-01-marcus-lim.pdf",
+        "sha256": "8776f3ac9f11c1c875e94b69d2ceb3107ca24ded7ea5077401ada06596393cdc",
+        "size": 74064,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-01-rachel-ng.pdf",
+        "sha256": "9f18c43bf18537f8879d3aa55fe27f5f7ee4061757daab24dc8d4e333837115e",
+        "size": 74975,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-02-marcus-lim.pdf",
+        "sha256": "75a7cee4a0d1fb94fd0a62ec4c98793a73654110eaee806b5683fae653fd35ef",
+        "size": 74826,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-02-rachel-ng.pdf",
+        "sha256": "00dc646e90da16f431f7ba67f88895c6446902337cda8591934f4afedd051edb",
+        "size": 75379,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-03-marcus-lim.pdf",
+        "sha256": "5d7753e89359fb1a49b727bcf0b4be51d448004c910e056eac5b2f6450e58626",
+        "size": 74977,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-03-rachel-ng.pdf",
+        "sha256": "925ba1af48cb04aff2b7a9d8535e5597f744fd7ccc87cad7e760ba39004c0c5f",
+        "size": 75880,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-04-marcus-lim.pdf",
+        "sha256": "19f1d125a67a94019b1270705c1428f1856e25b7b9c9e40711f8558ade16842b",
+        "size": 75051,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-04-rachel-ng.pdf",
+        "sha256": "41a99a55b8ab28c488ab8128a4fd4349e583ad7a4b6bbaefc7e96cd671fb0be6",
+        "size": 75238,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-05-marcus-lim.pdf",
+        "sha256": "bc4f9e3fe9604cc3bdb41cb868ff6c1edb5089a51c45cccd9753621510779fb0",
+        "size": 75605,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-05-rachel-ng.pdf",
+        "sha256": "57879891af0c2ccbbbb161764b0dc98ec38658fac98164b8442db51b282eb17b",
+        "size": 75228,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-06-marcus-lim.pdf",
+        "sha256": "be7f2b53ebe25c09a4960117f9694132513076a32616334f20603ac6cc037c66",
+        "size": 75514,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-06-rachel-ng.pdf",
+        "sha256": "82e2699e29d86f79f07736219b3d82748ce661b5e48b674203ec316a43dfe3f8",
+        "size": 75369,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-07-marcus-lim.pdf",
+        "sha256": "faed51f12e0150af6c798f4e8eaf787660a37288e0a00761fa88addcb73d3d00",
+        "size": 75619,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-07-rachel-ng.pdf",
+        "sha256": "528c628366aa0abfd667c86b18b993de527d024aed539616dabb4e6ce5bf929c",
+        "size": 75483,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-08-marcus-lim.pdf",
+        "sha256": "c55b23d965857f104c9e3e2d3dd7678141722958afc3c020bbce0f959c7edf92",
+        "size": 75583,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-08-rachel-ng.pdf",
+        "sha256": "9c971d41c5ca37708e5cd3555b5611734d981db6dc43227d0200747f66b52b32",
+        "size": 75546,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-09-marcus-lim.pdf",
+        "sha256": "60a363f3bdb00729496fd0095f76ff60c802f86d4ae786eeca802b213c677323",
+        "size": 74478,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-09-rachel-ng.pdf",
+        "sha256": "aba027da5dfcb034c3303a661c3229f37108d78006f2692d449b74a2040228ed",
+        "size": 75803,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-10-marcus-lim.pdf",
+        "sha256": "66e6ea07d31f35d4b944f7f78c7928ff880a33e1c86f91eaeea500068da5934b",
+        "size": 74377,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-10-rachel-ng.pdf",
+        "sha256": "453f401a6d2035b97e06ca17f93c3c045a5e665dc9158019acd3c468ee6d2a7c",
+        "size": 75299,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-11-marcus-lim.pdf",
+        "sha256": "83719ba7059c518ec561d6e2fa227b289db56ba8ce4b01cbc3c9d8ecd4018aa4",
+        "size": 75470,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-11-rachel-ng.pdf",
+        "sha256": "948793f866e085fefc27651354c1b0cea8ebbadd5df2e090d7ef9c283cbf2c48",
+        "size": 75893,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-12-marcus-lim.pdf",
+        "sha256": "3de4d7902fbdb477a0b4b07347ec87610f3cbf0a666ed32ea8a5866c123b3d33",
+        "size": 74638,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/cpf-monthly-2025/cpf-2025-12-rachel-ng.pdf",
+        "sha256": "935852ff12723aad6f3e877c18e3d2b942796254810d232e48785cc4a0e9ac4a",
+        "size": 75222,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/donations-rachel-2024-2025/donation-2024-02-29-rachel-ng-good-luck-vwo.pdf",
+        "sha256": "4cf874eba12f9a9ae85cbb23dfdc19949c66049f41d2b540569da76488440a8e",
+        "size": 1639,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/donations-rachel-2024-2025/donation-2024-06-15-rachel-ng-lionsbefriender.pdf",
+        "sha256": "bfc63d79d380cff22df172f4aa6c42c9ff79919f96530f4f364d3dbc53de29de",
+        "size": 1648,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/donations-rachel-2024-2025/donation-2025-11-15-rachel-ng-givesg.pdf",
+        "sha256": "0369ad079d3d6aa5f1dca9fecfbfcc5fed5c6561b1522f3fc9b5efb0983e3271",
+        "size": 1633,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/noa-ya2025/noa-ya2025-marcus-lim.pdf",
+        "sha256": "d69ec6d536ad0248d4e4908462cd040849031c865d608560b85633a97fa74bfc",
+        "size": 157334,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/noa-ya2025/noa-ya2025-rachel-ng.pdf",
+        "sha256": "da49de3e57d808d3b932fd8db62ea7cd620d8a889d085a83e1ede8024f30b868",
+        "size": 159382,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2020-marcus-lim.pdf",
+        "sha256": "dac70ead037bb24e1b7169231c4aae16fc29071b9205365448f36c6a145ba1ea",
+        "size": 152720,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2020-rachel-ng.pdf",
+        "sha256": "9d69b2e3fd81d808da4cee12a5b250a86182b41518c65882fc670148bb6dc710",
+        "size": 151960,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2021-marcus-lim.pdf",
+        "sha256": "777fc6ba805c284e94ab23b4f59edb543bb134a0531b5a7d6f7affa5678042df",
+        "size": 153513,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2021-rachel-ng.pdf",
+        "sha256": "a717c1460b9c31e6781def7c773ab649c2508ab53c7c6309e6de42c9b0073034",
+        "size": 153511,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2022-marcus-lim.pdf",
+        "sha256": "6b646c2ab624954260c87a2b202d8d37bebb806cc2e7c639fd81e386a7b7400b",
+        "size": 154401,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2022-rachel-ng.pdf",
+        "sha256": "362eab581a806ebea2ed090419f9227c1d10a28b69393d55c69e4758a88c8916",
+        "size": 154160,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2023-marcus-lim.pdf",
+        "sha256": "96af0b8c3cc4e350e891d1e4ec56e41eeb190723f3caa8400edaa5ec2fa0925b",
+        "size": 155364,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2023-rachel-ng.pdf",
+        "sha256": "0e3f019799d38628105c6b84cada005a4b2887b693ec16eb583a40ee20d1bf2c",
+        "size": 154909,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2024-rachel-ng.pdf",
+        "sha256": "c161157b62217946b45bbc2c541708bfd7a84e935410892f0072ade76ddd4216",
+        "size": 154033,
+        "role": "vault"
+      },
+      {
+        "path": "corpus/batches/srs-2020-2025/srs-2025-rachel-ng.pdf",
+        "sha256": "0896c7eb6fa005afc267282fd34ad532c9b257758d94be624fdcbdeab416a605",
+        "size": 154575,
+        "role": "vault"
+      }
+    ]
+  },
+  "documents": [
+    {
+      "path": "corpus/batches/batch1/b1-0001.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 8,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0002.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 8,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0003.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0004.pdf",
+      "status": "indexed",
+      "doc_type": "renewal_notice",
+      "facts": 6,
+      "chunks": 5,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0005.pdf",
+      "status": "indexed",
+      "doc_type": "renewal_notice",
+      "facts": 6,
+      "chunks": 5,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0006.pdf",
+      "status": "indexed",
+      "doc_type": "renewal_notice",
+      "facts": 6,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0007.pdf",
+      "status": "indexed",
+      "doc_type": "claim_letter",
+      "facts": 6,
+      "chunks": 5,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0008.pdf",
+      "status": "indexed",
+      "doc_type": "claim_letter",
+      "facts": 6,
+      "chunks": 5,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0009.pdf",
+      "status": "indexed",
+      "doc_type": "claim_letter",
+      "facts": 6,
+      "chunks": 5,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0010.pdf",
+      "status": "indexed",
+      "doc_type": "benefit_illustration",
+      "facts": 5,
+      "chunks": 11,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0011.pdf",
+      "status": "indexed",
+      "doc_type": "benefit_illustration",
+      "facts": 4,
+      "chunks": 8,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0012.pdf",
+      "status": "indexed",
+      "doc_type": "benefit_illustration",
+      "facts": 4,
+      "chunks": 8,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0013.pdf",
+      "status": "indexed",
+      "doc_type": "policy_anniversary_statement",
+      "facts": 8,
+      "chunks": 7,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0014.pdf",
+      "status": "indexed",
+      "doc_type": "policy_anniversary_statement",
+      "facts": 8,
+      "chunks": 7,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0015.pdf",
+      "status": "indexed",
+      "doc_type": "policy_anniversary_statement",
+      "facts": 8,
+      "chunks": 7,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0016.pdf",
+      "status": "indexed",
+      "doc_type": "payslip",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0017.pdf",
+      "status": "indexed",
+      "doc_type": "payslip",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0018.pdf",
+      "status": "indexed",
+      "doc_type": "payslip",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0019.pdf",
+      "status": "indexed",
+      "doc_type": "donation_receipt",
+      "facts": 6,
+      "chunks": 6,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0020.pdf",
+      "status": "indexed",
+      "doc_type": "donation_receipt",
+      "facts": 6,
+      "chunks": 6,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0021.png",
+      "status": "indexed",
+      "doc_type": "donation_receipt",
+      "facts": 6,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0022.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 4,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0023.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 4,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0024.png",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 4,
+      "chunks": 6,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0025.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0026.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0027.png",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0028.pdf",
+      "status": "indexed",
+      "doc_type": "notice_of_assessment",
+      "facts": 5,
+      "chunks": 7,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0029.pdf",
+      "status": "indexed",
+      "doc_type": "notice_of_assessment",
+      "facts": 5,
+      "chunks": 7,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0030.png",
+      "status": "indexed",
+      "doc_type": "notice_of_assessment",
+      "facts": 5,
+      "chunks": 2,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0031.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 10,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0032.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 8,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch1/b1-0033.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 10,
+      "chunks": 7,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0001.pdf",
+      "status": "indexed",
+      "doc_type": "payslip",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0002.pdf",
+      "status": "indexed",
+      "doc_type": "payslip",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0003.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 8,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0004.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0005.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 8,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0006.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0007.pdf",
+      "status": "indexed",
+      "doc_type": "renewal_notice",
+      "facts": 6,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0008.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 9,
+      "chunks": 15,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0009.pdf",
+      "status": "indexed",
+      "doc_type": "policy_schedule",
+      "facts": 8,
+      "chunks": 10,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0010.pdf",
+      "status": "indexed",
+      "doc_type": "loan_agreement",
+      "facts": 6,
+      "chunks": 13,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0011.pdf",
+      "status": "indexed",
+      "doc_type": "loan_agreement",
+      "facts": 6,
+      "chunks": 10,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0012.jpg",
+      "status": "indexed",
+      "doc_type": "identity_card",
+      "facts": 3,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0013.jpg",
+      "status": "indexed",
+      "doc_type": "identity_card",
+      "facts": 3,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0014.jpg",
+      "status": "indexed",
+      "doc_type": "identity_card",
+      "facts": 3,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0015.jpg",
+      "status": "indexed",
+      "doc_type": "identity_card",
+      "facts": 3,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0016.jpg",
+      "status": "indexed",
+      "doc_type": "birth_certificate",
+      "facts": 3,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch2/b2-0020.jpg",
+      "status": "indexed",
+      "doc_type": "passport",
+      "facts": 4,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch4/b4-0001.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_topup_receipt",
+      "facts": 5,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch4/b4-0002.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_topup_receipt",
+      "facts": 5,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch4/b4-0003.pdf",
+      "status": "indexed",
+      "doc_type": "course_fee_receipt",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/batch4/b4-0004.pdf",
+      "status": "indexed",
+      "doc_type": "course_fee_receipt",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-01-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-01-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-02-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-02-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-03-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-03-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-04-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-04-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-05-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-05-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-06-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-06-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-07-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-07-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-08-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-08-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 2,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-09-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-09-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-10-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-10-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-11-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-11-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-12-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 3,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/cpf-monthly-2025/cpf-2025-12-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "cpf_statement",
+      "facts": 3,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/donations-rachel-2024-2025/donation-2024-02-29-rachel-ng-good-luck-vwo.pdf",
+      "status": "indexed",
+      "doc_type": "donation_receipt",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/donations-rachel-2024-2025/donation-2024-06-15-rachel-ng-lionsbefriender.pdf",
+      "status": "indexed",
+      "doc_type": "donation_receipt",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/donations-rachel-2024-2025/donation-2025-11-15-rachel-ng-givesg.pdf",
+      "status": "indexed",
+      "doc_type": "donation_receipt",
+      "facts": 6,
+      "chunks": 1,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/noa-ya2025/noa-ya2025-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "notice_of_assessment",
+      "facts": 5,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/noa-ya2025/noa-ya2025-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "notice_of_assessment",
+      "facts": 5,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2020-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2020-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2021-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2021-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2022-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2022-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2023-marcus-lim.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2023-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2024-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    },
+    {
+      "path": "corpus/batches/srs-2020-2025/srs-2025-rachel-ng.pdf",
+      "status": "indexed",
+      "doc_type": "srs_statement",
+      "facts": 4,
+      "chunks": 4,
+      "reason": null
+    }
+  ],
+  "verification": {
+    "documents_expected": 93,
+    "documents_stored": 93,
+    "status": {
+      "indexed": 93
+    },
+    "hash_mismatches": [],
+    "not_in_manifest": [],
+    "extraction_f1": 0.9611,
+    "extraction": {
+      "tp": 309,
+      "fp": 13,
+      "fn": 12,
+      "precision": 0.9596273291925466,
+      "recall": 0.9626168224299065,
+      "f1": 0.9611197511664075
+    },
+    "by_doc_type": {
+      "claim_letter": {
+        "documents": 3,
+        "tp": 15,
+        "fp": 3,
+        "fn": 3,
+        "precision": 0.8333333333333334,
+        "recall": 0.8333333333333334,
+        "f1": 0.8333333333333334
+      },
+      "benefit_illustration": {
+        "documents": 3,
+        "tp": 11,
+        "fp": 2,
+        "fn": 2,
+        "precision": 0.8461538461538461,
+        "recall": 0.8461538461538461,
+        "f1": 0.8461538461538461
+      },
+      "renewal_notice": {
+        "documents": 4,
+        "tp": 21,
+        "fp": 3,
+        "fn": 3,
+        "precision": 0.875,
+        "recall": 0.875,
+        "f1": 0.875
+      },
+      "policy_anniversary_statement": {
+        "documents": 3,
+        "tp": 21,
+        "fp": 3,
+        "fn": 3,
+        "precision": 0.875,
+        "recall": 0.875,
+        "f1": 0.875
+      },
+      "policy_schedule": {
+        "documents": 12,
+        "tp": 101,
+        "fp": 2,
+        "fn": 1,
+        "precision": 0.9805825242718447,
+        "recall": 0.9901960784313726,
+        "f1": 0.9853658536585367
+      },
+      "payslip": {
+        "documents": 5,
+        "tp": 30,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "identity_card": {
+        "documents": 4,
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "cpf_statement": {
+        "documents": 3,
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "donation_receipt": {
+        "documents": 3,
+        "tp": 18,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "notice_of_assessment": {
+        "documents": 3,
+        "tp": 15,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "srs_statement": {
+        "documents": 3,
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "course_fee_receipt": {
+        "documents": 2,
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "cpf_topup_receipt": {
+        "documents": 2,
+        "tp": 10,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "loan_agreement": {
+        "documents": 2,
+        "tp": 12,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "birth_certificate": {
+        "documents": 1,
+        "tp": 3,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "passport": {
+        "documents": 1,
+        "tp": 4,
+        "fp": 0,
+        "fn": 0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    }
+  }
+}
