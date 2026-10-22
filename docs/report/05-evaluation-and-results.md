@@ -92,6 +92,9 @@ The columns are measurements on different corpora, not a series:
   faithfulness sit just under their lines on a vault three and a half times larger.
 - **Abstention:** the one row that does not move.
 
+**Since Run 3**, its corpus reloaded with the fixes it found: 76/93 right and cited, 22 unsupported
+claims, abstention 0.56, extraction 0.961, Set C 15/15.
+
 ## 5.4 Retrieval
 
 The naive baseline cleared recall and precision on six documents, which meant nothing. **Growing
@@ -255,3 +258,4 @@ merged pull request, never at memory. Result files are under `eval/results/`.
 | 20 Oct | Four "not stated" answers whose value the extractor had stored | issue #125 |
 | 20–21 Oct | Rejected: the reranker reading the documents' words (right and cited 74 → 73); the reference number in every chunk label (a near-miss policy number answered) | `2026-10-20-rerank-printed-words`, `2026-10-21-label-without-reference`, `2026-10-21-label-with-reference`, issue #125 |
 | 21 Oct | Four rerankers screened; `mxbai-rerank-large-v1` on the full sets: abstention 0.52 → 0.60, right and cited 74 → 71. Rejected | `2026-10-21-reranker-screen`, `2026-10-21-reranker-mxbai-large-v1` |
+| 22 Oct | Run 3's frozen corpus reloaded with the fixes since (#120, #126, #128, #133): right and cited 72 → 76, abstention 0.52 → 0.56, extraction 0.949 → 0.961, Set C 15/15 | `2026-10-22-since-run3`, `-freeze`, `-setc` |
