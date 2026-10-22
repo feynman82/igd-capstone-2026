@@ -384,11 +384,23 @@ SELECT p.relation, max(f.value_date)
  GROUP BY p.relation
 """
 
+# Whose a document is: a fact's subject matched to a person by a confirmed alias **or by the
+# person's own name**, as `AGE_BASIS` above already does. Aliases alone were not enough. On the
+# development vault on 23 October the owner's own name had been confirmed, by mistake, as an
+# alias of a second "Marcus Lim", and Rachel's name was proposed but never confirmed: every one
+# of Marcus's receipts was set aside as somebody else's, Rachel's matched nobody and so counted
+# as the household's, and "What did I donate?" was answered from her receipt. A document that
+# prints a household member's own name is theirs, whatever the alias table says.
 DOCUMENT_PEOPLE = """
 SELECT f.document_id, p.id, p.display_name
   FROM facts f
-  JOIN person_aliases a ON lower(btrim(a.alias)) = lower(btrim(f.subject)) AND a.confirmed
-  JOIN people p         ON p.id = a.person_id
+  JOIN people p
+    ON lower(btrim(f.subject)) = lower(btrim(p.display_name))
+    OR EXISTS (
+         SELECT 1 FROM person_aliases a
+          WHERE a.person_id = p.id
+            AND a.confirmed
+            AND lower(btrim(a.alias)) = lower(btrim(f.subject)))
  WHERE f.document_id = ANY(%(document_ids)s::uuid[])
  GROUP BY f.document_id, p.id, p.display_name
 """

@@ -698,3 +698,17 @@ def test_whose_gives_the_owner_their_own_first_name_without_a_possessive(
     assert subject.person_ids == frozenset({MARCUS.id})
     assert subject.name == "Marcus Lim Jun Wei"
     assert not subject.ambiguous
+
+
+def test_a_document_is_matched_by_the_persons_own_name_not_only_by_alias() -> None:
+    """23 October, the development vault: the owner's name had been confirmed as an alias of a
+    second person, and Rachel's was never confirmed. Matched by alias alone, Marcus's receipts
+    were somebody else's and Rachel's was nobody's, so it was kept, and "What did I donate?"
+    was answered from her receipt. A person's own display name resolves their documents too,
+    as it already does for a date of birth (`AGE_BASIS`)."""
+    from core.graph.scope import AGE_BASIS, DOCUMENT_PEOPLE
+
+    display_name = "lower(btrim(f.subject)) = lower(btrim(p.display_name))"
+    assert display_name in " ".join(DOCUMENT_PEOPLE.split())
+    assert "a.confirmed" in DOCUMENT_PEOPLE, "an alias still counts only once confirmed"
+    assert "p.display_name" in AGE_BASIS
