@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PARROT — Family Demo</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div><strong>PARROT</strong><small>Local-first household assistant</small></div>
+  <label>Demo family <select id="familySelect"></select></label>
+</header>
+<nav>
+  <button class="active" data-tab="today">Today</button>
+  <button data-tab="ask">Ask</button>
+  <button data-tab="vault">Vault</button>
+  <button data-tab="packs">Packs</button>
+</nav>
+<main>
+<section id="today" class="tab active">
+  <div class="eyebrow">TODAY</div>
+  <h1 id="familyName">Family</h1>
+  <p id="familySummary" class="lead"></p>
+  <div id="cards" class="cards"></div>
+</section>
+<section id="ask" class="tab">
+  <div class="eyebrow">ASK</div>
+  <h1>Ask PARROT</h1>
+  <p class="lead">Answers use only the selected family's synthetic vault.</p>
+  <div class="askbar"><input id="question" placeholder="e.g. When is the next renewal due?"><button onclick="answer()">Ask</button></div>
+  <div id="answer" class="answer"></div>
+</section>
+<section id="vault" class="tab">
+  <div class="eyebrow">VAULT</div>
+  <h1>Household documents</h1>
+  <div id="docs" class="docs"></div>
+</section>
+<section id="packs" class="tab">
+  <div class="eyebrow">PACKS</div>
+  <h1>Enabled domain packs</h1>
+  <div id="packsList" class="packs"></div>
+</section>
+</main>
+<footer>SYNTHETIC DEMO DATA — NOT A REAL RECORD</footer>
+<script src="app.js"></script>
+</body>
+</html>

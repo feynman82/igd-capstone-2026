@@ -1,0 +1,228 @@
+[
+  {
+    "id": "FAM-001",
+    "display_name": "Sarah's household",
+    "persona": "Sarah, 35",
+    "situation": "Two children, aged 5 and 8; Sarah runs the family calendar",
+    "moment_that_hurts": "Learns about a school event the morning it happens",
+    "packs": [
+      {
+        "name": "Children and School",
+        "reason": "School calendars, circulars and consent forms"
+      },
+      {
+        "name": "Tax Assistant",
+        "reason": "Household financial records for the demo"
+      }
+    ],
+    "obligations": [
+      {
+        "level": "reminder",
+        "title": "School consent form",
+        "detail": "Review the synthetic consent form before the displayed due date.",
+        "pack": "Children and School",
+        "source": "school_circular_fam001.pdf",
+        "page": 1,
+        "question": "Which school document needs attention?",
+        "answer": "The synthetic school consent form is the current reminder in this demo."
+      }
+    ],
+    "documents": [
+      {
+        "filename": "school_circular_fam001.pdf",
+        "type": "School circular",
+        "owner": "Sarah"
+      },
+      {
+        "filename": "term_calendar_fam001.pdf",
+        "type": "Term calendar",
+        "owner": "Sarah"
+      },
+      {
+        "filename": "enrichment_invoice_fam001.pdf",
+        "type": "Enrichment invoice",
+        "owner": "Sarah"
+      }
+    ]
+  },
+  {
+    "id": "FAM-002",
+    "display_name": "Marcus's household",
+    "persona": "Marcus, 39",
+    "situation": "One child plus ageing parents in regular care",
+    "moment_that_hurts": "Cannot recall which policy covered his father's admission",
+    "packs": [
+      {
+        "name": "Insurance Agent",
+        "reason": "Policy schedules, renewals and claims"
+      },
+      {
+        "name": "Caregiving and Health",
+        "reason": "Personal health records; no external grounding corpus"
+      }
+    ],
+    "obligations": [
+      {
+        "level": "alert",
+        "title": "Policy coverage review",
+        "detail": "Review the synthetic policy and claim records together.",
+        "pack": "Insurance Agent",
+        "source": "insurance_policy_fam002.pdf",
+        "page": 2,
+        "question": "Which policy record should I review?",
+        "answer": "The synthetic Insurance Agent pack links the household's policy schedule and claim record for review."
+      }
+    ],
+    "documents": [
+      {
+        "filename": "insurance_policy_fam002.pdf",
+        "type": "Policy schedule",
+        "owner": "Marcus"
+      },
+      {
+        "filename": "renewal_notice_fam002.pdf",
+        "type": "Renewal notice",
+        "owner": "Marcus"
+      },
+      {
+        "filename": "claim_letter_fam002.pdf",
+        "type": "Claim letter",
+        "owner": "Marcus"
+      }
+    ]
+  },
+  {
+    "id": "FAM-003",
+    "display_name": "Daniel & Rachel's household",
+    "persona": "Daniel and Rachel",
+    "situation": "Dual careers with no domestic support",
+    "moment_that_hurts": "Motor cover lapses; they find out at the worst moment",
+    "packs": [
+      {
+        "name": "Vehicle and Road Tax",
+        "reason": "Motor policy, road tax and servicing records"
+      },
+      {
+        "name": "Insurance Agent",
+        "reason": "Coverage and renewal evidence"
+      }
+    ],
+    "obligations": [
+      {
+        "level": "alert",
+        "title": "Motor cover renewal",
+        "detail": "Renewal is approaching in the synthetic household record.",
+        "pack": "Vehicle and Road Tax",
+        "source": "motor_policy_fam003.pdf",
+        "page": 1,
+        "question": "When is the motor cover renewal due?",
+        "answer": "The demo's motor policy record is the source for the renewal date; PARROT should cite that document rather than invent a date."
+      }
+    ],
+    "documents": [
+      {
+        "filename": "motor_policy_fam003.pdf",
+        "type": "Motor policy",
+        "owner": "Daniel & Rachel"
+      },
+      {
+        "filename": "road_tax_fam003.pdf",
+        "type": "Road tax notice",
+        "owner": "Daniel & Rachel"
+      },
+      {
+        "filename": "servicing_invoice_fam003.pdf",
+        "type": "Servicing invoice",
+        "owner": "Daniel & Rachel"
+      }
+    ]
+  },
+  {
+    "id": "FAM-004",
+    "display_name": "Priya's household",
+    "persona": "Priya, 32",
+    "situation": "Single, career-focused, contributing to SRS",
+    "moment_that_hurts": "Misses a top-up window and the relief with it",
+    "packs": [
+      {
+        "name": "Tax Assistant",
+        "reason": "SRS, payslip and tax records"
+      }
+    ],
+    "obligations": [
+      {
+        "level": "alert",
+        "title": "SRS review window",
+        "detail": "Review the synthetic SRS statement before the displayed deadline.",
+        "pack": "Tax Assistant",
+        "source": "srs_statement_fam004.pdf",
+        "page": 1,
+        "question": "What tax record should I review?",
+        "answer": "The synthetic SRS statement is the key record for Priya's review in this demo."
+      }
+    ],
+    "documents": [
+      {
+        "filename": "srs_statement_fam004.pdf",
+        "type": "SRS statement",
+        "owner": "Priya"
+      },
+      {
+        "filename": "payslip_fam004.pdf",
+        "type": "Payslip",
+        "owner": "Priya"
+      },
+      {
+        "filename": "tax_notice_fam004.pdf",
+        "type": "Tax notice",
+        "owner": "Priya"
+      }
+    ]
+  },
+  {
+    "id": "FAM-005",
+    "display_name": "Jason's household",
+    "persona": "Jason, 40",
+    "situation": "Business owner, married with two children",
+    "moment_that_hurts": "Business and household spending blur at tax time",
+    "packs": [
+      {
+        "name": "Tax Assistant",
+        "reason": "Payslips, receipts and tax records"
+      },
+      {
+        "name": "Groceries and Supplies",
+        "reason": "Receipts and delivery records"
+      }
+    ],
+    "obligations": [
+      {
+        "level": "reminder",
+        "title": "Expense classification review",
+        "detail": "Separate household and business-style demo expenses before the review point.",
+        "pack": "Tax Assistant",
+        "source": "expense_receipt_fam005.pdf",
+        "page": 1,
+        "question": "Which record should I review for expenses?",
+        "answer": "The synthetic expense receipt is the starting evidence for this demo; PARROT does not invent a classification unsupported by the record."
+      }
+    ],
+    "documents": [
+      {
+        "filename": "expense_receipt_fam005.pdf",
+        "type": "Expense receipt",
+        "owner": "Jason"
+      },
+      {
+        "filename": "donation_receipt_fam005.pdf",
+        "type": "Donation receipt",
+        "owner": "Jason"
+      },
+      {
+        "filename": "payslip_fam005.pdf",
+        "type": "Payslip",
+        "owner": "Jason"
+      }
+    ]
+  }
+]
