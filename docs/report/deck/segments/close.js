@@ -14,7 +14,7 @@ module.exports = function close({ pres, C, THEME, M, W, T, card, text, masters }
     { x: M, y: 3.3, w: 15, h: 1.0, fontSize: 22, color: C.background2, valign: "top" });
   const next = [
     ["The holdout", "14 real, redacted documents: how much of this survives real paper"],
-    ["When to stop", "12 of 25 unanswerable questions still answered; the label check (ADR 0021) awaits a decision"],
+    ["Do not guess", "22 of 118 answers still make an unsupported claim; the label check (ADR 0021) awaits a decision"],
     ["The headline", "Five numbers scored by code, proposed and awaiting the supervisor's sign-off"],
   ];
   text(s, "WHAT COMES NEXT", { x: M, y: 5.9, w: W, h: 0.45, fontFace: "Jost", fontSize: 15, bold: true, charSpacing: 2, color: C.accent1 });
@@ -27,5 +27,5 @@ module.exports = function close({ pres, C, THEME, M, W, T, card, text, masters }
   text(s, "Thank you. Questions.", { x: M, y: 9.3, w: W, h: 0.7, fontFace: "Jost", fontSize: 28, color: C.accent1 });
   s.addNotes("DRAFT for Christian to rewrite in their own words. " +
     "Everything you just saw ran on this laptop. It never paid anything, never booked anything, and it told us no. " +
-    "What comes next is honest work: the holdout on real documents, teaching it when to stop answering, and the supervisor's sign-off on how we score it. Thank you. We'd welcome your questions.");
+    "What comes next is honest work: the holdout on real documents, teaching it not to guess, and the supervisor's sign-off on how we score it. Thank you. We'd welcome your questions.");
 };

@@ -10,7 +10,7 @@ what they produce. Change a slide here, not in PowerPoint, or the next rebuild u
 | `segments/christian.js` | 1–6: title, problem, solution, privacy, platform, live demo | Christian | **Draft** for Christian |
 | `segments/zee.js` | 7–9: four screens, packs, product line | Zee | **Draft** for Zee |
 | `segments/desmond.js` | 10–12: corpus, the 15 traps, what synthetic cannot prove | Desmond | **Draft** for Desmond |
-| `segments/yew-mun.js` | 13–17: retrieval, scorecard, finding, checking the checker, where it stands | Yew Mun | Final |
+| `segments/yew-mun.js` | 13–17: retrieval, the five-number scorecard, what the unsupported claims are, checking the checker, where it stands | Yew Mun | Final |
 | `segments/siew.js` | 18–20: governance documents, never acts, the frameworks | Siew | **Draft** for Siew |
 | `segments/close.js` | 21: what you did not see, what comes next | Christian | **Draft** for Christian |
 
