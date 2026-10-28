@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9fe4225e`
+- Built from commit: `931d22b9`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -53,7 +53,7 @@
 - test_hybrid.py
 - modules/__init__.py
 - test_reindexing_replaces_chunks_and_leaves_facts_alone
-- test_household.py
+- HouseholdScope
 - pathlib
 - alert/__init__.py
 - retrieve.py
@@ -171,7 +171,7 @@
 - State
 - Every Fact Row Cites Its Source
 - DesignPreview evaluation harness
-- already_said
+- score_alerts
 - test_rerank.py
 - Siew — Lane C · Governance and assurance
 - Writing an ADR
@@ -181,7 +181,7 @@
 - Event
 - Calculation
 - Evaluation
-- .observe
+- User stories and acceptance criteria
 - HouseholdAdviceLog
 - lucide-react
 - Banded abstention: an evaluation model beside the fixed floor
@@ -203,7 +203,7 @@
 - One Database
 - What to ask before buying life insurance
 - CalendarEventIn
-- Household canon
+- 2. Amended Gemini Prompts Bank (Xinkapow Yellow/Orange Cards with KFC Mascot)
 - runtime/__init__.py
 - corpus/__init__.py
 - packs/__init__.py
@@ -237,7 +237,7 @@
 - read_and_commit
 - Zee — Lane D · Domain packs and interface
 - Zee — task list
-- ._handle
+- Household canon
 - PrivateCare Policy Wording Template
 - FakeCursor
 - Integration review
@@ -280,7 +280,7 @@
 - Authoring a domain pack
 - 3. PaperBrain informs core/retrieve/'s pattern; it is not the core module
 - `docs/governance/` — the assurance artefacts
-- quiet_engine
+- HouseholdCalendar
 - `core/adapters/` — capture adapters
 - Home Contents Insurance Policy
 - The pack catalogue
@@ -322,7 +322,7 @@
 - test_answer_graph.py
 - _page_of_examples
 - test_a_document_still_in_the_inbox_is_not_forgotten
-- .__post_init__
+- RagasJudge
 - 9. `next-themes` and `lucide-react` are the only two web dependencies beyond the named stack
 - 16 · A pack advises: code calculates from cited facts and reviewed rule values, under recorded consent
 - Yew Mun — Lane B · Retrieval and evaluation
@@ -507,7 +507,7 @@ Nodes (56): Answer, _as_sentence(), Cited, Every event, collected. `scripts/ask.
 Cohesion: 0.11
 Nodes (28): hybrid_score(), HybridRetriever, identifiers(), prints(), Hybrid retrieval: pgvector cosine search and Postgres full-text search, fused…, The tokens in a question that look like something printed rather than said: a…, Whether the chunk prints the identifier, ignoring case and the spacing inside…, The cosine similarity, lifted to `IDENTIFIER_HIT` when the chunk prints an… (+20 more)
 
-### Community 37 - "test_household.py"
+### Community 37 - "HouseholdScope"
 Cohesion: 0.16
 Nodes (17): HouseholdScope, Keep the passages of these people and of the household; set aside everybody…, What `AnswerGraph` is handed so it can scope without holding a connection.…, scope_to(), _conn_returning(), _passage(), The third bucket. Home contents, a utility bill — nobody's name on it,…, A joint policy is the owner's too. Presence wins over exclusion. (+9 more)
 
@@ -975,7 +975,7 @@ Nodes (11): Every Fact Row Cites Its Source, No Claim Without a Citation, A Corr
 Cohesion: 0.25
 Nodes (8): parrot-sweep shimmer animation, Starting Parrot, 3 of 5 ready, Parrot Startup Skeleton Screen, An answer with the page it came from, Civic Register direction, DesignPreview evaluation harness, Kitchen Table direction, The Reading Desk direction
 
-### Community 156 - "already_said"
+### Community 156 - "score_alerts"
 Cohesion: 0.16
 Nodes (14): alert_fpr(), AlertVerdict, One verdict per fired alert: whether the register, recomputed, crosses the same…, Metric 8. `None` when nothing fired: a rate over zero alerts is not 0.0, it is…, score_alerts(), Fired, Decimal, A `modules.alert.Alert` as far as `score_alerts` reads one. (+6 more)
 
@@ -1015,7 +1015,7 @@ Nodes (27): AdviceLog, Adviser, Calculation, ConsentBook, date, Protocol, What a
 Cohesion: 0.16
 Nodes (14): Evaluation, Extraction F1 by document type, Generating a lane's dozen, Ground truth comes free, How much of a delta is a delta, Metrics and targets, Running the harness, Set A, answerable (+6 more)
 
-### Community 166 - ".observe"
+### Community 166 - "User stories and acceptance criteria"
 Cohesion: 0.14
 Nodes (12): 1. How to read a criterion, 2. Rachel · Reminder module · Today, 3. Marcus · retrieval core · Ask, 4. Marcus and Rachel · capture · Vault, 5. Marcus · Alert module · Today, 6. The household ledger · Tracker · specification only, 7. Open questions for review, 8. The criteria as a checklist (+4 more)
 
@@ -1095,7 +1095,7 @@ Nodes (9): Are verbal representations provided in line with what's in the insura
 Cohesion: 0.20
 Nodes (11): CalendarEvent, CalendarEventIn, model_validator, What a person sets on an entry. The same shape creates and replaces one: an…, One stored entry, every date of it. Occurrences are `CalendarEntry` rows., _as_calendar_event(), create_event(), replace_event() (+3 more)
 
-### Community 190 - "Household canon"
+### Community 190 - "2. Amended Gemini Prompts Bank (Xinkapow Yellow/Orange Cards with KFC Mascot)"
 Cohesion: 0.11
 Nodes (19): 1. Ground Truth Parameters (Canonical Lim Household & Xinkapow), 2.1 Marcus Lim Jun Wei — Xinkapow National Identity Card (Front), 2.2 Marcus Lim Jun Wei — Xinkapow National Identity Card (Back), 2.3 Rachel Ng Hui Shan — Xinkapow National Identity Card (Front), 2.4 Rachel Ng Hui Shan — Xinkapow National Identity Card (Back), 2.5 Lim Ah Kow (Father) — Xinkapow Senior Citizen Identity Card, 2.6 Tan Mei Ling (Mother) — Xinkapow Senior Citizen Identity Card, 2.7 Lucas Lim Kai En — Xinkapow Digital Birth Certificate (+11 more)
 
@@ -1183,7 +1183,7 @@ Nodes (9): Half one — domain packs (weeks 1 to 7), Half two — the interface 
 Cohesion: 0.22
 Nodes (9): W10 — due 2026-11-10, W1 — due 2026-09-08, W2 — due 2026-09-15, W3 — due 2026-09-22, W5 — due 2026-10-06, W6 — due 2026-10-13, W7 — due 2026-10-20, W9 — due 2026-11-03 (+1 more)
 
-### Community 229 - "._handle"
+### Community 229 - "Household canon"
 Cohesion: 0.20
 Nodes (8): Address, Employment, Household canon, Issuers for the documents that have no `insurer` field, Life events that documents must reflect, People, The family tree, and why three of them are not called Lim, Vehicles
 
@@ -1347,7 +1347,7 @@ Nodes (6): 3. PaperBrain informs core/retrieve/'s pattern; it is not the core mo
 Cohesion: 0.50
 Nodes (3): `docs/governance/` — the assurance artefacts, The autonomy statement in one line, The rule that governs all eight
 
-### Community 280 - "quiet_engine"
+### Community 280 - "HouseholdCalendar"
 Cohesion: 0.29
 Nodes (4): Reply, HouseholdCalendar, Any, The graph's view of the calendar. Holds the connection the graph does not.
 
@@ -1471,7 +1471,7 @@ Nodes (10): _page_of_examples(), One page printing every field's `example`, so e
 Cohesion: 0.33
 Nodes (6): inbox(), Path, Capture would register it again within a minute, so the button would only…, A watched folder holding one document, hashed the way the ingest registered it., test_a_document_still_in_the_inbox_is_not_forgotten(), test_quarantine_says_what_needs_eyes_and_why()
 
-### Community 328 - ".__post_init__"
+### Community 328 - "RagasJudge"
 Cohesion: 0.32
 Nodes (6): RagasJudge, aembed_text(), aembed_texts(), embed_text(), embed_texts(), Ragas 0.4 metrics through Ollama's OpenAI-compatible endpoint. Imported lazily…
 

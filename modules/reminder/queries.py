@@ -22,10 +22,31 @@ opened. Nothing else is needed, and in particular nothing needs a new column.
 
 from __future__ import annotations
 
+# An expiry a later document extends is not due. A renewal notice prints the expiry of the term it
+# offers to renew; once the schedule for the renewed term is filed, that date is history, and
+# reminding about it reports a renewed policy as overdue. The rule is the Alert module's: per
+# person and per policy number as printed, the latest expiry wins (`DAYS_UNCOVERED`). Issue #137.
+NOT_RENEWED = """
+   AND NOT EXISTS (
+       SELECT 1
+         FROM facts p
+         JOIN facts q     ON q.key = 'policy_no'
+                         AND q.value_text = p.value_text
+                         AND q.document_id <> p.document_id
+         JOIN facts later ON later.document_id = q.document_id
+                         AND later.key = 'expiry_date'
+                         AND later.subject = f.subject
+                         AND later.value_date > o.due_date
+        WHERE f.key = 'expiry_date'
+          AND p.document_id = f.document_id
+          AND p.key = 'policy_no'
+   )"""
+
 # Everything not yet done or dismissed, with the fact and document behind it. The lead window
 # arithmetic happens in Python because it is easier to read there and easier to test there; the
 # database's job is to hand over the rows without a generated predicate.
-DUE_SWEEP = """
+DUE_SWEEP = (
+    """
 SELECT o.id,
        o.pack_id,
        o.label,
@@ -40,9 +61,12 @@ SELECT o.id,
   LEFT JOIN facts f     ON f.id = o.fact_id
   LEFT JOIN documents d ON d.id = f.document_id
  WHERE o.state IN ('pending', 'notified')
-   AND o.due_date >= %(floor)s
+   AND o.due_date >= %(floor)s"""
+    + NOT_RENEWED
+    + """
  ORDER BY o.due_date, o.id
 """
+)
 
 MARK_NOTIFIED = """
 UPDATE obligations
@@ -60,15 +84,19 @@ MARK_DISMISSED = "UPDATE obligations SET state = 'dismissed' WHERE id = %(obliga
 # The document and its page come back for the same reason they do on the sweep: a date that has
 # passed is the one a person most wants to check against the paper, and a citation without a
 # page is half a citation.
-OVERDUE = """
+OVERDUE = (
+    """
 SELECT o.id, o.pack_id, o.label, o.due_date, f.document_id, f.page, d.original_name
   FROM obligations o
   LEFT JOIN facts f     ON f.id = o.fact_id
   LEFT JOIN documents d ON d.id = f.document_id
  WHERE o.state IN ('pending', 'notified')
-   AND o.due_date < %(today)s
+   AND o.due_date < %(today)s"""
+    + NOT_RENEWED
+    + """
  ORDER BY o.due_date
 """
+)
 
 # One open obligation, with what `next_window` needs to say when it will speak again. Used
 # before a close or a snooze so that acting on a row that is already done says so, rather than
