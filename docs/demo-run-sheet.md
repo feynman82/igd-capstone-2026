@@ -205,8 +205,9 @@ what is my electricity bill for March?
 > because you can believe the answers, and you can only believe them if it is willing to say no.
 > Every one of those refusals is a question it could have answered plausibly and wrongly.
 >
-> We measure this. The headline number in the evaluation is not accuracy, it is the abstention
-> rate on a set of questions the corpus genuinely cannot answer.
+> We measure this. The first number in the evaluation is not accuracy: it is how many answers make
+> a claim the documents do not support, and a question like this one, answered anyway, is one of
+> them.
 
 **Why this question.** Neither installed pack covers utilities, so there is no document of that
 type for any batch — the abstention is structural rather than lucky, and it survives a corpus

@@ -49,63 +49,68 @@ module.exports = function yewMun({ pres, C, THEME, M, W, T, card, masters }) {
   // ---------------------------------------------------------------- 2. the scorecard
   {
     const s = pres.addSlide({ masterName: L.LIGHT, sectionTitle: S });
-    s.addText("THE SCORECARD · THREE RUNS", { placeholder: "eyebrow" });
-    s.addText([T("Run 3 cleared more lines. "), T("Abstention did not move.", { color: C.accent2 })], { placeholder: "title" });
+    s.addText("THE SCORECARD · ONE NUMBER PER PROMISE", { placeholder: "eyebrow" });
+    s.addText([T("Scored by code, not by a judge. "), T("Do not guess comes first.", { color: C.accent2 })], { placeholder: "title" });
 
     const head = (t, al) => ({ text: t, options: { bold: true, fontFace: "Jost", fontSize: 14, color: C.accent3, charSpacing: 1, align: al || "right" } });
     const cell = (t, o) => ({ text: t, options: Object.assign({ fontSize: 17, color: C.text1, align: "right" }, o || {}) });
+    const key = { bold: true, color: C.accent2 };
     const rows = [
-      [head("WHAT WE MEASURE · DOCS", "left"), head("TARGET"), head("RUN 1 · 6"), head("RUN 2 · 26"), head("RUN 3 · 93")],
-      [cell("Finds the page that answers", { align: "left" }), cell("≥ 0.85"), cell("0.895"), cell("0.897"), cell("0.848", { bold: true })],
-      [cell("Reads only pages on point", { align: "left" }), cell("≥ 0.70"), cell("0.868"), cell("0.854"), cell("0.820", { bold: true })],
-      [cell("Sticks to what the page says", { align: "left" }), cell("≥ 0.90"), cell("0.819"), cell("0.967"), cell("0.892", { bold: true })],
-      [cell("Answers the question asked", { align: "left" }), cell("≥ 0.80"), cell("0.765"), cell("0.779"), cell("0.834", { bold: true })],
-      [cell("Files the fields correctly", { align: "left" }), cell("≥ 0.90"), cell("0.898"), cell("0.903"), cell("0.949", { bold: true })],
-      [cell("Says 'I don't know' when it should", { align: "left", bold: true, color: C.accent2 }), cell("≥ 0.95", { color: C.accent2 }),
-        cell("0.76", { color: C.accent2 }), cell("0.52", { color: C.accent2 }), cell("0.52", { bold: true, color: C.accent2 })],
+      [head("THE PROMISE · DOCS", "left"), head("RUN 1 · 6"), head("RUN 2 · 26"), head("RUN 3 · 93"), head("SINCE RUN 3")],
+      [cell("Do not guess: unsupported claims", Object.assign({ align: "left" }, key)), cell("9/44", key), cell("19/64", key), cell("25/118", key), cell("22/118", key)],
+      [cell("Right, and citing its page", { align: "left" }), cell("16/19"), cell("31/39"), cell("72/93", { bold: true }), cell("76/93")],
+      [cell("Holds back when the page was read", { align: "left" }), cell("2/19"), cell("1/39"), cell("6/93", { bold: true }), cell("5/93")],
+      [cell("Casual vs formal questions", { align: "left" }), cell("—"), cell("—"), cell("8/10 · 64/83", { bold: true }), cell("8/10 · 68/83")],
+      [cell("Files the fields correctly (F1)", { align: "left" }), cell("0.898"), cell("0.903"), cell("0.949", { bold: true }), cell("0.961")],
+      [cell("Leaks on the 15 traps", { align: "left" }), cell("—"), cell("—"), cell("0", { bold: true }), cell("0")],
     ];
-    s.addTable(rows, { x: M, y: 3.2, w: 11.6, colW: [4.4, 1.5, 1.9, 1.9, 1.9], rowH: 0.62,
+    s.addTable(rows, { x: M, y: 3.2, w: 11.6, colW: [4.6, 1.5, 1.6, 2.0, 1.9], rowH: 0.62,
       border: { type: "solid", pt: 0.75, color: THEME.colors.lt2 }, fill: { color: THEME.colors.lt1 }, margin: [0, 0.12, 0, 0.12], valign: "middle" });
 
     const px = M + 12.3, pw = 20 - M - px;
     card(s, "run3Panel", px, 3.2, pw, 5.6, THEME.colors.lt2);
     s.addText("RUN 3 · 19–20 OCTOBER", { isTextBox: true, x: px + 0.4, y: 3.5, w: pw - 0.8, h: 0.4, fontFace: "Jost", fontSize: 14,
       bold: true, charSpacing: 2, color: C.accent2, margin: 0 });
-    const stat = (big, label, y) => {
-      s.addText(big, { isTextBox: true, x: px + 0.4, y, w: pw - 0.8, h: 0.85, fontFace: "Jost", fontSize: 44, color: C.text1, margin: 0 });
+    const stat = (big, label, y, color) => {
+      s.addText(big, { isTextBox: true, x: px + 0.4, y, w: pw - 0.8, h: 0.85, fontFace: "Jost", fontSize: 44, color: color || C.text1, margin: 0 });
       s.addText(label, { isTextBox: true, x: px + 0.4, y: y + 0.85, w: pw - 0.8, h: 0.45, fontSize: 15, color: C.text2, margin: 0 });
     };
-    stat("72 of 93", "right, and citing the page it is printed on", 4.05);
-    stat("15 of 15", "adversarial traps held, nothing leaked", 5.45);
-    stat("93 + 25", "answerable questions and hard negatives, on a frozen corpus", 6.85);
-    s.addText("Each run had a different corpus, so the columns are three measurements, not a trend.",
-      { isTextBox: true, x: M, y: 7.85, w: 11.6, h: 0.45, fontSize: 14, italic: true, color: C.accent3, margin: 0 });
-    card(s, "sinceRun3", M, 8.45, 11.6, 1.1, THEME.colors.lt2);
-    s.addText([T("SINCE RUN 3 · 22 OCT", { fontFace: "Jost", fontSize: 13, bold: true, charSpacing: 2, color: C.accent2, breakLine: true }),
-      T("Same corpus, with the fixes Run 3 found: ", { color: C.text2 }),
-      T("76/93 right and cited · abstention 0.56 · extraction 0.961", { bold: true, color: C.text1 })],
-      { isTextBox: true, x: M + 0.3, y: 8.55, w: 11.0, h: 0.9, fontSize: 16, margin: 0, valign: "middle" });
+    stat("25 of 118", "answers made a claim the documents do not support", 4.05, C.accent2);
+    stat("72 of 93", "right, and citing the page it is printed on", 5.45);
+    stat("0 of 15", "adversarial traps leaked", 6.85);
+    s.addText("Each run had a different corpus, so the columns are measurements, not a trend.",
+      { isTextBox: true, x: M, y: 7.75, w: 11.6, h: 0.45, fontSize: 14, italic: true, color: C.accent3, margin: 0 });
+    card(s, "proposed", M, 8.35, 11.6, 1.2, THEME.colors.lt2);
+    s.addText([T("PROPOSED · AWAITING SIGN-OFF", { fontFace: "Jost", fontSize: 13, bold: true, charSpacing: 2, color: C.accent2, breakLine: true }),
+      T("The nine week-1 metrics, abstention among them, are still measured every run, as diagnostics beneath these five.", { color: C.text2 })],
+      { isTextBox: true, x: M + 0.3, y: 8.4, w: 11.0, h: 1.1, fontSize: 16, margin: 0, valign: "middle" });
 
     s.addNotes(
-      "Three runs. Run 1 on six documents, run 2 after hybrid search and the re-reader, Run 3 on ninety-three documents loaded from a frozen copy of the corpus in a database of its own. " +
-      "Run 3 is the first run where every answerable question had its document present, and it clears answer relevancy and extraction comfortably. Recall and faithfulness sit just under their lines on a vault three and a half times bigger. " +
-      "The headline numbers: 72 of 93 answers right and cited, all 15 adversarial traps held. And the row in orange: saying 'I don't know' when it should. 0.76, then 0.52, then 0.52. That is the finding. " +
-      "The strip at the bottom is the same Run 3 corpus measured again on 22 October with the fixes Run 3 itself found: 76 right and cited, and abstention moves for the first time, to 0.56.");
+      "We score PARROT on its promises, one number each, and every one is counted by code against the answer key, not by a judge model. " +
+      "The first is the one that matters most: do not guess. An unsupported claim is a value the page doesn't print, a false 'not on file', or an answer to a question nothing on file can answer. Run 3 made 25 in 118 answers; since the fixes Run 3 found, 22. " +
+      "72 of 93 answerable questions were right and cited, 76 since. It held back only six times when it had the page. And nothing leaked on the fifteen traps. " +
+      "This headline is proposed and awaiting our supervisor's sign-off; the nine metrics we set in week one, abstention among them, are still measured underneath as diagnostics.");
   }
 
   // ---------------------------------------------------------------- 3. the finding (dark)
   {
     const s = pres.addSlide({ masterName: L.DARK, sectionTitle: S });
     s.addText("THE FINDING", { placeholder: "eyebrow" });
-    s.addText([T("0.76", { color: C.background1 }), T(" → ", { color: C.accent1 }), T("0.52", { color: C.background1 }),
-      T(" → ", { color: C.accent1 }), T("0.52", { color: C.accent1 })],
-      { isTextBox: true, x: M, y: 1.5, w: 10.2, h: 1.9, fontFace: "Jost", fontSize: 76, margin: 0, fit: "none", wrap: false });
-    s.addText("Better search made it worse at saying 'I don't know'. It stayed there through Run 3.",
-      { isTextBox: true, x: M, y: 3.7, w: 9.6, h: 1.4, fontFace: "Jost", fontSize: 30, color: C.background1, margin: 0, valign: "top" });
-    s.addText("Every document that arrives gives an unanswerable question a page that looks close. A relevant page is the one thing a better search engine always finds.",
-      { isTextBox: true, x: M, y: 5.35, w: 9.6, h: 1.4, fontSize: 18, color: C.background2, margin: 0, valign: "top" });
-    s.addText([T("12 of 25", { color: C.accent1, bold: true }), T(" unanswerable questions are still answered, each citing a page that exists. No threshold separates them from good answers (ADR 0019).", { color: C.background2 })],
-      { isTextBox: true, x: M, y: 7.1, w: 9.6, h: 1.3, fontSize: 18, margin: 0, valign: "top" });
+    s.addText([T("One answer in five still guesses. ", { color: C.background1 }), T("Half are questions with no answer on file.", { color: C.accent1 })],
+      { isTextBox: true, x: M, y: 1.3, w: 9.8, h: 2.3, fontFace: "Jost", fontSize: 40, margin: 0, valign: "top" });
+    const parts = [
+      ["12", "answered, though nothing on file answers them"],
+      ["8", "wrong values: a number the page does not print"],
+      ["5", "false 'not on file' for something that is"],
+    ];
+    parts.forEach(([n, label], i) => {
+      const y = 3.95 + i * 1.05;
+      s.addText(n, { isTextBox: true, x: M, y, w: 1.3, h: 0.9, fontFace: "Jost", fontSize: 48, color: i === 0 ? C.accent1 : C.background1, margin: 0, valign: "middle" });
+      s.addText(label, { isTextBox: true, x: M + 1.4, y, w: 8.2, h: 0.9, fontSize: 19, color: C.background2, margin: 0, valign: "middle" });
+    });
+    s.addText([T("The old headline saw only the first group. ", { color: C.background1 }),
+      T("Abstention fell 0.76 → 0.52 → 0.52 as search improved: every document gives an unanswerable question a page that looks close. No threshold separates them (ADR 0019).", { color: C.background2 })],
+      { isTextBox: true, x: M, y: 7.3, w: 9.6, h: 1.6, fontSize: 17, margin: 0, valign: "top" });
 
     const qx = 11.4, qw = 20 - M - qx;
     card(s, "labelCard", qx, 1.6, qw, 6.9, THEME.colors.lt1);
@@ -118,15 +123,15 @@ module.exports = function yewMun({ pres, C, THEME, M, W, T, card, masters }) {
       s.addText([T("CITING  ", { fontFace: "Jost", fontSize: 13, bold: true, charSpacing: 2, color: C.accent2 }), T(label, { fontFace: "Courier New", fontSize: 17, color: C.text1 })],
         { isTextBox: true, x: qx + 0.7, y: y + 0.98, w: qw - 1.4, h: 0.62, margin: 0, valign: "middle" });
     };
-    pair("\u201CThe named driver is Marcus.\u201D", "Name of Insured", 3.45);
-    pair("\u201CRoad tax is due 12 April 2026.\u201D", "Period of Insurance From", 5.3);
+    pair("“The named driver is Marcus.”", "Name of Insured", 3.45);
+    pair("“Road tax is due 12 April 2026.”", "Period of Insurance From", 5.3);
     s.addText("A score cannot see this; the printed label can. ADR 0021 checks it. It reaches only some cases, and is switched off pending review.",
       { isTextBox: true, x: qx + 0.45, y: 7.2, w: qw - 0.9, h: 1.1, fontSize: 15, color: C.text2, margin: 0, valign: "top" });
 
     s.addNotes(
-      "This is the finding. On six documents, three in four unanswerable questions were declined. As documents arrived, that fell to half, and Run 3 confirms it stays there. Nothing regressed: every new document gives an unanswerable question a page that looks close, and a better search engine is precisely the thing that finds it. " +
-      "We tried a threshold on the re-reader's relevance score and measured it: every setting traded away two targets we had cleared for a fraction of this one, so we rejected it, and the ADR records why. " +
-      "What the twelve still answered share is on the right. The value is real and printed, just under a different label: 'Name of Insured' read as the named driver, the start of the insurance period read as a road tax date. A score cannot see that; the printed label can. We built a check for it, ADR 0021. It met its own acceptance conditions, two fewer unsupported claims and no right answer lost, but it reaches only some cases, and it is switched off until the team reviews it.");
+      "This is the finding. Run 3's 25 unsupported claims are three kinds. Twelve are questions nothing on file can answer, answered anyway. Eight are wrong values. Five say something is not on file when it is. " +
+      "Our old headline, abstention, only ever saw the first group, and it fell from 0.76 to 0.52 as search improved, because every new document gives an unanswerable question a page that looks close. A threshold on the re-reader's score could not separate those from good answers; we measured it and rejected it, and ADR 0019 records why. " +
+      "What the twelve share is on the right: a real printed value under a different label. 'Name of Insured' read as the named driver; the start of the insurance period read as a road tax date. A score can't see that; the printed label can. ADR 0021 checks it: two fewer unsupported claims and no right answer lost, but it reaches only some cases, so it is switched off until the team reviews it.");
   }
 
   // ---------------------------------------------------------------- 4. checking the checker
@@ -168,16 +173,16 @@ module.exports = function yewMun({ pres, C, THEME, M, W, T, card, masters }) {
   {
     const s = pres.addSlide({ masterName: L.ORANGE, sectionTitle: S });
     s.addText("WHERE IT STANDS", { isTextBox: true, x: M, y: 0.75, w: W, h: 0.45, fontFace: "Jost", fontSize: 16, bold: true, charSpacing: 2, color: C.text1, margin: 0 });
-    s.addText("15 of 15", { isTextBox: true, x: M, y: 2.2, w: 9, h: 2.4, fontFace: "Jost", fontSize: 150, color: C.text1, margin: 0 });
-    s.addText("adversarial traps held in Run 3. The one absolute line, kept.", { isTextBox: true, x: M, y: 4.75, w: 8.4, h: 1.2, fontFace: "Jost", fontSize: 26, color: C.text1, margin: 0, valign: "top" });
-    s.addText("12 of 25", { isTextBox: true, x: 10.6, y: 2.2, w: 8.4, h: 2.4, fontFace: "Jost", fontSize: 150, color: C.background1, margin: 0 });
-    s.addText("unanswerable questions still answered. The work left is teaching it when to stop.", { isTextBox: true, x: 10.6, y: 4.75, w: 8.4, h: 1.2, fontFace: "Jost", fontSize: 26, color: C.background1, margin: 0, valign: "top" });
+    s.addText("0 of 15", { isTextBox: true, x: M, y: 2.2, w: 9, h: 2.4, fontFace: "Jost", fontSize: 150, color: C.text1, margin: 0 });
+    s.addText("adversarial traps leaked in Run 3. The one absolute line, kept.", { isTextBox: true, x: M, y: 4.75, w: 8.4, h: 1.2, fontFace: "Jost", fontSize: 26, color: C.text1, margin: 0, valign: "top" });
+    s.addText("22 of 118", { isTextBox: true, x: 10.6, y: 2.2, w: 8.4, h: 2.4, fontFace: "Jost", fontSize: 130, color: C.background1, margin: 0 });
+    s.addText("answers still make an unsupported claim, since the fixes Run 3 found. The work left is teaching it not to guess.", { isTextBox: true, x: 10.6, y: 4.75, w: 8.4, h: 1.6, fontFace: "Jost", fontSize: 26, color: C.background1, margin: 0, valign: "top" });
     s.addText("Next: the holdout, 14 real and redacted documents, tells us how much of this survives real paperwork.",
       { isTextBox: true, x: M, y: 7.6, w: W, h: 1.0, fontFace: "Jost", fontSize: 22, color: C.text1, margin: 0, valign: "top" });
 
     s.addNotes(
-      "Where it stands after Run 3. Fifteen of fifteen adversarial traps held: nothing forbidden leaked, which is the one line we treat as absolute. " +
-      "And twelve of twenty-five unanswerable questions still get an answer. The engine finds the page; what it still has to learn is when not to answer from it. " +
+      "Where it stands. Nothing leaked on the fifteen traps: that is the one line we treat as absolute. " +
+      "And since the fixes Run 3 found, 22 of 118 answers still make a claim the documents don't support, down from 25. The engine finds the page; what is left is teaching it not to guess from it. " +
       "Everything you've seen is on synthetic documents. The holdout, fourteen real, redacted documents, is the honest test of how much of it survives real paper.");
   }
 };

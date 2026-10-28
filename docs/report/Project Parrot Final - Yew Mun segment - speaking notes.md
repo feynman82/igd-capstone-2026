@@ -38,55 +38,57 @@ autonomy boundary.
 
 ## Slide 2 · The scorecard · ~1:45
 
-**Land this:** *72 of 93 right and cited, 15 of 15 traps held, and one row that didn't move.*
+**Land this:** *five numbers, one per promise, counted by code; "do not guess" comes first: 25 of 118.*
 
-> We measured three times. Run 1 was on six documents. Run 2 added hybrid search and the re-reader.
-> Run 3 used ninety-three documents, loaded from a frozen commit into a database of its own, so
-> anyone can rebuild it.
+> We score PARROT on its promises, one number each, and every one is counted by code against the
+> answer key, not by a judge model.
 >
-> One caution first: each run had a different corpus, so read these as three measurements, not a
-> trend.
->
-> Run 3: seventy-two of ninety-three questions answered right *and* citing the page the answer is
-> printed on. All fifteen adversarial traps held. Nothing leaked.
+> One caution first: each run had a different corpus, so read the columns as three measurements,
+> not a trend.
 
-*Point at the orange row.*
+*Point at the first row.*
 
-> And this row: saying "I don't know" when the answer isn't there. 0.76, then 0.52, then 0.52.
-> That's the finding, and it's the next slide.
+> The promise that matters most is: do not guess. An unsupported claim is a value the page doesn't
+> print, a false "not on file", or an answer to a question nothing on file can answer. Run 3 made
+> twenty-five of those in a hundred and eighteen answers. Since the fixes Run 3 found, twenty-two.
+
+*Point at the panel.*
+
+> Seventy-two of ninety-three answerable questions were right and cited the page. And nothing
+> leaked on the fifteen traps.
 
 *Point at the strip at the bottom.*
 
-> The strip is the same Run 3 corpus measured again on 22 October, with the fixes Run 3 itself
-> found: seventy-six right and cited.
+> This headline is proposed and waiting for our supervisor's sign-off. The nine metrics we set in
+> week one, abstention among them, are still measured underneath.
 
-**Bridge:** "Why did a better system get worse at saying no?"
+**Bridge:** "So what are those twenty-five?"
 
 ---
 
 ## Slide 3 · The finding · ~2:00 (the slide to slow down on)
 
-**Land this:** *better search made it worse at saying "I don't know", and no threshold fixes that.*
+**Land this:** *one answer in five still guesses; half of those are questions nothing on file answers.*
 
-> On six documents, three in four unanswerable questions were declined. As documents arrived, that
-> fell to half, and it stayed there.
+> Run 3's twenty-five unsupported claims are three kinds. Twelve are questions nothing on file can
+> answer, answered anyway. Eight are wrong values. Five say something isn't on file when it is.
 >
-> Nothing broke. Every new document gives an unanswerable question a page that looks close, and a
+> Our old headline, abstention, only ever saw the first kind, and it fell from 0.76 to 0.52 as
+> search improved. Every new document gives an unanswerable question a page that looks close, and a
 > better search engine is exactly the thing that finds it.
 >
-> The obvious fix is a threshold on the re-reader's score. We built it and swept it. Every setting
-> gave up two targets we had already cleared for a fraction of this one, so we rejected it. ADR 0019
-> records why.
+> The obvious fix is a threshold on the re-reader's score. We built it and swept it, and every
+> setting gave up good answers for a fraction of these. ADR 0019 records why we rejected it.
 
 *Point at the two examples.*
 
-> Look at what the twelve still answered have in common. The value is real and printed, just under
-> a different label. "The named driver is Marcus" cites *Name of Insured*. A road-tax date cites the
-> start of the insurance period.
+> Look at what the twelve have in common. The value is real and printed, just under a different
+> label. "The named driver is Marcus" cites *Name of Insured*. A road-tax date cites the start of
+> the insurance period.
 >
-> A score can't see that, but the printed label can. We built a check for it, ADR 0021. It met its
-> own conditions: two fewer unsupported claims, and no right answer lost. But it reaches only some
-> cases, so it's switched off until the team reviews it.
+> A score can't see that, but the printed label can. We built a check for it, ADR 0021: two fewer
+> unsupported claims, and no right answer lost. It reaches only some cases, so it's switched off
+> until the team reviews it.
 
 **Bridge:** "Every number so far is only worth what it measures, and three times it measured the wrong thing."
 
@@ -115,12 +117,12 @@ autonomy boundary.
 
 ## Slide 5 · Where it stands · ~1:00
 
-**Land this:** *the absolute line held; the work left is teaching it when to stop.*
+**Land this:** *nothing leaked; the work left is teaching it not to guess.*
 
-> Fifteen of fifteen adversarial traps held. That is the one line we treat as absolute.
+> Nothing leaked on the fifteen traps. That is the one line we treat as absolute.
 >
-> Twelve of twenty-five unanswerable questions still get an answer. The engine finds the page. What
-> it still has to learn is when *not* to answer from it.
+> And twenty-two of a hundred and eighteen answers still make a claim the documents don't support.
+> The engine finds the page. What it still has to learn is not to guess from it.
 >
 > And everything you've seen is on synthetic documents. The holdout, fourteen real, redacted
 > documents, is the honest test of how much of it survives real paper.
@@ -136,14 +138,14 @@ autonomy boundary.
 
 | | |
 |---|---|
+| Unsupported claims (the first number) | **25 / 118**, then 22 since Run 3: 12 answered with nothing on file, 8 wrong values, 5 false "not on file" |
 | Right and cited, Run 3 | **72 / 93**, then 76 / 93 since Run 3 |
-| Adversarial traps held | **15 / 15** |
-| Abstention | **0.76 → 0.52 → 0.52**, then 0.56 since Run 3 (target 0.95) |
-| Unanswerable still answered | **12 / 25** |
+| Over-caution | **6 / 93**, then 5 |
+| Leaks on the 15 traps | **0** |
+| Abstention (a diagnostic now) | **0.76 → 0.52 → 0.52**, then 0.56 since Run 3 |
 | Faithfulness when the re-reader arrived | **0.810 → 0.967** |
 | Misses with the right page in hand | **19 / 21** |
 | Extraction F1 | **0.949**, then 0.961 since Run 3; 0.982 without the insurer-name convention |
-| Unsupported claims | **25 / 118**, then 22 since Run 3 |
 | Median answer time | **4.4 s** |
 
 ---
@@ -153,7 +155,9 @@ autonomy boundary.
 **"Why not just set a confidence threshold?"**
 We built one on the re-reader's score and swept it (ADR 0019). The unanswerable questions that get
 answered are exactly the ones with a genuinely relevant page, so every threshold that caught them
-also dropped good answers. It cost two targets we'd cleared to gain a fraction of this one.
+also dropped good answers. It cost good answers to gain a fraction of these. That trade is also why we stopped making
+abstention the headline: chasing its target meant tuning the floor, and the aim was never "decline
+often", it was "do not guess".
 
 **"Can you trust an LLM judge?"**
 Not on its own, which is why it isn't the headline. Our judge (qwen2.5 7B, on the machine) scored a
@@ -161,9 +165,14 @@ wrong deductible 1.0. The headline is five numbers scored by code against the re
 come out identical to four decimals when the same configuration runs twice. The judged metrics
 move by up to 0.05 between identical runs, so we don't read anything into a smaller change.
 
-**"Abstention went 0.52 → 0.56. Is that real progress?"**
-Be honest: that is one more question of twenty-five. The measurement is deterministic, so it isn't
-noise, but it's one question, not a trend. The finding stands.
+**"Why isn't abstention your headline any more?"**
+Because declining isn't the aim; not guessing is. An answer that says plainly "that isn't on file"
+serves the household as well as a refusal at the gate. So the headline counts the claims the
+documents don't support, across every set, and abstention stays underneath as a diagnostic.
+
+**"Unsupported claims went 25 → 22. Is that real progress?"**
+Three fewer of 118, from fixes Run 3 found. The count is deterministic, so it isn't noise, but it's
+three questions on the same corpus, not a trend.
 
 **"Recall and faithfulness fell in Run 3. Did something regress?"**
 Run 3 has a different corpus, three and a half times larger, so the columns aren't a series. And
@@ -203,7 +212,8 @@ documents can't support one overall figure.
 
 ## Things not to say
 
-- **Not "abstention is improving."** It held at 0.52, and 0.56 is one question.
-- **Not "ADR 0021 fixes abstention."** It reaches only some cases, and it's switched off.
+- **Not "it no longer guesses."** 22 of 118 answers still do.
+- **Not "the headline is agreed."** It's proposed, awaiting the supervisor's sign-off.
+- **Not "ADR 0021 fixes it."** It reaches only some cases, and it's switched off.
 - **Not "the runs show a trend."** Three corpora, three measurements.
 - **Not "it's been tested on real documents"**, until the holdout has run.

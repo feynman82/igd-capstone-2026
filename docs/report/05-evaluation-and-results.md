@@ -18,16 +18,20 @@ A household document assistant is useful because it answers questions like *what
 and dangerous for the same reason: a confident, well-cited, wrong answer about an insurance policy
 is worse than no answer.
 
-> **Thesis.** Restraint is not a by-product of accuracy and cannot be measured as one. On this
-> corpus, retrieval and generation improved while the system's willingness to decline got *worse*,
-> not through any regression: better retrieval supplies plausible evidence for questions that have
-> no answer. A system trusted with household documents must be measured on what it refuses to say,
-> by a metric not derived from the signals that produce its accuracy.
+> **Thesis.** A household document assistant should be judged on whether it guesses, not on how
+> often it declines. Declining is one honest answer to a question the documents cannot settle;
+> saying plainly that the thing is not on file is another. What harms a household is the
+> *unsupported claim*: a value the page does not print, a false "not on file", or an answer to a
+> question nothing on file can answer. That is what this evaluation counts first, by code, against
+> a register written before the documents existed.
 
-Three runs support it. Abstention on the unanswerable set fell from 0.76 to 0.52 as retrieval
-improved. It then **held at 0.52 through Run 3**, on a vault three and a half times larger, after
-three weeks of fixes aimed elsewhere. Twelve of twenty-five hard negatives are still answered, each
-citing a page that exists.
+The evaluation began by measuring something else. Its headline was nine metrics with targets, and
+the one it missed by most was abstention on unanswerable questions: 0.76, then 0.52 as retrieval
+improved, and 0.52 again in Run 3. Chasing that target made the relevance floor the thing to tune,
+and every setting that raised it cost answerable questions (ADR 0019). In mid-October the headline
+moved to five numbers, one per aim (§5.2). Counted that way, **Run 3 made 25 unsupported claims in
+118 questions**: 12 unanswerable questions answered from a page that exists, 8 wrong values and
+5 false "not on file" answers (§5.5).
 
 ## 5.2 What was measured, and what is reported first
 
@@ -37,7 +41,7 @@ register, so all three sets are graded without a human:
 | Set | Run 3 | Tests |
 |---|---|---|
 | A · answerable | 93 | The right evidence is found and answered from |
-| B · hard negatives | 25 | The system **declines**: the answer is absent |
+| B · hard negatives | 25 | The answer is absent, so any value given is a claim the documents do not support |
 | C · adversarial | 15 | Injection, requests to act or advise, stale and absent records |
 
 Nine metrics with targets were fixed in week 1, before any had a value. The four Ragas metrics are
@@ -66,7 +70,30 @@ not moved.
 Run 1 and the rebaseline share a configuration, so run 2 changes one variable. **Run 3 is a new
 corpus, not a new configuration.** It ran from a frozen Git commit loaded into its own vault, with
 93 documents (39 of them unregistered statements kept as realistic noise), and every Set A question
-answerable from them.
+answerable from them. **Since Run 3** is the same corpus reloaded with the fixes Run 3 found.
+
+**The headline, one number per aim** (proposed, awaiting the supervisor's sign-off):
+
+| Aim | Headline | Run 1 · 6 docs | Run 2 · 26 | **Run 3 · 93** | Since Run 3 |
+|---|---|---|---|---|---|
+| Do not guess | **Unsupported claims, every set** | 9/44 | 19/64 | **25/118** | 22/118 |
+| Answer from the documents, with the page | Right and cited (A) | 16/19 | 31/39 | **72/93** | 76/93 |
+| Answer when the evidence is there | Over-caution (A) | 2/19 | 1/39 | **6/93** | 5/93 |
+| Serve the way people ask | Casual / formal phrasing | — | — | **8/10 · 64/83** | 8/10 · 68/83 |
+| File documents correctly | Extraction F1 | 0.898 | 0.903 | **0.949** | 0.961 |
+| The absolute line | Set C leaks | — | — | **0 of 15** | 0 of 15 |
+
+The columns are measurements on different corpora, not a series:
+- **Do not guess:** the share of answers making an unsupported claim was 0.20, 0.30 and 0.21. It
+  did not grow with a corpus fifteen times larger, and since Run 3 it is 0.19.
+- **Run 3** answers 72 of 93 right and cited, and holds back only 6 whose answering page it read.
+- **Set C:** nothing forbidden leaked.
+
+Scored again on 28 October with the code as it stands, on the same vault: unsupported claims
+21/118, right and cited 77/93, over-caution 4/93, and nothing leaked. The one hard negative that
+moved now declines rather than stating a value.
+
+**Diagnostics.** The nine metrics fixed in week 1, with their targets as references:
 
 | Metric | Target | Run 1 · 6 docs | Rebaseline · 26 | Run 2 · hybrid + reranker | **Run 3 · 93 docs** |
 |---|---|---|---|---|---|
@@ -74,26 +101,14 @@ answerable from them.
 | Context precision | ≥ 0.70 | 0.868 | 0.767 | **0.854** | 0.820 |
 | Faithfulness | ≥ 0.90 | 0.819 | 0.810 | **0.967** | 0.892 |
 | Answer relevancy | ≥ 0.80 | 0.765 | 0.776 | 0.779 | **0.834** |
-| **Abstention (Set B)** | ≥ 0.95 | 0.76 | 0.56 | 0.52 | **0.52** |
+| Abstention (Set B) | ≥ 0.95 | 0.76 | 0.56 | 0.52 | **0.52** |
 | Extraction F1 | ≥ 0.90 | 0.898 | 0.903 | 0.903 | **0.949** |
 | _Set A scored_ | | _19_ | _39_ | _39_ | _**93**_ |
 
-| Headline | Run 1 | Run 2 | **Run 3** |
-|---|---|---|---|
-| Right and cited (A) | 16/19 | 31/39 | **72/93** |
-| Unsupported claims (all) | 9/44 | 19/64 | **25/118** |
-| Over-caution (A) | 2/19 | 1/39 | **6/93** |
-| Casual / formal phrasing | — | — | **8/10 · 64/83** |
-| Set C contained | — | — | **15/15** |
-
-The columns are measurements on different corpora, not a series:
-- **Run 2:** three of four core targets cleared, extraction cleared.
-- **Run 3:** relevancy clears for the first time and extraction reaches 0.949. Recall and
-  faithfulness sit just under their lines on a vault three and a half times larger.
-- **Abstention:** the one row that does not move.
-
-**Since Run 3**, its corpus reloaded with the fixes it found: 76/93 right and cited, 22 unsupported
-claims, abstention 0.56, extraction 0.961, Set C 15/15.
+Run 3 clears relevancy for the first time and extraction reaches 0.949; recall and faithfulness
+sit just under their lines on a vault three and a half times larger. Abstention is the diagnostic
+that did not move, and §5.5 reads it as part of the unsupported claims rather than on its own.
+Since Run 3: abstention 0.56, extraction 0.961.
 
 ## 5.4 Retrieval
 
@@ -127,15 +142,28 @@ the vault that scores Set A, and one printed the real car policy's number and ou
 schedule. Removing them changed four answers *in both directions*. Since then Set C is scored on a
 copy of the vault, and Run 3 on a corpus anyone can rebuild from a commit.
 
-## 5.5 Abstention: the finding
+## 5.5 Unsupported claims: what Run 3 got wrong
 
-| | Run 1 | Rebaseline | Run 2 | Run 3 |
-|---|---|---|---|---|
-| Abstention (Set B) | 0.76 | 0.56 | 0.52 | 0.52 |
+| Unsupported claim | What it is | Run 3 | Since Run 3 |
+|---|---|---|---|
+| Answered with no answer on file | Set B: a value given for something the documents do not hold | 12 | 11 |
+| Wrong value | Set A: the value stated is not the one printed | 8 | 7 |
+| False "not on file" | Set A: the answer says the thing is absent, and it is on file | 5 | 4 |
+| Forbidden string | Set C: anything it must never say | 0 | 0 |
+| **Total** | | **25 of 118** | **22 of 118** |
 
-Set B's questions are about the household's documents, but their answers are absent. As documents
-arrived, each question acquired a page that is relevant and silent on the point asked, and a system
-shown a relevant page answers from it. Better retrieval made this worse by succeeding.
+The largest share is the twelve unanswerable questions answered. Set B's questions are about the
+household's documents, but their answers are absent. As documents arrived, each question acquired a
+page that is relevant and silent on the point asked, and a system shown a relevant page answers
+from it. That is why abstention, read on its own, fell as retrieval improved, and stayed down:
+
+| Diagnostic | Run 1 | Rebaseline | Run 2 | Run 3 | Since Run 3 |
+|---|---|---|---|---|---|
+| Abstention (Set B) | 0.76 | 0.56 | 0.52 | 0.52 | 0.56 |
+
+Read through the headline, the same twelve are twelve guesses, counted beside the wrong values and
+false absences on answerable questions. A Set B answer that says plainly the thing is not on file
+serves the aim; it is the value given anyway that counts.
 
 **No threshold fixes it.** A relevance floor on the cross-encoder was built, swept and rejected
 (ADR 0019). Every setting traded two cleared targets for a fraction of the missing one, because the
@@ -206,8 +234,8 @@ Apple's GPU, so Run 3 was loaded on the CPU.
    of a planned 40) will measure the gap.
 2. **Three runs, three corpora:** the columns are not a trend, except where the direction is plain
    (abstention, extraction).
-3. **Twelve of twenty-five hard negatives are still answered,** and the one measured remedy is
-   switched off.
+3. **About one answer in five still makes an unsupported claim** (25 of 118 in Run 3, 22 since).
+   Twelve are hard negatives answered, and the one measured remedy for those is switched off.
 4. **The headline is proposed, not agreed.** Until it is signed off, the nine metrics and their
    targets remain the agreed basis.
 5. **The judge is named in every result file but not pinned in configuration.** Four lanes'
@@ -269,4 +297,5 @@ merged pull request, never at memory. Result files are under `eval/results/`.
 | 20–21 Oct | Rejected: the reranker reading the documents' words (right and cited 74 → 73); the reference number in every chunk label (a near-miss policy number answered) | `2026-10-20-rerank-printed-words`, `2026-10-21-label-without-reference`, `2026-10-21-label-with-reference`, issue #125 |
 | 21 Oct | Four rerankers screened; `mxbai-rerank-large-v1` on the full sets: abstention 0.52 → 0.60, right and cited 74 → 71. Rejected | `2026-10-21-reranker-screen`, `2026-10-21-reranker-mxbai-large-v1` |
 | 22 Oct | Run 3's frozen corpus reloaded with the fixes since (#120, #126, #128, #133): right and cited 72 → 76, abstention 0.52 → 0.56, extraction 0.949 → 0.961, Set C 15/15 | `2026-10-22-since-run3`, `-freeze`, `-setc` |
+| 28 Oct | The five-number headline re-checked on the since-Run-3 vault with the code on `main`: unsupported claims 22 → 21, right and cited 76 → 77, Set C 15/15 | `2026-10-28-since-run3-on-main`, `-setc` |
 | 28 Oct | Reminder precision counted a reminder for a renewed policy as correct; all three overdue items were such. Re-scored: Run 3 0.875 → 0.8125, since Run 3 1.0 → 0.8125 | `2026-10-28-stale-reminders-run3`, `2026-10-28-stale-reminders-since-run3`, issue #137 |
