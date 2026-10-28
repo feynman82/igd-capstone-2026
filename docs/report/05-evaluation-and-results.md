@@ -173,14 +173,22 @@ Singapore Pte. Ltd."), as the field's definition asks, while the register record
 
 ## 5.7 Module metrics
 
-These are kept apart from the RAG metrics, and in Run 3 both failed for a reason outside the module:
-**both alerts that fired were false (rate 2/2), and one reminder went to the wrong person (precision
-0.875).** The new renewal notices print "Mr Marcus Lim Jun Wei". The title stayed in the extracted
-name, which then matched nobody, so his policies were reported uncovered for 262 and 233 days.
-Stripping courtesy titles (#120), measured on Run 3's exact corpus:
-- no alert fires;
-- obligation precision rises to 0.9375;
-- all 118 answers are unchanged.
+These are kept apart from the RAG metrics, and in Run 3 both missed their lines: **both alerts that
+fired were false (rate 2/2), and obligation precision was 0.8125.**
+
+The alerts failed on one word. The new renewal notices print "Mr Marcus Lim Jun Wei". The title
+stayed in the extracted name, which then matched nobody, so his policies were reported uncovered for
+262 and 233 days. Stripping courtesy titles (#120), measured on Run 3's exact corpus, fires no alert
+and leaves all 118 answers unchanged.
+
+**Every overdue reminder was for a policy already renewed.** A renewal notice prints the expiry of
+the term it offers to renew. Once the schedule for the renewed term is filed, a reminder raised from
+the notice reports a renewed policy as overdue, and all three of Run 3's overdue items were of this
+kind. The scorer first counted such a reminder as correct, because its date is printed on its own
+document, and reported 0.875 for Run 3 and 1.0 since. It now checks the latest expiry the register
+holds for the policy, the rule the alert metric already used. Re-scored, both are **0.8125**: the
+fixes since Run 3 made those three reminders exact, not right. The reminder module needs the same
+rule (#137).
 
 > A module reads extracted facts, so **one extra word in a name is indistinguishable from a person
 > whose insurance has lapsed**. That is why these metrics are scored against the register, not
@@ -206,6 +214,8 @@ Apple's GPU, so Run 3 was loaded on the CPU.
    generated questions are unreviewed drafts. Citations are graded per document where no field
    records its page.
 6. **The module metrics rest on two alerts.** Each is a found defect reported as a rate.
+7. **Reminder precision was first scored too generously.** A reminder for a renewed policy counted
+   as correct until 28 October; the scorer is corrected, but the module still raises them (#137).
 
 ## 5.10 What remains
 
@@ -259,3 +269,4 @@ merged pull request, never at memory. Result files are under `eval/results/`.
 | 20–21 Oct | Rejected: the reranker reading the documents' words (right and cited 74 → 73); the reference number in every chunk label (a near-miss policy number answered) | `2026-10-20-rerank-printed-words`, `2026-10-21-label-without-reference`, `2026-10-21-label-with-reference`, issue #125 |
 | 21 Oct | Four rerankers screened; `mxbai-rerank-large-v1` on the full sets: abstention 0.52 → 0.60, right and cited 74 → 71. Rejected | `2026-10-21-reranker-screen`, `2026-10-21-reranker-mxbai-large-v1` |
 | 22 Oct | Run 3's frozen corpus reloaded with the fixes since (#120, #126, #128, #133): right and cited 72 → 76, abstention 0.52 → 0.56, extraction 0.949 → 0.961, Set C 15/15 | `2026-10-22-since-run3`, `-freeze`, `-setc` |
+| 28 Oct | Reminder precision counted a reminder for a renewed policy as correct; all three overdue items were such. Re-scored: Run 3 0.875 → 0.8125, since Run 3 1.0 → 0.8125 | `2026-10-28-stale-reminders-run3`, `2026-10-28-stale-reminders-since-run3`, issue #137 |
