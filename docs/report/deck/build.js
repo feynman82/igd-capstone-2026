@@ -202,7 +202,7 @@ const S = "Retrieval and evaluation";
      "Each set now has its own vault, and Run 3 was loaded from a frozen commit anyone can rebuild."],
     ["One word made two alerts false",
      "The new renewal notices print 'Mr Marcus Lim Jun Wei'. The title stayed in the name, matched nobody, and his policies were reported lapsed.",
-     "Titles are stripped from names. On Run 3's corpus: no false alert, reminders 0.875 → 0.9375."],
+     "Titles are stripped from names. On Run 3's corpus: no false alert, all 118 answers unchanged."],
   ];
   const cw = 5.75, gap = 0.375, y0 = 3.2, ch = 6.2;
   items.forEach(([head, found, fix], i) => {
