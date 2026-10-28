@@ -118,6 +118,32 @@ def test_the_right_date_against_the_wrong_person_is_also_false() -> None:
     assert verdicts[0].verdict == "the wrong person"
 
 
+def test_an_expiry_a_later_document_extends_is_not_a_correct_obligation() -> None:
+    """Rachel's renewal notice prints 2026-02-28, read exactly right, but the schedule for the
+    renewed term runs to 2027-02-28. A reminder from the notice reports a renewed policy as
+    overdue; it was counted correct until 28 October."""
+    stale = _obligation(
+        label="policy expiry — Rachel Ng Hui Shan",
+        due_date=date(2026, 2, 28),
+        subject="Rachel Ng Hui Shan",
+        doc_id="b2-0007",
+    )
+    verdicts = score_obligations([stale], REGISTER, DECLARED)
+    assert verdicts[0].verdict == "a later document renews it"
+    assert verdicts[0].expected == "2027-02-28"  # the expiry that replaced it
+    assert obligation_precision(verdicts) == 0.0
+
+
+def test_the_renewed_terms_own_expiry_is_still_correct() -> None:
+    current = _obligation(
+        label="policy expiry — Rachel Ng Hui Shan",
+        due_date=date(2027, 2, 28),
+        subject="Rachel Ng Hui Shan",
+        doc_id="b2-0004",
+    )
+    assert score_obligations([current], REGISTER, DECLARED)[0].verdict == "matches the register"
+
+
 def test_case_is_not_a_disagreement_about_who_someone_is() -> None:
     """A passport prints RACHEL NG HUI SHAN; the register writes it in title case."""
     passport = _obligation(

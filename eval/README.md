@@ -80,7 +80,7 @@ clear is something a threshold can be tuned to reach.
 | 4 | Answer relevancy | `answer_relevancy` | ≥ 0.80 | RAG core | Set A | Ragas `answer_relevancy`. Whether the answer addresses the question asked rather than a neighbouring one. |
 | 5 | Abstention rate | `abstention_rate` | ≥ 0.95 | Grounding gate | Set B | Not a Ragas metric. Fraction of Set B questions for which the response `kind` is `abstention`. The headline reads the same answers the other way round, as `claimed` unsupported claims. |
 | 6 | Field extraction F1 | `extraction_f1` | ≥ 0.90 | Extraction | Register | Not a Ragas metric. For every `(doc_id, field)` the register fills, compare the `facts` row the extractor wrote. Exact match after type normalisation (dates to ISO, amounts to two decimals). Micro-averaged F1 across all fields, and per `doc_type` and per field in `eval/results/w6-extraction-by-doc-type.md`. |
-| 7 | Obligation precision | `obligation_precision` | ≥ 0.95 | Reminder module | Register | Not a Ragas metric. Of the `obligations` rows the reminder module raised, the fraction whose due date and subject match a register row. A reminder about a date that is not printed anywhere is a false obligation. |
+| 7 | Obligation precision | `obligation_precision` | ≥ 0.95 | Reminder module | Register | Not a Ragas metric. Of the `obligations` rows the reminder module raised, the fraction whose due date and subject match a register row, and whose expiry no later document for the same policy extends. A reminder about a date that is not printed anywhere is a false obligation; so is one for a policy already renewed. |
 | 8 | Alert false-positive rate | `alert_fpr` | ≤ 0.05 | Alert module | Register | Not a Ragas metric. Of the alerts the alert module fired, the fraction where no register value crosses the configured threshold. Reported apart from the RAG metrics: an alert module can be perfect on a system that retrieves badly, and vice versa. |
 | 9 | Decode throughput and peak VRAM | `decode_tok_s`, `peak_vram_gb` | Measured and reported | Runtime | `scripts/bench_runtime.py` | Not a quality metric and has no target: it is the number that says whether the other eight were achieved on the hardware we claim. Median with run-to-run spread, from `eval/results/w1-hardware.md`. |
 
@@ -264,6 +264,10 @@ Three decisions worth knowing, because they change what the numbers mean:
 - **Obligation precision is over the obligations a document produced.** A calendar deadline from
   `core/documents.yaml` has no document, so it is checked against the catalogue and counted
   separately rather than scored against a register that cannot speak for it.
+- **A printed expiry a later document extends is not a correct obligation.** A renewal notice
+  prints the expiry of the term it offers to renew; once the renewed schedule is filed, a reminder
+  from the notice reports a renewed policy as overdue. The latest expiry per person and policy wins,
+  the rule the alert rate already used. Until 28 October these counted as correct.
 - **Precision is not completeness.** An obligation can only exist for a fact the extractor wrote,
   so the report prints how many the register supports beside how many exist. The gap is extraction
   recall, not reminder logic.

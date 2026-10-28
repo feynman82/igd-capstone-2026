@@ -4,6 +4,7 @@ register.
     uv run python -m eval.modules              # writes eval/results/w7-module-metrics.md
     uv run python -m eval.modules --out -      # print it
     uv run python -m eval.modules --as-of 2026-12-31
+    uv run python -m eval.modules --vault parrot_run3 --out eval/results/<date>-<label>.md
 
 Both are reported apart from the RAG metrics, and the reason is in `eval/README.md`: an alert
 module can be perfect on a system that retrieves badly, and the reverse. Neither needs a judge —
@@ -18,6 +19,14 @@ date nobody printed is a false obligation. This scores what the row says against
 document holds, not whether every obligation that should exist does: an obligation can only be
 created from a fact the extractor wrote, so recall here is bounded by extraction recall and is
 reported beside the precision rather than folded into it.
+
+A printed date can also be out of date. A renewal notice prints the expiry of the policy it
+offers to renew; once the schedule for the renewed term is filed, that expiry is history, and a
+reminder raised from it reports a renewed policy as overdue. So an expiry is checked against the
+latest expiry the register holds for the same person and policy — the rule the alert metric
+already uses — and one a later document extends is not a correct obligation, however exactly it
+was read. Until 28 October it was counted correct: all three overdue items in Run 3's vault were
+of this kind.
 
 The catalogue's own calendar deadlines — a filing date, a contribution cutoff — belong to no
 document, so they are checked against `core/documents.yaml` instead and counted separately. The
@@ -38,6 +47,7 @@ not against the facts table.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
@@ -131,6 +141,7 @@ def score_obligations(
 ) -> list[Verdict]:
     """One verdict per obligation. `declared` is the catalogue's `registers.reminder` configs."""
     by_doc = {(row.get("doc_id") or ""): row for row in register}
+    latest = latest_expiries(register)
     calendar = {
         (config.key.replace("_", " "), config.on_date)
         for config in declared
@@ -157,9 +168,39 @@ def score_obligations(
             out.append(Verdict(row, "a date the document does not print", expected=printed))
         elif not _same_person(row.subject, entry.get("subject")):
             out.append(Verdict(row, "the wrong person", expected=entry.get("subject") or ""))
+        elif (renewed := _renewed_to(row, entry, latest)) is not None:
+            out.append(Verdict(row, "a later document renews it", expected=renewed.isoformat()))
         else:
             out.append(Verdict(row, "matches the register", expected=printed))
     return out
+
+
+def latest_expiries(register: Sequence[Row]) -> dict[tuple[str | None, str | None], date]:
+    """The latest expiry the register holds per person and policy number. A renewal notice
+    printing last year's expiry does not mean the policy lapsed, and grouping by person alone
+    would let a live travel policy cover a lapsed motor one."""
+    latest: dict[tuple[str | None, str | None], date] = {}
+    for row in register:
+        expiry = _day(row.get("expiry_date"))
+        if expiry is None:
+            continue
+        key = (row.get("subject"), (row.get("policy_no") or "").strip() or None)
+        held = latest.get(key)
+        if held is None or expiry > held:
+            latest[key] = expiry
+    return latest
+
+
+def _renewed_to(
+    row: Obligation, entry: Row, latest: Mapping[tuple[str | None, str | None], date]
+) -> date | None:
+    """The later expiry that replaces this one, when another document extends the same policy.
+    Only a policy expiry with a policy number can be superseded; anything else returns None."""
+    policy = (entry.get("policy_no") or "").strip()
+    if row.key != "expiry_date" or not policy:
+        return None
+    held = latest.get((entry.get("subject"), policy))
+    return held if held is not None and held > row.due_date else None
 
 
 def obligation_precision(verdicts: Sequence[Verdict]) -> float | None:
@@ -242,15 +283,7 @@ def register_days_uncovered(register: Sequence[Row], today: date) -> list[Measur
     positive, and `ceiling: 0` means a negative value does not cross the threshold either way, so
     the verdict is unchanged by keeping it.
     """
-    latest: dict[tuple[str | None, str | None], date] = {}
-    for row in register:
-        expiry = _day(row.get("expiry_date"))
-        if expiry is None:
-            continue
-        key = (row.get("subject"), (row.get("policy_no") or "").strip() or None)
-        held = latest.get(key)
-        if held is None or expiry > held:
-            latest[key] = expiry
+    latest = latest_expiries(register)
     return [
         Measured(
             Decimal((today - expiry).days),
@@ -589,6 +622,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         default="",
         help="the date to sweep for, YYYY-MM-DD (default today). Both metrics are date-dependent",
     )
+    parser.add_argument(
+        "--vault",
+        default="",
+        help="score this database instead of the development vault, e.g. parrot_run3",
+    )
     args = parser.parse_args(argv)
 
     sys.path.insert(0, str(ROOT))
@@ -603,6 +641,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         parser.error(f"--as-of takes a date as YYYY-MM-DD, not {args.as_of!r}")
     try:
         settings = Settings.load(ROOT)
+        if args.vault:
+            from eval.holdout import vault_url
+
+            settings = Settings.load(
+                ROOT, {**os.environ, "DATABASE_URL": vault_url(settings.database_url, args.vault)}
+            )
         register = read_registers(ROOT)
         with connect(settings) as conn:
             metrics = measure(conn, register, today)
