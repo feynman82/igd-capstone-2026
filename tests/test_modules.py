@@ -464,3 +464,39 @@ def test_every_firing_is_scoped_and_cites_a_page(
     for f in firing:
         assert f.citations, f"{f.key} fired uncited"
         assert all(c.startswith("b1-") and ", page " in c for c in f.citations)
+
+
+def _expiry_obligations(conn: Any) -> None:
+    """One `obligations` row per expiry fact, in a temporary table like the others."""
+    with conn.cursor() as cur:
+        cur.execute("CREATE TEMP TABLE obligations (LIKE public.obligations INCLUDING ALL)")
+        cur.execute(
+            "INSERT INTO obligations (fact_id, pack_id, label, due_date, lead_days)"
+            " SELECT f.id, 'core', 'policy expiry — ' || f.subject, f.value_date, '{60,30,14,1}'"
+            "   FROM facts f WHERE f.key = 'expiry_date'"
+        )
+
+
+def test_an_expiry_a_later_schedule_extends_is_not_overdue(db: Any) -> None:
+    """Marcus's renewal notices print the expiries of the terms they offer to renew: home
+    contents 2026-01-31 (b1-0006) and motor 2026-04-11 (b1-0004). The schedules for the renewed
+    terms run to 2027 (b1-0002, b1-0001). On 28 October 2026 neither policy is overdue. Issue #137.
+    """
+    load_register(db)
+    _expiry_obligations(db)
+
+    late = {row.document_name for row in reminder.overdue(db, date(2026, 10, 28))}
+
+    assert "b1-0006.pdf" not in late
+    assert "b1-0004.pdf" not in late
+
+
+def test_an_expiry_nothing_extends_is_still_overdue(db: Any) -> None:
+    """The same rule must not hide a policy that really lapsed: on 10 February 2027 the home
+    contents schedule's own expiry (b1-0002, 2027-01-31) has passed and nothing renews it."""
+    load_register(db)
+    _expiry_obligations(db)
+
+    late = {row.document_name for row in reminder.overdue(db, date(2027, 2, 10))}
+
+    assert "b1-0002.pdf" in late
