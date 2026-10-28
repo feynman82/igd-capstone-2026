@@ -22,10 +22,20 @@ is done and **checked on the presenting machine**, not on the machine it was bui
 - [ ] Passphrase already entered. **Do not demonstrate the lock screen.** It is thirty seconds
       of typing that shows nothing, and a forgotten passphrase in front of an audience costs
       the whole slot
-- [ ] A corpus batch loaded (`make corpus-load BATCH=batch1`) and **Today is not empty** —
-      at least one renewal inside its lead window
+- [ ] A corpus batch loaded (`make corpus-load BATCH=batch1`). **Today will be nearly empty the
+      week of 3 November**: nothing in batches 1–2 falls inside a lead window until mid-November,
+      and a renewed policy's old expiry is no longer shown as overdue (#140). Step 1 is scripted
+      for that
+- [ ] **No "Who is …?" card on Today.** Answer every name in the household first, or the first
+      thing the room sees is PARROT asking who somebody is. Lim Ah Kow is Marcus's father
+- [ ] **No Set C document in the vault** (`b3-*`, and anything the register marks as a Set C
+      fixture). They are planted to attack the system; step 4's chips will cite one if it is there
+- [ ] **Loan agreements read after #133**, so a joint loan is Marcus's, not a person called
+      "Marcus Lim Jun Wei & Rachel Ng Hui Shan"
 - [ ] Both packs switched **on**. Step 8 switches one off; it has to start on
-- [ ] One document in quarantine, so step 5 has something to show
+- [ ] One document in quarantine, so step 5 has something to show, **and its reason readable**.
+      A raw validation error (`schema: 3 validation errors for IdentityCard …`) is not the reason
+      the script promises; stage a different document
 - [ ] One unread document staged on the desktop for step 3, *not* already in `inbox/`
 - [ ] Browser at 125% zoom, one tab, bookmarks bar hidden, notifications silenced
 - [ ] Laptop on mains. The decode rate on battery is roughly half
@@ -65,9 +75,12 @@ is done and **checked on the presenting machine**, not on the machine it was bui
 > threshold crossed, any renewal coming up. Most days this screen should be nearly empty, and
 > an empty Today is the system working rather than a blank page.
 
-**Watch for.** If Today is empty, the corpus did not load. Go to Vault, confirm documents are
-there, and continue from step 2 — do not stand in front of an empty screen explaining what
-would have been on it.
+**Expect** a nearly empty Today in the week of 3 November (see the checklist), and say the last
+sentence above as the point rather than a caveat: nothing is due, and the screen says so.
+
+**Watch for.** If the footer reads no documents, the corpus did not load. Go to Vault, confirm
+documents are there, and continue from step 2 — do not stand in front of an empty screen
+explaining what would have been on it.
 
 ---
 
@@ -75,6 +88,10 @@ would have been on it.
 
 **Show.** Press the source chip on the top row. It reads a document name and a page —
 `Motor renewal notice · p.1`. The page opens, drawn, with the row still behind it. Close it.
+
+**If Today has no row** — expected the week of 3 November — make this gesture in step 4 instead:
+press the chip on the first sentence of the answer (`On file · b1-0001.pdf p.1`), and say the
+same words there. Checked on 28 October: it opens the page drawn, with the answer behind it.
 
 **Say.**
 
@@ -130,8 +147,14 @@ chip attached.
 > And a sentence that cannot be traced to one of your documents is never shown. Not shown and
 > then withdrawn — never shown at all. The gate runs before the sentence reaches the screen.
 
+**Expect,** checked on 28 October: two sentences, *"On file for Marcus Lim Jun Wei: MERIDIAN
+ASSURANCE, Private Car Insurance Policy … expiry date 2027-04-11"* with one chip, then *"The car
+insurance renews on 11 April 2027 …"* with its own. If a chip names a `b3-` document, a Set C
+fixture is in the vault — do not press it.
+
 **Watch for.** Slow decode. On the benchmarked machine the generator writes about 79 tokens a
-second with a full context window, so a four-sentence answer takes a few seconds. That is
+second with a full context window, so a four-sentence answer takes a few seconds. On a MacBook
+on 28 October the second sentence arrived 6 to 11 seconds after the question. That is
 normal and worth naming rather than apologising for: it is a 4-billion-parameter model on the
 presenter's own graphics card, and nothing left the machine.
 
@@ -231,21 +254,36 @@ renew my insurance policy and pay the premium
 ## 8 · Switch a pack off — 6:30, one minute
 
 **Show.** Packs. Both are listed with what each recognises and what it has found. Switch
-**Insurance and Coverage** off. A banner names what that just did. Go to Today.
+**Insurance and Coverage** off. A banner names what that just did. Go to Ask and type exactly:
 
-**Say,** on Today —
+```
+what is the excess on my car policy?
+```
 
-> Its reminders are gone. The insurance documents are hidden from the vault, and Ask will not
-> cite them — it will abstain on a question it could have answered a moment ago.
+**Expect,** checked on 28 October with the pack off: *"The excess on your car policy is SGD
+750.00."* with the schedule's chip — the same value as with the pack on.
+
+**Say** —
+
+> The answer is still there, because the documents were never the pack's. A policy schedule is
+> the household's paper; the core reads and files it whichever subjects are switched on. What a
+> pack adds is a voice: the insurance vocabulary, the published Singapore guidance it may quote,
+> and the advice it may give. That is what just went.
 >
 > Nothing was deleted. That is what switching a subject off is supposed to mean.
 
-Switch it back on. Return to Today. The rows are back.
+Switch it back on.
 
 > And nothing in the engine changed to make that work. The registry is read once per request
 > and handed to the modules and to retrieval, and neither of them knows a screen exists. A pack
 > is one YAML file — a third subject appears on that screen because somebody dropped a file in,
 > not because anybody edited the interface.
+
+**Why the script changed.** Until ADR 0017 a pack owned its documents, and switching it off hid
+them. Since then the core owns documents and a pack is grounding and persona, so the old lines —
+"its reminders are gone … it will abstain" — were no longer true (#137). **Do not ask "when does
+the car insurance renew?" with the pack off:** on 28 October it answered with the payment due
+date, 28 March 2027, instead of the expiry.
 >
 > That is the expansion model. Insurance and Tax are the two we built. Utilities, school fees,
 > season parking are the same shape.
