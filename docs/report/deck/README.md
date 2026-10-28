@@ -1,13 +1,29 @@
-# Lane B's deck segment
+# The final deck, 3 November
 
-`build.js` writes the five slides in `../Project Parrot Final - Yew Mun segment.pptx`: retrieval,
-the three-run scorecard, the abstention finding, what the measurement got wrong, and where it
-stands. It is the source; the `.pptx` is what it produces. Change a number here, not in PowerPoint,
-or the next rebuild undoes it.
+`final.js` writes `../Project Parrot Final.pptx`: 21 slides, five segments in the presentation order
+of `docs/TEAM.md`, and a close. `build.js` writes Yew Mun's segment on its own, as
+`../Project Parrot Final - Yew Mun segment.pptx`. The scripts are the source; the `.pptx` files are
+what they produce. Change a slide here, not in PowerPoint, or the next rebuild undoes it.
 
-The slides match the midterm deck: 20" × 11.25", Jost titles, Arial body, the cream, brown and
-orange palette. Every figure comes from `docs/report/05-evaluation-and-results.md`, which cites its
-result files.
+| File | Slides | Presenter | State |
+|---|---|---|---|
+| `segments/christian.js` | 1–6: title, problem, solution, privacy, platform, live demo | Christian | **Draft** for Christian |
+| `segments/zee.js` | 7–9: four screens, packs, product line | Zee | **Draft** for Zee |
+| `segments/desmond.js` | 10–12: corpus, the 15 traps, what synthetic cannot prove | Desmond | **Draft** for Desmond |
+| `segments/yew-mun.js` | 13–17: retrieval, scorecard, finding, checking the checker, where it stands | Yew Mun | Final |
+| `segments/siew.js` | 18–20: governance documents, never acts, the frameworks | Siew | **Draft** for Siew |
+| `segments/close.js` | 21: what you did not see, what comes next | Christian | **Draft** for Christian |
+
+The drafts were written on 28 October from what the repository already holds: the midterm script
+(`../Parrot Pitch Script.md`), chapters 4, 5 and 7, `docs/governance/`, the corpus register, the
+demo run sheet, and screenshots of the running app (`../deck-shots/final-*.jpg`). Each draft slide's
+speaker notes begin "DRAFT for …", and several end with what to re-check before the day: the tax
+pack's indexing, the governance statuses, and the holdout. **Each owner rewrites their notes in
+their own words and edits their own segment file**; nobody else's slides are touched by that.
+
+The look is the midterm deck's: 20" × 11.25", Jost titles, Arial body, the cream, brown and orange
+palette, all in `common.js`. Each presenter has their own three layouts, so the footer names
+whoever is speaking.
 
 ## Rebuilding
 
@@ -17,6 +33,7 @@ palette into the deck's theme (without it the colours fall back to Office's defa
 ```
 cd docs/report/deck
 npm install --no-save pptxgenjs
+SKILL=<path to the pptx skill> node final.js "../Project Parrot Final.pptx"
 SKILL=<path to the pptx skill> node build.js "../Project Parrot Final - Yew Mun segment.pptx"
 ```
 
