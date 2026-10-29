@@ -53,11 +53,11 @@ export function ProblemState({
       <div className="flex items-start gap-[var(--s-3)]">
         <Icon aria-hidden size={20} strokeWidth={1.9} style={{ color: `var(--${tone})` }} />
         <div className="min-w-0">
-          <h2 className="text-lead font-medium text-ink">{title}</h2>
+          <h2 className="text-body font-semibold text-ink">{title}</h2>
           {/* Straight from the API. `core/runtime/db.py` guarantees it never carries a
               connection string, which is the only reason it can be shown to a person at all. */}
           <p className="mt-[var(--s-1)] text-body text-ink-2">{problem.detail}</p>
-          {children ? <div className="mt-[var(--s-3)] text-meta text-ink-2">{children}</div> : null}
+          {children ? <div className="mt-[var(--s-3)] text-caption text-ink-2">{children}</div> : null}
         </div>
       </div>
     </div>
@@ -91,7 +91,7 @@ export function EmptyState({
           <Check aria-hidden size={20} strokeWidth={2.4} />
         </span>
       ) : null}
-      <h2 className={`font-display text-screen font-semibold ${tick ? "mt-[var(--s-4)]" : ""}`}>
+      <h2 className={`font-display text-heading font-semibold ${tick ? "mt-[var(--s-4)]" : ""}`}>
         {title}
       </h2>
       {children ? (

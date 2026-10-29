@@ -25,22 +25,21 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
 
   return (
     <>
-      <Link href="/vault" className="text-meta text-ink-2 no-underline hover:text-accent">
+      <Link href="/vault" className="text-caption text-ink-2 no-underline hover:text-accent">
         ← Vault
       </Link>
 
-      {/* The body face, not the display one. Every other surface's h1 is a name somebody
-          would say out loud — "Today", "Vault", a date. A filename is a string a machine
-          produced, and setting it in a serif makes it look like a title it is not. */}
-      <h1 className="mt-[var(--s-3)] text-screen font-medium break-words">
+      {/* The page role, as on every other surface. A filename is a string a machine produced
+          rather than a name somebody would say, so it is allowed to break anywhere. */}
+      <h1 className="mt-[var(--s-3)] text-heading font-semibold break-words lg:text-page">
         {document.original_name}
       </h1>
 
-      <p className="mt-[var(--s-2)] flex flex-wrap items-center gap-x-[var(--s-3)] text-meta text-ink-2">
+      <p className="mt-[var(--s-2)] flex flex-wrap items-center gap-x-[var(--s-3)] text-caption text-ink-2">
         {document.pack_id ? (
           <span>{document.pack_id.replace(/_/g, " ")}</span>
         ) : (
-          <span>no pack — searchable, but no fields extracted</span>
+          <span>no pack: searchable, but no fields extracted</span>
         )}
         {document.doc_type ? <span>{document.doc_type.replace(/_/g, " ")}</span> : null}
         {document.pages ? (
@@ -49,17 +48,17 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
           </span>
         ) : null}
         {document.ingested_at ? <span>added {when(document.ingested_at)}</span> : null}
-        {document.synthetic ? <span className="text-brass">synthetic — test corpus</span> : null}
+        {document.synthetic ? <span className="text-brass">synthetic test corpus</span> : null}
       </p>
 
       {subjects.size === 1 ? (
-        <p className="mt-[var(--s-1)] text-meta text-ink-2">
+        <p className="mt-[var(--s-1)] text-caption text-ink-2">
           About {[...subjects][0]}
         </p>
       ) : null}
 
       {!document.pack_enabled ? (
-        <p className="mt-[var(--s-3)] rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-3)] text-meta text-ink-2">
+        <p className="mt-[var(--s-3)] rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-3)] text-caption text-ink-2">
           This document&rsquo;s pack is switched off, so its facts are hidden from Ask and its
           reminders are silent. The document itself is still here and still searchable.
         </p>
@@ -76,7 +75,7 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
           <div className="flex items-baseline justify-between gap-[var(--s-3)]">
             <h2 className="group-label">Extracted fields</h2>
             {flagged - corrected > 0 ? (
-              <p className="text-meta text-warn">
+              <p className="text-caption text-warn">
                 {flagged - corrected} below the confidence floor
               </p>
             ) : null}
@@ -84,8 +83,8 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
 
           {document.facts.length === 0 ? (
             <p className="mt-[var(--s-3)] text-body text-ink-2">
-              Nothing was extracted from this document. It is still searchable — Ask can quote
-              it — but no pack recognised it, so there are no typed fields and no reminders.
+              Nothing was extracted from this document. It is still searchable, and Ask can quote
+              it, but no pack recognised it, so there are no typed fields and no reminders.
             </p>
           ) : (
             <dl className="mt-[var(--s-2)]">
@@ -102,9 +101,9 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
           )}
 
           {flagged > 0 ? (
-            <p className="mt-[var(--s-4)] max-w-[var(--measure)] text-meta text-ink-2">
+            <p className="mt-[var(--s-4)] max-w-[var(--measure)] text-caption text-ink-2">
               A field below the floor is flagged rather than trusted. Confirming or fixing it
-              takes one click, and either way the answer is stored as a labelled example — what
+              takes one click, and either way the answer is stored as a labelled example: what
               the model read, what it actually said, and how sure it was.
             </p>
           ) : null}
@@ -131,7 +130,7 @@ export function DocumentDetail({ document }: { document: VaultDocument }) {
                   type="button"
                   onClick={() => setPage(number)}
                   aria-current={number === page ? "true" : undefined}
-                  className={`num size-7 rounded-[var(--r-sm)] text-meta ${
+                  className={`num size-7 rounded-[var(--r-sm)] text-caption ${
                     number === page
                       ? "bg-brand text-brand-ink"
                       : "border border-edge text-ink-2 hover:bg-surface-2"

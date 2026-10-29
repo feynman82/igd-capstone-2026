@@ -25,10 +25,10 @@ const STATUS: Record<
   ConsentStatus,
   { label: string; Icon: typeof CircleCheck; tone: string }
 > = {
-  granted: { label: "Agreed", Icon: CircleCheck, tone: "border-ok-line bg-ok-soft text-ink" },
-  withdrawn: { label: "Withdrawn", Icon: CircleSlash, tone: "border-hairline bg-surface-2 text-ink-2" },
-  none: { label: "Not agreed", Icon: CircleDashed, tone: "border-hairline bg-surface-2 text-ink-2" },
-  outdated: { label: "Wording changed", Icon: RefreshCw, tone: "border-warn-line bg-warn-soft text-ink" },
+  granted: { label: "Agreed", Icon: CircleCheck, tone: "bg-ok-soft text-ok" },
+  withdrawn: { label: "Withdrawn", Icon: CircleSlash, tone: "bg-surface-2 text-ink-2" },
+  none: { label: "Not agreed", Icon: CircleDashed, tone: "bg-surface-2 text-ink-2" },
+  outdated: { label: "Wording changed", Icon: RefreshCw, tone: "bg-warn-soft text-warn" },
 };
 
 type Load =
@@ -88,7 +88,7 @@ export function AdviceConsentSection() {
   return (
     <section className="mt-[var(--s-6)]" aria-busy={load.state === "loading"}>
       <h2 className="group-label">Advice</h2>
-      <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-meta text-ink-3">
+      <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-caption text-ink-3">
         Packs that can advise ask for your agreement first. Your agreement covers the people you
         have confirmed in this household.
       </p>
@@ -101,13 +101,13 @@ export function AdviceConsentSection() {
 
       {load.state === "failed" ? (
         <div className="mt-[var(--s-3)] flex flex-wrap items-center gap-[var(--s-3)] rounded-[var(--r)] border border-crit-line bg-crit-soft px-[var(--s-4)] py-[var(--s-3)]">
-          <p role="alert" className="flex-1 text-meta text-ink">
+          <p role="alert" className="flex-1 text-caption text-ink">
             {load.detail}
           </p>
           <button
             type="button"
             onClick={() => void fetchConsents()}
-            className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+            className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
           >
             Try again
           </button>
@@ -115,28 +115,27 @@ export function AdviceConsentSection() {
       ) : null}
 
       {load.state === "shown" ? (
-        <ul className="mt-[var(--s-3)] space-y-[var(--s-2)]">
+        <ul className="row-list mt-[var(--s-3)]">
           {load.items.map((item) => {
             const { label, Icon, tone } = STATUS[item.status];
             return (
               <li
                 key={item.pack_id}
-                className="rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)]"
+                className="px-[var(--s-4)] py-[var(--s-3)]"
               >
                 <div className="flex flex-wrap items-center gap-[var(--s-4)]">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-baseline gap-[var(--s-2)]">
-                      <h3 className="font-display text-title font-semibold">{item.display_name}</h3>
+                      <h3 className="font-display text-body font-semibold">{item.display_name}</h3>
                       <span
-                        className={`inline-flex items-center gap-[var(--s-1)] self-center rounded-[var(--r-sm)] border px-[var(--s-2)] py-[2px] text-label font-semibold tracking-[var(--tr-label)] uppercase ${tone}`}
+                        className={`status gap-[var(--s-1)] self-center ${tone}`}
                       >
                         <Icon aria-hidden size={12} strokeWidth={2.4} />
                         {label}
                       </span>
                     </div>
-                    <p className="mt-[2px] text-meta text-ink-2">
-                      <span className="num">Wording version {item.version}</span>
-                      {" · "}
+                    <p className="mt-[2px] text-caption text-ink-2">
+                      <span className="num">Wording version {item.version}.</span>{" "}
                       {item.status === "granted"
                         ? "Parrot can advise when you ask."
                         : item.status === "outdated"
@@ -150,7 +149,7 @@ export function AdviceConsentSection() {
                       type="button"
                       disabled={busy !== null}
                       onClick={() => withdraw(item)}
-                      className="shrink-0 rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
+                      className="shrink-0 rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
                     >
                       {busy === item.pack_id ? "Withdrawing…" : "Withdraw"}
                       <span className="sr-only"> agreement to {item.display_name} advice</span>
@@ -159,19 +158,19 @@ export function AdviceConsentSection() {
                 </div>
 
                 <details className="mt-[var(--s-2)]">
-                  <summary className="w-fit cursor-pointer text-meta text-ink-2 hover:text-ink">
+                  <summary className="w-fit cursor-pointer text-caption text-ink-2 hover:text-ink">
                     Read the wording
                   </summary>
                   <p className="mt-[var(--s-2)] max-w-[var(--measure)] whitespace-pre-line text-body text-ink">
                     {item.consent_text}
                   </p>
-                  <p className="mt-[var(--s-2)] max-w-[var(--measure)] whitespace-pre-line text-meta text-ink-2">
+                  <p className="mt-[var(--s-2)] max-w-[var(--measure)] whitespace-pre-line text-caption text-ink-2">
                     {item.disclaimer}
                   </p>
                 </details>
 
                 {failed?.pack === item.pack_id ? (
-                  <p role="alert" className="mt-[var(--s-2)] text-meta text-crit">
+                  <p role="alert" className="mt-[var(--s-2)] text-caption text-crit">
                     {failed.detail}
                   </p>
                 ) : null}

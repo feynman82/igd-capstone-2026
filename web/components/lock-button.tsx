@@ -20,7 +20,7 @@ export function LockButton() {
         await fetch("/api/auth", { method: "DELETE" }).catch(() => null);
         window.location.assign("/unlock");
       }}
-      className="flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-meta text-ink-3 transition-colors hover:text-ink"
+      className="flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-caption text-ink-3 transition-colors hover:text-ink"
     >
       <Lock aria-hidden size={14} strokeWidth={1.9} />
       {busy ? "Locking…" : "Lock"}

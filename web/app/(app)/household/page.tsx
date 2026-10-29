@@ -3,6 +3,7 @@ import { AdviceConsentSection } from "@/components/household/advice-consent";
 import { OwnerForm } from "@/components/household/owner-form";
 import { Roster } from "@/components/household/roster";
 import { WhoIsThis } from "@/components/household/who-is-this";
+import { PageHeader } from "@/components/page-header";
 import { ProblemState } from "@/components/states";
 import { household } from "@/lib/api";
 
@@ -29,7 +30,7 @@ export default async function HouseholdPage() {
   if (!who.ok) {
     return (
       <>
-        <h1 className="font-display text-screen lg:text-display">Household</h1>
+        <PageHeader title="Household" />
         <div className="mt-[var(--s-5)]">
           <ProblemState problem={who.problem} />
         </div>
@@ -41,12 +42,14 @@ export default async function HouseholdPage() {
 
   return (
     <>
-      <h1 className="font-display text-screen lg:text-display">Household</h1>
-      <p className="mt-[var(--s-3)] max-w-[var(--measure)] text-lead text-ink-2">
-        {owner
-          ? "Who Parrot has found on your documents, and which one of them is you."
-          : "Parrot does not know who you are yet."}
-      </p>
+      <PageHeader
+        title="Household"
+        lead={
+          owner
+            ? "Who Parrot has found on your documents, and which one of them is you."
+            : "Parrot does not know who you are yet."
+        }
+      />
 
       {owner ? null : (
         <div className="mt-[var(--s-6)]">
@@ -59,7 +62,7 @@ export default async function HouseholdPage() {
           <h2 className="group-label">
             {pending.length === 1 ? "One name to place" : "Names to place"}
           </h2>
-          <ul className="mt-[var(--s-3)] space-y-[var(--s-2)]">
+          <ul className="row-list mt-[var(--s-3)]">
             {pending.map((name, index) => (
               <WhoIsThis key={name.id} name={name} people={people} index={index} />
             ))}
@@ -72,7 +75,7 @@ export default async function HouseholdPage() {
       {/* Consent is the owner's, so there is nothing to agree to or withdraw until there is one. */}
       {owner ? <AdviceConsentSection /> : null}
 
-      <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-meta text-ink-3">
+      <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-caption text-ink-3">
         Parrot never invents a person. Every name here was printed on a document you filed, or
         typed by you.
       </p>

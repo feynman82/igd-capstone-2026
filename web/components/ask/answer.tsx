@@ -1,24 +1,31 @@
 "use client";
 
-import { Ban, CircleSlash, FileQuestion, Scale } from "lucide-react";
 import { AdviceCard, AdviceWithheld } from "@/components/ask/advice-card";
 import { ConsentPrompt } from "@/components/ask/consent-prompt";
 import { DraftCard } from "@/components/ask/draft-card";
 import { SourceChip } from "@/components/source-chip";
+import { Mark } from "@/components/wordmark";
 import type {
   AdviceCardEvent,
   AdviceWithheldEvent,
   ConsentRequiredEvent,
   DraftEvent,
+  Source,
 } from "@/lib/api";
 import type { ParrotMessage } from "@/lib/chat";
 
 /**
  * One turn of the conversation, rendered from parts that are already verified.
  *
- * There is no string of prose here to render. A sentence arrived with its citations attached
- * and is drawn with them; there is no code path in this file that can produce a factual
- * sentence without a chip beside it, which is rule 3 surviving all the way to the pixel.
+ * There is no string of prose here to render. The graph refuses any sentence it cannot attach a
+ * supporting passage to (rule 3), so every sentence that reaches this file arrived with its
+ * citations. On screen they are gathered rather than repeated: the answer reads as prose, and the
+ * pages behind it are listed once, under it, each one opening to the page.
+ *
+ * Every kind of reply is the same card — an answer, an abstention, a refusal, advice, a consent
+ * prompt, a draft — with the same three parts: who is speaking and what kind of reply this is,
+ * the reply, and what it was drawn from. Before, each kind drew its own box with its own stripe
+ * and its own capitalised label, and a thread read as six different components taking turns.
  */
 
 type Part = NonNullable<ParrotMessage["parts"]>[number];
@@ -37,12 +44,13 @@ export function Turn({
   /** Sends `question` again. Owned by the conversation, which owns `useChat`. */
   onConsented?: (question: string) => void;
 }) {
+  // The question is the heading of the card that answers it.
   if (message.role === "user") {
     return (
-      <li className="flex justify-end">
-        <p className="max-w-[85%] rounded-[var(--r)] rounded-br-[var(--r-sm)] bg-surface-2 px-[var(--s-4)] py-[var(--s-3)] text-body">
+      <li className="mt-[var(--s-7)] first:mt-0">
+        <h2 className="max-w-[var(--measure)] font-display text-title font-semibold text-ink">
           {textOf(message)}
-        </p>
+        </h2>
       </li>
     );
   }
@@ -94,11 +102,36 @@ export function Turn({
   // one member of the household. Shown for exactly the reason a citation is shown: the defence
   // against answering about the wrong person is putting the person on the screen that used
   // them, not being careful. A wrong alias is then a thing you can see. See ADR 0011.
-  const person = (
-    [finished, abstention, reading].find(
-      (part) => part && (part as { data: { person?: string | null } }).data.person,
-    ) as { data: { person?: string | null } } | undefined
-  )?.data.person;
+  const person =
+    advice?.data.person ??
+    (
+      [finished, abstention, reading].find(
+        (part) => part && (part as { data: { person?: string | null } }).data.person,
+      ) as { data: { person?: string | null } } | undefined
+    )?.data.person;
+
+  const whose = abstention
+    ? (abstention as { data: { reason: string } }).data.reason === WHOSE_REASON
+    : false;
+  const kind: [string, string] = failure
+    ? ["Stopped answering", "text-crit"]
+    : consent
+      ? [`Needs your agreement for ${consent.data.pack_name} advice`, "text-brand-strong"]
+      : withheld
+        ? ["Needs more to advise on this", "text-ink-2"]
+        : advice
+          ? [`Advice${person ? ` for ${person}` : ""}`, "text-accent"]
+          : abstention
+            ? [whose ? "Needs to know whose situation this is" : "No document answers this", "text-brass"]
+            : refusal
+              ? ["Does not act", "text-ink-2"]
+              : declined
+                ? ["Explains, does not recommend", "text-ink-2"]
+                : draft
+                  ? ["Drafted a calendar entry", "text-ink-2"]
+                  : sentences.length > 0
+                    ? [`Answer${person ? ` for ${person}` : ""}`, "text-ink-3"]
+                    : ["Reading your documents", "text-ink-3"];
 
   return (
     /*
@@ -110,70 +143,123 @@ export function Turn({
      * and not `atomic` so each new sentence is read on its own rather than re-reading the whole
      * answer every time one lands.
      */
-    <li className="max-w-[var(--measure)]" aria-live="polite" aria-atomic="false">
-      {/* Between the question and the first sentence. Not a spinner — a sentence about what is
-          happening, because on a 4B model this is several seconds and "reading 6 passages" is
-          more reassuring than a shape going round. */}
-      {reading && sentences.length === 0 && !settled ? (
-        <p className="flex items-center gap-[var(--s-2)] text-meta text-ink-3">
-          <span aria-hidden className="inline-block size-1.5 animate-pulse rounded-full bg-accent" />
-          Reading {(reading as { data: { passages_read: number } }).data.passages_read} passages
-        </p>
-      ) : null}
+    <li className="mt-[var(--s-3)] max-w-[var(--measure)]" aria-live="polite" aria-atomic="false">
+      <Card title={kind[0]} tone={kind[1]}>
+        {/* Between the question and the first sentence. Not a spinner — a sentence about what
+            is happening, because on a 4B model this is several seconds and "reading 6
+            passages" is more reassuring than a shape going round. */}
+        {reading && sentences.length === 0 && !settled ? (
+          <Waiting>
+            Reading {(reading as { data: { passages_read: number } }).data.passages_read} passages
+          </Waiting>
+        ) : null}
 
-      {/* The advice card names its person in its own heading. */}
-      {advice ? (
-        <div className="mb-[var(--s-3)]">
-          <AdviceCard advice={advice.data} />
-        </div>
-      ) : null}
+        {advice ? (
+          <AdviceCard advice={advice.data}>
+            {sentences.length > 0 ? (
+              <Prose sentences={sentences} className="mt-[var(--s-4)] text-body" />
+            ) : null}
+          </AdviceCard>
+        ) : sentences.length > 0 ? (
+          <Prose sentences={sentences} className="text-body" />
+        ) : null}
 
-      {person && sentences.length > 0 && !advice ? (
-        <p className="mb-[var(--s-3)] flex items-center gap-[var(--s-2)] text-meta text-ink-3">
-          <span className="rounded-[var(--r-sm)] border border-hairline bg-surface-2 px-[var(--s-2)] py-[2px] font-medium text-ink-2">
-            for {person}
-          </span>
-          <span>only their documents were read</span>
-        </p>
-      ) : null}
+        {abstention ? <Abstention part={abstention} whose={whose} /> : null}
+        {refusal ? <Refusal part={refusal} /> : null}
+        {declined ? <Declined part={declined} /> : null}
+        {consent ? (
+          <ConsentPrompt
+            consent={consent.data}
+            busy={busy}
+            onConsented={() => onConsented?.(question)}
+          />
+        ) : null}
+        {withheld ? <AdviceWithheld withheld={withheld.data} /> : null}
+        {draft ? <DraftCard draft={draft.data} /> : null}
+        {failure ? <Broken part={failure} /> : null}
 
-      {sentences.map((part, index) => {
-        const { text, citations } = (
-          part as { data: { text: string; citations: Parameters<typeof SourceChip>[0]["source"][] } }
-        ).data;
-        return (
-          <p
-            key={index}
-            style={{ animation: "parrot-rise var(--dur-chip) var(--ease) both" }}
-            className="mt-[var(--s-2)] text-lead first:mt-0"
-          >
-            {text}{" "}
-            <span className="inline-flex flex-wrap gap-[var(--s-1)] align-middle">
-              {citations.map((source, at) => (
-                <SourceChip key={at} source={source} />
-              ))}
-            </span>
-          </p>
-        );
-      })}
+        {finished && (sentences.length > 0 || advice) ? (
+          <Footer
+            part={finished}
+            sources={distinct([
+              ...(advice?.data.inputs ?? []),
+              ...sentences.flatMap(
+                (part) => (part as { data: { citations: Source[] } }).data.citations,
+              ),
+            ])}
+            person={person ?? null}
+            advised={Boolean(advice)}
+            calendar={fromCalendar}
+          />
+        ) : null}
+      </Card>
+    </li>
+  );
+}
 
-      {abstention ? <Abstention part={abstention} /> : null}
-      {refusal ? <Refusal part={refusal} /> : null}
-      {declined ? <Declined part={declined} /> : null}
-      {consent ? (
-        <ConsentPrompt
-          consent={consent.data}
-          busy={busy}
-          onConsented={() => onConsented?.(question)}
-        />
-      ) : null}
-      {withheld ? <AdviceWithheld withheld={withheld.data} /> : null}
-      {draft ? <DraftCard draft={draft.data} /> : null}
-      {failure ? <Broken part={failure} /> : null}
+/**
+ * The card every reply sits in, and its first line: the mark, the name, and what kind of reply
+ * this is, in the colour of that kind. The kind is said in words, so the colour is never the only
+ * thing carrying it.
+ */
+function Card({
+  title,
+  tone,
+  children,
+}: {
+  title: string;
+  tone: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <article
+      className="rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-4)] sm:px-[var(--s-5)]"
+      style={{ animation: "parrot-rise var(--dur-chip) var(--ease) both" }}
+    >
+      <p className="flex flex-wrap items-center gap-x-[var(--s-2)] gap-y-[var(--s-1)] text-caption">
+        <Mark />
+        <span className="font-semibold text-ink">Parrot</span>
+        <span className={`font-semibold ${tone}`}>{title}</span>
+      </p>
+      <div className="mt-[var(--s-3)]">{children}</div>
+    </article>
+  );
+}
 
-      {finished && (sentences.length > 0 || advice) ? (
-        <Trace part={finished} advised={Boolean(advice)} calendar={fromCalendar} />
-      ) : null}
+/** The verified sentences as one paragraph, each rising in as it arrives. */
+function Prose({ sentences, className }: { sentences: Part[]; className: string }) {
+  return (
+    <p className={`text-ink ${className}`}>
+      {sentences.map((part, index) => (
+        <span key={index} style={{ animation: "parrot-rise var(--dur-chip) var(--ease) both" }}>
+          {(part as { data: { text: string } }).data.text}{" "}
+        </span>
+      ))}
+    </p>
+  );
+}
+
+/** A live wait, said as a sentence. The pulse is the one moving thing, and it means "working". */
+function Waiting({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-[var(--s-2)] text-caption text-ink-3">
+      <span aria-hidden className="inline-block size-1.5 animate-pulse rounded-full bg-accent" />
+      {children}
+    </p>
+  );
+}
+
+/**
+ * The gap between sending a question and the first thing coming back: on a 4B model, and on the
+ * first question after a start, that is several seconds, and an empty thread under a question
+ * reads as nothing having happened.
+ */
+export function Pending() {
+  return (
+    <li className="mt-[var(--s-3)] max-w-[var(--measure)]" aria-live="polite">
+      <Card title="Reading your documents" tone="text-ink-3">
+        <Waiting>Looking for the pages that answer this</Waiting>
+      </Card>
     </li>
   );
 }
@@ -188,11 +274,11 @@ const WHOSE_REASON = "the question could be about more than one person";
 /**
  * Silence beats a guess, and it is designed as a considered state rather than as a failure.
  *
- * Brass, not red. It names why it declined and what would have answered. A person reading this
- * should feel that the system held a line, not that something went wrong — that is the whole
- * reason the trust story works, and a red error box would undo it.
+ * Brass, not red, and only in the card's first line. It names why it declined and what would
+ * have answered. A person reading this should feel that the system held a line, not that
+ * something went wrong — that is the whole reason the trust story works.
  */
-function Abstention({ part }: { part: Part }) {
+function Abstention({ part, whose }: { part: Part; whose: boolean }) {
   const data = (
     part as {
       data: {
@@ -204,18 +290,11 @@ function Abstention({ part }: { part: Part }) {
       };
     }
   ).data;
-  const whoseQuestion = data.reason === WHOSE_REASON;
 
   return (
-    <div className="rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-4)]">
-      <div className="flex items-center gap-[var(--s-2)]">
-        <FileQuestion aria-hidden size={16} strokeWidth={2} className="text-brass" />
-        <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-brass uppercase">
-          {whoseQuestion ? "Whose situation this is about" : "No document supports an answer"}
-        </h3>
-      </div>
-      <p className="mt-[var(--s-2)] text-lead text-ink">
-        {whoseQuestion ? (
+    <>
+      <p className="text-body text-ink">
+        {whose ? (
           sentence(data.reason)
         ) : (
           <>I do not have a document that answers this. {sentence(data.reason)}</>
@@ -224,39 +303,29 @@ function Abstention({ part }: { part: Part }) {
       {data.missing ? (
         <p className="mt-[var(--s-2)] text-body text-ink-2">{sentence(data.missing)}</p>
       ) : null}
-      <p className="mt-[var(--s-3)] text-meta text-ink-2">
-        <span className="num">{data.passages_read}</span> passage
-        {data.passages_read === 1 ? "" : "s"} read
-        {data.dropped > 0 ? (
-          <>
-            {" · "}
-            <span className="num">{data.dropped}</span> sentence
-            {data.dropped === 1 ? "" : "s"} written and dropped for having no source
-          </>
-        ) : null}
-        {" · nothing was invented to fill the gap"}
-      </p>
-      {data.disclaimer ? (
-        <p className="mt-[var(--s-2)] text-meta text-ink-2">{data.disclaimer}</p>
-      ) : null}
-    </div>
+      <div className="mt-[var(--s-4)] border-t border-hairline pt-[var(--s-3)] text-caption text-ink-3">
+        <p>
+          <span className="num">{data.passages_read}</span> passage
+          {data.passages_read === 1 ? "" : "s"} read.
+          {data.dropped > 0 ? (
+            <>
+              {" "}
+              <span className="num">{data.dropped}</span> sentence
+              {data.dropped === 1 ? " was" : "s were"} written and dropped for having no source.
+            </>
+          ) : null}{" "}
+          Nothing was invented to fill the gap.
+        </p>
+        {data.disclaimer ? <p className="mt-[var(--s-2)] text-ink-2">{data.disclaimer}</p> : null}
+      </div>
+    </>
   );
 }
 
 /** `never_acts` is `Literal[True]` in every pack manifest. This is that reaching a person. */
 function Refusal({ part }: { part: Part }) {
   const { text } = (part as { data: { text: string } }).data;
-  return (
-    <div className="rounded-[var(--r)] border border-hairline bg-surface-2 p-[var(--s-4)]">
-      <div className="flex items-center gap-[var(--s-2)]">
-        <Ban aria-hidden size={16} strokeWidth={2} className="text-ink-2" />
-        <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-ink-2 uppercase">
-          Parrot does not act
-        </h3>
-      </div>
-      <p className="mt-[var(--s-2)] text-lead text-ink">{text}</p>
-    </div>
-  );
+  return <p className="text-body text-ink">{text}</p>;
 }
 
 /**
@@ -269,50 +338,45 @@ function Declined({ part }: { part: Part }) {
     part as { data: { text: string; disclaimer: string; offer: string } }
   ).data;
   return (
-    <div className="rounded-[var(--r)] border border-hairline bg-surface-2 p-[var(--s-4)]">
-      <div className="flex items-center gap-[var(--s-2)]">
-        <Scale aria-hidden size={16} strokeWidth={2} className="text-ink-2" />
-        <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-ink-2 uppercase">
-          Parrot explains, it does not recommend
-        </h3>
-      </div>
-      <p className="mt-[var(--s-2)] text-lead text-ink">{text}</p>
+    <>
+      <p className="text-body text-ink">{text}</p>
       {offer ? (
         <p className="mt-[var(--s-2)] text-body text-ink-2">
           You could ask: <span className="text-ink">{offer}</span>
         </p>
       ) : null}
-      {disclaimer ? <p className="mt-[var(--s-3)] text-meta text-ink-2">{disclaimer}</p> : null}
-    </div>
+      {disclaimer ? (
+        <p className="mt-[var(--s-4)] border-t border-hairline pt-[var(--s-3)] text-caption text-ink-2">
+          {disclaimer}
+        </p>
+      ) : null}
+    </>
   );
 }
 
 function Broken({ part }: { part: Part }) {
   const { detail } = (part as { data: { detail: string } }).data;
-  return (
-    <div className="mt-[var(--s-3)] rounded-[var(--r)] border border-crit-line bg-crit-soft p-[var(--s-4)]">
-      <div className="flex items-center gap-[var(--s-2)]">
-        <CircleSlash aria-hidden size={16} strokeWidth={2} className="text-crit" />
-        <h3 className="text-body font-medium text-ink">Parrot stopped answering</h3>
-      </div>
-      <p className="mt-[var(--s-1)] text-meta text-ink-2">{detail}</p>
-    </div>
-  );
+  return <p className="text-body text-ink-2">{detail}</p>;
 }
 
 /**
- * The line beneath a finished answer.
+ * What the answer was drawn from, and how.
  *
- * Worth leaving on. It is what lets the system account for itself — how many passages it read,
- * how many sentences it wrote and then refused to show. A reader who can see that number trusts
- * the ones that got through more, not less.
+ * The sources first, each document page once: the reference list under the answer. Then the
+ * line that lets the system account for itself — how many passages it read, how many sentences
+ * it wrote and then refused to show. A reader who can see that number trusts the ones that got
+ * through more, not less.
  */
-function Trace({
+function Footer({
   part,
+  sources,
+  person,
   advised = false,
   calendar = false,
 }: {
   part: Part;
+  sources: Source[];
+  person: string | null;
   advised?: boolean;
   /** Every sentence was read off the calendar by code (ADR 0020): no passage, no model. */
   calendar?: boolean;
@@ -331,42 +395,72 @@ function Trace({
   ).data;
   return (
     <div className="mt-[var(--s-4)] border-t border-hairline pt-[var(--s-3)]">
-      <p className="text-meta text-ink-3">
+      {sources.length > 0 ? (
+        <>
+          <h3 className="group-label">Sources</h3>
+          <ul className="mt-[var(--s-2)] flex flex-col items-start gap-[var(--s-1)]">
+            {sources.map((source, at) => (
+              <li key={at} className="max-w-full">
+                <SourceChip source={source} />
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : null}
+      <p className={`text-caption text-ink-3 ${sources.length > 0 ? "mt-[var(--s-3)]" : ""}`}>
         {/* After advice the "passages" are the card's own inputs, so the line says that. */}
         {calendar ? (
-          "read off your calendar by code, not written by a model"
+          "Read off your calendar by code, not written by a model."
         ) : advised ? (
-          "explained from the inputs on the card"
+          "Explained from the figures above."
         ) : (
           <>
-            answered from <span className="num">{data.passages_read}</span> passage
+            Answered from <span className="num">{data.passages_read}</span> passage
             {data.passages_read === 1 ? "" : "s"}
+            {person ? `, all from ${person}'s documents` : ""}.
           </>
         )}
         {data.dropped > 0 ? (
           <>
-            {" · "}
+            {" "}
             <span className="num">{data.dropped}</span> unsourced sentence
-            {data.dropped === 1 ? "" : "s"} dropped
+            {data.dropped === 1 ? " was" : "s were"} dropped.
           </>
         ) : null}
-        {data.truncated ? " · shortened to the pack's limit" : null}
-        {data.unanswered ? " · the pages read do not answer the rest of this question" : null}
+        {data.truncated ? " Shortened to the pack's limit." : null}
+        {data.unanswered ? " The pages read do not answer the rest of this question." : null}
         {data.quarantined ? (
           <>
-            {" · "}
+            {" "}
             <span className="num">{data.quarantined}</span> document
-            {data.quarantined === 1 ? "" : "s"} in quarantine not checked
+            {data.quarantined === 1 ? " in quarantine was" : "s in quarantine were"} not checked.
           </>
         ) : null}
-        {calendar ? " · nothing left this computer" : " · local model, nothing left this computer"}
+        {calendar ? " Nothing left this computer." : " Local model; nothing left this computer."}
       </p>
-      {/* Advice already shows its disclaimer on the card, where it cannot be missed. */}
+      {/* Advice already shows its disclaimer in the card, where it cannot be missed. */}
       {data.disclaimer && !advised ? (
-        <p className="mt-[var(--s-2)] text-meta text-ink-2">{data.disclaimer}</p>
+        <p className="mt-[var(--s-2)] text-caption text-ink-2">{data.disclaimer}</p>
       ) : null}
     </div>
   );
+}
+
+/**
+ * Each document page once, in the order the answer first leaned on it. A calculation is not
+ * listed: it has no page, and the footer line already says the figures were worked out.
+ */
+function distinct(sources: Source[]): Source[] {
+  const seen = new Map<string, Source>();
+  for (const source of sources) {
+    if (source.kind === "calculation") continue;
+    // A page is the same page whether it arrived as an advice input or behind a sentence.
+    const key = source.document_id
+      ? `${source.document_id}|${source.page ?? ""}`
+      : `${source.kind ?? ""}|${source.text}`;
+    if (!seen.has(key)) seen.set(key, source);
+  }
+  return [...seen.values()];
 }
 
 function textOf(message: ParrotMessage): string {

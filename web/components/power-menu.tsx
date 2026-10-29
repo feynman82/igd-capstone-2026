@@ -135,7 +135,7 @@ export function PowerMenu() {
         aria-controls={open ? panelId : undefined}
         onClick={() => (open ? close() : setStage({ kind: "menu" }))}
         className={[
-          "flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-meta transition-colors",
+          "flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-caption transition-colors",
           open ? "bg-surface-2 text-ink" : "text-ink-3 hover:text-ink",
         ].join(" ")}
       >
@@ -162,30 +162,30 @@ export function PowerMenu() {
                 >
                   <Icon aria-hidden size={16} strokeWidth={1.9} className="mt-[2px] shrink-0 text-ink-2" />
                   <span className="flex flex-col gap-[2px]">
-                    <span className="font-display text-body leading-[var(--lh-snug)] font-semibold text-ink">
+                    <span className="font-display text-body font-semibold text-ink">
                       {title}
                     </span>
-                    <span className="text-meta text-ink-3">{hint}</span>
+                    <span className="text-caption text-ink-3">{hint}</span>
                   </span>
                 </button>
               ))}
-              <p className="mx-[var(--s-1)] mt-[var(--s-1)] border-t border-hairline px-[var(--s-2)] pt-[var(--s-2)] pb-[var(--s-1)] text-meta text-ink-3">
+              <p className="mx-[var(--s-1)] mt-[var(--s-1)] border-t border-hairline px-[var(--s-2)] pt-[var(--s-2)] pb-[var(--s-1)] text-caption text-ink-3">
                 Your documents are kept either way.
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-[var(--s-3)] p-[var(--s-5)]">
-              <h2 className="font-display text-lead font-semibold">{CONFIRM[pending.action].title}</h2>
+              <h2 className="font-display text-body font-semibold">{CONFIRM[pending.action].title}</h2>
               <p className="text-body text-ink-2">{CONFIRM[pending.action].body}</p>
               {pending.action === "shutdown" ? (
-                <p className="text-meta text-ink-3">
+                <p className="text-caption text-ink-3">
                   To start again, open <span className="num text-ink-2">START.cmd</span>.
                 </p>
               ) : null}
               {pending.kind === "failed" ? (
                 <p
                   role="alert"
-                  className="rounded-[var(--r-sm)] border border-warn-line bg-warn-soft px-[var(--s-3)] py-[var(--s-2)] text-meta text-ink"
+                  className="rounded-[var(--r-sm)] border border-warn-line bg-warn-soft px-[var(--s-3)] py-[var(--s-2)] text-caption text-ink"
                 >
                   {pending.detail}
                 </p>
@@ -195,7 +195,7 @@ export function PowerMenu() {
                   type="button"
                   autoFocus
                   onClick={close}
-                  className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium text-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+                  className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold text-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
                 >
                   Cancel
                 </button>
@@ -203,7 +203,7 @@ export function PowerMenu() {
                   type="button"
                   disabled={pending.kind === "sending"}
                   onClick={() => send(pending.action)}
-                  className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] font-display text-meta font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-70"
+                  className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] font-display text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-70"
                 >
                   {pending.kind === "sending" ? CONFIRM[pending.action].going : CONFIRM[pending.action].go}
                 </button>

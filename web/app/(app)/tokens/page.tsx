@@ -33,14 +33,14 @@ export default function TokensPage() {
     <div className="min-h-dvh bg-ground">
       <header className="sticky top-0 z-10 border-b border-hairline bg-ground/85 backdrop-blur-sm">
         <div className="mx-auto flex max-w-[var(--shell)] items-center gap-[var(--s-4)] px-[var(--gutter)] py-[var(--s-3)]">
-          <span className="font-display text-lead font-semibold">Parrot</span>
-          <span className="text-meta text-ink-3">Design tokens</span>
+          <span className="font-display text-body font-semibold">Parrot</span>
+          <span className="text-caption text-ink-3">Design tokens</span>
           <nav className="ml-auto hidden items-center gap-[var(--s-4)] md:flex">
             {SECTIONS.map(([id, label]) => (
               <a
                 key={id}
                 href={`#${id}`}
-                className="text-meta text-ink-2 no-underline transition-colors hover:text-brand"
+                className="text-caption text-ink-2 no-underline transition-colors hover:text-brand"
               >
                 {label}
               </a>
@@ -54,15 +54,15 @@ export default function TokensPage() {
 
       <main className="mx-auto max-w-[var(--shell)] px-[var(--gutter)] pb-[var(--s-8)]">
         <div className="max-w-[var(--measure)] py-[var(--s-7)]">
-          <h1 className="font-display text-screen">
+          <h1 className="font-display text-heading">
             Every colour, size, radius and duration this interface is allowed to use.
           </h1>
-          <p className="mt-[var(--s-4)] text-lead text-ink-2">
+          <p className="mt-[var(--s-4)] text-body text-ink-2">
             Four surfaces get built against this file. A screen that needs a value which is not
             here is a screen that has found a gap in the system — the fix is to add it here, once,
             not to write it into the screen.
           </p>
-          <p className="mt-[var(--s-3)] text-meta text-ink-3">
+          <p className="mt-[var(--s-3)] text-caption text-ink-3">
             Contrast figures below were computed against every background the token can legally sit
             on, in both themes, not sampled from the one that flattered it. Switch the theme in the
             corner and the numbers stay true.
@@ -78,7 +78,7 @@ export default function TokensPage() {
         <Focus />
         <Motion />
 
-        <footer className="mt-[var(--s-8)] border-t border-hairline pt-[var(--s-5)] text-meta text-ink-3">
+        <footer className="mt-[var(--s-8)] border-t border-hairline pt-[var(--s-5)] text-caption text-ink-3">
           Source: <span className="num">web/app/theme.css</span>. The values are the Kitchen
           Table resolution in{" "}
           <span className="num">
@@ -107,8 +107,8 @@ function Section({
   return (
     <section id={id} className="scroll-mt-[var(--s-8)] border-t border-hairline pt-[var(--s-6)] pb-[var(--s-7)]">
       <div className="mb-[var(--s-5)] max-w-[var(--measure)]">
-        <h2 className="text-title font-medium">{title}</h2>
-        <p className="mt-[var(--s-2)] text-meta text-ink-2">{note}</p>
+        <h2 className="text-title font-semibold">{title}</h2>
+        <p className="mt-[var(--s-2)] text-caption text-ink-2">{note}</p>
       </div>
       {children}
     </section>
@@ -134,12 +134,12 @@ function Swatch({
         className="flex h-[74px] items-end p-[var(--s-3)]"
         style={{ background: `var(${value})`, color: ink ? `var(${ink})` : undefined }}
       >
-        {ink ? <span className="text-meta font-medium">Aa $742.00</span> : null}
+        {ink ? <span className="text-caption font-semibold">Aa $742.00</span> : null}
       </div>
       <div className="border-t border-hairline p-[var(--s-3)]">
-        <div className="num text-meta text-ink">{name}</div>
+        <div className="num text-caption text-ink">{name}</div>
         {ratio ? (
-          <div className="mt-[var(--s-1)] text-meta text-ink-3">
+          <div className="mt-[var(--s-1)] text-caption text-ink-3">
             <span className="num">{ratio}</span> {on}
           </div>
         ) : null}
@@ -172,24 +172,24 @@ function Colour() {
           <div className="mt-[var(--s-3)] flex flex-wrap items-center gap-[var(--s-2)]">
             <button
               type="button"
-              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] font-display text-meta font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] font-display text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
             >
               Mark done
             </button>
             <button
               type="button"
-              className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium text-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold text-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
             >
               Snooze
             </button>
-            <span className="inline-flex items-center rounded-[var(--r-pill)] bg-brand-soft px-[var(--s-4)] py-[var(--s-2)] font-display text-meta font-semibold text-brand-strong">
+            <span className="inline-flex items-center rounded-[var(--r-pill)] bg-brand-soft px-[var(--s-4)] py-[var(--s-2)] font-display text-caption font-semibold text-brand-strong">
               Today
             </span>
           </div>
           {/* `--brand-strong` exists because terracotta at 4.40:1 on its own tint is under AA.
               A colour that works as a 40px button does not automatically work as 14px type on
               a tint, and the current tab above is 14px type on a tint. */}
-          <p className="mt-[var(--s-3)] text-meta text-ink-3">
+          <p className="mt-[var(--s-3)] text-caption text-ink-3">
             The tab&rsquo;s label is <span className="num">--brand-strong</span>, not{" "}
             <span className="num">--brand</span>: the fill and the type on its tint are two
             different measurements.
@@ -214,7 +214,7 @@ function Colour() {
           </p>
           <a
             href="#colour"
-            className="mt-[var(--s-3)] inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent no-underline"
+            className="mt-[var(--s-3)] inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-caption font-semibold text-accent no-underline"
           >
             Motor renewal notice <span className="num">p.1</span>
           </a>
@@ -251,8 +251,8 @@ function Surfaces() {
           <div key={token} className="overflow-hidden rounded-[var(--r)] border border-hairline">
             <div className="h-[74px]" style={{ background: `var(${token})` }} />
             <div className="border-t border-hairline bg-surface p-[var(--s-3)]">
-              <div className="num text-meta text-ink">{token}</div>
-              <div className="mt-[var(--s-1)] text-meta text-ink-3">{use}</div>
+              <div className="num text-caption text-ink">{token}</div>
+              <div className="mt-[var(--s-1)] text-caption text-ink-3">{use}</div>
             </div>
           </div>
         ))}
@@ -264,13 +264,13 @@ function Surfaces() {
           <dl className="mt-[var(--s-3)] space-y-[var(--s-3)]">
             {INKS.map(([token, role, light, dark]) => (
               <div key={token} className="flex flex-wrap items-baseline gap-x-[var(--s-3)] gap-y-[var(--s-1)]">
-                <dt className="num w-[5.5rem] shrink-0 text-meta" style={{ color: `var(${token})` }}>
+                <dt className="num w-[5.5rem] shrink-0 text-caption" style={{ color: `var(${token})` }}>
                   {token}
                 </dt>
                 <dd className="text-body" style={{ color: `var(${token})` }}>
                   {role}
                 </dd>
-                <dd className="num ml-auto text-meta text-ink-3">
+                <dd className="num ml-auto text-caption text-ink-3">
                   {light} light · {dark} dark
                 </dd>
               </div>
@@ -280,7 +280,7 @@ function Surfaces() {
 
         <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-4)]">
           <div className="group-label">Lines</div>
-          <ul className="mt-[var(--s-3)] space-y-[var(--s-3)] text-meta">
+          <ul className="mt-[var(--s-3)] space-y-[var(--s-3)] text-caption">
             <li>
               <div className="h-px w-full bg-hairline" />
               <div className="num mt-[var(--s-2)] text-ink">--hairline</div>
@@ -368,16 +368,16 @@ function Status() {
           >
             <div className="flex items-baseline gap-[var(--s-2)]">
               <span
-                className="text-meta font-semibold uppercase tracking-[var(--tr-label)]"
+                className="text-caption font-semibold"
                 style={{ color: `var(--${token})` }}
               >
                 {word}
               </span>
-              <span className="num ml-auto text-meta text-ink-2">{light}</span>
+              <span className="num ml-auto text-caption text-ink-2">{light}</span>
             </div>
             <p className="mt-[var(--s-2)] text-body text-ink">{line}</p>
-            <p className="mt-[var(--s-1)] text-meta text-ink-2">{means}</p>
-            <div className="num mt-[var(--s-3)] text-meta text-ink-2">
+            <p className="mt-[var(--s-1)] text-caption text-ink-2">{means}</p>
+            <div className="num mt-[var(--s-3)] text-caption text-ink-2">
               --{token} · --{token}-soft · --{token}-line
             </div>
           </div>
@@ -389,34 +389,35 @@ function Status() {
 
 /* ------------------------------------------------------------------------------------- type */
 
+// [role, n, exact 16 x 1.2^n, size used, line height, utility, sample]
 const SCALE = [
-  ["--fs-label", "11", "group-label font-display", "NEEDS YOU NOW"],
-  ["--fs-meta", "13", "text-meta text-ink-3", "NTUC Income home insurance renewal, page 3"],
-  ["--fs-body", "15.5", "text-body", "You are at $12,400 of the $15,300 cap."],
-  ["--fs-lead", "17.5", "text-lead", "Renew before cover lapses. Last premium was $742."],
-  ["--fs-title", "19", "text-title font-display", "Motor policy expires for SLK8842J"],
-  ["--fs-screen", "24", "text-screen font-display", "Your motor policy has expired"],
-  ["--fs-display", "28", "text-display font-display", "Wednesday, 2 September"],
-  ["--fs-figure", "34", "text-figure num", "115"],
+  ["caption", "-1", "13.33", "13", "20", "text-caption text-ink-2", "NTUC Income home insurance renewal, page 3"],
+  ["body", "0", "16.00", "16", "24", "text-body", "You are at $12,400 of the $15,300 cap."],
+  ["title", "+1", "19.20", "19", "28", "text-title font-display font-semibold", "This week"],
+  ["heading", "+2", "23.04", "23", "28", "text-heading font-display font-semibold", "Your motor policy has expired"],
+  ["page", "+3", "27.65", "28", "36", "text-page font-display font-semibold", "Wednesday, 2 September"],
+  ["figure", "+4", "33.18", "33", "40", "text-figure num", "115"],
 ] as const;
 
 function Type() {
   return (
     <Section
       id="type"
-      title="Two sans faces, eight steps, fixed in rem"
-      note="Outfit names things — the wordmark, a surface’s title, a card’s headline, the text on a button. Figtree is read: prose, an answer, a value, a meta line. JetBrains Mono carries anything measured or identified, and the largest step belongs to it, because the biggest thing on Today is a countdown. There is no serif anywhere; the previous pass had one, and it was the part of the interface people described rather than used. Sizes do not scale with the viewport — this is read at a consistent distance on a consistent screen, and a heading that shrinks inside a narrow column looks broken rather than responsive."
+      title="One face, six roles, 16px × 1.2ⁿ"
+      note="Every size is 16px times 1.2 to a whole power, rounded to a whole pixel, so each role is a fifth larger than the one below it and every step up reads as the same step. Line heights are whole multiples of 4px, the spacing scale's base. Two weights: 400 is read, 600 names things. Figures line up because the digits are tabular, not because they are set in another face. Sizes do not scale with the viewport: this is read at a consistent distance, and a heading that shrinks inside a narrow column looks broken rather than responsive."
     >
       <div className="rounded-[var(--r)] border border-hairline bg-surface">
-        {SCALE.map(([token, px, cls, sample], i) => (
+        {SCALE.map(([role, n, exact, px, line, cls, sample], i) => (
           <div
-            key={token}
+            key={role}
             className={`flex flex-wrap items-baseline gap-x-[var(--s-4)] gap-y-[var(--s-1)] px-[var(--s-4)] py-[var(--s-3)] ${
               i ? "border-t border-hairline" : ""
             }`}
           >
-            <div className="num w-[7rem] shrink-0 text-meta text-ink-3">{token}</div>
-            <div className="num w-[2.5rem] shrink-0 text-meta text-ink-3">{px}px</div>
+            <div className="w-[4.5rem] shrink-0 text-caption font-semibold text-ink-2">{role}</div>
+            <div className="num w-[9rem] shrink-0 text-caption text-ink-3">
+              n {n} · {exact} → {px}/{line}
+            </div>
             <div className={`min-w-0 flex-1 ${cls}`}>{sample}</div>
           </div>
         ))}
@@ -424,22 +425,22 @@ function Type() {
 
       <div className="mt-[var(--s-4)] grid gap-[var(--s-3)] md:grid-cols-3">
         <FaceCard
-          family="font-display"
-          name="Outfit 600"
-          role="Names things: the wordmark, a title, a status label, the text on a button."
+          family="font-display font-semibold"
+          name="Figtree 600"
+          role="Names things: a surface, a card, a row, a section, the text on a button."
           sample="Insurance and Coverage"
         />
         <FaceCard
           family="font-sans"
-          name="Figtree 400/500"
-          role="Everything you read: prose, answers, values, meta lines, table cells."
+          name="Figtree 400"
+          role="Everything you read: prose, answers, values, captions, table cells."
           sample="Cover ended on 30 November 2026."
         />
         <FaceCard
-          family="font-mono"
-          name="JetBrains Mono"
-          role="Only what is measured or identified. Never a costume for looking technical."
-          sample="HI-2244019 · 0.61"
+          family="num font-sans"
+          name="Figtree 400, tabular"
+          role="What is measured or identified. Same face; the digits are held to one width."
+          sample="HI-2244019 · SGD 1,284.00"
         />
       </div>
     </Section>
@@ -460,8 +461,8 @@ function FaceCard({
   return (
     <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-4)]">
       <div className={`${family} text-title`}>{sample}</div>
-      <div className="mt-[var(--s-3)] text-meta font-medium text-ink">{name}</div>
-      <div className="mt-[var(--s-1)] text-meta text-ink-2">{role}</div>
+      <div className="mt-[var(--s-3)] text-caption font-semibold text-ink">{name}</div>
+      <div className="mt-[var(--s-1)] text-caption text-ink-2">{role}</div>
     </div>
   );
 }
@@ -488,10 +489,10 @@ function Radius() {
               className="h-[72px] border border-accent-line bg-accent-soft"
               style={{ borderRadius: `var(${token})` }}
             />
-            <div className="num mt-[var(--s-3)] text-meta text-ink">
+            <div className="num mt-[var(--s-3)] text-caption text-ink">
               {token} <span className="text-ink-3">{px}</span>
             </div>
-            <div className="mt-[var(--s-1)] text-meta text-ink-2">{use}</div>
+            <div className="mt-[var(--s-1)] text-caption text-ink-2">{use}</div>
           </div>
         ))}
       </div>
@@ -522,9 +523,9 @@ function Space() {
       <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-4)]">
         {SPACE.map(([token, px]) => (
           <div key={token} className="flex items-center gap-[var(--s-4)] py-[var(--s-1)]">
-            <div className="num w-[3.5rem] shrink-0 text-meta text-ink-3">{token}</div>
+            <div className="num w-[3.5rem] shrink-0 text-caption text-ink-3">{token}</div>
             <div className="h-3 rounded-[2px] bg-accent-soft" style={{ width: px * 2 }} />
-            <div className="num text-meta text-ink-3">{px}px</div>
+            <div className="num text-caption text-ink-3">{px}px</div>
           </div>
         ))}
       </div>
@@ -536,9 +537,9 @@ function Space() {
           ["--gutter", "24px", "the page's side padding"],
         ].map(([token, v, use]) => (
           <div key={token} className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-3)]">
-            <div className="num text-meta text-ink">{token}</div>
-            <div className="num text-meta text-ink-3">{v}</div>
-            <div className="mt-[var(--s-1)] text-meta text-ink-2">{use}</div>
+            <div className="num text-caption text-ink">{token}</div>
+            <div className="num text-caption text-ink-3">{v}</div>
+            <div className="mt-[var(--s-1)] text-caption text-ink-2">{use}</div>
           </div>
         ))}
       </div>
@@ -558,19 +559,19 @@ function Focus() {
       <div className="flex flex-wrap items-center gap-[var(--s-3)] rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-5)]">
         <button
           type="button"
-          className="rounded-[var(--r-sm)] bg-accent px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium text-accent-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+          className="rounded-[var(--r-sm)] bg-accent px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold text-accent-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
         >
           Primary action
         </button>
         <button
           type="button"
-          className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium text-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+          className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold text-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
         >
           Secondary
         </button>
         <a
           href="#focus"
-          className="rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[var(--s-1)] text-meta text-accent no-underline"
+          className="rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[var(--s-2)] py-[var(--s-1)] text-caption text-accent no-underline"
         >
           A source chip <span className="num">p.2</span>
         </a>
@@ -583,12 +584,12 @@ function Focus() {
           placeholder="A text field"
           className="min-w-[12rem] flex-1 rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-body"
         />
-        <label className="flex items-center gap-[var(--s-2)] text-meta">
+        <label className="flex items-center gap-[var(--s-2)] text-caption">
           <input type="checkbox" defaultChecked className="accent-accent" />
           Insurance pack
         </label>
       </div>
-      <p className="mt-[var(--s-3)] max-w-[var(--measure)] text-meta text-ink-3">
+      <p className="mt-[var(--s-3)] max-w-[var(--measure)] text-caption text-ink-3">
         The gap is painted in the surface colour, so the ring always has something to contrast
         against whatever it wraps. That is the whole trick, and it is why there is no second
         &ldquo;focus ring on dark backgrounds&rdquo; token to remember.

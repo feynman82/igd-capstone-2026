@@ -35,7 +35,7 @@ const PLACES: { relation: Place; label: string; said: string }[] = [
 ];
 
 const choice =
-  "rounded-[var(--r-sm)] border px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60";
+  "rounded-[var(--r-sm)] border px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60";
 const suggested = "border-brand-line bg-brand-soft text-brand-strong";
 
 export function WhoIsThis({
@@ -100,24 +100,23 @@ export function WhoIsThis({
 
   if (gone !== null) {
     return (
-      <li className="rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)] text-meta text-ink-2">
-        <span className="font-medium text-ink">{name.alias}</span> {gone}
+      <li className="px-[var(--s-4)] py-[var(--s-3)] text-caption text-ink-2">
+        <span className="font-semibold text-ink">{name.alias}</span> {gone}
       </li>
     );
   }
 
   return (
     <li
-      className="rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)]"
+      className="px-[var(--s-4)] py-[var(--s-3)]"
       style={{
         animation: "parrot-rise var(--dur-enter) var(--ease) both",
         animationDelay: `${index * 50}ms`,
       }}
     >
       <div className="flex items-start gap-[var(--s-4)]">
-        <span aria-hidden className="mt-[3px] w-[3px] shrink-0 self-stretch rounded-[2px] bg-brass" />
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-title font-semibold">
+          <h3 className="font-display text-body font-semibold">
             {placing ? (
               <>
                 How is <span className="text-brand-strong">{name.alias}</span> related to you?
@@ -128,9 +127,9 @@ export function WhoIsThis({
               </>
             )}
           </h3>
-          <p className="mt-[2px] text-meta text-ink-2">
+          <p className="mt-[2px] text-caption text-ink-2">
             {placing
-              ? "This decides which of your packs apply to their documents — parent relief needs a parent."
+              ? "This decides which of your packs apply to their documents: parent relief needs a parent."
               : `${
                   name.document_name
                     ? `That name is on ${name.document_name}. `
@@ -155,7 +154,7 @@ export function WhoIsThis({
                 type="button"
                 disabled={busy}
                 onClick={() => setPlacing(false)}
-                className="ml-auto rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-2)] text-meta text-ink-3 transition-colors hover:text-ink disabled:opacity-60"
+                className="ml-auto rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-2)] text-caption text-ink-3 transition-colors hover:text-ink disabled:opacity-60"
               >
                 Back
               </button>
@@ -202,9 +201,9 @@ export function WhoIsThis({
                 type="button"
                 disabled={busy}
                 onClick={notOneOfUs}
-                title="A landlord, an employer, an insurer's officer — not part of this household"
+                title="A landlord, an employer, an insurer's officer. Not part of this household"
                 className={[
-                  "rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60",
+                  "rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60",
                   created?.external ? "text-brand-strong" : "text-ink-2",
                 ].join(" ")}
               >
@@ -215,7 +214,7 @@ export function WhoIsThis({
                 type="button"
                 disabled={busy}
                 onClick={() => answer(null, "set aside. Parrot will ask again next time it sees the name.")}
-                className="ml-auto rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-2)] text-meta text-ink-3 transition-colors hover:text-ink disabled:opacity-60"
+                className="ml-auto rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-2)] text-caption text-ink-3 transition-colors hover:text-ink disabled:opacity-60"
               >
                 Ask me later
               </button>
@@ -223,7 +222,7 @@ export function WhoIsThis({
           )}
 
           {failed ? (
-            <p role="alert" className="mt-[var(--s-2)] text-meta text-crit">
+            <p role="alert" className="mt-[var(--s-2)] text-caption text-crit">
               {failed}
             </p>
           ) : null}

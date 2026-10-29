@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import Path as PathParam
 from fastapi.responses import StreamingResponse
 
 from api.models import (
@@ -66,6 +67,10 @@ from api.models import (
     ConfirmNameRequest,
     ConsentRequest,
     ConsentRequiredEvent,
+    Conversation,
+    ConversationIn,
+    ConversationsResponse,
+    ConversationSummary,
     CorrectionRequest,
     CorrectionResponse,
     DeclinedEvent,
@@ -99,7 +104,7 @@ from api.models import (
     VaultFact,
     VaultResponse,
 )
-from core import advice_consent, corrections, household, registry, vault
+from core import advice_consent, conversations, corrections, household, registry, vault
 from core import calendar as household_calendar
 from core.advice_records import HouseholdAdviceLog
 from core.graph import answer as graph
@@ -259,6 +264,8 @@ def _today_items(conn: Any, on: date) -> list[TodayItem]:
 
 Conn = Annotated[Any, Depends(connection)]
 Config = Annotated[Settings, Depends(_settings)]
+# The thread id the Ask screen makes: a UUID, held to the table's own check.
+ConversationId = Annotated[str, PathParam(pattern=r"^[A-Za-z0-9_-]{1,64}$")]
 
 
 @dataclass
@@ -920,6 +927,48 @@ def build_router() -> APIRouter:
             raise HTTPException(status_code=404, detail="that entry is no longer on the calendar")
         conn.commit()
         return DeletedEvent(id=event_id, title=existing.title)
+
+    # ------------------------------------------------------------------------- conversations
+    #
+    # Ask's history column. A transcript is written by the screen after each turn and read back
+    # only to be drawn again; the answer graph never reads it (`core/conversations.py`).
+
+    @router.get("/conversations", response_model=ConversationsResponse)
+    def list_conversations(conn: Conn) -> ConversationsResponse:
+        """The most recently used conversations, newest first."""
+        return ConversationsResponse(
+            conversations=[
+                ConversationSummary(id=row.id, title=row.title, updated_at=row.updated_at)
+                for row in conversations.recent(conn)
+            ]
+        )
+
+    @router.get("/conversations/{conversation_id}", response_model=Conversation)
+    def get_conversation(conversation_id: ConversationId, conn: Conn) -> Conversation:
+        """One conversation, every message of it.
+
+        * **404** there is no such conversation
+        """
+        found = conversations.get(conn, conversation_id)
+        if found is None:
+            raise HTTPException(status_code=404, detail="that conversation is not on this computer")
+        return Conversation(
+            id=found.id, title=found.title, messages=found.messages, updated_at=found.updated_at
+        )
+
+    @router.put("/conversations/{conversation_id}", response_model=ConversationSummary)
+    def save_conversation(
+        conversation_id: ConversationId, body: ConversationIn, conn: Conn
+    ) -> ConversationSummary:
+        """The whole conversation, written over what was stored.
+
+        * **422** nothing in it was asked, so there is nothing to call it
+        """
+        saved = conversations.save(conn, conversation_id, body.messages)
+        if saved is None:
+            raise HTTPException(status_code=422, detail="a conversation needs a question in it")
+        conn.commit()
+        return ConversationSummary(id=saved.id, title=saved.title, updated_at=saved.updated_at)
 
     return router
 

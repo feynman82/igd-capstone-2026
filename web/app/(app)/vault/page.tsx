@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ProblemState } from "@/components/states";
 import { QuarantineQueue } from "@/components/vault/quarantine";
 import { quarantine, vault, type VaultDocument } from "@/lib/api";
@@ -33,12 +34,12 @@ export default async function VaultPage({
   if (!listing.ok) {
     return (
       <>
-        <h1 className="font-display text-screen lg:text-display">Vault</h1>
-        <div className="mt-[var(--s-4)]">
+        <PageHeader title="Vault" />
+        <div className="mt-[var(--s-5)]">
           <ProblemState problem={listing.problem}>
             {listing.problem.kind === "offline" || listing.problem.kind === "foreign" ? (
               <>
-                Your documents are untouched — they are files in your watched folder, and Parrot
+                Your documents are untouched: they are files in your watched folder, and Parrot
                 only reads them.
               </>
             ) : null}
@@ -57,12 +58,14 @@ export default async function VaultPage({
 
   return (
     <>
-      <h1 className="font-display text-screen lg:text-display">Vault</h1>
-      <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-lead text-ink-2">
-        {total === 0
-          ? "Nothing filed yet."
-          : `${total} document${total === 1 ? "" : "s"}, and everything read off ${total === 1 ? "it" : "them"}.`}
-      </p>
+      <PageHeader
+        title="Vault"
+        lead={
+          total === 0
+            ? "Nothing filed yet."
+            : `${total} document${total === 1 ? "" : "s"}, and everything read off ${total === 1 ? "it" : "them"}.`
+        }
+      />
 
       {needsEyes.length > 0 ? (
         <section className="mt-[var(--s-6)]">
@@ -82,14 +85,14 @@ export default async function VaultPage({
         <div className="mt-[var(--s-6)]">
           <EmptyState title="Nothing filed yet">
             Drop a document into your watched folder, or send one to the Parrot bot on Telegram.
-            It will appear here within a minute. Nothing is uploaded anywhere — the folder stays
+            It will appear here within a minute. Nothing is uploaded anywhere; the folder stays
             where it is and Parrot reads it in place.
           </EmptyState>
         </div>
       ) : (
         <section className="mt-[var(--s-6)]">
-          <h2 className="group-label">{status ? `Filed — ${status}` : "Filed"}</h2>
-          <ul className="mt-[var(--s-3)] divide-y divide-hairline overflow-hidden rounded-[var(--r)] border border-hairline bg-surface">
+          <h2 className="group-label">{status ? `Filed, ${status}` : "Filed"}</h2>
+          <ul className="row-list mt-[var(--s-3)]">
             {documents.map((document) => (
               <Row key={document.document_id} document={document} />
             ))}
@@ -109,24 +112,22 @@ function Row({ document }: { document: VaultDocument }) {
         href={`/vault/${document.document_id}`}
         className="hoverable flex flex-wrap items-baseline gap-x-[var(--s-3)] gap-y-[var(--s-1)] px-[var(--s-4)] py-[var(--s-3)] no-underline"
       >
-        <span className="min-w-0 flex-1 truncate text-body font-medium text-ink">
+        <span className="min-w-0 flex-1 truncate text-body font-semibold text-ink">
           {document.original_name}
         </span>
 
         {flagged > 0 ? (
-          <span className="rounded-[var(--r-sm)] border border-warn-line bg-warn-soft px-[var(--s-2)] py-[1px] text-meta text-warn">
-            {flagged} to check
-          </span>
+          <span className="status bg-warn-soft text-warn">{flagged} to check</span>
         ) : null}
 
         {!document.pack_enabled ? (
-          <span className="text-meta text-ink-3">pack off</span>
+          <span className="text-caption text-ink-3">pack off</span>
         ) : null}
 
-        <span className="text-meta text-ink-2">
+        <span className="text-caption text-ink-2">
           {document.doc_type?.replace(/_/g, " ") ?? "not recognised"}
         </span>
-        <span className="num w-[7rem] shrink-0 text-right text-meta text-ink-3">
+        <span className="num w-[7rem] shrink-0 text-right text-caption text-ink-3">
           {document.facts.length} field{document.facts.length === 1 ? "" : "s"}
         </span>
       </Link>

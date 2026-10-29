@@ -53,11 +53,11 @@ export function Tabs() {
                 aria-current={on ? "page" : undefined}
                 title={hint}
                 className={[
-                  "inline-flex items-center rounded-[var(--r-pill)] px-[var(--s-4)] py-[10px]",
-                  "font-display text-[0.90625rem] leading-[var(--lh-flat)] no-underline",
+                  "inline-flex items-center rounded-[var(--r-pill)] px-[var(--s-4)] py-[var(--s-2)]",
+                  "font-display text-body no-underline",
                   on
                     ? "bg-brand-soft font-semibold text-brand-strong"
-                    : "font-medium text-ink-2 hover:bg-surface-2 hover:text-ink",
+                    : "font-semibold text-ink-2 hover:bg-surface-2 hover:text-ink",
                 ].join(" ")}
               >
                 {label}
@@ -97,7 +97,7 @@ export function TabBar() {
                 ].join(" ")}
               >
                 <Icon aria-hidden size={19} strokeWidth={on ? 2.2 : 1.9} />
-                <span className="text-label font-medium tracking-normal normal-case">{label}</span>
+                <span className="text-caption font-semibold tracking-normal normal-case">{label}</span>
               </Link>
             </li>
           );

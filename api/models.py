@@ -15,7 +15,7 @@ answer, abstain or refuse, and a client should not have to guess from which fiel
 from __future__ import annotations
 
 from datetime import date, datetime, time
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -636,3 +636,33 @@ class CalendarResponse(BaseModel):
 class DeletedEvent(BaseModel):
     id: int
     title: str
+
+
+# ------------------------------------------------------------------------- conversations
+
+
+class ConversationSummary(BaseModel):
+    """One line in Ask's history column: what was first asked, and when it was last used."""
+
+    id: str
+    title: str
+    updated_at: datetime
+
+
+class ConversationsResponse(BaseModel):
+    conversations: list[ConversationSummary]
+
+
+class Conversation(ConversationSummary):
+    """A past conversation as the screen drew it. A transcript to reopen, never a source: these
+    messages are the AI SDK's own shape and nothing on the server reads inside them but the
+    first question, for the title."""
+
+    messages: list[dict[str, Any]]
+
+
+class ConversationIn(BaseModel):
+    """The whole conversation, written over what was stored. 400 messages is a long evening of
+    questions; the cap is there so a runaway client cannot fill the disk."""
+
+    messages: list[dict[str, Any]] = Field(min_length=1, max_length=400)

@@ -3,7 +3,9 @@
 import { useChat } from "@ai-sdk/react";
 import { ArrowUp, Square } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Turn } from "@/components/ask/answer";
+import { Pending, Turn } from "@/components/ask/answer";
+import { PageHeader } from "@/components/page-header";
+import { saveConversation, type ConversationSummary } from "@/lib/api";
 import type { ParrotMessage } from "@/lib/chat";
 
 /**
@@ -17,15 +19,39 @@ import type { ParrotMessage } from "@/lib/chat";
 const SUGGESTIONS = [
   "When does the motor policy expire?",
   "What did I donate, and to whom?",
-  "What is the renewal premium?",
+  "Analyze my insurance coverage.",
 ] as const;
 
-export function Conversation() {
-  // One id for the life of this conversation, sent as the thread id. The graph's checkpointer
-  // and every advice record are keyed on it; without it the route falls back to "local" and
-  // every conversation on this computer shares one thread.
-  const [threadId] = useState(() => crypto.randomUUID());
-  const { messages, sendMessage, status, stop, error } = useChat<ParrotMessage>({ id: threadId });
+export function Conversation({
+  id,
+  initial,
+  onSaved,
+  toolbar,
+}: {
+  /**
+   * The thread id, for the life of this conversation. The graph's checkpointer, every advice
+   * record and the saved transcript are keyed on it; without it the route falls back to "local"
+   * and every conversation on this computer shares one thread.
+   */
+  id: string;
+  /** A past conversation being reopened, as it was drawn. Empty for a new one. */
+  initial: ParrotMessage[];
+  onSaved: (summary: ConversationSummary) => void;
+  /** Above the thread: the history and new-conversation buttons on a phone. */
+  toolbar?: React.ReactNode;
+}) {
+  const [unsaved, setUnsaved] = useState(false);
+  const { messages, sendMessage, status, stop, error } = useChat<ParrotMessage>({
+    id,
+    messages: initial,
+    // Saved whole after every turn, stopped ones too: what was shown is what is kept. A save
+    // that fails costs the history and never the answer, so it is a line, not an error.
+    onFinish: async ({ messages: all }) => {
+      const saved = await saveConversation(id, all);
+      setUnsaved(!saved.ok);
+      if (saved.ok) onSaved(saved.data);
+    },
+  });
   const [draft, setDraft] = useState("");
   const thread = useRef<HTMLDivElement>(null);
   const busy = status === "submitted" || status === "streaming";
@@ -58,27 +84,42 @@ export function Conversation() {
   // under the composer sits behind the tabs.
   return (
     <div className="flex h-[calc(100dvh-var(--bar)-var(--s-6)-var(--s-7)-3.5rem)] flex-col lg:h-[calc(100dvh-var(--bar)-var(--s-6)-var(--s-7))]">
-      <div ref={thread} className="min-h-0 flex-1 overflow-y-auto">
+      {toolbar}
+      {/* `relative` so an answer's visually hidden text is placed inside the scroll box. Without
+          it, an absolutely positioned `sr-only` span takes the page as its container, and a long
+          answer makes the whole page scroll beneath a thread that was meant to scroll alone. */}
+      <div ref={thread} className="relative min-h-0 flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <Opening onPick={ask} />
         ) : (
-          <ul className="space-y-[var(--s-6)] pb-[var(--s-6)]">
-            {messages.map((message, index) => (
-              <Turn
-                key={message.id}
-                message={message}
-                question={questionBefore(messages, index)}
-                busy={busy}
-                onConsented={askAgain}
-              />
-            ))}
-          </ul>
+          <>
+            {/* Every surface has a name for a screen reader to land on; here the questions are
+                the visible headings, so the name is only for it. */}
+            <h1 className="sr-only">Ask</h1>
+            <ul className="pb-[var(--s-6)]">
+              {messages.map((message, index) => (
+                <Turn
+                  key={message.id}
+                  message={message}
+                  question={questionBefore(messages, index)}
+                  busy={busy}
+                  onConsented={askAgain}
+                />
+              ))}
+              {busy && messages.at(-1)?.role === "user" ? <Pending /> : null}
+            </ul>
+          </>
         )}
       </div>
 
       {error ? (
-        <p role="alert" className="mb-[var(--s-2)] text-meta text-crit">
+        <p role="alert" className="mb-[var(--s-2)] text-caption text-crit">
           {error.message}
+        </p>
+      ) : null}
+      {unsaved ? (
+        <p role="status" className="mb-[var(--s-2)] text-caption text-ink-3">
+          This conversation could not be added to your history. The answers above are unaffected.
         </p>
       ) : null}
 
@@ -134,7 +175,7 @@ export function Conversation() {
         )}
       </form>
 
-      <p className="mt-[var(--s-2)] text-meta text-ink-3">
+      <p className="mt-[var(--s-2)] text-caption text-ink-3">
         Parrot answers only from your own documents, and says so when they do not cover a
         question.
       </p>
@@ -166,18 +207,17 @@ function questionBefore(messages: ParrotMessage[], index: number): string {
 function Opening({ onPick }: { onPick: (question: string) => void }) {
   return (
     <div className="flex h-full flex-col justify-center">
-      <h1 className="font-display text-screen lg:text-display">Ask about your documents</h1>
-      <p className="mt-[var(--s-3)] max-w-[var(--measure)] text-lead text-ink-2">
-        Every sentence in an answer carries the document and page it came from. When nothing in
-        your vault covers a question, Parrot says so rather than guessing.
-      </p>
+      <PageHeader
+        title="Ask about your documents"
+        lead="Every sentence in an answer carries the document and page it came from. When nothing in your vault covers a question, Parrot says so rather than guessing."
+      />
       <ul className="mt-[var(--s-5)] flex flex-wrap gap-[var(--s-2)]">
         {SUGGESTIONS.map((question) => (
           <li key={question}>
             <button
               type="button"
               onClick={() => onPick(question)}
-              className="rounded-[var(--r-pill)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-meta transition-colors hover:bg-surface-2"
+              className="rounded-[var(--r-pill)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-caption transition-colors hover:bg-surface-2"
             >
               {question}
             </button>

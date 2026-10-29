@@ -41,7 +41,7 @@ export function SourceChip({ source }: { source: Source }) {
     return (
       <Link
         href={href}
-        className="inline-flex max-w-full items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline bg-surface px-[11px] py-[7px] text-meta font-medium text-ink-2 no-underline hover:bg-surface-2"
+        className="inline-flex max-w-full items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline bg-surface px-[11px] py-[7px] text-caption font-semibold text-ink-2 no-underline hover:bg-surface-2"
       >
         <CalendarDays aria-hidden size={13} strokeWidth={2} className="shrink-0" />
         {source.text}
@@ -51,7 +51,7 @@ export function SourceChip({ source }: { source: Source }) {
 
   if (source.kind === "calculation") {
     return (
-      <span className="inline-flex max-w-full items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[11px] py-[7px] text-meta text-ink-3">
+      <span className="inline-flex max-w-full items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[11px] py-[7px] text-caption text-ink-3">
         <Calculator aria-hidden size={13} strokeWidth={2} className="shrink-0" />
         {source.text}
       </span>
@@ -67,7 +67,7 @@ export function SourceChip({ source }: { source: Source }) {
 
   if (!openable) {
     return (
-      <span className="inline-flex items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[11px] py-[7px] text-meta text-ink-3">
+      <span className="inline-flex items-center gap-[var(--s-1)] rounded-[var(--r-sm)] border border-hairline px-[11px] py-[7px] text-caption text-ink-3">
         {source.text}
       </span>
     );
@@ -79,7 +79,7 @@ export function SourceChip({ source }: { source: Source }) {
         ref={chip}
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex max-w-full items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-meta font-medium text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+        className="inline-flex max-w-full items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-accent-line bg-accent-soft px-[11px] py-[7px] text-caption font-semibold text-accent transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
       >
         <span className="truncate">
           {source.kind === "inventory" ? `On file · ${name}` : name}
@@ -118,7 +118,7 @@ function RuleChip({ source }: { source: Source }) {
   const body = (
     <>
       <span className="min-w-0">
-        <span className="font-medium text-ink">{title}</span>
+        <span className="font-semibold text-ink">{title}</span>
         {said ? <span className="text-ink-3"> · {said}</span> : null}
       </span>
       {href ? (
@@ -131,7 +131,7 @@ function RuleChip({ source }: { source: Source }) {
   );
 
   const shape =
-    "inline-flex max-w-full items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-hairline bg-surface px-[11px] py-[7px] text-left text-meta";
+    "inline-flex max-w-full items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-hairline bg-surface px-[11px] py-[7px] text-left text-caption";
 
   return href ? (
     <a
@@ -202,8 +202,8 @@ function SourcePanel({
     >
       <div className="flex items-center gap-[var(--s-3)] border-b border-hairline px-[var(--s-4)] py-[var(--s-3)]">
         <div className="min-w-0">
-          <p className="truncate text-body font-medium">{name}</p>
-          <p className="num text-meta text-ink-3">Page {source.page}</p>
+          <p className="truncate text-body font-semibold">{name}</p>
+          <p className="num text-caption text-ink-3">Page {source.page}</p>
         </div>
         <button
           type="button"
@@ -278,8 +278,8 @@ function PanelMessage({
     <div className="flex items-start gap-[var(--s-3)] rounded-[var(--r-sm)] border border-hairline bg-surface p-[var(--s-4)]">
       <Icon aria-hidden size={18} strokeWidth={1.9} className="text-warn" />
       <div>
-        <p className="text-body font-medium">{title}</p>
-        <p className="mt-[var(--s-1)] text-meta text-ink-2">{detail}</p>
+        <p className="text-body font-semibold">{title}</p>
+        <p className="mt-[var(--s-1)] text-caption text-ink-2">{detail}</p>
       </div>
     </div>
   );

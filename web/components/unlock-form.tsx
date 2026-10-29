@@ -53,16 +53,16 @@ export function UnlockForm({ configured }: { configured: boolean }) {
   return (
     <main className="grid min-h-dvh place-items-center px-[var(--gutter)] py-[var(--s-7)]">
       <div className="w-full max-w-[26rem]">
-        <Wordmark />
+        <Wordmark className="-ml-[var(--s-2)]" />
 
-        <h1 className="mt-[var(--s-5)] font-display text-screen lg:text-display">
+        <h1 className="mt-[var(--s-5)] font-display text-heading lg:text-page">
           {configured ? "Unlock this computer" : "Choose a passphrase"}
         </h1>
 
         <p className="mt-[var(--s-3)] text-body text-ink-2">
           {configured
             ? "Your documents, the dates that come off them, and the answers drawn from them are behind this."
-            : "It is set once, on this computer. There is no account and no email address. Pick something you will still have in six months — a short sentence works better than a short word."}
+            : "It is set once, on this computer. There is no account and no email address. Pick something you will still have in six months. A short sentence works better than a short word."}
         </p>
 
         {/* `noValidate`: the browser's own constraint bubble is an unstyled tooltip in a font
@@ -90,7 +90,7 @@ export function UnlockForm({ configured }: { configured: boolean }) {
               disabled={busy}
               aria-invalid={error !== null}
               aria-describedby={error ? "passphrase-error" : undefined}
-              className="min-w-0 flex-1 bg-transparent px-[var(--s-3)] py-[var(--s-3)] text-lead outline-none"
+              className="min-w-0 flex-1 bg-transparent px-[var(--s-3)] py-[var(--s-3)] text-body outline-none"
             />
             <button
               type="button"
@@ -108,7 +108,7 @@ export function UnlockForm({ configured }: { configured: boolean }) {
           <p
             id="passphrase-error"
             role="alert"
-            className="mt-[var(--s-2)] min-h-[1.4rem] text-meta text-crit"
+            className="mt-[var(--s-2)] min-h-[1.4rem] text-caption text-crit"
           >
             {error}
           </p>
@@ -122,8 +122,8 @@ export function UnlockForm({ configured }: { configured: boolean }) {
           </button>
         </form>
 
-        <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-meta text-ink-3">
-          This locks the screen. It does not encrypt anything — your documents stay in the folder
+        <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-caption text-ink-3">
+          This locks the screen. It does not encrypt anything: your documents stay in the folder
           you put them in, and anyone who can use this computer can still open them there.
         </p>
       </div>

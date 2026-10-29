@@ -51,6 +51,13 @@
     text-wrap: pretty;
   }
 
+  /* Two weights, and bold is the second of them. A browser's bold is 700, a third weight. */
+  b,
+  strong,
+  th {
+    font-weight: 600;
+  }
+
   /* ------------------------------------------------------------------------------- focus
      One ring, everywhere, for keyboard only. `:focus-visible` rather than `:focus` so a mouse
      click on a card does not leave a ring behind — but every keyboard path gets one, and the
@@ -163,22 +170,68 @@
    ============================================================================================= */
 
 @layer components {
-  /* A measured value: a premium, a policy number, a confidence, a page reference. */
+  /* A measured value: a premium, a policy number, a time, a page reference. Same face as the
+     sentence around it, with the digits held to one width so a column of them lines up. */
   .num {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-    font-feature-settings: "zero" 1;
-    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums lining-nums;
   }
 
-  /* The label above a group of rows: NEEDS YOU NOW, COMING UP, EXTRACTED FIELDS. */
+  /* The name of a group of rows: Needs you now, Coming up, Extracted fields. Sentence case, so it
+     reads as words rather than as a stamp. */
   .group-label {
-    font-size: var(--fs-label);
-    line-height: var(--lh-flat);
-    letter-spacing: var(--tr-label);
-    text-transform: uppercase;
+    font-size: var(--fs-caption);
+    line-height: var(--lh-caption);
     font-weight: 600;
-    color: var(--ink-3);
+    color: var(--ink-2);
+  }
+
+  /* A section's rows, as one card: hairlines between the rows, never a box around each one. A box
+     per row with a coloured stripe down its left edge was how this interface first drew a list,
+     and it is the most recognisable thing a generated interface does. The rows inside carry their
+     own padding and no border, background or radius; the first and last take the card's corners
+     so a hover fill does not square them off. */
+  .row-list {
+    border: 1px solid var(--hairline);
+    border-radius: var(--r);
+    background: var(--surface);
+  }
+
+  .row-list > * + * {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .row-list > :first-child {
+    border-top-left-radius: calc(var(--r) - 1px);
+    border-top-right-radius: calc(var(--r) - 1px);
+  }
+
+  .row-list > :last-child {
+    border-bottom-left-radius: calc(var(--r) - 1px);
+    border-bottom-right-radius: calc(var(--r) - 1px);
+  }
+
+  /* A status said in a word, tinted: Overdue, Needs your eyes, Agreed. The word carries the
+     meaning; the tint only lets an eye find it. */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--r-sm);
+    padding: 0 var(--s-2);
+    font-size: var(--fs-caption);
+    line-height: var(--lh-caption);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* The logo's backing: the paper it was drawn for, shown only where the page is not that paper
+     (dark mode, `--logo-plate`). The padding is there in both themes so the header does not move
+     when the theme changes. */
+  .logo-plate {
+    display: inline-flex;
+    flex-shrink: 0;
+    border-radius: var(--r-sm);
+    padding: var(--s-1) var(--s-2);
+    background: var(--logo-plate);
   }
 
   /* The actions on a compact row: there, but quiet until the row is hovered or tabbed into.

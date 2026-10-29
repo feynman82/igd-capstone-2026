@@ -60,20 +60,20 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <div className="ml-auto flex items-center gap-[var(--s-4)]">
             {/* Said once, in the chrome, because it is the claim the whole product rests on and
                 it is true on every surface. It is not a status that can change. */}
-            {/* One item, two facts. The dot and the phrase are the privacy claim the whole
-                product rests on; the name is who Parrot thinks you are, and putting them in
-                one line is what stops the right-hand side becoming a row of five things.
+            {/* One item, two facts. The phrase is the privacy claim the whole product rests
+                on; the name is who Parrot thinks you are, and putting them in one line is what
+                stops the right-hand side becoming a row of five things. No coloured dot before
+                it: the words make the claim, and a dot only looked like a status light.
                 It is a link because the place to correct it is one tap from seeing it wrong. */}
             <Link
               href="/household"
-              className="hidden items-center gap-[var(--s-2)] text-meta text-ink-3 no-underline transition-colors hover:text-ink md:flex"
+              className="hidden items-center gap-[var(--s-2)] text-caption text-ink-3 no-underline transition-colors hover:text-ink md:flex"
             >
-              <span aria-hidden className="size-[7px] rounded-[var(--r-pill)] bg-accent" />
               {owner ? (
-                <>
-                  <span className="font-medium text-ink-2">{owner.display_name}</span>
-                  <span aria-hidden>—</span> on this computer
-                </>
+                <span>
+                  <span className="font-semibold text-ink-2">{owner.display_name}</span>, on this
+                  computer
+                </span>
               ) : (
                 "On this computer"
               )}
@@ -85,9 +85,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
+      {/* A surface with a column of its own beside the content (Ask's history) marks itself
+          `data-wide` and gets the shell's width, so the content keeps the reading column's. */}
       <main
         id="surface"
-        className="mx-auto w-full max-w-[var(--column)] flex-1 px-[var(--gutter)] pt-[var(--s-6)] pb-[var(--s-7)]"
+        className="mx-auto w-full max-w-[var(--column)] flex-1 px-[var(--gutter)] pt-[var(--s-6)] pb-[var(--s-7)] lg:has-[[data-wide]]:max-w-[var(--shell)]"
       >
         {children}
       </main>

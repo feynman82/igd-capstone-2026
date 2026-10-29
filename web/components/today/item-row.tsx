@@ -13,22 +13,27 @@ import type { ObligationChanged, TodayItem } from "@/lib/api";
  * arranges itself around that number. Actions are visible without hovering, because this is the
  * card somebody is going to act on.
  *
- * **compact** — everything after it. Stripe, title, sentence, chips, countdown on the right; a
- * normal day fits one screen. The actions are there but quiet until the row is hovered or
- * tabbed into, so eight rows do not read as sixteen buttons.
+ * **compact** — everything after it. Title with its status word, sentence, chips, countdown on
+ * the right; a normal day fits one screen. The actions are there but quiet until the row is
+ * hovered or tabbed into, so eight rows do not read as sixteen buttons.
  *
- * Urgency is encoded three ways in the hero and twice in a compact row — stripe, word, number —
- * so the list is scannable without being read and is still complete without colour. A stripe
- * alone would put the whole meaning in a hue.
- *
- * The stripe is 3px. A thicker coloured border on a list item is the decorative version of this
- * and belongs to a different kind of product.
+ * Both are rows of the section's one card (`.row-list`), not cards of their own. Urgency is said
+ * twice — a status word beside the title, and the countdown — so the list is scannable without
+ * being read and is complete without colour. It used to be said three times, the third being a
+ * coloured stripe down each row's left edge; the word does that job and reads as a word.
  */
 
 const TONE = {
   overdue: "crit",
   alert: "warn",
-  reminder: "accent",
+  reminder: "ink-2",
+} as const;
+
+/** The status word's tint. A reminder is neutral: it is coming, not wrong. */
+const STATUS = {
+  overdue: "bg-crit-soft text-crit",
+  alert: "bg-warn-soft text-warn",
+  reminder: "bg-surface-2 text-ink-2",
 } as const;
 
 const WORD = {
@@ -89,15 +94,15 @@ export function ItemRow({
 
   if (closed !== null) {
     return (
-      <li className="rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)] text-meta text-ink-2">
-        <span className="font-medium text-ink">{sentence(item.label)}</span>{" "}
+      <li className="px-[var(--s-4)] py-[var(--s-3)] text-caption text-ink-2">
+        <span className="font-semibold text-ink">{sentence(item.label)}</span>{" "}
         {closed.state === "snoozed"
           ? closed.speaksAgain
-            ? `snoozed — back on ${longDate(closed.speaksAgain)}.`
+            ? `snoozed until ${longDate(closed.speaksAgain)}.`
             : "snoozed. Parrot will not raise it again before it is due."
           : closed.state === "done"
             ? "marked done."
-            : "dismissed — Parrot will not raise it again."}
+            : "dismissed. Parrot will not raise it again."}
       </li>
     );
   }
@@ -119,7 +124,7 @@ export function ItemRow({
               ? "This reminder should not have existed"
               : "Quiet until it gets more urgent"
           }
-          className="rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
+          className="rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink"
         >
           {item.kind === "overdue" ? "Not mine" : "Snooze"}
         </button>
@@ -128,8 +133,8 @@ export function ItemRow({
           onClick={() => act("done")}
           className={
             variant === "hero"
-              ? "rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[10px] font-display text-meta font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
-              : "rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              ? "rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[10px] font-display text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              : "rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
           }
         >
           {variant === "hero" ? "Mark done" : "Done"}
@@ -138,7 +143,7 @@ export function ItemRow({
     );
 
   const problem = failed ? (
-    <p role="alert" className="mt-[var(--s-2)] text-meta text-crit">
+    <p role="alert" className="mt-[var(--s-2)] text-caption text-crit">
       {failed}
     </p>
   ) : null;
@@ -148,10 +153,7 @@ export function ItemRow({
   if (variant === "hero") {
     const { value, unit, word } = figure(item);
     return (
-      <li
-        className="rounded-[var(--r)] border border-hairline bg-surface shadow-lift-1"
-        style={{ ...enter, borderLeft: `3px solid var(--${tone})` }}
-      >
+      <li style={enter}>
         <div className="flex flex-col gap-[var(--s-5)] p-[var(--s-5)] sm:flex-row sm:items-start">
           {/* The countdown, as the figure. Not a badge and not a decoration — it is the
               sentence "this is 115 days late" said in the fewest possible glyphs, and it is
@@ -163,24 +165,26 @@ export function ItemRow({
               color: item.kind === "reminder" ? "var(--ink)" : `var(--${tone})`,
             }}
           >
-            <p className={`num font-medium ${word ? "text-screen" : "text-figure"}`}>{value}</p>
+            <p className={`num ${word ? "text-heading" : "text-figure"}`}>{value}</p>
             <p className="group-label mt-[var(--s-1)]" style={{ color: "inherit" }}>
               {unit}
             </p>
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className="font-display text-screen font-semibold">{sentence(item.label)}</h3>
+            <div className="flex flex-wrap items-center gap-x-[var(--s-3)] gap-y-[var(--s-1)]">
+              <h3 className="font-display text-heading font-semibold">{sentence(item.label)}</h3>
+              <span className={`status ${STATUS[item.kind]}`}>{WORD[item.kind]}</span>
+            </div>
             <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-body text-ink-2">
               {detail(item)}
             </p>
 
             <div className="mt-[var(--s-4)] flex flex-wrap items-center gap-[var(--s-2)]">
-              <span className="sr-only">{WORD[item.kind]}.</span>
               {item.sources.map((source, at) => (
                 <SourceChip key={`${source.text}-${at}`} source={source} />
               ))}
-              <span className="text-meta text-ink-3">{item.pack_id.replace(/_/g, " ")}</span>
+              <span className="text-caption text-ink-3">{item.pack_id.replace(/_/g, " ")}</span>
               {actions ? (
                 <span className="ml-auto flex items-center gap-[var(--s-2)]">{actions}</span>
               ) : null}
@@ -197,27 +201,23 @@ export function ItemRow({
 
   return (
     <li
-      className="group flex items-center gap-[var(--s-4)] rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)]"
+      className="group flex items-center gap-[var(--s-4)] px-[var(--s-4)] py-[var(--s-3)]"
       style={enter}
     >
-      <span
-        aria-hidden
-        className="w-[3px] shrink-0 self-stretch rounded-[2px]"
-        style={{ background: `var(--${tone})` }}
-      />
-
       <div className="min-w-0 flex-1">
         {/* An obligation has a label and a sentence about it; an alert has a metric name and a
             sentence that *starts* with it — "days uncovered is 15, over the 0 limit". Giving
             the alert a heading too would print its subject twice and leave the body reading as
             a fragment, so the alert's sentence is the heading and there is no second line. */}
-        <h3 className="font-display text-title font-semibold">
-          {sentence(item.kind === "alert" ? item.line : item.label)}
-        </h3>
+        <div className="flex flex-wrap items-center gap-x-[var(--s-2)] gap-y-[var(--s-1)]">
+          <h3 className="font-display text-body font-semibold">
+            {sentence(item.kind === "alert" ? item.line : item.label)}
+          </h3>
+          <span className={`status ${STATUS[item.kind]}`}>{WORD[item.kind]}</span>
+        </div>
         {item.kind === "alert" ? null : (
-          <p className="mt-[2px] text-meta text-ink-2">{detail(item)}</p>
+          <p className="mt-[2px] text-caption text-ink-2">{detail(item)}</p>
         )}
-        <span className="sr-only">{WORD[item.kind]}.</span>
         {problem}
       </div>
 
@@ -230,7 +230,7 @@ export function ItemRow({
       {actions ? <span className="row-actions flex shrink-0 items-center">{actions}</span> : null}
 
       <span
-        className="num w-[5.5rem] shrink-0 text-right text-meta font-medium"
+        className="num w-[5.5rem] shrink-0 text-right text-caption font-semibold"
         style={{ color: item.kind === "reminder" ? "var(--ink-2)" : `var(--${tone})` }}
       >
         {countdown(item)}
@@ -286,7 +286,7 @@ function countdown(item: TodayItem): string {
  */
 function figure(item: TodayItem): { value: string; unit: string; word: boolean } {
   if (item.kind === "alert") return { value: "now", unit: "needs your eyes", word: true };
-  if (item.days_left === null) return { value: "—", unit: "no date", word: true };
+  if (item.days_left === null) return { value: "Undated", unit: "no due date", word: true };
   const days = Math.abs(item.days_left);
   if (item.days_left < 0) {
     return { value: String(days), unit: days === 1 ? "day overdue" : "days overdue", word: false };
