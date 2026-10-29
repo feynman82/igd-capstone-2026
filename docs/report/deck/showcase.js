@@ -130,13 +130,50 @@ function bigStat(slide, value, label, x, y, w, o = {}) {
     color: o.labelColor || C.text2 });
 }
 
+// Speaker notes, one per slide in order: about a minute and a half each.
+const NOTES = [
+  // 1 · Title
+  "Good morning. A question almost nobody in this room can answer quickly: where, exactly, is your car insurance policy right now? Not roughly. Exactly. An email, a drawer, a photo somewhere on a phone.\n\nWe are Group 1, and this is PARROT. You photograph a document once, it files itself, and when you ask it something it answers with the page the answer came from. And the part we care about most: when it does not know, it says so. It runs on the family's own laptop, so nothing leaves the house.\n\nIn the next fifteen slides: the problem, the product, the platform underneath it, the evidence that it works, and what still has to be true before anyone pays for it.",
+  // 2 · Problem
+  "Meet three people from our proposal. Sarah is a working mother, which makes her the household calendar: school fees, renewals, appointments, spread over six inboxes and a drawer.\n\nMarcus is the sandwich generation. Between himself, his wife, his son and his two parents he tracks eleven policies, and the one question that matters, are we covered, costs him an evening.\n\nPriya saves tax through SRS, once a year, in a narrow window. Miss it and nothing happens: no letter, no alarm. The relief just disappears.\n\nWhat they share: none of them is missing documents. They are missing a way to ask the pile a question and trust the answer. And a chatbot that confidently invents a policy date is worse than none, because now you have stopped checking.",
+  // 3 · Solution
+  "Here is the whole product in three moves.\n\nOne, capture. You photograph a document and send it to a Telegram chat, or drop it in a folder. That is all the filing you ever do. Those are real replies from the running app: filed, filed, filed. Docling reads the page and the model extracts typed fields: dates, amounts, policy numbers.\n\nTwo, ask. Plain English. Every sentence in the answer carries its own source, the document and the page, and one click opens the original. You can see the chip: b1-0001.pdf, page 1.\n\nThree, Today. You do not even have to ask. It opens on what needs you now.\n\nAnd the line to remember: when the documents do not say, PARROT says so. It does not guess.",
+  // 4 · Four screens
+  "Four screens, and the design principle is that it speaks first.\n\nToday is the home screen: a policy that has expired, something due, and the documents it could not read and wants you to check. Ask is the conversation, where every answer shows its page. Vault is honesty about extraction: what it read off each document, with a confidence, and what it could not, in plain words rather than hidden. Packs is where a family chooses what PARROT knows about. Switch the insurance pack off and its advice goes quiet; the documents stay searchable.\n\nThe interface is Next.js 15 with Tailwind and shadcn, behind a local passphrase, and it never talks to anything outside the laptop.",
+  // 5 · Anatomy of an answer
+  "Let us zoom into one real answer: when does the car insurance renew?\n\nNumber one: every sentence ends in a citation chip, a document and a page. Behind that is a hard rule in the database: a fact row cannot be written without document_id and page; both are NOT NULL.\n\nNumber two: the footer says nothing left this computer. Generation, embedding, reranking, even the model that grades us, all run locally.\n\nNumber three: it knows what it is not. It is not a licensed financial adviser, and it says so.\n\nNumber four, and the title of this slide: the date 11 April 2027 is read from a typed column in Postgres. The model writes the sentence around the number. It never produces the number itself.",
+  // 6 · Architecture
+  "Underneath, five layers, one laptop and one database.\n\nThe launcher starts the FastAPI engine, the folder watcher and the Celery worker, and the Next.js screens talk to the engine. Captured documents queue through Redis to the Docling pipeline; a page it is not confident about goes to quarantine, where the vision model reads the image itself on a second pass.\n\nQuestions run through a LangGraph graph: scoping to the right person, hybrid retrieval fused with reciprocal rank fusion, a cross-encoder reranker, then an evidence gate that decides whether the answer is supported at all.\n\nEvery model is open and local: SEA-LION 4B vision-language from AI Singapore for generation, EmbeddingGemma for embeddings, bge for reranking. Everything lands in one PostgreSQL with pgvector. Tested on a 32 GB laptop with an RTX 4060.",
+  // 7 · Platform
+  "Why call it a platform and not an app? Because we built the hard part once.\n\nThe engine in the middle files, finds, checks and cites. Everything else plugs in from two directions. Capability modules, Reminder, Alert and Advice, read the typed facts the engine has filed; none of them touches the screen. Domain packs teach the engine a field: Tax and Reliefs, and Insurance, are built. A pack is one YAML file, so a new domain means writing, not rebuilding. Nine more are specified, and a test checks them.\n\nOne rule is enforced by the type system rather than by convention: never_acts is declared Literal True. A pack that tries to pay, book or file will not even load.",
+  // 8 · Pack at work
+  "A file of know-how sounds abstract, so here is one at work. Marcus types one sentence: review my insurance coverage and tell me what is lacking.\n\nThe insurance pack reads his income off his payslip and his cover off his policies, and applies the rule of thumb MoneySense publishes: life cover around nine times annual income, critical illness around four. Then ordinary code does the arithmetic. He earns 112,800 a year; nine times that is just over a million; he holds 300,000. He is short about 715,000 on life cover and about 251,000 on critical illness.\n\nEvery number on that card links to its page. It names the gap and the kind of plan that closes it, never a product, and Marcus's consent to advice is recorded.",
+  // 9 · Corpus
+  "You cannot test an assistant like this on real families' payslips, so we built one family. The Lim household in Tampines: Marcus, his wife Rachel, their son Lucas, and Marcus's parents. Three surnames, one household, which is exactly what makes parent relief and elderly hospital cover interesting.\n\nThe rule is register first: the ground-truth spreadsheet is filled in before any document is generated, so every question can be graded by code, not by opinion. That ID card is one of those synthetic specimens.\n\nRun 3's vault holds 93 documents across 16 types, 39 of them unregistered statements kept as realistic noise. Against it: 118 golden questions, 93 answerable and 25 hard negatives, plus 15 adversarial traps: prompt injection, requests to act, stale and absent records.",
+  // 10 · Thesis
+  "This is the slide that changed how we evaluate. A confident, well-cited, wrong answer about an insurance policy is worse than no answer. So the first number we report is the unsupported claim.\n\nIn Run 3 there were 25 in 118 answers. Twelve were unanswerable questions answered anyway, from a page that was relevant but silent on the point. Eight were wrong values. Five were a false 'not on file' when it was on file. And zero forbidden strings leaked on the adversarial set.\n\nOn the right is what a good 'no' looks like: no document supports an answer, here is the closest one, and nothing was invented to fill the gap. With the fixes Run 3 found, on 28 October the count is 21.",
+  // 11 · Scorecard
+  "So the report leads with five numbers, one per aim, each scored by code against the register.\n\nRight and cited: 77 of 93. Unsupported claims: 21 of 118. Over-caution, meaning it held back although it had read the answering page: 4 of 93. Extraction F1: 0.961. And the absolute line: zero leaks on the 15 adversarial questions.\n\nThe bars compare Run 3 on 19 October with main on 28 October: same vault, same questions, and every headline moved the right way. One honest caveat: this five-number headline is proposed and awaiting our supervisor's sign-off. The nine original metrics remain as diagnostics.",
+  // 12 · Retrieval
+  "The biggest single lesson came from retrieval.\n\nOn six documents, naive dense search looked fine. Grow the corpus to 26 with no code change, and recall fell 0.074 and precision 0.101. A score on a small corpus does not predict one on a realistic corpus.\n\nDense search cannot reliably find a policy by its printed number, so full-text search joined it, fused by reciprocal rank fusion, and a cross-encoder keeps the best six of forty passages. Faithfulness jumped from 0.810 to 0.967, the largest movement in the project. Once the right page was reliably in the window, the model stopped borrowing from a neighbouring document.\n\nBy Run 3, 19 of the 21 misses had the right page in hand: retrieval is no longer where answers are lost.",
+  // 13 · Governance
+  "PARROT advises. It never pays, books or files. Ask it to renew a policy and pay the premium and it explains what the documents say and declines to act, because that is enforced in the code and not left to the model's judgement.\n\nAround that sits a full governance set. For PDPA: a data inventory, a consent and redaction protocol, retention and erasure, and a breach procedure. An ISO/IEC 22989 to 5338 map that ties every lifecycle stage to a file in the repository. A mapping to IMDA's nine generative-AI governance dimensions, with an autonomy statement. And a model card and terms of use that say plainly what it is for, where it fails and who it is not for.",
+  // 14 · Roadmap
+  "Commercially, PARROT is sold the way it is built: packs are the unit of sale. The core is common; the domain packs are what a family buys, and modules multiply what each pack can do.\n\nNow: the prototype, two packs and two modules. Next: a household product with catalogue packs bought one at a time, once we have a measured minimum hardware spec. Then: a professional seat, where an insurance agent reviews a client's cover with consent, which first needs a position on the Financial Advisers Act. Later: a marketplace of packs written by domain experts.\n\nWe claim no price or market size. Willingness to pay is a hypothesis, ordered by how countable the loss is: a missed SRS relief, a lapsed motor policy.",
+  // 15 · Close
+  "Three things come next. First, prove it on real paper: close the synthetic-to-real gap with the holdout set, 14 of a planned 40 real redacted documents so far. Second, turn on the label check from ADR 0021, which checks each stated value against the printed label beside it: two fewer unsupported claims and no right answer lost. Third, measure the minimum machine: fit the full workflow on an 8 GB GPU and publish the spec.\n\nIf you remember one line, make it this one: when the documents don't say, PARROT says so.\n\nThank you. We are happy to take your questions.",
+];
+
 const sections = new Set();
+let slideCount = 0;
 function newSlide(masterName, sectionTitle) {
   if (!sections.has(sectionTitle)) {
     pres.addSection({ title: sectionTitle });
     sections.add(sectionTitle);
   }
-  return pres.addSlide({ masterName, sectionTitle });
+  const slide = pres.addSlide({ masterName, sectionTitle });
+  slide.addNotes(NOTES[slideCount++]);
+  return slide;
 }
 function heading(slide, kicker, title) {
   slide.addText(kicker.toUpperCase(), { placeholder: "kicker" });
@@ -224,7 +261,6 @@ async function build() {
     }
     text(s, "SMU Industry Graduate Diploma · Integrated Learning Project · Sep to Nov 2026",
       { x: 0.8, y: 6.6, w: 8, h: 0.3, fontSize: 11, color: C.accent5 });
-    s.addNotes("Where, exactly, is your car insurance policy right now? PARROT: photograph a document once, it files itself, and every answer comes with the page it came from. When it does not know, it says so. Nothing leaves the house.");
   }
 
   // 2 · Problem
@@ -257,7 +293,6 @@ async function build() {
       shape: pres.shapes.ROUNDED_RECTANGLE, rectRadius: 0.16, fill: { color: C.text1 },
       valign: "middle", isTextBox: true, objectName: "banner" });
     source(s, "corpus/canon.md · proposal §2");
-    s.addNotes("Three personas from the proposal. None of them is missing the documents; they are missing a trustworthy way to ask them a question.");
   }
 
   // 3 · Solution
@@ -362,7 +397,6 @@ async function build() {
       }
     }
     source(s, "gitdiagram · README stack table", true);
-    s.addNotes("Launcher starts the engine, watcher and worker. Captured documents queue through Redis to the Docling pipeline; low-confidence pages go to quarantine. Questions run through the LangGraph graph: scoping, hybrid retrieval, reranker, then the evidence gate. Everything lands in one Postgres, and every model is open and local: SEA-LION 4B VL from AI Singapore for generation and vision, EmbeddingGemma for embeddings, bge for reranking. Tested on a 32 GB laptop with an RTX 4060.");
   }
 
   // 7 · Platform: two axes
