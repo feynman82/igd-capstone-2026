@@ -13,10 +13,12 @@ import {
 /**
  * What the owner has agreed to, per pack that advises, and the way back out (ADR 0016).
  *
- * Agreeing happens in the conversation, at the moment advice is first asked for, because that is
- * when the words mean something. Withdrawing happens here, where a person looks for "what have I
- * signed up to". A withdrawal is appended, never an edit, so the record still shows the yes that
- * came before it.
+ * Agreeing usually happens in the conversation, at the moment advice is first asked for, because
+ * that is when the words mean something. It can also happen here, under the wording itself, so a
+ * person who looks for "turn on tax advice" finds it; the yes is to the version on screen, as in
+ * the conversation, and a wording that moved meanwhile is refused (409) and shown again.
+ * Withdrawing happens here, where a person looks for "what have I signed up to". Either answer is
+ * appended, never an edit, so the record still shows what came before it.
  *
  * Every status has a word and an icon, not just a colour.
  */
@@ -55,13 +57,13 @@ export function AdviceConsentSection() {
     void fetchConsents();
   }, []);
 
-  async function withdraw(item: AdviceConsent) {
+  async function answer(item: AdviceConsent, action: "granted" | "withdrawn") {
     setBusy(item.pack_id);
     setFailed(null);
     const outcome = await setAdviceConsent({
       pack_id: item.pack_id,
       version: item.version,
-      action: "withdrawn",
+      action,
     });
     setBusy(null);
     if (!outcome.ok) {
@@ -139,8 +141,8 @@ export function AdviceConsentSection() {
                       {item.status === "granted"
                         ? "Parrot can advise when you ask."
                         : item.status === "outdated"
-                          ? "The wording changed since you agreed. Parrot will ask again the next time you ask for advice."
-                          : "Advice needs your agreement the first time you ask."}
+                          ? "The wording changed since you agreed. Read it to agree again, or Parrot will ask the next time you ask for advice."
+                          : "Advice needs your agreement. Read the wording to agree here, or agree the first time you ask."}
                     </p>
                   </div>
 
@@ -148,7 +150,7 @@ export function AdviceConsentSection() {
                     <button
                       type="button"
                       disabled={busy !== null}
-                      onClick={() => withdraw(item)}
+                      onClick={() => answer(item, "withdrawn")}
                       className="shrink-0 rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
                     >
                       {busy === item.pack_id ? "Withdrawing…" : "Withdraw"}
@@ -167,6 +169,18 @@ export function AdviceConsentSection() {
                   <p className="mt-[var(--s-2)] max-w-[var(--measure)] whitespace-pre-line text-caption text-ink-2">
                     {item.disclaimer}
                   </p>
+                  {/* Under the words, so the yes is to the wording this version shows. */}
+                  {item.status !== "granted" ? (
+                    <button
+                      type="button"
+                      disabled={busy !== null}
+                      onClick={() => answer(item, "granted")}
+                      className="mt-[var(--s-3)] rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
+                    >
+                      {busy === item.pack_id ? "Saving…" : "I understand and agree"}
+                      <span className="sr-only"> to {item.display_name} advice</span>
+                    </button>
+                  ) : null}
                 </details>
 
                 {failed?.pack === item.pack_id ? (

@@ -270,6 +270,13 @@ def _review_asked(
     return None
 
 
+def _names_pack(question: str, installed: InstalledPack) -> bool:
+    """Whether a question names a pack by a word of its display name: "tax" for Tax and Reliefs.
+    Whole words only, so "taxes" does not name it."""
+    words = re.findall(r"[a-z]+", installed.manifest.display_name.lower())
+    return any(mentions(question, word) for word in words if word not in {"and", "the", "of"})
+
+
 ADULT_AGE = 21
 
 
@@ -1234,9 +1241,26 @@ class AnswerGraph:
         """The pack's own decline, signed with its disclaimer, and a question it can answer."""
         asked = categories_asked(question, packs)
         owner = next((p for p in packs if asked and p.id == asked[0].pack_id), None)
+        if owner is None:
+            # No kind of document named, but a question that names one pack ("tax" for Tax and
+            # Reliefs) is that pack's to decline, in its own words and under its own disclaimer.
+            named = [p for p in packs if _names_pack(question, p)]
+            owner = named[0] if len(named) == 1 else None
         if owner is None and len(packs) == 1:
             owner = packs[0]
-        text = owner.manifest.guardrails.advice_decline.strip() if owner else DEFAULT_DECLINE
+        if owner is not None:
+            text = owner.manifest.guardrails.advice_decline.strip()
+        else:
+            text = DEFAULT_DECLINE
+            # The generic decline says Parrot does not advise. With the advice ports wired and a
+            # pack that reviews, it does, so say what it can work out instead.
+            reviews = [a.review for p in packs if (a := p.manifest.advice) and a.review]
+            ports = (self._adviser, self._consents, self._advice_log)
+            if reviews and all(port is not None for port in ports):
+                kinds = " or ".join(
+                    ("an " if r.label[0] in "aeiou" else "a ") + r.label for r in reviews
+                )
+                text = f"I can work out {kinds} from your documents. Ask for one of those."
         # Every ending is signed. With no single owner, the pack that answers questions about kinds
         # of document signs it; failing that, the strictest. Unsigned only with no pack enabled.
         signer = owner or next(

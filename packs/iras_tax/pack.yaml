@@ -45,8 +45,9 @@ guardrails:
     does not file or pay on your behalf; confirm reliefs and amounts on myTax Portal or with IRAS
     before you file.
   advice_decline: >
-    I can explain what your tax documents and IRAS guidance say. For Parrot to calculate your SRS
-    room or an estimated tax saving, turn on tax advice in Household settings.
+    I can explain what your tax documents and IRAS guidance say. Parrot can also calculate your SRS
+    room and an estimated tax saving: ask "How can I reduce my tax?". You agree to tax advice once,
+    when you first ask for it or on the Household page.
 
 # Advice (ADR 0016). Code calculates every figure and chooses the verdict from the household's own
 # cited facts and published values a person approved; the model only explains. Consent is the
@@ -143,6 +144,17 @@ advice:
       - reliefs i am missing
       - what reliefs can i
       - what reliefs should i
+      # Asking for tax advice in general is asking for the check. On 29 October "give me some
+      # tax advice" matched no phrase here, was declined, and the consent card never appeared.
+      - tax advice
+      - advice on tax
+      - advice on my tax
+      - advise me on tax
+      - advise me on my tax
+      - optimise my tax
+      - optimize my tax
+      - minimise my tax
+      - minimize my tax
     shapes: [srs_room, srs_saving]
 
 # How people ask about tax, applied by the core without a model. Nothing here is a field.
