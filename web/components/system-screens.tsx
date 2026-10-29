@@ -105,8 +105,8 @@ export function RestartingScreen() {
       <div className="mx-auto w-full max-w-[var(--column)] px-[var(--gutter)] pt-[var(--s-6)] pb-[var(--s-7)]">
         <div className="flex max-w-[35rem] flex-col gap-[var(--s-6)]">
           <div className="flex flex-col gap-[var(--s-2)]">
-            <h1 className="font-display text-display font-semibold">Restarting Parrot</h1>
-            <p className="text-lead text-ink-2">
+            <h1 className="font-display text-page font-semibold">Restarting Parrot</h1>
+            <p className="text-body text-ink-2">
               Your documents stay exactly where they are. This page reconnects by itself, usually
               within a minute.
             </p>
@@ -134,7 +134,7 @@ export function RestartingScreen() {
 
           {phase.slow && !ready ? (
             <div className="rounded-[var(--r)] border border-warn-line bg-warn-soft p-[var(--s-4)]">
-              <p className="text-body font-medium text-ink">Parrot has not come back yet.</p>
+              <p className="text-body font-semibold text-ink">Parrot has not come back yet.</p>
               <p className="mt-[var(--s-1)] text-body text-ink-2">
                 The first start after a restart can take longer while the local model loads. This
                 page keeps checking. If the Parrot window shows an error, that is the reason.
@@ -175,11 +175,11 @@ function Row({
         <span aria-hidden className="skeleton size-[22px] shrink-0 rounded-[var(--r-pill)]" />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="font-display text-body leading-[var(--lh-snug)] font-semibold">{title}</span>
-        <span className="text-meta text-ink-3">{detail}</span>
+        <span className="font-display text-body font-semibold">{title}</span>
+        <span className="text-caption text-ink-3">{detail}</span>
       </div>
       {done ? (
-        <span className="min-w-[var(--s-8)] text-right text-meta font-medium text-ok">{doneLabel}</span>
+        <span className="min-w-[var(--s-8)] text-right text-caption font-semibold text-ok">{doneLabel}</span>
       ) : (
         <span aria-hidden className="skeleton h-[10px] w-14 rounded-[var(--r-sm)]" />
       )}
@@ -215,8 +215,8 @@ export function ShutDownScreen() {
           />
         </svg>
         <div className="flex flex-col gap-[var(--s-2)]">
-          <h1 className="font-display text-display font-semibold">Parrot is off</h1>
-          <p className="text-lead text-ink-2">
+          <h1 className="font-display text-page font-semibold">Parrot is off</h1>
+          <p className="text-body text-ink-2">
             The assistant, its filing and these screens have stopped. Your documents are kept, and
             everything Parrot has already read is still there when it starts again.
           </p>
@@ -225,7 +225,7 @@ export function ShutDownScreen() {
           To start it again, open <span className="num text-ink">START.cmd</span> in the Parrot
           folder.
         </p>
-        <p className="text-meta text-ink-3">You can close this tab.</p>
+        <p className="text-caption text-ink-3">You can close this tab.</p>
       </div>
     </div>
   );

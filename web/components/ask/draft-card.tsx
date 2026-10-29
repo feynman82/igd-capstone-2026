@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarPlus, Check } from "lucide-react";
+import { Check } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { EntryDialog, whenText, type EntryDraft } from "@/components/calendar/entry-dialog";
@@ -61,7 +61,7 @@ export function DraftCard({ draft }: { draft: Omit<DraftEvent, "kind"> }) {
       <p role="status" className="flex flex-wrap items-center gap-[var(--s-2)] text-body text-ok">
         <Check aria-hidden size={16} />
         Added {draft.title} to the calendar.
-        <Link href={`/calendar?d=${draft.starts_on}`} className="font-medium text-brand-strong">
+        <Link href={`/calendar?d=${draft.starts_on}`} className="font-semibold text-brand-strong">
           Open it
         </Link>
       </p>
@@ -72,20 +72,16 @@ export function DraftCard({ draft }: { draft: Omit<DraftEvent, "kind"> }) {
   }
 
   return (
-    <div className="rounded-[var(--r)] border border-brand-line bg-surface p-[var(--s-4)] shadow-lift-1">
-      <p className="flex items-center gap-[var(--s-2)] text-label uppercase text-ink-3">
-        <CalendarPlus aria-hidden size={14} />
-        Draft calendar entry
-      </p>
-      <p className="mt-[var(--s-2)] font-display text-title font-semibold">{draft.title}</p>
+    <div>
+      <p className="font-display text-title font-semibold">{draft.title}</p>
       <p className="mt-[var(--s-1)] text-body text-ink-2">
         {whenText(draft)}
         {draft.person ? ` · ${draft.person}` : " · the whole household"}
         {draft.location ? ` · ${draft.location}` : ""}
       </p>
-      <p className="mt-[var(--s-3)] text-meta text-ink-3">{draft.note}</p>
+      <p className="mt-[var(--s-3)] text-caption text-ink-3">{draft.note}</p>
       {error ? (
-        <p role="alert" className="mt-[var(--s-2)] text-meta text-crit">
+        <p role="alert" className="mt-[var(--s-2)] text-caption text-crit">
           {error}
         </p>
       ) : null}
@@ -94,21 +90,21 @@ export function DraftCard({ draft }: { draft: Omit<DraftEvent, "kind"> }) {
           type="button"
           disabled={state === "saving"}
           onClick={add}
-          className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
+          className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
         >
           {state === "saving" ? "Adding…" : "Add to calendar"}
         </button>
         <button
           type="button"
           onClick={change}
-          className="rounded-[var(--r-sm)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium"
+          className="rounded-[var(--r-sm)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold"
         >
           Change first
         </button>
         <button
           type="button"
           onClick={() => setState("dropped")}
-          className="rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-meta text-ink-2 hover:bg-surface-2"
+          className="rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-caption text-ink-2 hover:bg-surface-2"
         >
           Not now
         </button>

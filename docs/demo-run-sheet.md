@@ -71,12 +71,14 @@ is done and **checked on the presenting machine**, not on the machine it was bui
 **Say.**
 
 > This is where it opens. Not a prompt box — a household is busy and does not know what to
-> ask, so it tells you first. Everything here is in order of urgency: anything overdue, any
-> threshold crossed, any renewal coming up. Most days this screen should be nearly empty, and
-> an empty Today is the system working rather than a blank page.
+> ask, so it tells you first. At the top is the week: today across the band, the six days
+> after it underneath. Under that, in order of urgency: anything overdue, any threshold
+> crossed, any renewal coming up. Most weeks that part should be nearly empty, and an empty
+> one is the system working rather than a blank page.
 
-**Expect** a nearly empty Today in the week of 3 November (see the checklist), and say the last
-sentence above as the point rather than a caveat: nothing is due, and the screen says so.
+**Expect** the week at the top and little or nothing under it in the week of 3 November (see
+the checklist), and say the last sentence above as the point rather than a caveat: nothing is
+due, and the screen says so.
 
 **Watch for.** If the footer reads no documents, the corpus did not load. Go to Vault, confirm
 documents are there, and continue from step 2 — do not stand in front of an empty screen

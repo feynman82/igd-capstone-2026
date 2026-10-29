@@ -98,6 +98,8 @@ docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
   < db/migrations/0003_advice.sql
 docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
   < db/migrations/0004_calendar.sql
+docker compose -f infra/docker-compose.yml exec -T db psql -U parrot -d parrot \
+  < db/migrations/0005_conversations.sql
 
 # All three models are required: generation and the image pass, embedding, reranking.
 ollama pull hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M
@@ -139,6 +141,7 @@ Then open Claude Code in the repository and run **`/orient`**.
 | `db/migrations/0002_household.sql` | Who lives here, what they are called on paper, and which one is you. |
 | `db/migrations/0003_advice.sql` | The values a pack calculates with, the owner's consent, and the record of every advice answer. |
 | `db/migrations/0004_calendar.sql` | The household calendar's own entries. Deadlines stay in `obligations` (ADR 0020). |
+| `db/migrations/0005_conversations.sql` | Ask's past conversations, as the screen drew them. A transcript, never a source. |
 | `packs/README.md` | The domain-pack guide written for a non-technical author. This is the file to send Zee. |
 | `corpus/` | Desmond's lane: the canon template, the register template, and the validator that gates a handover. No document generation. |
 | `docs/GRAPHIFY.md` | The knowledge graph: setup, the merge driver, and what leaves the machine. |
@@ -155,7 +158,7 @@ Then open Claude Code in the repository and run **`/orient`**.
    are on `main`.
 2. **Apply the migrations and confirm them.**
    `psql "$DATABASE_URL" -f db/migrations/0001_init.sql`, then `0002_household.sql`, then
-   `0003_advice.sql`, then `0004_calendar.sql`
+   `0003_advice.sql`, then `0004_calendar.sql`, then `0005_conversations.sql`
 3. **Benchmark the workstation** and paste the table into `eval/results/w1-hardware.md`.
    Every VRAM figure in the proposal is currently a planning estimate.
 

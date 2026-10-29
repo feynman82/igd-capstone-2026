@@ -103,7 +103,7 @@ export function Field({
             <button
               type="submit"
               disabled={busy}
-              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-3)] py-[var(--s-1)] text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
             >
               {busy ? "Saving…" : "Save"}
             </button>
@@ -128,7 +128,7 @@ export function Field({
                 {format(current)}
               </span>
               {showSubject && current.subject ? (
-                <span className="ml-[var(--s-2)] text-meta text-ink-3">{current.subject}</span>
+                <span className="ml-[var(--s-2)] text-caption text-ink-3">{current.subject}</span>
               ) : null}
             </span>
 
@@ -138,7 +138,7 @@ export function Field({
                   type="button"
                   disabled={busy}
                   onClick={() => save(String(current.value ?? ""))}
-                  className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+                  className="rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-1)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
                 >
                   {busy ? "Saving…" : "Looks right"}
                 </button>
@@ -157,12 +157,12 @@ export function Field({
         )}
 
         {error ? (
-          <p role="alert" className="mt-[var(--s-1)] text-meta text-crit">
+          <p role="alert" className="mt-[var(--s-1)] text-caption text-crit">
             {error}
           </p>
         ) : null}
 
-        <p className="mt-[var(--s-1)] flex flex-wrap items-center gap-x-[var(--s-2)] text-meta text-ink-2">
+        <p className="mt-[var(--s-1)] flex flex-wrap items-center gap-x-[var(--s-2)] text-caption text-ink-2">
           <button
             type="button"
             onClick={() => onPage(current.page)}
@@ -192,7 +192,7 @@ function isNumeric(fact: VaultFact): boolean {
 
 /** Money the way a person writes it; everything else as it was extracted. */
 function format(fact: VaultFact): string {
-  if (fact.value === null) return "—";
+  if (fact.value === null) return "Not read";
   if (fact.value_type === "money" && typeof fact.value === "number") {
     return fact.value.toLocaleString("en-SG", { style: "currency", currency: "SGD" });
   }

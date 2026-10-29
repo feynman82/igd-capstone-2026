@@ -134,6 +134,9 @@
   --focus: #b4462a;
   --focus-gap: #fffcf6;
 
+  /* What the logo sits on. Nothing in light: the terracotta mark is 7.8:1 on paper. See below. */
+  --logo-plate: transparent;
+
   /* Elevation. Two levels and no more. Both carry a vertical offset and a soft blur —
      light falls from above in this system, so a symmetric halo is decoration and is not used.
        lift-1  a card at rest, or a row you are hovering
@@ -197,6 +200,11 @@
   --focus: #e8825e;
   --focus-gap: #25211b;
 
+  /* The logo is a raster in light-theme terracotta (about #883820), and on these surfaces it
+     measured 2.0 to 2.3:1, under the 3:1 a graphic needs to be made out. It keeps its colour and
+     sits on the light theme's own paper instead, where it is the same 7.8:1 it is by day. */
+  --logo-plate: #fffcf6;
+
   --lift-1: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 28px -18px rgb(0 0 0 / 0.9);
   --lift-2: 0 2px 6px rgb(0 0 0 / 0.5), 0 28px 56px -26px rgb(0 0 0 / 0.95);
 
@@ -219,44 +227,57 @@
   --r-pill: 999px;
 
   /* -------- type.
-     Two faces and one measurement face, and no serif anywhere.
+     One face: Figtree, self-hosted (`app/fonts/`), at two weights: 400 for reading and 600 for
+     anything that names something (a title, a row, a button, a section). Hierarchy comes from
+     size and weight, never from switching family, and never from a third weight.
 
-       display — Outfit 600, geometric and friendly, and the rule for it is one sentence:
-                 **it names things.** The wordmark, the h1 of a surface, a card's title, a
-                 status label, the text on a button. It is a naming face, not a reading face
-                 — it thins out over a paragraph, which is why it does not get one.
-       sans    — Figtree 400/500. Everything you actually read: prose, an answer, a value, a
-                 meta line, a table cell. Same family feel as Outfit, built for reading, so
-                 the two sit together without looking like two decisions.
-       mono    — JetBrains Mono, unchanged, and only for things that are measured or
-                 identified: a policy number, a confidence score, a page reference, a
-                 countdown, a currency column. Monospace as a costume for "technical" is
-                 banned.
+     This replaced three. The design pack named Outfit for names, Figtree for reading and
+     JetBrains Mono for anything measured; in practice none was loaded, the system font stood in
+     for the first two, and a monospace face appeared in thirty-five places — every time, date,
+     page number and sum. A calendar cell set "9:00 am" in one face and "Swimming lesson" in
+     another, and the screen read as three typefaces arguing. Figures now line up because the
+     face's tabular numerals are switched on (`.num`, and `body` in globals.css), not because
+     they are set in a different font.
 
-     The previous pass set names in Spectral, a serif. It was the one part of the interface
-     that people described rather than used, which is the tell: the type was a subject. Two
-     sans faces, one voice.
+     No uppercase labels either. A group of rows is named in sentence case at caption size and
+     semibold (`.group-label`); small capitals with wide tracking above every section is the
+     template every generated interface ships, and it said nothing the words did not.
 
-     One scale, eight steps, fixed in rem. Fluid type is wrong here — this is a tool used at a
-     consistent distance on a consistent screen, and an h1 that shrinks inside a narrow column
-     looks broken rather than responsive. */
-  --fs-label: 0.6875rem; /* 11px   — uppercase section labels: NEEDS YOU NOW */
-  --fs-meta: 0.8125rem; /* 13px   — provenance, timestamps, table cells */
-  --fs-body: 0.96875rem; /* 15.5px — the default */
-  --fs-lead: 1.09375rem; /* 17.5px — an answer, a card's first line, the day's summary */
-  --fs-title: 1.1875rem; /* 19px   — the title of a compact row or a document */
-  --fs-screen: 1.5rem; /* 24px   — a hero card's headline */
-  --fs-display: 1.75rem; /* 28px   — the name of the surface you are on */
-  --fs-figure: 2.125rem; /* 34px   — a figure worth reading across the room: the countdown */
+     One scale, six roles, one formula: every size is 16px x 1.2^n, rounded to a whole pixel.
+     A minor third: each role is a fifth larger than the one below it, so every step up reads
+     as the same step. It replaced nine sizes picked one at a time (12, 13, 14.5, 15.5, 17.5,
+     19, 24, 28, 34) whose neighbours were sometimes a single pixel apart, too close to say two
+     different things. A role that needs to stand out from its neighbour gets weight or colour,
+     not a size between two of these.
 
-  --lh-tight: 1.15; /* display sizes */
-  --lh-snug: 1.3; /* titles, leads */
-  --lh-body: 1.55; /* prose */
-  --lh-flat: 1.2; /* labels, buttons, single-line rows */
+       role     n    16 x 1.2^n   size   line   used for
+       caption  -1   13.33        13px   20px   provenance, timestamps, chips, cells, section names
+       body      0   16.00        16px   24px   prose, answers, row titles, buttons, tabs
+       title    +1   19.20        19px   28px   a card's title, a question in Ask, the month
+       heading  +2   23.04        23px   28px   the urgent card, the Today band
+       page     +3   27.65        28px   36px   the name of the surface you are on
+       figure   +4   33.18        33px   40px   the countdown, and nothing else
 
-  --tr-label: 0.08em; /* the only positive tracking in the system */
-  --tr-tight: -0.005em; /* body: Figtree needs far less pulling in than Archivo did */
-  --tr-display: -0.02em; /* Outfit at 19px and above */
+     Line heights are whole multiples of 4px, the spacing scale's base, so a line of text and a
+     gap between blocks land on the same grid. Fixed in rem rather than fluid: this is a tool
+     used at a consistent distance, and an h1 that shrinks inside a narrow column looks broken
+     rather than responsive. The `/tokens` page renders this table back. */
+  --fs-caption: 0.8125rem; /* 13px */
+  --fs-body: 1rem; /* 16px */
+  --fs-title: 1.1875rem; /* 19px */
+  --fs-heading: 1.4375rem; /* 23px */
+  --fs-page: 1.75rem; /* 28px */
+  --fs-figure: 2.0625rem; /* 33px */
+
+  --lh-caption: 1.25rem; /* 20px */
+  --lh-body: 1.5rem; /* 24px */
+  --lh-title: 1.75rem; /* 28px */
+  --lh-heading: 1.75rem; /* 28px */
+  --lh-page: 2.25rem; /* 36px */
+  --lh-figure: 2.5rem; /* 40px */
+
+  --tr-tight: -0.005em; /* caption and body */
+  --tr-display: -0.02em; /* title and larger */
 
   /* -------- spacing.
      A 4px base with eight rungs. Use the rungs; do not use the values between them, and do
@@ -357,27 +378,21 @@
   --radius: var(--r);
   --radius-pill: var(--r-pill);
 
-  --font-display: "Segoe UI", system-ui, sans-serif;
-  --font-sans: "Segoe UI", system-ui, sans-serif;
-  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--font-figtree), system-ui, sans-serif;
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
 
-  --text-label: var(--fs-label);
-  --text-label--line-height: var(--lh-flat);
-  --text-label--letter-spacing: var(--tr-label);
-  --text-meta: var(--fs-meta);
-  --text-meta--line-height: var(--lh-body);
+  --text-caption: var(--fs-caption);
+  --text-caption--line-height: var(--lh-caption);
   --text-body: var(--fs-body);
   --text-body--line-height: var(--lh-body);
-  --text-lead: var(--fs-lead);
-  --text-lead--line-height: var(--lh-snug);
   --text-title: var(--fs-title);
-  --text-title--line-height: var(--lh-snug);
-  --text-screen: var(--fs-screen);
-  --text-screen--line-height: var(--lh-tight);
-  --text-display: var(--fs-display);
-  --text-display--line-height: var(--lh-tight);
+  --text-title--line-height: var(--lh-title);
+  --text-heading: var(--fs-heading);
+  --text-heading--line-height: var(--lh-heading);
+  --text-page: var(--fs-page);
+  --text-page--line-height: var(--lh-page);
   --text-figure: var(--fs-figure);
-  --text-figure--line-height: var(--lh-tight);
+  --text-figure--line-height: var(--lh-figure);
 
   --shadow-lift-1: var(--lift-1);
   --shadow-lift-2: var(--lift-2);

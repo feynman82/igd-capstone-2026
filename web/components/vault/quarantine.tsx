@@ -21,7 +21,7 @@ import type { QuarantinedDocument } from "@/lib/api";
  */
 export function QuarantineQueue({ documents }: { documents: QuarantinedDocument[] }) {
   return (
-    <ul className="mt-[var(--s-3)] space-y-[var(--s-2)]">
+    <ul className="row-list mt-[var(--s-3)]">
       {documents.map((document) =>
         document.retryable ? (
           <QuarantineRow key={document.document_id} document={document} />
@@ -56,36 +56,37 @@ function QuarantineRow({ document }: { document: QuarantinedDocument }) {
   }
 
   return (
-    <li className="overflow-hidden rounded-[var(--r)] border border-hairline bg-surface">
+    <li>
       <div className="flex gap-[var(--s-3)] p-[var(--s-4)]">
-        <span aria-hidden className="w-[3px] shrink-0 rounded-[2px] bg-warn" />
         <div className="min-w-0 flex-1">
-          <h3 className="text-lead font-medium break-words">{document.original_name}</h3>
+          <h3 className="font-display text-body font-semibold break-words">
+            {document.original_name}
+          </h3>
           <p className="mt-[var(--s-1)] text-body text-ink-2">
             {document.reason ?? "This document could not be read."}
           </p>
 
           <div className="mt-[var(--s-3)] flex flex-wrap items-center gap-[var(--s-3)]">
             {state === "queued" ? (
-              <p className="text-meta text-ok">
-                Queued. The vision pass takes a minute or so — reload to see the result.
+              <p className="text-caption text-ok">
+                Queued. The vision pass takes a minute or so; reload to see the result.
               </p>
             ) : (
               <button
                 type="button"
                 disabled={state === "queueing"}
                 onClick={retry}
-                className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
+                className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-1)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97]"
               >
                 <RotateCw aria-hidden size={13} />
                 {state === "queueing" ? "Queueing…" : "Read it again"}
               </button>
             )}
-            <span className="num text-meta text-ink-3">{document.mime}</span>
+            <span className="num text-caption text-ink-3">{document.mime}</span>
           </div>
 
           {error ? (
-            <p role="alert" className="mt-[var(--s-2)] text-meta text-crit">
+            <p role="alert" className="mt-[var(--s-2)] text-caption text-crit">
               {error}
             </p>
           ) : null}
@@ -117,10 +118,10 @@ function GoneRow({ document }: { document: QuarantinedDocument }) {
   }
 
   return (
-    <li className="rounded-[var(--r)] border border-hairline px-[var(--s-4)] py-[var(--s-2)]">
+    <li className="px-[var(--s-4)] py-[var(--s-2)]">
       <div className="flex flex-wrap items-center gap-x-[var(--s-3)] gap-y-[var(--s-1)]">
-        <p className="min-w-0 flex-1 text-meta text-ink-3">
-          <span className="font-medium break-words text-ink-2">{document.original_name}</span>{" "}
+        <p className="min-w-0 flex-1 text-caption text-ink-3">
+          <span className="font-semibold break-words text-ink-2">{document.original_name}</span>{" "}
           {state === "forgotten"
             ? "is forgotten."
             : "left the inbox before Parrot could read it. Nothing from it was filed."}
@@ -131,14 +132,14 @@ function GoneRow({ document }: { document: QuarantinedDocument }) {
             disabled={state === "forgetting"}
             onClick={forget}
             title="Removes Parrot's record of this document. Your files are not touched."
-            className="shrink-0 rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-meta font-medium text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60"
+            className="shrink-0 rounded-[var(--r-sm)] px-[var(--s-2)] py-[var(--s-1)] text-caption font-semibold text-ink-2 transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-60"
           >
             {state === "forgetting" ? "Forgetting…" : "Forget it"}
           </button>
         )}
       </div>
       {error ? (
-        <p role="alert" className="mt-[var(--s-1)] text-meta text-crit">
+        <p role="alert" className="mt-[var(--s-1)] text-caption text-crit">
           {error}
         </p>
       ) : null}

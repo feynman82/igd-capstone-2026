@@ -102,7 +102,7 @@ export function EntryDialog({
     onSaved(`Deleted ${outcome.data.title}.`);
   }
 
-  const label = "text-meta font-medium text-ink-2";
+  const label = "text-caption font-semibold text-ink-2";
   const input =
     "mt-[var(--s-1)] w-full rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-2)] text-body text-ink";
 
@@ -268,7 +268,7 @@ export function EntryDialog({
           </label>
 
           {error ? (
-            <p role="alert" className="rounded-[var(--r-sm)] border border-crit-line bg-crit-soft px-[var(--s-3)] py-[var(--s-2)] text-meta text-crit">
+            <p role="alert" className="rounded-[var(--r-sm)] border border-crit-line bg-crit-soft px-[var(--s-3)] py-[var(--s-2)] text-caption text-crit">
               {error}
             </p>
           ) : null}
@@ -279,20 +279,20 @@ export function EntryDialog({
             <button
               type="button"
               onClick={() => setConfirming(true)}
-              className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium text-crit hover:bg-crit-soft"
+              className="inline-flex items-center gap-[var(--s-2)] rounded-[var(--r-sm)] px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold text-crit hover:bg-crit-soft"
             >
               <Trash2 aria-hidden size={15} />
               Delete
             </button>
           ) : null}
           {confirming ? (
-            <span className="flex flex-wrap items-center gap-[var(--s-2)] text-meta text-ink-2">
+            <span className="flex flex-wrap items-center gap-[var(--s-2)] text-caption text-ink-2">
               {repeats ? "Delete every date of" : "Delete"} {initial.title}?
               <button
                 type="button"
                 disabled={busy}
                 onClick={remove}
-                className="rounded-[var(--r-sm)] bg-crit px-[var(--s-3)] py-[var(--s-2)] font-medium text-surface"
+                className="rounded-[var(--r-sm)] bg-crit px-[var(--s-3)] py-[var(--s-2)] font-semibold text-surface"
               >
                 Delete
               </button>
@@ -308,19 +308,19 @@ export function EntryDialog({
 
           <span className="ml-auto flex items-center gap-[var(--s-3)]">
             {editing && repeats && !confirming ? (
-              <span className="hidden text-meta text-ink-3 sm:inline">Changes every date</span>
+              <span className="hidden text-caption text-ink-3 sm:inline">Changes every date</span>
             ) : null}
             <button
               type="button"
               onClick={() => dialog.current?.close()}
-              className="rounded-[var(--r-sm)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium"
+              className="rounded-[var(--r-sm)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={busy || confirming}
-              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
+              className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
             >
               {busy ? "Saving…" : editing ? "Save" : "Add to calendar"}
             </button>

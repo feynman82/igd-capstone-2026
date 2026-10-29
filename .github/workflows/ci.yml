@@ -24,6 +24,7 @@ jobs:
       - run: psql "$DATABASE_URL" -f db/migrations/0002_household.sql
       - run: psql "$DATABASE_URL" -f db/migrations/0003_advice.sql
       - run: psql "$DATABASE_URL" -f db/migrations/0004_calendar.sql
+      - run: psql "$DATABASE_URL" -f db/migrations/0005_conversations.sql
       # Fails if a pack.yaml was edited without regenerating. This is what stops Zee's field
       # names and Desmond's register columns drifting apart.
       - run: uv run python -m packs.build --check

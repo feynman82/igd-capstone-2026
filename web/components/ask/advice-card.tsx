@@ -1,8 +1,7 @@
 "use client";
 
-import { ArrowDownRight, ArrowUpRight, ClipboardList, Minus, Scale } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
 import Link from "next/link";
-import { SourceChip } from "@/components/source-chip";
 import type { AdviceCardEvent, AdviceWithheldEvent } from "@/lib/api";
 
 /**
@@ -14,9 +13,9 @@ import type { AdviceCardEvent, AdviceWithheldEvent } from "@/lib/api";
  * insurance or tax, and nothing here may, because a domain word written into a component is a
  * word no pack author can correct.
  *
- * Distinct from an explained answer (it is a bordered card, not a run of sentences) and from the
- * abstention and decline cards (evergreen, not brass or grey), because a person must be able to
- * tell at a glance that this is a judgement Parrot is offering, not a line read off a page.
+ * It sits inside the answer card like every other reply (`answer.tsx`), whose first line says
+ * "Advice for …" in evergreen, so a person can tell at a glance that this is a judgement Parrot is
+ * offering, not a line read off a page. What it read is listed once with the answer's sources.
  */
 
 type Advice = Omit<AdviceCardEvent, "kind">;
@@ -28,9 +27,9 @@ type Withheld = Omit<AdviceWithheldEvent, "kind">;
  * not know is shown neutrally — calculators choose the codes, and a new one must not break here.
  */
 const TONES = {
-  better: { Icon: ArrowUpRight, bar: "bg-ok", icon: "text-ok" },
-  worse: { Icon: ArrowDownRight, bar: "bg-warn", icon: "text-warn" },
-  neutral: { Icon: Minus, bar: "bg-rule", icon: "text-ink-3" },
+  better: { Icon: ArrowUpRight, icon: "text-ok" },
+  worse: { Icon: ArrowDownRight, icon: "text-warn" },
+  neutral: { Icon: Minus, icon: "text-ink-3" },
 } as const;
 
 const VERDICT_TONE: Record<string, keyof typeof TONES> = {
@@ -42,43 +41,39 @@ const VERDICT_TONE: Record<string, keyof typeof TONES> = {
   loses: "worse",
 };
 
-export function AdviceCard({ advice }: { advice: Advice }) {
+export function AdviceCard({
+  advice,
+  children,
+}: {
+  advice: Advice;
+  /** The explaining sentences, between the figures and the caveat that covers them. */
+  children?: React.ReactNode;
+}) {
   const tone = TONES[VERDICT_TONE[advice.verdict] ?? "neutral"];
   const [header, ...body] = advice.rows;
 
   return (
-    <section
-      aria-label={`Advice for ${advice.person ?? "you"}`}
-      style={{ animation: "parrot-rise var(--dur-chip) var(--ease) both" }}
-      className="rounded-[var(--r)] border border-accent-line bg-surface p-[var(--s-4)]"
-    >
-      <div className="flex flex-wrap items-center gap-[var(--s-2)]">
-        <Scale aria-hidden size={16} strokeWidth={2} className="text-accent" />
-        <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-accent uppercase">
-          Advice for {advice.person ?? "you"}
+    <section aria-label={`Advice for ${advice.person ?? "you"}`}>
+      {advice.label || advice.estimate ? (
+        <h3 className="flex flex-wrap items-baseline gap-x-[var(--s-2)] font-display text-title font-semibold">
+          {advice.label ? capitalise(advice.label) : "Advice"}
+          {advice.estimate ? (
+            <span className="rounded-[var(--r-sm)] bg-warn-soft px-[var(--s-2)] py-[2px] text-caption font-semibold text-warn">
+              Estimate
+            </span>
+          ) : null}
         </h3>
-        {advice.estimate ? (
-          <span className="rounded-[var(--r-sm)] border border-warn-line bg-warn-soft px-[var(--s-2)] py-[2px] text-label font-semibold tracking-[var(--tr-label)] text-ink uppercase">
-            Estimate
-          </span>
-        ) : null}
-      </div>
-      {advice.label ? (
-        <p className="mt-[var(--s-1)] text-meta text-ink-3">{capitalise(advice.label)}</p>
       ) : null}
 
-      <div className="mt-[var(--s-3)] flex gap-[var(--s-3)]">
-        <span aria-hidden className={`w-[3px] shrink-0 self-stretch rounded-[2px] ${tone.bar}`} />
-        <p className="flex-1 text-lead text-ink">
-          <tone.Icon
-            aria-hidden
-            size={18}
-            strokeWidth={2.2}
-            className={`mr-[var(--s-1)] inline-block align-[-3px] ${tone.icon}`}
-          />
-          {advice.verdict_text}
-        </p>
-      </div>
+      <p className={`text-body text-ink ${advice.label || advice.estimate ? "mt-[var(--s-2)]" : ""}`}>
+        <tone.Icon
+          aria-hidden
+          size={18}
+          strokeWidth={2.2}
+          className={`mr-[var(--s-1)] inline-block align-[-3px] ${tone.icon}`}
+        />
+        {advice.verdict_text}
+      </p>
 
       {advice.figures.length > 0 ? (
         <table className="mt-[var(--s-4)] w-full border-collapse text-body">
@@ -111,7 +106,7 @@ export function AdviceCard({ advice }: { advice: Advice }) {
           aria-label="Comparison"
           className="mt-[var(--s-4)] overflow-x-auto rounded-[var(--r-sm)] border border-hairline"
         >
-          <table className="w-full min-w-max border-collapse text-meta">
+          <table className="w-full min-w-max border-collapse text-caption">
             <thead className="bg-surface-2">
               <tr>
                 {header.map((cell, index) => (
@@ -133,7 +128,7 @@ export function AdviceCard({ advice }: { advice: Advice }) {
                       <th
                         key={index}
                         scope="row"
-                        className="px-[var(--s-3)] py-[var(--s-2)] text-left font-medium text-ink"
+                        className="px-[var(--s-3)] py-[var(--s-2)] text-left font-semibold text-ink"
                       >
                         {cell}
                       </th>
@@ -150,18 +145,7 @@ export function AdviceCard({ advice }: { advice: Advice }) {
         </div>
       ) : null}
 
-      {advice.inputs.length > 0 ? (
-        <div className="mt-[var(--s-4)]">
-          <h4 className="group-label">Inputs</h4>
-          <ul className="mt-[var(--s-2)] flex flex-wrap gap-[var(--s-1)]">
-            {advice.inputs.map((source, index) => (
-              <li key={index} className="max-w-full">
-                <SourceChip source={source} />
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      {children}
 
       <AdviceNote disclosure={advice.product_disclosure} disclaimer={advice.disclaimer} />
     </section>
@@ -177,21 +161,12 @@ export function AdviceCard({ advice }: { advice: Advice }) {
  */
 export function AdviceWithheld({ withheld }: { withheld: Withheld }) {
   return (
-    <section
-      aria-label="Parrot needs more to advise on this"
-      className="rounded-[var(--r)] border border-hairline bg-surface-2 p-[var(--s-4)]"
-    >
-      <div className="flex items-center gap-[var(--s-2)]">
-        <ClipboardList aria-hidden size={16} strokeWidth={2} className="text-ink-2" />
-        <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-ink-2 uppercase">
-          Parrot needs more to advise on this
-        </h3>
-      </div>
+    <section aria-label="Parrot needs more to advise on this">
       {withheld.label || withheld.person ? (
-        <p className="mt-[var(--s-1)] text-meta text-ink-3">
+        <h3 className="font-display text-title font-semibold">
           {withheld.label ? capitalise(withheld.label) : "Advice"}
-          {withheld.person ? ` · for ${withheld.person}` : ""}
-        </p>
+          {withheld.person ? ` for ${withheld.person}` : ""}
+        </h3>
       ) : null}
 
       {withheld.missing.length > 0 ? (
@@ -204,11 +179,11 @@ export function AdviceWithheld({ withheld }: { withheld: Withheld }) {
 
       <p className="mt-[var(--s-3)] text-body text-ink-2">
         Nothing was estimated to fill the gap.{" "}
-        <Link href="/vault" className="font-medium text-ink underline underline-offset-2">
+        <Link href="/vault" className="font-semibold text-ink underline underline-offset-2">
           Open your vault
         </Link>{" "}
         to see what is on file, or the{" "}
-        <Link href="/household" className="font-medium text-ink underline underline-offset-2">
+        <Link href="/household" className="font-semibold text-ink underline underline-offset-2">
           Household page
         </Link>{" "}
         to say who is who.
@@ -235,7 +210,7 @@ export function AdviceNote({
   return (
     <div
       role="note"
-      className="mt-[var(--s-4)] space-y-[var(--s-2)] rounded-[var(--r-sm)] border border-edge bg-surface-2 p-[var(--s-3)] text-meta text-ink-2"
+      className="mt-[var(--s-4)] space-y-[var(--s-2)] border-t border-hairline pt-[var(--s-3)] text-caption text-ink-2"
     >
       {disclosure.trim() ? <p className="whitespace-pre-line text-ink">{disclosure}</p> : null}
       <p className="whitespace-pre-line">{disclaimer}</p>

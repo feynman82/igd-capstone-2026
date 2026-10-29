@@ -14,6 +14,8 @@
  * deliverable, not the polish.
  */
 
+import type { ParrotMessage } from "@/lib/chat";
+
 export const PARROT_API = process.env.PARROT_API_URL ?? "http://127.0.0.1:8000";
 
 /* ------------------------------------------------------------------------------- the shapes
@@ -578,6 +580,46 @@ export async function deleteEvent(id: number): Promise<Result<{ id: number; titl
   const outcome = await throughProxy<{ id: number; title: string }>(
     `/api/parrot/calendar/events/${id}`,
     { method: "DELETE", headers: { accept: "application/json" } },
+  );
+  return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
+}
+
+/* ------------------------------------------------------------------------ conversations */
+
+/** One line in Ask's history column. */
+export type ConversationSummary = { id: string; title: string; updated_at: string };
+
+/** A past conversation as the screen drew it: a transcript to reopen, never a source. */
+export type StoredConversation = ConversationSummary & { messages: ParrotMessage[] };
+
+export function conversations(): Promise<Result<{ conversations: ConversationSummary[] }>> {
+  return get<{ conversations: ConversationSummary[] }>("/api/conversations");
+}
+
+export function conversation(id: string): Promise<Result<StoredConversation>> {
+  return get<StoredConversation>(`/api/conversations/${encodeURIComponent(id)}`);
+}
+
+export async function conversationInBrowser(id: string): Promise<Result<StoredConversation>> {
+  const outcome = await throughProxy<StoredConversation>(
+    `/api/parrot/conversations/${encodeURIComponent(id)}`,
+    { method: "GET", headers: { accept: "application/json" } },
+  );
+  return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
+}
+
+/** The whole conversation, written over what was stored. */
+export async function saveConversation(
+  id: string,
+  messages: ParrotMessage[],
+): Promise<Result<ConversationSummary>> {
+  const outcome = await throughProxy<ConversationSummary>(
+    `/api/parrot/conversations/${encodeURIComponent(id)}`,
+    {
+      method: "PUT",
+      headers: { accept: "application/json", "content-type": "application/json" },
+      body: JSON.stringify({ messages }),
+    },
   );
   return outcome.ok ? outcome : { ok: false, problem: outcome.problem };
 }

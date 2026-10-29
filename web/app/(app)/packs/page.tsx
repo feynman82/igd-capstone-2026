@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/page-header";
 import { EmptyState, ProblemState } from "@/components/states";
 import { Toggle } from "@/components/packs/toggle";
 import { packs, type ModuleSummary, type PackSummary } from "@/lib/api";
@@ -30,8 +31,8 @@ export default async function PacksPage() {
   if (!result.ok) {
     return (
       <>
-        <h1 className="font-display text-screen lg:text-display">Packs</h1>
-        <div className="mt-[var(--s-4)]">
+        <PageHeader title="Packs" />
+        <div className="mt-[var(--s-5)]">
           <ProblemState problem={result.problem} />
         </div>
       </>
@@ -43,12 +44,10 @@ export default async function PacksPage() {
 
   return (
     <>
-      <h1 className="font-display text-screen lg:text-display">Packs</h1>
-      <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-lead text-ink-2">
-        What this assistant specialises in. Switching a pack off turns off its specialist voice,
-        rules, grounding and advice. Your documents stay searchable and in the vault, and
-        switching it back on brings all of it back.
-      </p>
+      <PageHeader
+        title="Packs"
+        lead="What this assistant specialises in. Switching a pack off turns off its specialist voice, rules, grounding and advice. Your documents stay searchable and in the vault, and switching it back on brings all of it back."
+      />
 
       <AlwaysOn />
 
@@ -63,7 +62,7 @@ export default async function PacksPage() {
             </EmptyState>
           </div>
         ) : (
-          <ul className="mt-[var(--s-3)] space-y-[var(--s-3)]">
+          <ul className="row-list mt-[var(--s-3)]">
             {installed.map((pack) => (
               <PackCard key={pack.id} pack={pack} />
             ))}
@@ -72,7 +71,7 @@ export default async function PacksPage() {
       </section>
 
       {off.length > 0 ? (
-        <p className="mt-[var(--s-4)] max-w-[var(--measure)] rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-3)] text-meta text-ink-2">
+        <p className="mt-[var(--s-4)] max-w-[var(--measure)] rounded-[var(--r)] border border-brass-line bg-brass-soft p-[var(--s-3)] text-caption text-ink-2">
           {off.map((pack) => pack.display_name).join(" and ")}{" "}
           {off.length === 1 ? "is" : "are"} switched off.{" "}
           {off.length === 1 ? "Its" : "Their"} specialist voice, rules, grounding and advice are
@@ -83,11 +82,11 @@ export default async function PacksPage() {
 
       <section className="mt-[var(--s-6)]">
         <h2 className="group-label">Modules</h2>
-        <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-meta text-ink-2">
+        <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-caption text-ink-2">
           A pack declares what to watch; a module does the watching. Switching one off here
           silences it for every pack at once.
         </p>
-        <ul className="mt-[var(--s-3)] space-y-[var(--s-2)]">
+        <ul className="row-list mt-[var(--s-3)]">
           {modules.map((module) => (
             <ModuleRow key={module.id} module={module} />
           ))}
@@ -101,7 +100,7 @@ export default async function PacksPage() {
               (`docs/team-tasks.csv`, W3). Inventing plausible names here would put product
               scope on a screen that nobody has agreed to. */}
           <EmptyState title="The catalogue is not written yet">
-            The expansion story is that a new domain is a YAML file rather than a release — the
+            The expansion story is that a new domain is a YAML file rather than a release: the
             same core, a different pack. The nine packs we specify but do not build are still to
             be named, each against the same manifest the two above use.
           </EmptyState>
@@ -122,12 +121,12 @@ function AlwaysOn() {
   return (
     <div className="mt-[var(--s-5)] rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-4)]">
       <div className="flex items-baseline gap-[var(--s-3)]">
-        <h2 className="text-lead font-medium">Retrieval</h2>
-        <span className="ml-auto text-meta text-ok">always on</span>
+        <h2 className="font-display text-body font-semibold">Retrieval</h2>
+        <span className="status ml-auto bg-ok-soft text-ok">Always on</span>
       </div>
       <p className="mt-[var(--s-1)] max-w-[var(--measure)] text-body text-ink-2">
         Reading, extracting, reminding and answering are the core, not a pack. Every document
-        is always searchable and can always be quoted — packs add a specialist voice, rules,
+        is always searchable and can always be quoted. Packs add a specialist voice, rules,
         grounding and advice.
       </p>
     </div>
@@ -137,21 +136,17 @@ function AlwaysOn() {
 function PackCard({ pack }: { pack: PackSummary }) {
   return (
     // A switched-off pack is dimmed by moving it onto a recessed surface, not by fading it.
-    // `opacity` degrades every colour inside a card at once, including the muted provenance
-    // text that was measured to exactly 4.5:1 — the one row that can least afford it. The card
+    // `opacity` degrades every colour inside a row at once, including the muted provenance
+    // text that was measured to exactly 4.5:1, the one line that can least afford it. The row
     // still has to be readable: a person deciding whether to switch it back on is reading it.
-    <li
-      className={`rounded-[var(--r)] border p-[var(--s-4)] ${
-        pack.enabled ? "border-hairline bg-surface" : "border-hairline bg-surface-2"
-      }`}
-    >
+    <li className={`p-[var(--s-4)] ${pack.enabled ? "" : "bg-surface-2"}`}>
       <div className="flex items-start gap-[var(--s-3)]">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-[var(--s-3)]">
-            <h3 className="text-title font-medium">{pack.display_name}</h3>
-            <span className="num text-meta text-ink-3">v{pack.version}</span>
+            <h3 className="font-display text-body font-semibold">{pack.display_name}</h3>
+            <span className="num text-caption text-ink-3">v{pack.version}</span>
             {!pack.on_disk ? (
-              <span className="text-meta text-crit">
+              <span className="text-caption text-crit">
                 installed, but its folder is gone from packs/
               </span>
             ) : null}
@@ -169,8 +164,8 @@ function PackCard({ pack }: { pack: PackSummary }) {
       {/* Not decoration. `never_acts` is `Literal[True]` in the contract, so a pack that set
           anything else would fail to load — this says so to the person it protects. */}
       {pack.never_acts ? (
-        <p className="mt-[var(--s-3)] border-t border-hairline pt-[var(--s-3)] text-meta text-ink-2">
-          <span className="font-medium text-ink">Advises, never acts.</span> This pack cannot
+        <p className="mt-[var(--s-3)] border-t border-hairline pt-[var(--s-3)] text-caption text-ink-2">
+          <span className="font-semibold text-ink">Advises, never acts.</span> This pack cannot
           pay, renew, book or file anything. That is enforced by the type system rather than by
           its own good behaviour.
         </p>
@@ -178,10 +173,10 @@ function PackCard({ pack }: { pack: PackSummary }) {
 
       {pack.disclaimer ? (
         <details className="mt-[var(--s-2)]">
-          <summary className="cursor-pointer text-meta text-ink-3">
+          <summary className="cursor-pointer text-caption text-ink-3">
             What this pack says about its own limits
           </summary>
-          <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-meta text-ink-2">
+          <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-caption text-ink-2">
             {pack.disclaimer}
           </p>
         </details>
@@ -192,15 +187,15 @@ function PackCard({ pack }: { pack: PackSummary }) {
 
 function ModuleRow({ module }: { module: ModuleSummary }) {
   return (
-    <li className="flex items-center gap-[var(--s-3)] rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)]">
+    <li className="flex items-center gap-[var(--s-3)] px-[var(--s-4)] py-[var(--s-3)]">
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-[var(--s-3)]">
-          <h3 className="text-body font-medium capitalize">{module.id}</h3>
-          <span className="num text-meta text-ink-3">v{module.version}</span>
+          <h3 className="font-display text-body font-semibold capitalize">{module.id}</h3>
+          <span className="num text-caption text-ink-3">v{module.version}</span>
         </div>
-        <p className="mt-[var(--s-1)] text-meta text-ink-2">
-          {module.runs_on === "schedule" ? "runs nightly" : "runs when a fact is written"}
-          {module.surfaces.length > 0 ? ` · shows on ${module.surfaces.join(", ")}` : null}
+        <p className="mt-[var(--s-1)] text-caption text-ink-2">
+          {module.runs_on === "schedule" ? "Runs nightly" : "Runs when a fact is written"}
+          {module.surfaces.length > 0 ? `, shows on ${module.surfaces.join(", ")}.` : "."}
         </p>
       </div>
       <Toggle

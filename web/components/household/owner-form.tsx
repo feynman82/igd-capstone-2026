@@ -51,7 +51,7 @@ export function OwnerForm({ onDone }: { onDone?: () => void }) {
 
   return (
     <div className="rounded-[var(--r)] border border-hairline bg-surface p-[var(--s-6)]">
-      <h2 className="font-display text-screen font-semibold">Who are you?</h2>
+      <h2 className="font-display text-heading font-semibold">Who are you?</h2>
       <p className="mt-[var(--s-2)] max-w-[var(--measure)] text-body text-ink-2">
         Your household&rsquo;s documents will name several people. Parrot needs to know which one
         is you, so that &ldquo;when does <em>my</em> policy renew&rdquo; means yours and not
@@ -70,14 +70,14 @@ export function OwnerForm({ onDone }: { onDone?: () => void }) {
           disabled={busy}
           aria-invalid={error !== null}
           aria-describedby="owner-name-hint owner-name-error"
-          className="mt-[var(--s-2)] w-full rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-3)] text-lead"
+          className="mt-[var(--s-2)] w-full rounded-[var(--r-sm)] border border-edge bg-surface px-[var(--s-3)] py-[var(--s-3)] text-body"
         />
         {/* The sentence that makes the field work. Without it people type their first name. */}
-        <p id="owner-name-hint" className="mt-[var(--s-2)] text-meta text-ink-3">
-          As it is printed — full name, the way a payslip or a policy writes it. You can add
+        <p id="owner-name-hint" className="mt-[var(--s-2)] text-caption text-ink-3">
+          As it is printed: full name, the way a payslip or a policy writes it. You can add
           other spellings later, and Parrot will ask about any it finds.
         </p>
-        <p id="owner-name-error" role="alert" className="mt-[var(--s-2)] min-h-[1.4rem] text-meta text-crit">
+        <p id="owner-name-error" role="alert" className="mt-[var(--s-2)] min-h-[1.4rem] text-caption text-crit">
           {error}
         </p>
         <button
@@ -89,7 +89,7 @@ export function OwnerForm({ onDone }: { onDone?: () => void }) {
         </button>
       </form>
 
-      <p className="mt-[var(--s-5)] border-t border-hairline pt-[var(--s-4)] text-meta text-ink-3">
+      <p className="mt-[var(--s-5)] border-t border-hairline pt-[var(--s-4)] text-caption text-ink-3">
         You can change this at any time, and hand the household to somebody else.
       </p>
     </div>

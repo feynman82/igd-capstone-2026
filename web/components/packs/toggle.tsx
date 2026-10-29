@@ -79,7 +79,7 @@ export function Toggle({
         />
       </button>
       {error ? (
-        <span role="alert" className="text-meta text-crit">
+        <span role="alert" className="text-caption text-crit">
           {error}
         </span>
       ) : null}

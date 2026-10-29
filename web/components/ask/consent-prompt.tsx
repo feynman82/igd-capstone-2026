@@ -1,6 +1,5 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
 import { useRef, useState } from "react";
 import { AdviceNote } from "@/components/ask/advice-card";
 import { adviceConsents, setAdviceConsent, type ConsentRequiredEvent } from "@/lib/api";
@@ -101,25 +100,17 @@ export function ConsentPrompt({
   const settled = state.step === "agreed" || state.step === "dismissed";
 
   return (
-    <section
-      aria-label={`${consent.pack_name}: advice needs your agreement`}
-      className="rounded-[var(--r)] border border-brand-line bg-surface p-[var(--s-4)]"
-    >
-      <div className="flex gap-[var(--s-3)]">
-        <span aria-hidden className="w-[3px] shrink-0 self-stretch rounded-[2px] bg-brand" />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-[var(--s-2)]">
-            <ShieldCheck aria-hidden size={16} strokeWidth={2} className="text-brand-strong" />
-            <h3 className="text-label font-semibold tracking-[var(--tr-label)] text-brand-strong uppercase">
-              {consent.pack_name} advice needs your agreement
-            </h3>
-          </div>
+    <section aria-label={`${consent.pack_name}: advice needs your agreement`}>
+      <div>
+        <div>
           {consent.label ? (
-            <p className="mt-[var(--s-1)] text-meta text-ink-3">You asked about: {consent.label}</p>
+            <h3 className="font-display text-title font-semibold">
+              {consent.label.charAt(0).toUpperCase() + consent.label.slice(1)}
+            </h3>
           ) : null}
 
           {changed ? (
-            <p role="status" className="mt-[var(--s-3)] text-body font-medium text-ink">
+            <p role="status" className="mt-[var(--s-3)] text-body font-semibold text-ink">
               This wording changed since it was first shown. Read the current version before you
               answer.
             </p>
@@ -128,7 +119,7 @@ export function ConsentPrompt({
           <p className="mt-[var(--s-3)] whitespace-pre-line text-body text-ink">
             {shown.consent_text}
           </p>
-          <p className="num mt-[var(--s-2)] text-meta text-ink-3">Wording version {shown.version}</p>
+          <p className="num mt-[var(--s-2)] text-caption text-ink-3">Wording version {shown.version}</p>
 
           <AdviceNote disclaimer={shown.disclaimer} />
 
@@ -150,7 +141,7 @@ export function ConsentPrompt({
                 onClick={agree}
                 disabled={saving || busy}
                 title={busy ? "Wait for the current answer to finish" : undefined}
-                className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-meta font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
+                className="rounded-[var(--r-sm)] bg-brand px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold text-brand-ink transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
               >
                 {saving ? "Saving…" : "I understand and agree"}
               </button>
@@ -158,7 +149,7 @@ export function ConsentPrompt({
                 type="button"
                 onClick={() => settle("dismissed")}
                 disabled={saving}
-                className="rounded-[var(--r-sm)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-meta font-medium transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
+                className="rounded-[var(--r-sm)] border border-edge px-[var(--s-4)] py-[var(--s-2)] text-caption font-semibold transition-transform duration-[var(--dur-press)] active:scale-[0.97] disabled:opacity-60"
               >
                 Not now
               </button>
@@ -166,7 +157,7 @@ export function ConsentPrompt({
           )}
 
           {failed ? (
-            <p role="alert" className="mt-[var(--s-2)] text-meta text-crit">
+            <p role="alert" className="mt-[var(--s-2)] text-caption text-crit">
               {failed}
             </p>
           ) : null}

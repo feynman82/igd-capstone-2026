@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { MonthView } from "@/components/calendar/month-view";
+import { PageHeader } from "@/components/page-header";
 import { ProblemState } from "@/components/states";
 import { calendarRange } from "@/lib/api";
 import { iso, monthGrid, monthKey, parseDay } from "@/lib/days";
@@ -37,10 +38,10 @@ export default async function CalendarPage({
 
   return (
     <>
-      <div className="flex flex-wrap items-baseline justify-between gap-[var(--s-4)]">
-        <h1 className="font-display text-screen lg:text-display">Calendar</h1>
-        <span className="text-meta text-ink-3">The household&rsquo;s own entries, and dates from its documents</span>
-      </div>
+      <PageHeader
+        title="Calendar"
+        lead="The household’s own entries, and dates from its documents."
+      />
       <div className="mt-[var(--s-5)]">
         {result.ok ? (
           <MonthView data={result.data} month={month} selected={selected} today={today} />

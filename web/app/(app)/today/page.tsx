@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ItemRow } from "@/components/today/item-row";
 import { EmptyState, ProblemState } from "@/components/states";
 import { OwnerForm } from "@/components/household/owner-form";
+import { PageHeader } from "@/components/page-header";
 import { WhoIsThis } from "@/components/household/who-is-this";
 import { Week } from "@/components/today/week";
 import { calendarRange, household, quarantine, today, vault, type TodayItem } from "@/lib/api";
@@ -33,10 +34,13 @@ export const metadata: Metadata = {
  * calls the sweep with `mark=False`; the nightly Celery pass owns `last_notified_at`. A person
  * who refreshes twice has not used up their thirty-day warning.
  *
- * The shape is one hero and a list. The most urgent thing gets a card with the countdown as its
- * figure; everything else is a compact row. Before this, eight equal cards meant a person had to
- * read all eight to find out which one was the problem — the list was sorted and did not look
- * it. A hero says "this one" without asking anybody to compare dates.
+ * The shape is the week, then one urgent card, then a list. The week leads because it is the
+ * answer to "what is on", which is asked every morning, where "what is late" is asked when
+ * something is; and in a quiet week of documents it is the part of the screen that still has
+ * something in it. Under it, the most urgent thing gets a card with the countdown as its figure
+ * and everything else is a compact row. Before the urgent card, eight equal cards meant a person
+ * had to read all eight to find out which one was the problem — the list was sorted and did not
+ * look it. A hero says "this one" without asking anybody to compare dates.
  */
 
 /**
@@ -92,26 +96,28 @@ export default async function TodayPage({
     return (
       <>
         <Header as_of={as_of ?? null} />
-        <ProblemState problem={result.problem}>
-          {result.problem.kind === "offline" ? (
-            <>
-              Start it with <span className="num">make dev</span> in the project folder, then
-              reload this page.
-            </>
-          ) : result.problem.kind === "foreign" ? (
-            <>
-              Stop whatever is on that port and run <span className="num">make dev</span>, or
-              start Parrot elsewhere with{" "}
-              <span className="num">uv run python scripts/run_parrot.py --port 8010</span> and set{" "}
-              <span className="num">PARROT_API_URL</span> to match.
-            </>
-          ) : result.problem.kind === "database" ? (
-            <>
-              Your documents are safe — nothing has been lost. Parrot needs Postgres running
-              before it can tell you what is due.
-            </>
-          ) : null}
-        </ProblemState>
+        <div className="mt-[var(--s-5)]">
+          <ProblemState problem={result.problem}>
+            {result.problem.kind === "offline" ? (
+              <>
+                Start it with <span className="num">make dev</span> in the project folder, then
+                reload this page.
+              </>
+            ) : result.problem.kind === "foreign" ? (
+              <>
+                Stop whatever is on that port and run <span className="num">make dev</span>, or
+                start Parrot elsewhere with{" "}
+                <span className="num">uv run python scripts/run_parrot.py --port 8010</span> and
+                set <span className="num">PARROT_API_URL</span> to match.
+              </>
+            ) : result.problem.kind === "database" ? (
+              <>
+                Your documents are safe; nothing has been lost. Parrot needs Postgres running
+                before it can tell you what is due.
+              </>
+            ) : null}
+          </ProblemState>
+        </div>
       </>
     );
   }
@@ -133,11 +139,11 @@ export default async function TodayPage({
 
   return (
     <>
-      <Header as_of={result.data.as_of} />
+      <Header as_of={result.data.as_of} lead={summary(attention, later.length)} />
 
-      <p className="mt-[var(--s-3)] max-w-[var(--measure)] text-lead text-ink-2">
-        {summary(attention, later.length)}
-      </p>
+      {/* The week first: it is what a person checks every morning, and a failed read of it costs
+          the week only — never the rest of the screen. */}
+      {week.ok ? <Week data={week.data} from={weekStart} /> : null}
 
       {items.length === 0 && needsEyes === 0 ? (
         <div className="mt-[var(--s-6)]">
@@ -168,10 +174,6 @@ export default async function TodayPage({
         </Section>
       ) : null}
 
-      {/* After what needs you and before what is merely coming: the week is a glance, and a
-          failed read of it costs the week only — never the rest of the screen. */}
-      {week.ok ? <Week data={week.data} from={weekStart} /> : null}
-
       {later.length > 0 ? (
         <Section label="Coming up">
           {later.map((item, at) => (
@@ -189,7 +191,7 @@ export default async function TodayPage({
 /** Quiet on purpose: nothing here needs doing today, and the Vault is where it is forgotten. */
 function GoneNote({ count }: { count: number }) {
   return (
-    <p className="mt-[var(--s-2)] text-meta text-ink-3">
+    <p className="mt-[var(--s-2)] text-caption text-ink-3">
       {count === 1
         ? "One document left the inbox before Parrot could read it."
         : `${count} documents left the inbox before Parrot could read them.`}{" "}
@@ -200,24 +202,25 @@ function GoneNote({ count }: { count: number }) {
   );
 }
 
-function Header({ as_of }: { as_of: string | null }) {
+function Header({ as_of, lead }: { as_of: string | null; lead?: string }) {
   const when = as_of ? new Date(`${as_of}T00:00:00`) : new Date();
   return (
-    <div className="flex flex-wrap items-baseline justify-between gap-[var(--s-4)]">
-      <h1 className="font-display text-screen lg:text-display">
-        {when.toLocaleDateString("en-SG", { weekday: "long", day: "numeric", month: "long" })}
-      </h1>
-      {/* Not decoration. It is the answer to "is this stale", which is the first thing anybody
-          asks of a screen that claims to know what is due. */}
-      <span className="num text-meta text-ink-3">
-        checked{" "}
-        {new Date().toLocaleTimeString("en-SG", {
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })}
-      </span>
-    </div>
+    <PageHeader
+      title={when.toLocaleDateString("en-SG", { weekday: "long", day: "numeric", month: "long" })}
+      lead={lead}
+      aside={
+        // Not decoration. It is the answer to "is this stale", which is the first thing anybody
+        // asks of a screen that claims to know what is due.
+        <span className="num text-caption text-ink-3">
+          checked{" "}
+          {new Date().toLocaleTimeString("en-SG", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+          })}
+        </span>
+      }
+    />
   );
 }
 
@@ -234,7 +237,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
     <section className="mt-[var(--s-6)]">
       {/* More space above a group label than below it: the label belongs to what follows. */}
       <h2 className="group-label">{label}</h2>
-      <ul className="mt-[var(--s-3)] space-y-[var(--s-2)]">{children}</ul>
+      <ul className="row-list mt-[var(--s-3)]">{children}</ul>
     </section>
   );
 }
@@ -246,7 +249,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
  */
 function Provenance({ total }: { total: number }) {
   return (
-    <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-meta text-ink-3">
+    <p className="mt-[var(--s-6)] border-t border-hairline pt-[var(--s-4)] text-caption text-ink-3">
       Based only on your own documents · <span className="num">{total}</span> on this computer ·
       nothing left it
     </p>
@@ -260,24 +263,26 @@ function Provenance({ total }: { total: number }) {
 function QuarantineRow({ count, index }: { count: number; index: number }) {
   return (
     <li
-      className="flex items-center gap-[var(--s-4)] rounded-[var(--r)] border border-hairline bg-surface px-[var(--s-4)] py-[var(--s-3)]"
+      className="flex items-center gap-[var(--s-4)] px-[var(--s-4)] py-[var(--s-3)]"
       style={{
         animation: "parrot-rise var(--dur-enter) var(--ease) both",
         animationDelay: `${index * 50}ms`,
       }}
     >
-      <span aria-hidden className="w-[3px] shrink-0 self-stretch rounded-[2px] bg-warn" />
       <div className="min-w-0 flex-1">
-        <h3 className="font-display text-title font-semibold">
-          {count === 1 ? "One document could not be read" : `${count} documents could not be read`}
-        </h3>
-        <p className="mt-[2px] text-meta text-ink-2">
+        <div className="flex flex-wrap items-center gap-x-[var(--s-2)] gap-y-[var(--s-1)]">
+          <h3 className="font-display text-body font-semibold">
+            {count === 1 ? "One document could not be read" : `${count} documents could not be read`}
+          </h3>
+          <span className="status bg-warn-soft text-warn">Needs your eyes</span>
+        </div>
+        <p className="mt-[2px] text-caption text-ink-2">
           Nothing from {count === 1 ? "it" : "them"} has been filed. A minute to confirm.
         </p>
       </div>
       <Link
         href="/vault?status=quarantined"
-        className="shrink-0 rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-2)] text-meta font-medium no-underline"
+        className="shrink-0 rounded-[var(--r-sm)] border border-edge px-[var(--s-3)] py-[var(--s-2)] text-caption font-semibold no-underline"
       >
         Review
       </Link>
