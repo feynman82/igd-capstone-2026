@@ -428,6 +428,47 @@ def test_advice_is_declined_when_the_graph_was_given_no_adviser() -> None:
     assert [type(event) for event in graph.stream(ASKED)] == [Declined]
 
 
+def test_asking_for_tax_advice_in_general_asks_for_the_tax_packs_consent() -> None:
+    # The pack's own phrase decides, not the router: on 29 October "give me some tax advice"
+    # matched no tax phrase, was declined, and the consent card was never shown.
+    client = ScriptedOllama({"intent": "explain"})
+    both = [pack("insurance_agent"), pack("iras_tax")]
+    graph, adviser, consents, _, _ = build(client, consent_id=None, packs=both)
+
+    (required,) = list(graph.stream("give me some tax advice"))
+
+    assert isinstance(required, ConsentRequired)
+    assert required.pack_id == "iras_tax"
+    assert required.label == "tax relief check"
+    assert consents.asked == [("iras_tax", "1.0.0")]
+    assert adviser.calls == []
+
+
+def test_an_advice_question_naming_one_pack_gets_that_packs_decline() -> None:
+    tax = pack("iras_tax")
+    graph, *_ = build(ScriptedOllama({"intent": "advise"}), packs=[pack("insurance_agent"), tax])
+
+    (declined,) = list(graph.stream("is my tax situation fine?"))
+
+    assert isinstance(declined, Declined)
+    assert declined.text == tax.manifest.guardrails.advice_decline.strip()
+    assert declined.disclaimer == tax.manifest.guardrails.disclaimer.strip()
+
+
+def test_an_advice_question_naming_no_pack_says_what_can_be_advised() -> None:
+    graph, *_ = build(
+        ScriptedOllama({"intent": "advise"}), packs=[pack("insurance_agent"), pack("iras_tax")]
+    )
+
+    (declined,) = list(graph.stream("what would you advise?"))
+
+    assert isinstance(declined, Declined)
+    assert declined.text == (
+        "I can work out an insurance coverage review or a tax relief check from your documents. "
+        "Ask for one of those."
+    )
+
+
 def test_ask_leads_with_the_verdict_on_the_calculation_path() -> None:
     client = ScriptedOllama({"intent": "advise"}, {"sentences": [THE_GAP]})
     graph, *_ = build(client)
