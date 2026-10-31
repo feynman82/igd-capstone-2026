@@ -53,38 +53,39 @@ const C = pres.SchemeColor;
 
 const TEAM = ["Christian", "Fauziah", "Desmond", "Siew Siew", "Yew Mun"];
 
-// Speaker notes, one per slide in order: about a minute and a half each.
+// Speaker script, one per slide in order: about a minute and a half each. Every [CLICK] brings in
+// the next element, in the order addAnimations() builds; the count on each slide matches it.
 const NOTES = [
-  // 1
-  "SIEW SIEW\n\nGood morning. A question almost nobody in this room can answer quickly: where, exactly, is your car insurance policy right now? Not roughly. Exactly. An email, a drawer, a photo somewhere on a phone.\n\nWe are Group 1, and this is PARROT. You photograph a document once, it files itself, and when you ask it something it answers with the page the answer came from. And the part we care about most: when it does not know, it says so. It runs on the family's own laptop, so nothing leaves the house.\n\nI am Siew Siew, and with Desmond I will take you through the problem, the product, the evidence that it works, and what still has to be true before anyone pays for it. Christian, Fauziah and Yew Mun built it with us.",
-  // 2
-  "SIEW SIEW\n\nMeet three people from our proposal. Sarah is a working mother, which makes her the household calendar: school fees, renewals, appointments, spread over six inboxes and a drawer.\n\nMarcus is the sandwich generation. Between himself, his wife, his son and his two parents he tracks eleven policies, and the one question that matters, are we covered, costs him an evening.\n\nPriya saves tax through SRS, once a year, in a narrow window. Miss it and nothing happens: no letter, no alarm. The relief just disappears.\n\nWhat they share: none of them is missing documents. They are missing a way to ask the pile a question and trust the answer. And a chatbot that confidently invents a policy date is worse than none, because now you have stopped checking.",
-  // 3
-  "SIEW SIEW\n\nHere is the whole product in three moves.\n\nOne, capture. You photograph a document and send it to a Telegram chat, or drop it in a folder. That is all the filing you ever do. Those are real replies from the running app: filed, filed, filed. Docling reads the page and the model extracts typed fields: dates, amounts, policy numbers.\n\nTwo, ask. Plain English. Every sentence in the answer carries its own source, the document and the page, and one click opens the original.\n\nThree, Today. You do not even have to ask. It opens on what needs you now.\n\nAnd the line to remember: when the documents do not say, PARROT says so. It does not guess.",
-  // 4
-  "SIEW SIEW\n\nFour screens, and the design principle is that it speaks first.\n\nToday is the home screen: a policy that has expired, something due, and the documents it could not read and wants you to check. Ask is the conversation, where every answer shows its page. Vault is honesty about extraction: what it read off each document, with a confidence, and what it could not, in plain words rather than hidden. Packs is where a family chooses what PARROT knows about. Switch the insurance pack off and its advice goes quiet; the documents stay searchable.\n\nThe interface is Next.js 15 with Tailwind and shadcn, behind a local passphrase, and it never talks to anything outside the laptop.",
-  // 5
-  "SIEW SIEW\n\nLet us zoom into one real answer: when does the car insurance renew?\n\nNumber one: every sentence ends in a citation chip, a document and a page. Behind that is a hard rule in the database: a fact row cannot be written without document_id and page; both are NOT NULL.\n\nNumber two: the footer says nothing left this computer. Generation, embedding, reranking, even the model that grades us, all run locally.\n\nNumber three: it knows what it is not. It is not a licensed financial adviser, and it says so.\n\nNumber four, and the title of this slide: the date 11 April 2027 is read from a typed column in Postgres. The model writes the sentence around the number. It never produces the number itself.",
-  // 6
-  "SIEW SIEW\n\nUnderneath, five layers, one laptop and one database.\n\nThe launcher starts the FastAPI engine, the folder watcher and the Celery worker, and the Next.js screens talk to the engine. Captured documents queue through Redis to the Docling pipeline; a page it is not confident about goes to quarantine, where the vision model reads the image itself on a second pass.\n\nQuestions run through a LangGraph graph: scoping to the right person, hybrid retrieval fused with reciprocal rank fusion, a cross-encoder reranker, then an evidence gate that decides whether the answer is supported at all.\n\nEvery model is open and local: SEA-LION 4B vision-language from AI Singapore for generation, EmbeddingGemma for embeddings, bge for reranking. Everything lands in one PostgreSQL with pgvector. Tested on a 32 GB laptop with an RTX 4060.",
-  // 7
-  "SIEW SIEW\n\nWhy call it a platform and not an app? Because we built the hard part once.\n\nThe engine in the middle files, finds, checks and cites. Everything else plugs in from two directions. Capability modules, Reminder, Alert and Advice, read the typed facts the engine has filed; none of them touches the screen. Domain packs teach the engine a field: Tax and Reliefs, and Insurance, are built. A pack is one YAML file, so a new domain means writing, not rebuilding. Nine more are specified, and a test checks them.\n\nOne rule is enforced by the type system rather than by convention: never_acts is declared Literal True. A pack that tries to pay, book or file will not even load.\n\nDesmond will now show you one pack at work, and how we proved any of this.",
-  // 8
-  "DESMOND\n\nThank you, Siew Siew. A file of know-how sounds abstract, so here is one at work. Marcus types one sentence: review my insurance coverage and tell me what is lacking.\n\nThe insurance pack reads his income off his payslip and his cover off his policies, and applies the rule of thumb MoneySense publishes: life cover around nine times annual income, critical illness around four. Then ordinary code does the arithmetic. He earns 112,800 a year; nine times that is just over a million; he holds 300,000. He is short about 715,000 on life cover and about 251,000 on critical illness.\n\nEvery number on that card links to its page. It names the gap and the kind of plan that closes it, never a product, and Marcus's consent to advice is recorded.",
-  // 9
-  "DESMOND\n\nYou cannot test an assistant like this on real families' payslips, so we built one family. The Lim household in Tampines: Marcus, his wife Rachel, their son Lucas, and Marcus's parents. Three surnames, one household, which is exactly what makes parent relief and elderly hospital cover interesting.\n\nThe rule is register first: the ground-truth spreadsheet is filled in before any document is generated, so every question can be graded by code, not by opinion. That ID card is one of those synthetic specimens.\n\nRun 3's vault holds 93 documents across 16 types, 39 of them unregistered statements kept as realistic noise. Against it: 118 golden questions, 93 answerable and 25 hard negatives, plus 15 adversarial traps: prompt injection, requests to act, stale and absent records.",
-  // 10
-  "DESMOND\n\nThis is the slide that changed how we evaluate. A confident, well-cited, wrong answer about an insurance policy is worse than no answer. So the first number we report is the unsupported claim.\n\nIn Run 3 there were 25 in 118 answers; that is the coloured part of the ring. Twelve were unanswerable questions answered anyway, from a page that was relevant but silent on the point. Eight were wrong values. Five were a false 'not on file' when it was on file. And zero forbidden strings leaked on the adversarial set.\n\nWith the fixes Run 3 found, on 28 October the count is 21.",
-  // 11
-  "DESMOND\n\nSo the report leads with five numbers, one per aim, each scored by code against the register, and each ring shows how full it is.\n\nRight and cited: 77 of 93. Unsupported claims: 21 of 118, the one ring we want empty. Over-caution, meaning it held back although it had read the answering page: 4 of 93. Extraction F1: 0.961. And the absolute line: all 15 adversarial questions contained, zero leaks.\n\nThese are main on 28 October, on the same 93-document vault as Run 3, and every headline moved the right way since. One honest caveat: this five-number headline is proposed and awaiting our supervisor's sign-off. The nine original metrics remain as diagnostics.",
-  // 12
-  "DESMOND\n\nThe biggest single lesson came from retrieval.\n\nOn six documents, naive dense search looked fine. Grow the corpus to 26 with no code change, and recall fell 0.074 and precision 0.101. A score on a small corpus does not predict one on a realistic corpus.\n\nDense search cannot reliably find a policy by its printed number, so full-text search joined it, fused by reciprocal rank fusion, and a cross-encoder keeps the best six of forty passages. Faithfulness jumped from 0.810 to 0.967, the largest movement in the project. Once the right page was reliably in the window, the model stopped borrowing from a neighbouring document.\n\nBy Run 3, 19 of the 21 misses had the right page in hand. Back to Siew Siew on what keeps it safe.",
-  // 13
-  "SIEW SIEW\n\nThank you, Desmond. PARROT advises. It never pays, books or files. Ask it to renew a policy and pay the premium and it explains what the documents say and declines to act, because that is enforced in the code and not left to the model's judgement.\n\nAround that sits a full governance set. For PDPA: a data inventory, a consent and redaction protocol, retention and erasure, and a breach procedure. An ISO/IEC 22989 to 5338 map that ties every lifecycle stage to a file in the repository. A mapping to IMDA's nine generative-AI governance dimensions, with an autonomy statement. And a model card and terms of use that say plainly what it is for, where it fails and who it is not for.",
-  // 14
-  "SIEW SIEW\n\nCommercially, PARROT is sold the way it is built: packs are the unit of sale. The core is common; the domain packs are what a family buys, and modules multiply what each pack can do.\n\nNow: the prototype, two packs and two modules. Next: a household product with catalogue packs bought one at a time, once we have a measured minimum hardware spec. Then: a professional seat, where an insurance agent reviews a client's cover with consent, which first needs a position on the Financial Advisers Act. Later: a marketplace of packs written by domain experts.\n\nWe claim no price or market size. Willingness to pay is a hypothesis, ordered by how countable the loss is: a missed SRS relief, a lapsed motor policy.",
-  // 15
-  "SIEW SIEW (Desmond joins for questions)\n\nThree things come next. First, prove it on real paper: close the synthetic-to-real gap with the holdout set, 14 of a planned 40 real redacted documents so far. Second, turn on the label check from ADR 0021, which checks each stated value against the printed label beside it: two fewer unsupported claims and no right answer lost. Third, measure the minimum machine: fit the full workflow on an 8 GB GPU and publish the spec.\n\nOptional: click the logo on the right to play the ten-second reveal.\n\nIf you remember one line, make it this one: when the documents don't say, PARROT says so.\n\nThank you. Desmond and I are happy to take your questions.",
+  // 1 · 1 click
+  "SIEW SIEW  ·  1 click\n\nGood morning. A question almost nobody in this room can answer quickly: where, exactly, is your car insurance policy right now? Not roughly. Exactly. An email, a drawer, a photo somewhere on a phone.\n\nWe are Group 1, and this is PARROT. You photograph a document once, it files itself, and when you ask it something it answers with the page the answer came from. And the part we care about most: when it does not know, it says so. It runs on the family's own laptop, so nothing leaves the house.\n\n[CLICK] PARROT was built by five of us: Christian, Fauziah, Desmond, Yew Mun and me, Siew Siew. Desmond and I will take you through the problem, the product, the evidence that it works, and what still has to be true before anyone pays for it.",
+  // 2 · 4 clicks
+  "SIEW SIEW  ·  4 clicks\n\nLet me introduce three people from our proposal.\n\n[CLICK] Sarah is a working mother, which makes her the household calendar: renewals and due dates spread over six inboxes and a drawer.\n\n[CLICK] Marcus is the sandwich generation. Between himself, his wife, his son and his two parents he tracks eleven policies, and the one question that matters, are we covered, costs him an evening.\n\n[CLICK] Priya saves tax through SRS, once a year, in a narrow window. Miss it and nothing happens: no letter, no alarm. The relief just disappears.\n\n[CLICK] What they share: none of them is missing documents. They are missing a way to ask the pile a question and trust the answer. And a chatbot that confidently invents a policy date is worse than none, because now you have stopped checking.",
+  // 3 · 5 clicks
+  "SIEW SIEW  ·  5 clicks\n\nHere is the whole product in three moves.\n\n[CLICK] One, capture. You photograph a document and send it to a Telegram chat, or drop it in a folder. That is all the filing you ever do. Docling reads the page and the model extracts typed fields: dates, amounts, policy numbers.\n\n[CLICK] Two, ask. Plain English. Every sentence in the answer carries its own source, the document and the page.\n\n[CLICK] Three, Today. You do not even have to ask. It opens on what needs you now.\n\n[CLICK] And the line to remember: when the documents do not say, PARROT says so. It does not guess.\n\n[CLICK] These are real screens from the running app: on the left, a phone filing photos through Telegram; on the right, an answer with its citation, b1-0001.pdf, page 1. One click opens the original.",
+  // 4 · 4 clicks
+  "SIEW SIEW  ·  4 clicks\n\nFour screens, and the design principle is that it speaks first.\n\n[CLICK] Today is the home screen: a policy that has expired, something due, and the documents it could not read and wants you to check.\n\n[CLICK] Ask is the conversation, where every answer shows its page.\n\n[CLICK] Vault is honesty about extraction: what it read off each document, with a confidence, and what it could not, in plain words rather than hidden.\n\n[CLICK] Packs is where a family chooses what PARROT knows about. Switch the insurance pack off and its advice goes quiet; the documents stay searchable.\n\nThe interface is Next.js 15 behind a local passphrase, and it never talks to anything outside the laptop.",
+  // 5 · 4 clicks
+  "SIEW SIEW  ·  4 clicks\n\nLet us zoom into one real answer: when does the car insurance renew?\n\n[CLICK] Number one: every sentence ends in a citation chip, a document and a page. Behind that is a hard rule in the database: a fact row cannot be written without its document and page; both columns are NOT NULL.\n\n[CLICK] Number two: the footer says nothing left this computer. Generation, embedding, reranking, even the model that grades us, all run locally.\n\n[CLICK] Number three: it knows what it is not. It is not a licensed financial adviser, and it says so.\n\n[CLICK] Number four, and the title of this slide: the date 11 April 2027 is read from a typed column in Postgres. The model writes the sentence around the number. It never produces the number itself.",
+  // 6 · 5 clicks
+  "SIEW SIEW  ·  5 clicks\n\nUnderneath, five layers, one laptop and one database. Let me build it up.\n\n[CLICK] At the top, a launcher starts everything, the Next.js screens are what the family sees, and the FastAPI engine serves them.\n\n[CLICK] Capture: the folder watcher and the Telegram bot hand documents to a Celery worker, Docling parses them, and a page it is not confident about goes to quarantine, where the vision model reads the image itself.\n\n[CLICK] Answering: a LangGraph graph scopes the question to the right person, runs hybrid search fused with reciprocal rank fusion, reranks with a cross-encoder, and an evidence gate decides whether the answer is supported at all.\n\n[CLICK] Runtime: every model is open and local. SEA-LION 4B vision-language from AI Singapore generates, EmbeddingGemma embeds, all in one PostgreSQL with pgvector.\n\n[CLICK] And knowledge: the contracts, the domain packs, the modules and the grounding corpus. Tested on a 32 GB laptop with an RTX 4060.",
+  // 7 · 4 clicks
+  "SIEW SIEW  ·  4 clicks\n\nWhy call it a platform and not an app? Because we built the hard part once.\n\n[CLICK] The engine in the middle files, finds, checks and cites.\n\n[CLICK] From one side plug in capability modules: Reminder, Alert and Advice. They read the typed facts the engine has filed, and none of them touches the screen.\n\n[CLICK] From the other side plug in domain packs: Tax and Reliefs, and Insurance. A pack is one YAML file, so a new domain means writing, not rebuilding.\n\n[CLICK] Two packs built, nine more specified and checked by a test, three modules running, and zero packs that can act: never_acts is typed Literal True, so a pack that tries to pay, book or file will not even load.\n\nDesmond will now show you one pack at work, and how we proved any of this.",
+  // 8 · 4 clicks
+  "DESMOND  ·  4 clicks\n\nThank you, Siew Siew. A file of know-how sounds abstract, so here is one at work.\n\n[CLICK] Marcus types one sentence: review my insurance coverage and tell me what is lacking.\n\n[CLICK] The insurance pack reads his income off his payslip and his cover off his policies, and applies the MoneySense rule of thumb: life cover around nine times annual income. He earns 112,800 a year, so the target is just over a million. He holds 300,000. He is short about 715,000.\n\n[CLICK] Critical illness, around four times income: he is short about 251,000.\n\n[CLICK] Plain code does the sums, not the model, and every input on that card links to its page. It names the gap and the kind of plan that closes it, never a product, and Marcus's consent to advice is recorded.",
+  // 9 · 5 clicks
+  "DESMOND  ·  5 clicks\n\nYou cannot test an assistant like this on real families' payslips, so we built one family, and wrote their whole life down before a single document existed. That ID card is one of our synthetic specimens.\n\n[CLICK] The Lim household in Tampines: Marcus, his wife Rachel, their son Lucas, and Marcus's parents Ah Kow and Mei Ling. Three surnames, one household, which is exactly what makes parent relief and elderly hospital cover interesting.\n\n[CLICK] Run 3's vault holds 93 documents, 39 of them unregistered statements kept as realistic noise.\n\n[CLICK] Across 16 document types, from payslips to policy schedules.\n\n[CLICK] Against it, 118 golden questions: 93 answerable and 25 whose answer is deliberately absent. Every one is graded by code against the register, not by opinion.\n\n[CLICK] And 15 adversarial traps: prompt injection, requests to act, stale and absent records.",
+  // 10 · 5 clicks
+  "DESMOND  ·  5 clicks\n\nThis is the slide that changed how we evaluate. A confident, well-cited, wrong answer about an insurance policy is worse than no answer. So the first number we report is the unsupported claim. In Run 3 there were 25 in 118 answers; that is the coloured part of the ring.\n\n[CLICK] Twelve were unanswerable questions answered anyway, from a page that was relevant but silent on the point.\n\n[CLICK] Eight were wrong values.\n\n[CLICK] Five were a false 'not on file' when it was on file.\n\n[CLICK] And zero forbidden strings leaked on the adversarial set.\n\n[CLICK] That is why we lead with this number. And with the fixes Run 3 found, the count fell from 25 to 21.",
+  // 11 · 6 clicks
+  "DESMOND  ·  6 clicks\n\nSo the report leads with five numbers, one per aim, each scored by code against the register. Each ring shows how full it is.\n\n[CLICK] Right and cited: 77 of 93.\n\n[CLICK] Unsupported claims: 21 of 118. This is the one ring we want empty.\n\n[CLICK] Over-caution, meaning it held back although it had read the answering page: 4 of 93.\n\n[CLICK] Extraction F1: 0.961.\n\n[CLICK] And the absolute line: all 15 adversarial traps contained.\n\n[CLICK] Measured on main on 28 October, on the same 93-document vault as Run 3, and every headline moved the right way since. One honest caveat: this five-number headline is proposed and awaiting our supervisor's sign-off.",
+  // 12 · 4 clicks
+  "DESMOND  ·  4 clicks\n\nThe biggest single lesson came from retrieval. The chart shows recall, precision and faithfulness across our runs.\n\n[CLICK] The headline: faithfulness jumped from 0.81 to 0.97, the largest movement in the project, once hybrid search and a cross-encoder put the answering page reliably in the window. The model stopped borrowing from a neighbouring document.\n\n[CLICK] Why it was needed: grow the corpus from 6 documents to 26, with no code change, and precision fell by 0.10. A score on a small corpus does not predict one on a realistic corpus.\n\n[CLICK] Dense search cannot reliably find a policy by its printed number, so full-text search joined it.\n\n[CLICK] And by Run 3, 19 of the 21 misses had the right page in hand: retrieval is no longer where answers are lost.\n\nBack to Siew Siew on what keeps it safe.",
+  // 13 · 6 clicks
+  "SIEW SIEW  ·  6 clicks\n\nThank you, Desmond. PARROT advises. It never pays, books or files.\n\n[CLICK] Ask it to renew a policy and pay the premium, and it explains what the documents say and declines to act.\n\n[CLICK] That is enforced in the code, not left to the model's judgement: never_acts is typed Literal True in every pack.\n\nAround that sits a full governance set.\n\n[CLICK] For PDPA: a data inventory, a consent and redaction protocol, retention and erasure, and a breach procedure.\n\n[CLICK] An ISO/IEC 22989 to 5338 map that ties every lifecycle stage to a file in the repository.\n\n[CLICK] A mapping to IMDA's nine generative-AI governance dimensions, with an autonomy statement.\n\n[CLICK] And a model card and terms of use that say plainly what it is for, where it fails, and who it is not for.",
+  // 14 · 5 clicks
+  "SIEW SIEW  ·  5 clicks\n\nCommercially, PARROT is sold the way it is built: packs are the unit of sale. The core is common; the domain packs are what a family buys.\n\n[CLICK] Now: the prototype, two packs and two modules.\n\n[CLICK] Next: a household product with catalogue packs bought one at a time, once we have a measured minimum hardware spec.\n\n[CLICK] Then: a professional seat, where an insurance agent reviews a client's cover with consent. That first needs a position on the Financial Advisers Act.\n\n[CLICK] Later: a marketplace of packs written by domain experts.\n\n[CLICK] We claim no price or market size. Willingness to pay is a hypothesis, ordered by how countable the loss is: a missed SRS relief, a lapsed motor policy.",
+  // 15 · 4 clicks
+  "SIEW SIEW  ·  4 clicks  ·  Desmond joins for questions\n\nThree things come next.\n\n[CLICK] First, prove it on real paper: close the synthetic-to-real gap with the holdout set, 14 of a planned 40 real redacted documents so far.\n\n[CLICK] Second, turn on the label check from ADR 0021, which checks each stated value against the printed label beside it: two fewer unsupported claims, and no right answer lost.\n\n[CLICK] Third, measure the minimum machine: fit the full workflow on an 8 GB GPU and publish the spec.\n\n[CLICK] If you remember one line, make it this one: when the documents don't say, PARROT says so. (Optional: click the logo to play the ten-second reveal.)\n\nThank you. Desmond and I are happy to take your questions.",
 ];
 
 // ---------- images ----------
@@ -181,8 +182,23 @@ function newSlide(masterName, sectionTitle) {
   }
   const slide = pres.addSlide({ masterName, sectionTitle });
   slide.addNotes(NOTES[slideCount++]);
+  step = 0;
+  // Anything added while a click step is set is named "animN_…"; addAnimations() turns the
+  // names into click-triggered fades, in step order.
+  for (const m of ["addText", "addShape", "addImage", "addChart", "addMedia"]) {
+    const orig = slide[m].bind(slide);
+    slide[m] = (...args) => {
+      const o = args[args.length - 1];
+      if (step > 0 && o && typeof o === "object" && !Array.isArray(o) && !o.placeholder) {
+        o.objectName = `anim${step}_${o.objectName || m}`;
+      }
+      return orig(...args);
+    };
+  }
   return slide;
 }
+let step = 0;
+const go = (n) => { step = n; };
 function heading(slide, kicker, title) {
   slide.addText(kicker.toUpperCase(), { placeholder: "kicker" });
   slide.addText(title, { placeholder: "title" });
@@ -237,6 +253,7 @@ async function build() {
     ], { placeholder: "title" });
     s.addText("A local-first household AI that shows its page, and says so when it does not know.",
       { placeholder: "body" });
+    go(1);
     let x = 0.6;
     const fills = [C.accent1, C.accent2, C.accent3, C.accent4, C.accent5];
     for (let i = 0; i < TEAM.length; i++) {
@@ -258,6 +275,7 @@ async function build() {
     ];
     for (let i = 0; i < 3; i++) {
       const [ic, name, who, pain, fill, hex] = people[i];
+      go(i + 1);
       const x = 0.5 + i * 4.18;
       card(s, x, 1.8, 3.97, 3.7, { fill, dark: true });
       await iconDisc(s, ic, x + 0.35, 2.1, 0.95, C.background1, hex);
@@ -265,6 +283,7 @@ async function build() {
       text(s, who, { x: x + 1.45, y: 2.62, w: 2.4, h: 0.4, fontSize: 17, bold: true, color: C.background1 });
       text(s, pain, { x: x + 0.35, y: 3.35, w: 3.3, h: 2.0, fontSize: 24, color: C.background1 });
     }
+    go(4);
     s.addText([
       { text: "Not missing documents. ", options: { bold: true } },
       { text: "Missing a way to ask the pile a question, and trust the answer." },
@@ -285,13 +304,16 @@ async function build() {
     ];
     for (let i = 0; i < 3; i++) {
       const [ic, h, b, fill, fg] = steps[i];
+      go(i + 1);
       const y = 1.85 + i * 1.5;
       await iconDisc(s, ic, 0.5, y, 1.1, fill, fg);
       text(s, `0${i + 1}  ${h}`, { x: 1.85, y: y - 0.02, w: 5.3, h: 0.55, fontFace: "Arial", bold: true, fontSize: 28, color: C.text1 });
       text(s, b, { x: 1.85, y: y + 0.55, w: 5.3, h: 0.6, fontSize: 19 });
     }
+    go(4);
     text(s, "When the documents don't say, PARROT says so.", { x: 0.5, y: 6.35, w: 7.0, h: 0.5,
       fontSize: 22, italic: true, bold: true, color: C.accent1 });
+    go(5);
     screenshot(s, "03-capture.jpg", 7.55, 1.75, 2.7, 5.1, { rotate: -5 });
     screenshot(s, "final-ask.jpg", 10.15, 2.0, 2.75, 3.85, { rotate: 4 });
     pill(s, "b1-0001.pdf  p.1", 10.4, 6.2, { w: 2.3, fill: C.accent4, mono: true, size: 14 });
@@ -307,6 +329,7 @@ async function build() {
     const w = 2.95, h = w * 1255 / 935;
     for (let i = 0; i < 4; i++) {
       const [f, name, col, cap] = screens[i];
+      go(i + 1);
       const x = 0.55 + i * 3.18;
       screenshot(s, f, x, 1.8, w, h, { rotate: [-4, 2, -2, 4][i], dark: true });
       pill(s, name, x + 0.15, 1.55, { w: 1.45, h: 0.5, fill: col, color: i === 1 ? C.text1 : C.background1, size: 18 });
@@ -332,6 +355,7 @@ async function build() {
     ];
     for (let i = 0; i < 4; i++) {
       const [px, py] = at(...spots[i]);
+      go(i + 1);
       numDisc(s, i + 1, px - 0.25, py - 0.25, 0.5, cols[i], i === 1 ? C.text1 : C.background1);
       const y = 1.8 + i * 1.29;
       card(s, 4.6, y, 8.23, 1.13);
@@ -355,6 +379,7 @@ async function build() {
     ];
     for (let r = 0; r < rows.length; r++) {
       const [label, col, boxes] = rows[r];
+      go(r + 1);
       const y = 1.75 + r * 1.03;
       text(s, label.toUpperCase(), { x: 0.5, y, w: 2.2, h: 0.88, fontSize: 16, bold: true, charSpacing: 2, color: col, valign: "middle" });
       const bw = (12.83 - 2.75 - (boxes.length - 1) * 0.15) / boxes.length;
@@ -372,6 +397,7 @@ async function build() {
   {
     const s = newSlide("Content", "The platform");
     heading(s, "The platform", "One engine. Two ways to grow");
+    go(1);
     s.addText([
       { text: "THE CORE ENGINE", options: { fontSize: 14, bold: true, charSpacing: 3, color: C.accent2, breakLine: true } },
       { text: "File · Find", options: { fontSize: 32, bold: true, fontFace: "Arial", color: C.background1, breakLine: true } },
@@ -383,14 +409,18 @@ async function build() {
       [8.95, Fi.FiPackage, "Domain packs", "Tax · Insurance", "One YAML file of know-how each.", C.accent1, HEX.accent1],
     ];
     for (const [x, ic, h, sub, b, fill, hex] of sides) {
+      go(x < 5 ? 2 : 3);
       card(s, x, 1.85, 3.88, 3.4, { fill });
       await iconDisc(s, ic, x + 0.3, 2.1, 0.85, C.background1, hex);
       text(s, h, { x: x + 1.3, y: 2.25, w: 2.5, h: 0.55, fontFace: "Arial", bold: true, fontSize: 26, color: C.background1 });
       text(s, sub, { x: x + 0.3, y: 3.15, w: 3.4, h: 0.45, fontSize: 19, bold: true, color: C.background1 });
       text(s, b, { x: x + 0.3, y: 3.7, w: 3.4, h: 1.2, fontSize: 19, color: C.background1 });
     }
+    go(2);
     s.addShape(pres.shapes.LINE, { x: 4.38, y: 3.55, w: 0.24, h: 0, line: { color: C.accent3, width: 4, endArrowType: "triangle" } });
+    go(3);
     s.addShape(pres.shapes.LINE, { x: 8.72, y: 3.55, w: 0.23, h: 0, line: { color: C.accent1, width: 4, beginArrowType: "triangle" } });
+    go(4);
     const stats = [["2", "packs built", C.accent1], ["9", "more specified", C.accent3], ["3", "modules running", C.accent4],
       ["0", "packs that can act", C.accent5]];
     for (let i = 0; i < 4; i++) {
@@ -406,14 +436,18 @@ async function build() {
     const s = newSlide("Content Dark", "The evidence");
     heading(s, "A working domain pack", "Ask what's missing. Code does the sums");
     screenshot(s, "06-advice.png", 0.65, 1.9, 5.7, 5.7 * 930 / 1080, { rotate: -2, dark: true });
-    text(s, "“Review my insurance coverage and tell me what is lacking.”", { x: 6.9, y: 1.8, w: 5.95, h: 0.95,
+    go(1);
+    text(s, "\u201CReview my insurance coverage and tell me what is lacking.\u201D", { x: 6.9, y: 1.8, w: 5.95, h: 0.95,
       fontSize: 22, italic: true, color: C.accent2 });
+    go(2);
     card(s, 6.9, 2.95, 2.88, 2.4, { fill: C.accent1, dark: true });
-    card(s, 9.95, 2.95, 2.88, 2.4, { fill: C.accent3, dark: true });
     text(s, "715k", { x: 7.1, y: 3.05, w: 2.5, h: 1.05, fontFace: "Arial", bold: true, fontSize: 60, color: C.background1, valign: "bottom" });
     text(s, "SGD short on life cover", { x: 7.1, y: 4.15, w: 2.5, h: 1.0, fontSize: 18, bold: true, color: C.background1 });
+    go(3);
+    card(s, 9.95, 2.95, 2.88, 2.4, { fill: C.accent3, dark: true });
     text(s, "251k", { x: 10.15, y: 3.05, w: 2.5, h: 1.05, fontFace: "Arial", bold: true, fontSize: 60, color: C.background1, valign: "bottom" });
     text(s, "SGD short on critical illness", { x: 10.15, y: 4.15, w: 2.5, h: 1.0, fontSize: 18, bold: true, color: C.background1 });
+    go(4);
     text(s, "9 × income, from his payslip, against cover from his policies. Plain code does the sums; every input is cited.",
       { x: 6.9, y: 5.55, w: 5.95, h: 0.95, fontSize: 18, color: C.background1 });
     source(s, "packs/insurance_agent · Pitch Script §06", "dark");
@@ -425,6 +459,7 @@ async function build() {
     heading(s, "The corpus", "One synthetic family, written first");
     const iw = 6.0, ih = iw * 1536 / 2816;
     screenshot(s, "09-photo-doc.jpg", 0.75, 1.95, iw, ih, { rotate: -3, pad: 0.12 });
+    go(1);
     const fam = [["M", "Marcus"], ["R", "Rachel"], ["L", "Lucas"], ["AK", "Ah Kow"], ["ML", "Mei Ling"]];
     const fc = [C.accent1, C.accent3, C.accent2, C.accent4, C.accent5];
     for (let i = 0; i < 5; i++) {
@@ -437,6 +472,7 @@ async function build() {
     const tiles = [["93", "documents in the vault", C.accent1], ["16", "document types", C.accent3],
       ["118", "golden questions", C.accent4], ["15", "adversarial traps", C.accent2]];
     for (let i = 0; i < 4; i++) {
+      go(i + 2);
       const x = 7.2 + (i % 2) * 2.88;
       const y = 1.8 + Math.floor(i / 2) * 2.55;
       const fg = i === 3 ? C.text1 : C.background1;
@@ -460,12 +496,14 @@ async function build() {
     text(s, "25", { x: 1.6, y: 3.35, w: 2.85, h: 1.2, fontFace: "Arial", bold: true, fontSize: 80, color: C.background1, align: "center", valign: "middle" });
     text(s, "unsupported claims\nin 118 answers", { x: 1.6, y: 4.55, w: 2.85, h: 0.7, fontSize: 16, color: MIST, align: "center" });
     const parts = [["12", "unanswerable questions answered anyway", C.accent1], ["8", "wrong values", C.accent2],
-      ["5", "false “not on file”", "4F95FF"], ["0", "leaks on the adversarial set", "2BC48F"]];
+      ["5", "false \u201Cnot on file\u201D", "4F95FF"], ["0", "leaks on the adversarial set", "2BC48F"]];
     for (let i = 0; i < 4; i++) {
+      go(i + 1);
       const y = 1.75 + i * 1.1;
       text(s, parts[i][0], { x: 6.0, y, w: 1.3, h: 0.95, fontFace: "Arial", bold: true, fontSize: 56, color: parts[i][2], valign: "middle", align: "right" });
       text(s, parts[i][1], { x: 7.55, y, w: 5.3, h: 0.95, fontSize: 22, bold: true, color: C.background1, valign: "middle" });
     }
+    go(5);
     s.addText([{ text: "A confident wrong answer is worse than none. ", options: { bold: true, color: C.accent2 } },
       { text: "With Run 3's fixes, 25 fell to 21.", options: { color: C.background1 } }],
     { x: 6.0, y: 6.15, w: 6.85, h: 0.7, fontSize: 19, margin: 0, isTextBox: true, valign: "middle" });
@@ -486,6 +524,7 @@ async function build() {
     const d = 2.35;
     for (let i = 0; i < 5; i++) {
       const [v, t, big, small, label, col] = rings[i];
+      go(i + 1);
       const x = 0.5 + i * 2.5;
       ring(s, v, t, x, 1.85, d, col, { name: label, hole: 76 });
       s.addText([{ text: big, options: { fontSize: i === 3 ? 26 : 34, bold: true, color: C.text1, breakLine: !!small } },
@@ -493,6 +532,7 @@ async function build() {
       { x: x + 0.45, y: 1.85 + d / 2 - 0.5, w: d - 0.9, h: 1.0, fontFace: "Arial", align: "center", valign: "middle", margin: 0, isTextBox: true });
       text(s, label, { x: x - 0.05, y: 4.3, w: d + 0.1, h: 0.45, fontSize: 19, bold: true, color: C.text1, align: "center" });
     }
+    go(6);
     s.addText([{ text: "Lower is better on one ring only: ", options: { bold: true, color: C.accent1 } },
       { text: "unsupported claims, from 25 in Run 3 to 21 on 28 October. Every other ring moved up, on the same 93-document vault.", options: { color: C.text2 } }],
     { x: 0.5, y: 5.2, w: 12.33, h: 1.0, fontSize: 19, margin: [0.1, 0.3, 0.1, 0.3], shape: pres.shapes.ROUNDED_RECTANGLE,
@@ -518,13 +558,15 @@ async function build() {
       catAxisLabelFontFace: "+mn-lt", showLegend: true, legendPos: "t", legendFontSize: 14, legendColor: HEX.dk2,
       legendFontFace: "+mn-lt", objectName: "retrieval diagnostics",
     });
+    go(1);
     card(s, 8.3, 1.8, 4.53, 2.55, { fill: C.accent1 });
     text(s, "FAITHFULNESS", { x: 8.6, y: 2.0, w: 4, h: 0.35, fontSize: 15, bold: true, charSpacing: 3, color: C.background1 });
-    text(s, "0.81 → 0.97", { x: 8.6, y: 2.4, w: 4.1, h: 0.95, fontFace: "Arial", bold: true, fontSize: 48, color: C.background1, valign: "middle" });
+    text(s, "0.81 \u2192 0.97", { x: 8.6, y: 2.4, w: 4.1, h: 0.95, fontFace: "Arial", bold: true, fontSize: 48, color: C.background1, valign: "middle" });
     text(s, "hybrid search plus a cross-encoder", { x: 8.6, y: 3.4, w: 4.1, h: 0.75, fontSize: 18, color: C.background1 });
     const pts = [["Bigger corpus alone: precision fell 0.10", C.accent3], ["Full text finds policy numbers", C.accent2],
       ["Run 3: 19 of 21 misses had the page", C.accent4]];
     for (let i = 0; i < 3; i++) {
+      go(i + 2);
       const y = 4.6 + i * 0.75;
       s.addShape(pres.shapes.OVAL, { x: 8.35, y: y + 0.12, w: 0.3, h: 0.3, fill: { color: pts[i][1] }, line: { color: pts[i][1] } });
       text(s, pts[i][0], { x: 8.85, y, w: 4.0, h: 0.6, fontSize: 18, bold: true, color: C.text1, valign: "middle" });
@@ -536,16 +578,19 @@ async function build() {
   {
     const s = newSlide("Content Dark", "Trust and what next");
     heading(s, "Governance and assurance", "It advises. It never pays, books or files");
-    text(s, "“Renew my policy and pay the premium.”", { x: 0.5, y: 1.8, w: 6, h: 0.5, fontSize: 22, italic: true, color: C.accent2 });
+    go(1);
+    text(s, "\u201CRenew my policy and pay the premium.\u201D", { x: 0.5, y: 1.8, w: 6, h: 0.5, fontSize: 22, italic: true, color: C.accent2 });
     screenshot(s, "final-refusal-crop.jpg", 0.65, 2.55, 5.7, 5.7 * 300 / 800, { rotate: -2, dark: true });
+    go(2);
     text(s, "never_acts: true", { x: 0.5, y: 5.0, w: 6.0, h: 0.8, fontFace: "Courier New", bold: true, fontSize: 36, color: "2BC48F", valign: "middle" });
     text(s, "Typed Literal[True] in every pack: one that can act will not load.", { x: 0.5, y: 5.85, w: 6.0, h: 0.8, fontSize: 18, color: C.background1 });
     const docs = [[Fi.FiLock, "PDPA", "Inventory, consent, retention, breach", HEX.accent1, HEX.lt1],
-      [Fi.FiLayers, "ISO/IEC 22989 → 5338", "Every lifecycle stage mapped to a file", HEX.accent2, HEX.dk1],
+      [Fi.FiLayers, "ISO/IEC 22989 \u2192 5338", "Every lifecycle stage mapped to a file", HEX.accent2, HEX.dk1],
       [Fi.FiFlag, "IMDA governance", "Nine GenAI dimensions, autonomy statement", HEX.accent3, HEX.lt1],
       [Fi.FiFileText, "Model card and terms", "What it is for, and where it fails", HEX.accent4, HEX.lt1]];
     for (let i = 0; i < 4; i++) {
       const [ic, h, b, col, fg] = docs[i];
+      go(i + 3);
       const y = 1.8 + i * 1.27;
       card(s, 6.85, y, 5.98, 1.12, { fill: C.accent6, dark: true });
       await iconDisc(s, ic, 7.05, y + 0.18, 0.76, col, fg);
@@ -565,6 +610,7 @@ async function build() {
       ["Later", "Marketplace", "Packs by domain experts", C.accent1]];
     for (let i = 0; i < 4; i++) {
       const [when, h, b, col] = stages[i];
+      go(i + 1);
       const x = 0.5 + i * 3.13;
       const y = 3.5 - i * 0.55;
       const fg = i === 2 ? C.text1 : C.background1;
@@ -573,6 +619,7 @@ async function build() {
       text(s, h, { x: x + 0.25, y: y + 0.6, w: 2.5, h: 0.55, fontFace: "Arial", bold: true, fontSize: 26, color: fg });
       text(s, b, { x: x + 0.25, y: y + 1.25, w: 2.5, h: 1.2, fontSize: 19, color: fg });
     }
+    go(5);
     text(s, "No price claimed: willingness to pay is a hypothesis, ordered by how countable the loss is.",
       { x: 0.5, y: 6.35, w: 12.33, h: 0.5, fontSize: 18, italic: true });
     source(s, "docs/report/07-commercialisation-roadmap.md");
@@ -587,16 +634,19 @@ async function build() {
       ["Measure the minimum machine", "Fit it on an 8 GB GPU, publish the spec"]];
     for (let i = 0; i < 3; i++) {
       const y = 1.85 + i * 1.3;
+      go(i + 1);
       numDisc(s, i + 1, 0.5, y, 0.9, C.background1, C.accent1);
       text(s, next[i][0], { x: 1.65, y: y - 0.02, w: 5.6, h: 0.5, fontFace: "Arial", bold: true, fontSize: 26, color: C.background1 });
       text(s, next[i][1], { x: 1.65, y: y + 0.5, w: 5.6, h: 0.45, fontSize: 19, color: C.background1 });
     }
+    go(4);
     const vx = 7.45, vy = 1.85, vw = 5.4, vh = vw * 9 / 16;
     card(s, vx - 0.1, vy - 0.1, vw + 0.2, vh + 0.2, { dark: true, r: 0.14, name: "video frame" });
     const cover = await sharp(path.join(SHOTS, "logo-reveal-final.jpg")).png().toBuffer();
     s.addMedia({ type: "video", path: path.join(ASSETS, "parrot logo reveal.mp4"), x: vx, y: vy, w: vw, h: vh,
       cover: "data:image/png;base64," + cover.toString("base64"), objectName: "logo reveal" });
     text(s, "Questions?", { x: 7.45, y: 5.15, w: 5.4, h: 0.8, fontFace: "Arial", bold: true, fontSize: 40, color: C.background1, align: "center" });
+    go(0);
     let x = 0.5;
     for (const n of TEAM) {
       x += pill(s, n, x, 6.2, { fill: C.background1, color: C.accent1, w: 1.45, h: 0.46, size: 15 }) + 0.12;
@@ -607,6 +657,7 @@ async function build() {
   await pres.writeFile({ fileName: OUT });
   await applyTheme(OUT, THEME);
   await addFades(OUT);
+  await addAnimations(OUT);
   console.log("wrote", OUT);
 }
 
@@ -619,6 +670,38 @@ async function addFades(file) {
     if (xml.includes("<p:transition")) continue;
     xml = xml.includes("</p:clrMapOvr>") ? xml.replace("</p:clrMapOvr>", "</p:clrMapOvr>" + fade)
       : xml.replace("</p:cSld>", "</p:cSld>" + fade);
+    zip.file(name, xml);
+  }
+  fs.writeFileSync(file, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
+}
+
+// Click-triggered fade-ins. Every element named "animN_…" appears on click N; the elements of
+// one step appear together. Built as PowerPoint writes it: a main sequence of click groups.
+async function addAnimations(file) {
+  const zip = await JSZip.loadAsync(fs.readFileSync(file));
+  for (const name of Object.keys(zip.files).filter((n) => /^ppt\/slides\/slide\d+\.xml$/.test(n))) {
+    let xml = await zip.file(name).async("string");
+    const steps = new Map();
+    const re = /<p:(sp|pic|graphicFrame)>\s*<p:nv\w+Pr>\s*<p:cNvPr id="(\d+)" name="anim(\d+)_/g;
+    for (const m of xml.matchAll(re)) {
+      const n = Number(m[3]);
+      if (!steps.has(n)) steps.set(n, []);
+      steps.get(n).push({ kind: m[1], id: m[2] });
+    }
+    if (!steps.size) continue;
+    let id = 3;
+    const effect = (sp, first) => `<p:par><p:cTn id="${id++}" presetID="10" presetClass="entr" presetSubtype="0" fill="hold" grpId="0" nodeType="${first ? "clickEffect" : "withEffect"}"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst><p:set><p:cBhvr><p:cTn id="${id++}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn><p:tgtEl><p:spTgt spid="${sp.id}"/></p:tgtEl><p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set><p:animEffect transition="in" filter="fade"><p:cBhvr><p:cTn id="${id++}" dur="500"/><p:tgtEl><p:spTgt spid="${sp.id}"/></p:tgtEl></p:cBhvr></p:animEffect></p:childTnLst></p:cTn></p:par>`;
+    const groups = [...steps.keys()].sort((a, b) => a - b).map((n) => {
+      const outer = id++;
+      const inner = id++;
+      const effects = steps.get(n).map((sp, i) => effect(sp, i === 0)).join("");
+      return `<p:par><p:cTn id="${outer}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/></p:stCondLst><p:childTnLst><p:par><p:cTn id="${inner}" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst>${effects}</p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn></p:par>`;
+    }).join("");
+    const bld = [...steps.values()].flat().map((sp) => sp.kind === "sp"
+      ? `<p:bldP spid="${sp.id}" grpId="0" animBg="1"/>`
+      : sp.kind === "graphicFrame" ? `<p:bldGraphic spid="${sp.id}" grpId="0"><p:bldAsOne/></p:bldGraphic>` : "").join("");
+    const timing = `<p:timing><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst><p:seq concurrent="1" nextAc="seek"><p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst>${groups}</p:childTnLst></p:cTn><p:prevCondLst><p:cond evt="onPrev" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:prevCondLst><p:nextCondLst><p:cond evt="onNext" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:nextCondLst></p:seq></p:childTnLst></p:cTn></p:par></p:tnLst>${bld ? `<p:bldLst>${bld}</p:bldLst>` : ""}</p:timing>`;
+    xml = xml.replace("</p:transition>", "</p:transition>" + timing);
     zip.file(name, xml);
   }
   fs.writeFileSync(file, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
