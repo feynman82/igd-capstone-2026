@@ -98,6 +98,25 @@ async function glow(base, blobs) {
     <defs>${g}</defs><rect width="1920" height="1080" fill="#${base}"/>${e}</svg>`;
   return "image/jpeg;base64," + (await sharp(Buffer.from(svg)).jpeg({ quality: 88 }).toBuffer()).toString("base64");
 }
+// The light slides: a diagonal lavender-to-peach wash with sky and mint glows. Pale enough that
+// dark text, white cards and screenshots all keep their contrast.
+async function pastel() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080"><defs>
+    <linearGradient id="w" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E9E3FF"/><stop offset="0.5" stop-color="#F4EEFB"/>
+      <stop offset="1" stop-color="#FFE6D6"/></linearGradient>
+    <radialGradient id="a" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#CFE4FF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#CFE4FF" stop-opacity="0"/></radialGradient>
+    <radialGradient id="b" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFD9E2" stop-opacity="0.8"/>
+      <stop offset="1" stop-color="#FFD9E2" stop-opacity="0"/></radialGradient>
+    <radialGradient id="c" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#D4F5E9" stop-opacity="0.7"/>
+      <stop offset="1" stop-color="#D4F5E9" stop-opacity="0"/></radialGradient></defs>
+    <rect width="1920" height="1080" fill="url(#w)"/>
+    <ellipse cx="1750" cy="90" rx="700" ry="520" fill="url(#a)"/>
+    <ellipse cx="120" cy="1040" rx="760" ry="560" fill="url(#c)"/>
+    <ellipse cx="1820" cy="1060" rx="560" ry="420" fill="url(#b)"/></svg>`;
+  return "image/jpeg;base64," + (await sharp(Buffer.from(svg)).jpeg({ quality: 90 }).toBuffer()).toString("base64");
+}
 // The logo-reveal still, darkened on the left so the title reads over it.
 async function heroImage() {
   const shade = `<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080"><defs>
@@ -210,7 +229,7 @@ async function build() {
       { c: HEX.accent1, o: 0.42, x: 1900, y: -80, r: 760 },
       { c: HEX.accent5, o: 0.45, x: -60, y: 1120, r: 820 },
     ]),
-    light: await glow("FFFFFF", [{ c: HEX.accent2, o: 0.16, x: 1950, y: -60, r: 560 }]),
+    light: await pastel(),
     vivid: await glow(HEX.accent1, [
       { c: "FF7A1A", o: 0.9, x: 1750, y: 80, r: 900 },
       { c: HEX.accent5, o: 0.75, x: 40, y: 1120, r: 900 },
