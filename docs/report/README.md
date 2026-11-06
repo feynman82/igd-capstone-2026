@@ -5,9 +5,15 @@
 `ILP_Report_Skeleton.docx` is the frame. Open it and read the first four pages before
 writing anything — they carry the rubric, the page budget and the writing schedule.
 
-`Project Parrot Final Report (draft).docx` is that frame with every written chapter in it and a
-marked gap, naming the owner, for each section still to write. Rebuild it with
-`python3 docs/report/build_docx.py` as chapters arrive; do not edit it by hand.
+**The skeleton is not in the brief's format.** The course brief sets Arial, 12 pt main text, 14 pt
+bold section titles, 1.5 line spacing, justified, 20 pages, and an abstract of 150 to 300 words. At
+that format a page holds about 340 words, so the skeleton's page budgets overstate what fits.
+
+`Project Parrot Final Report (draft).docx` is built in the brief's format from the chapters here.
+Rebuild it with `python3 docs/report/build_docx.py`; do not edit it by hand. A chapter drafted from
+the repository carries a note until its owner has rewritten it. Clear the owner in `CHAPTERS` then.
+Chapters `04-packs-and-interface.md` and `07-commercialisation-roadmap.md` are the longer sources
+§3.3, §4.3, §4.4 and §7.4 were condensed from; they are not in the build.
 
 ## The thing to understand before you write a word
 
@@ -63,6 +69,7 @@ one carries the argument, not the build log, and each names the decision record 
 | [`05-evaluation-and-results.md`](05-evaluation-and-results.md) | §5, and the retrieval half of §3 | **§5 itself, on its budget of three and a half pages, in the skeleton's order; the holdout gap is marked ⟨holdout⟩.** That a household assistant should be judged on whether it guesses, not on how often it declines: the headline is five numbers, one per aim, led by unsupported claims (25 of 118 in Run 3, 21 on `main`), with the nine week-1 metrics as diagnostics and four validity threats. Decisions: [ADR 0018](../adr/0018-the-reranker-runs-in-process-because-ollama-cannot-serve-a-cross-encoder.md), [ADR 0019](../adr/0019-the-reranker-drops-what-does-not-answer-the-question.md). |
 | [`appendix-c-evaluation-results.md`](appendix-c-evaluation-results.md) | Appendix C | The full results behind §5: every table, the module metrics, extraction by defect, runtime, seven limitations, and a source for each claim in date order. Excluded from the twenty pages. |
 | [`appendix-d-golden-set-sample.md`](appendix-d-golden-set-sample.md) | Appendix D | Sample questions from the three sets, chosen by rule, each with its Run 3 outcome, failures included. Excluded from the twenty pages. |
+| `00-abstract.md`, `01-introduction.md`, `02-background.md`, `03-design.md`, `04-implementation.md`, `06-governance.md`, `07-value-creation.md`, `09-conclusion.md` | The rest of the report | **Drafts written from the repository, for their owners to rewrite in their own words.** `references-verified.md` holds the reference entries they use. `figures/` holds Figures 1 to 4. |
 | [`03-4-technology-selection.md`](03-4-technology-selection.md) | §3.4 | **Draft for Christian to review.** The stack by layer with its reason, and the generator's case: why a 4B vision-language model, what was measured, and why fitting 8 GB is still an estimate. |
 | [`08-limitations-and-future-work.md`](08-limitations-and-future-work.md) | §8 | **Draft for Desmond to review.** What ten weeks did not reach, kept apart from what the approach itself cannot do, then the next three things. |
 | [`04-packs-and-interface.md`](04-packs-and-interface.md) | §3.3, §4.3, §4.4 | **Draft, to re-check after the 28 October freeze.** A second domain cost a file, not a release, because a pack is data checked against a contract, the core owns the household's documents, and the interface shows where each claim came from. Covers the two axes, what a pack stopped being (documents moved to the core), a table of six rules each enforced by code, the two built packs side by side, the catalogue as evidence for the expansion model, and the three interface decisions that carry the thesis. States that Ask has not been usability-tested. Decisions: [ADR 0014](../adr/0014-a-pack-supplies-knowledge-and-the-core-stays-generic.md), [ADR 0016](../adr/0016-a-pack-advises-code-calculates-under-recorded-consent.md), [ADR 0017](../adr/0017-a-pack-is-grounding-and-persona-the-core-owns-documents.md). |

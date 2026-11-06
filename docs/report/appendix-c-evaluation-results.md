@@ -3,9 +3,9 @@
 **Owner: Yew Mun (Lane B).** Excluded from the twenty-page body. §5 is the argument, on its budget of
 three and a half pages; this appendix is the evidence behind it, with the raw runs in `eval/results/`.
 
-> **Status.** Two things are outstanding: **the synthetic-to-real gap**, which waits on the holdout
-> (14 of a planned 40 real documents, run on the integration machine), and **the five-number
-> headline**, which is proposed and awaiting the supervisor's sign-off. Gaps are marked **⟨holdout⟩**.
+> **Status.** The five-number headline is proposed and awaiting the supervisor's sign-off. The
+> holdout (14 of a planned 40 real documents) had not been run when this appendix was completed, so
+> the synthetic-to-real gap is unmeasured.
 
 ---
 
@@ -234,14 +234,14 @@ Apple's GPU, so Run 3 was loaded on the CPU.
 
 ## C.9 Limitations
 
-1. **⟨holdout⟩ Every number is on synthetic documents.** The holdout (14 real, redacted documents
-   of a planned 40) will measure the gap.
+1. **Every number is on synthetic documents.** The holdout (14 real, redacted documents
+   of a planned 40) had not been run when this appendix was completed.
 2. **Three runs, three corpora:** the columns are not a trend, except where the direction is plain
    (abstention, extraction).
 3. **About one answer in five still makes an unsupported claim** (25 of 118 in Run 3, 22 since).
    Twelve are hard negatives answered, and the one measured remedy for those is switched off.
 4. **The headline is proposed, not agreed.** Until it is signed off, the nine metrics and their
-   targets remain the agreed basis.
+   targets remain the reference.
 5. **The judge is named in every result file but not pinned in configuration.** Four lanes'
    generated questions are unreviewed drafts. Citations are graded per document where no field
    records its page.
@@ -252,7 +252,7 @@ Apple's GPU, so Run 3 was loaded on the CPU.
 
 ## C.10 What remains
 
-- **The holdout gap** ⟨holdout⟩.
+- **The holdout,** which has not been run.
 - **The supervisor's sign-off** on the headline.
 - **A decision on ADR 0021.**
 - **The register's insurer names,** after which extraction can be re-scored from stored facts
