@@ -75,7 +75,8 @@ false-positive rate was 2/2 against 0.05: a courtesy title left in an extracted 
 and reported two policies as uncovered. Removing it fires no alert and changes none of the 118
 answers.
 Extraction cleared its line, and would read 0.982 but for a register convention on insurer names.
-The generator decodes at 130 tokens a second at 7.4 GB of VRAM, and Run 3's median answer took 4.4 s.
+On the benchmark machine the generator writes 79 tokens a second with a full 16K window (§3.4), and
+Run 3's median answer took 4.4 s.
 
 ## 5.4 What each component contributed
 

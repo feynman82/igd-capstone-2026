@@ -37,8 +37,9 @@ faithfully. A more accurate model changes neither.
 surname or a romanisation variant becomes a question for the owner. That is right for a system
 that advises, and it costs a household several questions in its first week.
 
-**Local-first has a price.** The generator peaks at 7.4 GB of VRAM. Keeping documents on the
-owner's hardware assumes hardware not every household owns.
+**Local-first has a price.** The generator and the embedder fill 7.4 GB of a 10 GB graphics card
+before the reranker loads (§3.4). Keeping documents on the owner's hardware assumes hardware not
+every household owns.
 
 ## What comes next
 

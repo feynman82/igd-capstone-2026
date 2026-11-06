@@ -227,8 +227,9 @@ that a later one extends. The obligation rows are untouched, so the metric stays
 
 ## C.8 Runtime
 
-The 4B generator decodes at 130 tok/s with 7.4 GB peak VRAM, falling to 79 tok/s on a realistically
-full context. In Run 3, the median answer took 4.4 s. One committed statement crashes Docling on
+On a 10 GB RTX 3080 the 4B generator decodes at 130 tok/s on a short prompt, falling to 79 tok/s on a
+realistically full 16K context, where it holds 5.7 GB. With the embedder resident the card holds
+7.4 GB, of which 1.7 GB is the idle desktop; the reranker, about 1.1 GB, was not in that figure. In Run 3, the median answer took 4.4 s. One committed statement crashes Docling on
 Apple's GPU, so Run 3 was loaded on the CPU.
 
 ## C.9 Limitations

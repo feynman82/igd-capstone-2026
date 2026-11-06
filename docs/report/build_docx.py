@@ -37,7 +37,6 @@ GAPS = {
     66: "Siew",
     71: "Christian",
     73: "Christian",
-    78: "Christian and Yew Mun",
     81: "Christian",
     86: "Christian",
     88: "Christian",
@@ -324,7 +323,14 @@ def main() -> None:
     opening = evaluation[evaluation.index("A household document assistant") :].split("## 5.1")[0]
     status = re.search(r"> \*\*Status\.\*\* (.*?)\n\n", evaluation, re.S).group(1)
     status = " ".join(line.lstrip("> ") for line in status.splitlines())
+    selection = (HERE / "03-4-technology-selection.md").read_text()
+    table_part, cited = selection.split("### References used in this section")
+    table_part = table_part[table_part.index("Every layer runs") :]
     references = evaluation[evaluation.index("### References used") :].split("\n", 1)[1]
+    entries = sorted(
+        {" ".join(e.split()) for e in (references + "\n\n" + cited).strip().split("\n\n")},
+        key=str.lower,
+    )
     packs = sections((HERE / "04-packs-and-interface.md").read_text())
     roadmap = (HERE / "07-commercialisation-roadmap.md").read_text()
     roadmap = "It claims no price" + roadmap.split("It claims no price", 1)[1]
@@ -353,6 +359,7 @@ def main() -> None:
         + zee_section(packs, "6 ·")
         + heading("What this chapter does not claim", 4)
         + markdown(packs["What this chapter does not claim"]),
+        78: callout("Draft · Yew Mun", "For Christian to review.") + markdown(table_part),
         100: markdown(result["5.1"]),
         103: markdown(result["5.2"]),
         105: markdown(result["5.3"]),
@@ -362,8 +369,7 @@ def main() -> None:
         115: markdown(result["5.7"]),
         145: callout("Draft · Yew Mun", "For Desmond to review and add to.") + markdown(limits),
         152: "".join(
-            para(entry.replace("\n", " "), extra='<w:ind w:left="480" w:hanging="480"/>')
-            for entry in references.strip().split("\n\n")
+            para(entry, extra='<w:ind w:left="480" w:hanging="480"/>') for entry in entries
         )
         + gap(old[152], GAPS[152]),
     }
