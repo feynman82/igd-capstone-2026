@@ -5,6 +5,10 @@
 `ILP_Report_Skeleton.docx` is the frame. Open it and read the first four pages before
 writing anything — they carry the rubric, the page budget and the writing schedule.
 
+`Project Parrot Final Report (draft).docx` is that frame with every written chapter in it and a
+marked gap, naming the owner, for each section still to write. Rebuild it with
+`python3 docs/report/build_docx.py` as chapters arrive; do not edit it by hand.
+
 ## The thing to understand before you write a word
 
 The report rubric in the module brief marks **six categories**: Overall Quality, Content
