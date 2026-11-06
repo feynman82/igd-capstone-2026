@@ -2,15 +2,14 @@
 
 **Owners: Desmond and Yew Mun.** Budget three quarters of a page.
 
-> **Status.** A draft by Yew Mun, for Desmond to review and add to. The holdout is marked
-> **⟨holdout⟩**.
+> **Status.** A draft by Yew Mun, for Desmond to review and add to.
 
 ---
 
-## What ten weeks did not reach
+## 8.1 What ten weeks did not reach
 
-- **Real documents.** ⟨holdout⟩ Every number in §5 is on a synthetic corpus about one household. The
-  holdout is 14 real, redacted documents of a planned 40.
+- **Real documents.** Every number in §5 is on a synthetic corpus about one household. The holdout,
+  14 real, redacted documents of a planned 40, had not been run when this report was completed.
 - **Real people.** Nobody outside the team has used the interface, and no household has lived with
   it. So this report can show how often the system guesses; it cannot show that a household comes
   to trust it, which is what the thesis is finally about.
@@ -21,7 +20,7 @@
 - **Our own questions.** Set B was written by the people who built the system. It tests what we
   thought to ask, not what households ask.
 
-## What the approach itself cannot do
+## 8.2 What the approach itself cannot do
 
 **A citation shows where a value came from, not whether it answers the question.** Code can check
 the first, and does. The second is a judgement about meaning, and no threshold makes it for us: to
@@ -41,7 +40,7 @@ that advises, and it costs a household several questions in its first week.
 before the reranker loads (§3.4). Keeping documents on the owner's hardware assumes hardware not
 every household owns.
 
-## What comes next
+## 8.3 What comes next
 
 1. **Finish the holdout,** to 40 documents, and report the gap by document type.
 2. **Close the guessing that can be closed:** decide ADR 0021, and answer from values already

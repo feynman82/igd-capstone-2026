@@ -3,10 +3,9 @@
 **Owner: Yew Mun (Lane B).** Budget three and a half pages. The full results, every table and the
 source of every claim are in [Appendix C](appendix-c-evaluation-results.md).
 
-> **Status.** Two things are outstanding: **the synthetic-to-real gap**, which waits on the holdout
-> (14 of a planned 40 real documents), and **the five-number headline**, which is proposed and
-> awaiting the supervisor's sign-off. Gaps are marked **⟨holdout⟩**. §5.6 is Desmond's in the
-> skeleton; the paragraph here is a draft for Desmond to take.
+> **Status.** The five-number headline is proposed and awaiting the supervisor's sign-off. The
+> holdout had not been run when this section was completed, so the synthetic-to-real gap is
+> unmeasured. §5.6 is Desmond's in the skeleton; the paragraph here is a draft for Desmond to take.
 
 ---
 
@@ -61,16 +60,9 @@ The columns are measurements on different corpora, not a series. The last is Run
 with the fixes Run 3 found. The share of answers making an unsupported claim was 0.20, 0.30 and
 0.21: it did not grow with a corpus fifteen times larger. On `main` it is 0.18.
 
-| Diagnostic | Target | Run 1 | Rebaseline | Run 2 | **Run 3** |
-|---|---|---|---|---|---|
-| Context recall | ≥ 0.85 | 0.895 | 0.821 | **0.897** | 0.848 |
-| Context precision | ≥ 0.70 | 0.868 | 0.767 | **0.854** | 0.820 |
-| Faithfulness | ≥ 0.90 | 0.819 | 0.810 | **0.967** | 0.892 |
-| Answer relevancy | ≥ 0.80 | 0.765 | 0.776 | 0.779 | **0.834** |
-| Abstention (Set B) | ≥ 0.95 | 0.76 | 0.56 | 0.52 | **0.52** |
-
-**Run 3 missed five lines.** Recall and faithfulness sit just under theirs, on a vault three and a
-half times larger. Abstention is far below. Obligation precision was 0.8125 against 0.95. The alert
+**Run 3 missed five of the lines in §1.4,** and Appendix C has every run. Context recall (0.848) and
+faithfulness (0.892) sit just under theirs, on a vault three and a half times larger. Abstention
+(0.52) is far below 0.95. Obligation precision was 0.8125 against 0.95. The alert
 false-positive rate was 2/2 against 0.05: a courtesy title left in an extracted name matched nobody
 and reported two policies as uncovered. Removing it fires no alert and changes none of the 118
 answers.
@@ -133,12 +125,13 @@ These follow the frame of Wohlin et al. (2012).
 
 - **Construct.** The five numbers proxy for a household's trust; none measures it. A code scorer
   sees only what the register records, and citations are graded per document where no field records
-  its page. The headline is proposed, so the nine metrics remain the agreed basis.
+  its page. The headline is proposed, so the nine metrics remain the reference.
 - **Internal.** Hybrid retrieval and the reranker arrived together. The team that built the system
   wrote the questions, and four lanes' generated questions are unreviewed drafts. The judge is named
   in every result file but not pinned in configuration.
-- **External.** ⟨holdout⟩ **Every number here is on synthetic documents about one household.** The
-  holdout will measure the gap.
+- **External.** **Every number here is on synthetic documents about one household.** The holdout,
+  14 real redacted documents of a planned 40, had not been run when this report was completed, so
+  the gap to real documents is unmeasured.
 - **Conclusion.** Three runs on three corpora are not a trend, except where the direction is plain.
   The casual gap rests on ten questions, the alert rate on two alerts.
 

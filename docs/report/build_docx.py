@@ -1,17 +1,20 @@
-"""Builds the report as a Word file from ILP_Report_Skeleton.docx and the chapters beside it.
+"""Builds the report as a Word file, in the format the course brief sets.
 
-The skeleton gives the title page, the styles and the section order. Its guidance boxes are dropped.
-A section with a chapter behind it gets that chapter; a section without one keeps a marked gap that
-names its owner, so nothing is invented and the file can be rebuilt as sections arrive.
+The brief's Formatting Standard is Arial, 12 pt main text, 14 pt bold section titles, 1.5 line
+spacing, justified, and 20 pages. ILP_Report_Skeleton.docx is not in that format, so it gives only
+the title page and the styles; the chapters beside this script give the text. A chapter whose owner
+has not yet rewritten it carries a visible note saying so: set its owner to "" in CHAPTERS, or pass
+--clean, only once that is true.
 
-    python docs/report/build_docx.py [pages.json]
+    python3 docs/report/build_docx.py [--clean] [pages.json]
 
 pages.json, if given, maps a heading to its page, for the contents list. Word refreshes the list on
-opening either way. Add a section by writing its chapter here and changing `body` below.
+opening either way.
 """
 
 import json
 import re
+import struct
 import sys
 import zipfile
 from pathlib import Path
@@ -20,46 +23,58 @@ from xml.sax.saxutils import escape
 HERE = Path(__file__).parent
 SKELETON = HERE / "ILP_Report_Skeleton.docx"
 OUTPUT = HERE / "Project Parrot Final Report (draft).docx"
-WIDTH = 8882  # A4 less the skeleton's margins; its own tables are 9360 and overhang the right edge
+WIDTH = 9026  # A4 with one-inch margins
+BODY, SMALL = 24, 20
 GREEN, AMBER, GREY, INK = "0F5F52", "8A6224", "5A6560", "1A1A1A"
+FONT = '<w:rFonts w:ascii="Arial" w:cs="Arial" w:eastAsia="Arial" w:hAnsi="Arial"/>'
+JUSTIFY = '<w:jc w:val="both"/>'
 SPACER = '<w:p><w:pPr><w:spacing w:after="0" w:line="120" w:lineRule="exact"/></w:pPr></w:p>'
-FONT = '<w:rFonts w:ascii="{0}" w:cs="{0}" w:eastAsia="{0}" w:hAnsi="{0}"/>'
 
-# Skeleton element -> who owes that passage, for each gap. The text is the skeleton's own brief.
-GAPS = {
-    36: "Christian",
-    41: "Christian",
-    44: "Christian",
-    54: "Christian",
-    57: "Christian",
-    62: "Siew",
-    64: "Siew",
-    66: "Siew",
-    71: "Christian",
-    73: "Christian",
-    81: "Christian",
-    86: "Christian",
-    88: "Christian",
-    95: "Christian",
-    120: "Siew",
-    123: "Siew",
-    125: "Siew",
-    128: "Siew",
-    130: "Siew",
-    135: "Christian and Zee",
-    137: "Christian and Zee",
-    139: "Christian and Zee",
-    141: "Christian and Zee",
-    148: "Christian",
-    152: "Siew, with everyone's sources",
-}
-SCAFFOLD_ONLY = {
-    "[Draft in week 8.]",
-    "[Quarter page.]",
-    "[Half a page.]",
-    "[One page including the selection table.]",
-    "[Half a page including the stage-by-process table.]",
-}
+# (title, file, who still has to rewrite it). "" means the text is its owner's own.
+CHAPTERS = [
+    ("Abstract", "00-abstract.md", "Christian"),
+    ("1 · Introduction: the problem and the argument", "01-introduction.md", "Christian"),
+    ("2 · Background and landscape", "02-background.md", "Siew"),
+    ("3 · Solution design and architecture", "03-design.md", "Christian"),
+    ("4 · Implementation", "04-implementation.md", "Christian and Zee"),
+    ("5 · Evaluation and results", "05-evaluation-and-results.md", ""),
+    ("6 · Governance, ethics and risk", "06-governance.md", "Siew"),
+    (
+        "7 · Value creation and organisational readiness",
+        "07-value-creation.md",
+        "Christian and Zee",
+    ),
+    ("8 · Limitations and future work", "08-limitations-and-future-work.md", "Desmond"),
+    ("9 · Key findings, recommendations and conclusion", "09-conclusion.md", "Christian"),
+]
+SELECTION = "03-4-technology-selection.md"  # §3.4, placed between §3.3 and §3.5
+REFERENCE_FILES = ("05-evaluation-and-results.md", SELECTION, "references-verified.md")
+
+
+class Media:
+    """Pictures used so far, for the package."""
+
+    def __init__(self) -> None:
+        self.files: list[Path] = []
+
+    def add(self, path: Path) -> tuple[int, int, int]:
+        self.files.append(path)
+        width, height = image_size(path)
+        return len(self.files), width, height
+
+
+def image_size(path: Path) -> tuple[int, int]:
+    data = path.read_bytes()
+    if data[:8] == b"\x89PNG\r\n\x1a\n":
+        return struct.unpack(">II", data[16:24])
+    at = 2
+    while at < len(data):  # a JPEG's frame header holds its size
+        marker, length = data[at + 1], struct.unpack(">H", data[at + 2 : at + 4])[0]
+        if 0xC0 <= marker <= 0xCF and marker not in (0xC4, 0xC8, 0xCC):
+            height, width = struct.unpack(">HH", data[at + 5 : at + 9])
+            return width, height
+        at += 2 + length
+    raise ValueError(f"no size found in {path}")
 
 
 def elements(body: str) -> list[str]:
@@ -74,29 +89,21 @@ def elements(body: str) -> list[str]:
     return found
 
 
-def run(
-    text: str,
-    *,
-    size: int = 21,
-    color: str = INK,
-    flags: str = "",
-    font: str = "Aptos",
-    track: int = 0,
-) -> str:
-    props = FONT.format(font) + flags + f'<w:color w:val="{color}"/>'
+def run(text: str, *, size: int = BODY, color: str = INK, flags: str = "", track: int = 0) -> str:
+    props = FONT + flags + f'<w:color w:val="{color}"/>'
     props += f'<w:spacing w:val="{track}"/>' if track else ""
     props += f'<w:sz w:val="{size}"/><w:szCs w:val="{size}"/>'
     return f'<w:r><w:rPr>{props}</w:rPr><w:t xml:space="preserve">{escape(text)}</w:t></w:r>'
 
 
-def inline(text: str, size: int = 21, color: str = INK) -> str:
-    """Markdown bold, italic, code and links, as runs."""
+def inline(text: str, size: int = BODY, color: str = INK) -> str:
+    """Markdown bold, italic, code and links, as runs. The brief sets one font, so code uses it."""
     text = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", text)
     out, bold, italic = [], False, False
-    for part in re.split(
-        r"(`[^`]+`|\*\*|(?<![\w*])\*(?=\S)|(?<=\S)\*(?![\w*])|(?<![\w_])_(?=\S)|(?<=\S)_(?![\w_]))",
-        text,
-    ):
+    marks = (
+        r"(`[^`]+`|\*\*|(?<![\w*])\*(?=\S)|(?<=\S)\*(?![\w*])|(?<![\w_])_(?=\S)|(?<=\S)_(?![\w_]))"
+    )
+    for part in re.split(marks, text):
         if not part:
             continue
         if part == "**":
@@ -105,44 +112,37 @@ def inline(text: str, size: int = 21, color: str = INK) -> str:
             italic = not italic
         else:
             flags = ("<w:b/><w:bCs/>" if bold else "") + ("<w:i/><w:iCs/>" if italic else "")
-            if part.startswith("`"):
-                out.append(
-                    run(part[1:-1], size=size - 2, color=color, flags=flags, font="Consolas")
-                )
-                continue
-            for piece in re.split("(⟨holdout⟩)", part):
-                if piece == "⟨holdout⟩":
-                    out.append(run(piece, size=size, color=AMBER, flags="<w:b/><w:bCs/>"))
-                elif piece:
-                    out.append(run(piece, size=size, color=color, flags=flags))
+            out.append(run(part.strip("`"), size=size, color=color, flags=flags))
     return "".join(out)
 
 
-def para(text: str, *, after: int = 140, extra: str = "", size: int = 21) -> str:
-    props = f'<w:spacing w:after="{after}" w:line="288"/>{extra}'
-    return f"<w:p><w:pPr>{props}</w:pPr>{inline(text, size)}</w:p>"
+def para(text: str, *, after: int = 80, props: str = "", line: int = 360, jc: str = JUSTIFY) -> str:
+    spacing = f'<w:spacing w:after="{after}" w:line="{line}" w:lineRule="auto"/>'
+    return f"<w:p><w:pPr>{spacing}{props}{jc}</w:pPr>{inline(text)}</w:p>"
 
 
 def bullet(text: str) -> str:
     props = '<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>'
-    props += '<w:spacing w:after="80" w:line="288"/><w:ind w:left="400" w:hanging="260"/>'
+    props += '<w:spacing w:after="40" w:line="360" w:lineRule="auto"/>'
+    props += f'<w:ind w:left="400" w:hanging="280"/>{JUSTIFY}'
     return f"<w:p><w:pPr>{props}</w:pPr>{inline(text)}</w:p>"
 
 
 def numbered(number: str, text: str) -> str:
     props = '<w:tabs><w:tab w:val="left" w:pos="400"/></w:tabs>'
-    props += '<w:spacing w:after="80" w:line="288"/><w:ind w:left="400" w:hanging="400"/>'
-    tab = "<w:r><w:tab/></w:r>"
-    return f"<w:p><w:pPr>{props}</w:pPr>{inline(number)}{tab}{inline(text)}</w:p>"
+    props += '<w:spacing w:after="40" w:line="360" w:lineRule="auto"/>'
+    props += f'<w:ind w:left="400" w:hanging="400"/>{JUSTIFY}'
+    return f"<w:p><w:pPr>{props}</w:pPr>{inline(number)}<w:r><w:tab/></w:r>{inline(text)}</w:p>"
 
 
-def heading(text: str, level: int) -> str:
-    size, color = {1: (30, INK), 3: (21, INK), 4: (21, GREEN)}[level]
-    props = (
-        f'<w:pStyle w:val="Heading{level}"/><w:keepNext/><w:spacing w:after="80" w:before="220"/>'
-    )
-    text_run = run(text, size=size, color=color, flags="<w:b/><w:bCs/>", font="Aptos Display")
-    return f"<w:p><w:pPr>{props}</w:pPr>{text_run}</w:p>"
+def heading(text: str, level: int, *, new_page: bool = False) -> str:
+    size = 28 if level == 1 else BODY
+    before, after = (200, 80) if level == 1 else (120, 50)
+    flags = "<w:b/><w:bCs/>" + ("<w:i/><w:iCs/>" if level == 3 else "")
+    props = f'<w:pStyle w:val="Heading{level}"/><w:keepNext/>'
+    props += "<w:pageBreakBefore/>" if new_page else ""
+    props += f'<w:spacing w:after="{after}" w:before="{before}" w:line="276" w:lineRule="auto"/>'
+    return f"<w:p><w:pPr>{props}</w:pPr>{run(text, size=size, flags=flags)}</w:p>"
 
 
 def callout(label: str, text: str, color: str = AMBER, fill: str = "F5EEE0") -> str:
@@ -152,11 +152,13 @@ def callout(label: str, text: str, color: str = AMBER, fill: str = "F5EEE0") -> 
         '<w:insideH w:val="none"/><w:insideV w:val="none"/>'
     )
     head = run(label + "  ", size=17, color=color, flags="<w:b/><w:bCs/><w:caps/>", track=12)
-    spacing = '<w:spacing w:after="40" w:before="40" w:line="264"/>'
-    inner = f"<w:p><w:pPr>{spacing}</w:pPr>{head}{inline(text, 19, GREY)}</w:p>"
+    inner = (
+        '<w:p><w:pPr><w:spacing w:after="20" w:before="20" w:line="252" w:lineRule="auto"/></w:pPr>'
+        f"{head}{inline(text, SMALL, GREY)}</w:p>"
+    )
     margins = "".join(
         f'<w:{side} w:type="dxa" w:w="{w}"/>'
-        for side, w in (("top", 130), ("left", 200), ("bottom", 130), ("right", 180))
+        for side, w in (("top", 70), ("left", 180), ("bottom", 70), ("right", 160))
     )
     cell = (
         f'<w:tcPr><w:tcW w:type="dxa" w:w="{WIDTH}"/><w:shd w:fill="{fill}" w:val="clear"/>'
@@ -171,29 +173,33 @@ def callout(label: str, text: str, color: str = AMBER, fill: str = "F5EEE0") -> 
 
 
 def table(rows: list[list[str]]) -> str:
-    size = 16 if max(len(c) for r in rows for c in r) > 90 else 18
+    size = 16 if max(len(c) for r in rows for c in r) > 150 else 19
     columns = len(rows[0])
     weights = [
-        max(min(max(len(r[i]) for r in rows), 60), len(rows[0][i]) + 4) for i in range(columns)
+        max(
+            min(max(len(r[i]) for r in rows), 60),
+            max(len(word) for r in rows for word in r[i].split()) * 2 + 2,
+        )
+        for i in range(columns)
     ]
     widths = [round(WIDTH * w / sum(weights)) for w in weights]
     widths[-1] += WIDTH - sum(widths)
     borders = (
-        '<w:top w:val="single" w:color="C9D2CD" w:sz="4"/><w:left w:val="none"/>'
-        '<w:bottom w:val="single" w:color="C9D2CD" w:sz="4"/><w:right w:val="none"/>'
-        '<w:insideH w:val="single" w:color="E2E8E4" w:sz="2"/><w:insideV w:val="none"/>'
+        '<w:top w:val="single" w:color="9FB0A8" w:sz="4"/><w:left w:val="none"/>'
+        '<w:bottom w:val="single" w:color="9FB0A8" w:sz="4"/><w:right w:val="none"/>'
+        '<w:insideH w:val="single" w:color="D5DDD9" w:sz="2"/><w:insideV w:val="none"/>'
     )
     grid = "".join(f'<w:gridCol w:w="{w}"/>' for w in widths)
     out = [
         f'<w:tbl><w:tblPr><w:tblW w:type="dxa" w:w="{WIDTH}"/>'
-        f"<w:tblBorders>{borders}</w:tblBorders>"
-        f'<w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid>{grid}</w:tblGrid>'
+        f'<w:tblBorders>{borders}</w:tblBorders><w:tblLayout w:type="fixed"/></w:tblPr>'
+        f"<w:tblGrid>{grid}</w:tblGrid>"
     ]
     margins = (
-        '<w:tcMar><w:top w:type="dxa" w:w="50"/><w:left w:type="dxa" w:w="80"/>'
-        '<w:bottom w:type="dxa" w:w="50"/><w:right w:type="dxa" w:w="80"/></w:tcMar>'
+        '<w:tcMar><w:top w:type="dxa" w:w="35"/><w:left w:type="dxa" w:w="70"/>'
+        '<w:bottom w:type="dxa" w:w="35"/><w:right w:type="dxa" w:w="70"/></w:tcMar>'
     )
-    keep = "<w:keepNext/>" if len(rows) <= 10 else ""  # a short table stays on one page
+    keep = "<w:keepNext/>" if len(rows) <= 11 else ""  # a short table stays on one page
     for number, row in enumerate(rows):
         props = "<w:cantSplit/>" + ("<w:tblHeader/>" if number == 0 else "")
         out.append(f"<w:tr><w:trPr>{props}</w:trPr>")
@@ -202,30 +208,68 @@ def table(rows: list[list[str]]) -> str:
             text = f"**{cell}**" if number == 0 and cell and "**" not in cell else cell
             out.append(
                 f'<w:tc><w:tcPr><w:tcW w:type="dxa" w:w="{width}"/>{shade}{margins}</w:tcPr>'
-                f'<w:p><w:pPr>{keep}<w:spacing w:after="0" w:line="252"/></w:pPr>'
+                f'<w:p><w:pPr>{keep}<w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr>'
                 f"{inline(text, size)}</w:p></w:tc>"
             )
         out.append("</w:tr>")
-    out.append("</w:tbl>" + SPACER)
+    out.append("</w:tbl>" + SPACER + SPACER)
     return "".join(out)
 
 
-def markdown(text: str) -> str:
+def picture(path: Path, caption: str, scale: float, media: Media) -> str:
+    """An inline picture and its caption. `scale` is a share of the text width."""
+    number, width, height = media.add(path)
+    cx = int(WIDTH * 635 * scale)
+    cy = int(cx * height / width)
+    graphic = (
+        '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'
+        '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+        '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'
+        f'<pic:nvPicPr><pic:cNvPr id="{number}" name="{path.name}"/><pic:cNvPicPr/></pic:nvPicPr>'
+        f'<pic:blipFill><a:blip r:embed="rIdMedia{number}"/><a:stretch><a:fillRect/></a:stretch>'
+        "</pic:blipFill><pic:spPr><a:xfrm>"
+        f'<a:off x="0" y="0"/><a:ext cx="{cx}" cy="{cy}"/></a:xfrm>'
+        '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic>'
+        "</a:graphicData></a:graphic>"
+    )
+    description = escape(caption.replace("*", ""), {'"': "&quot;"})
+    drawing = (
+        f'<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="{cx}" '
+        f'cy="{cy}"/><wp:docPr id="{100 + number}" name="Figure {number}" '
+        f'descr="{description}"/>{graphic}</wp:inline></w:drawing>'
+    )
+    centre = '<w:jc w:val="center"/>'
+    image = (
+        f'<w:p><w:pPr><w:keepNext/><w:spacing w:after="60"/>{centre}</w:pPr>'
+        f"<w:r>{drawing}</w:r></w:p>"
+    )
+    note = (
+        f'<w:p><w:pPr><w:spacing w:after="160" w:line="252" w:lineRule="auto"/>{centre}</w:pPr>'
+        f"{inline(caption, SMALL, GREY)}</w:p>"
+    )
+    return image + note
+
+
+def markdown(text: str, media: Media, level: int = 3) -> str:
     """The Markdown these chapters use, as Word paragraphs and tables."""
     out, lines, i = [], text.strip().splitlines(), 0
     while i < len(lines):
         line = lines[i]
         if not line.strip() or line.strip() == "---":
             i += 1
+        elif image := re.fullmatch(r"!\[(.+)\]\(([^)|]+)(?:\|([\d.]+))?\)", line.strip()):
+            scale = float(image.group(3) or 1)
+            out.append(picture(HERE / image.group(2), image.group(1), scale, media))
+            i += 1
         elif line.startswith("#"):
-            out.append(heading(line.lstrip("# ").strip(), 4))
+            out.append(heading(line.lstrip("# ").strip(), level))
             i += 1
         elif line.startswith("|"):
             rows = []
             while i < len(lines) and lines[i].startswith("|"):
                 cells = [c.strip() for c in re.split(r"(?<!\\)\|", lines[i].strip())[1:-1]]
                 if not all(re.fullmatch(r":?-+:?", c) for c in cells):
-                    rows.append(cells)
+                    rows.append([c.replace("\\|", "|") for c in cells])
                 i += 1
             out.append(table(rows))
         elif line.startswith(">"):
@@ -233,7 +277,8 @@ def markdown(text: str) -> str:
             while i < len(lines) and lines[i].startswith(">"):
                 quote.append(lines[i].lstrip("> ").strip())
                 i += 1
-            out.append(callout("Note", " ".join(quote), GREEN, "E7F1EE"))
+            ind = '<w:ind w:left="360" w:right="360"/>'
+            out.append(para(" ".join(quote), props=ind))
         elif item := re.match(r"(\d+\.|-) (.*)", line):
             words = [item.group(2)]
             i += 1
@@ -245,7 +290,7 @@ def markdown(text: str) -> str:
         else:
             words = []
             while (
-                i < len(lines) and lines[i].strip() and not re.match(r"[#|>]|\d+\. |- ", lines[i])
+                i < len(lines) and lines[i].strip() and not re.match(r"[#|>!]|\d+\. |- ", lines[i])
             ):
                 words.append(lines[i].strip())
                 i += 1
@@ -253,42 +298,44 @@ def markdown(text: str) -> str:
     return "".join(out)
 
 
-def sections(text: str, level: str = "## ") -> dict[str, str]:
-    """A chapter split at its headings, keyed by heading."""
-    parts = re.split(rf"^{level}(.+)$", text, flags=re.M)
+def sections(text: str) -> dict[str, str]:
+    """A chapter split at its `## ` headings, keyed by heading."""
+    parts = re.split(r"^## (.+)$", text, flags=re.M)
     return {parts[n].strip(): parts[n + 1] for n in range(1, len(parts) - 1, 2)}
 
 
-def gap(element: str, owner: str) -> str:
-    brief = "".join(re.findall(r"<w:t[^>]*>([^<]*)", element))
-    brief = brief.replace("&apos;", "'").replace("&amp;", "&").replace("&quot;", '"')
-    unwritten = brief in SCAFFOLD_ONLY or brief.startswith("[Write ")
-    text = "Not yet written." if unwritten else brief.strip("[]")
-    return callout(f"To write · {owner}", text)
+def body_of(text: str) -> str:
+    """A chapter without its title, its note and its references."""
+    text = text.split("### References used")[0]
+    return text.split("\n---\n", 1)[1] if "\n---\n" in text else text
 
 
-def zee_section(chapter: dict[str, str], title: str) -> str:
-    key = next(k for k in chapter if k.startswith(title))
-    name = re.sub(r"^\d · ", "", re.sub(r" \((feeds|ADR).*\)$", "", key))
-    return heading(name, 4) + markdown(chapter[key])
+def references() -> list[str]:
+    """Every entry the chapters hold, sorted, each once."""
+    found = set()
+    for name in REFERENCE_FILES:
+        text = (HERE / name).read_text()
+        if name != "references-verified.md":
+            text = text.split("### References used in this section")[1]
+        found |= {" ".join(entry.split()) for entry in text.strip().split("\n\n") if entry.strip()}
+    return sorted(found, key=lambda entry: entry.lstrip('*"').lower())
 
 
 def contents(body: list[str], pages: dict[str, int]) -> str:
     """The contents field, filled in so it reads before Word has refreshed it."""
     entries = []
     for element in body:
-        style = re.search(r'<w:pStyle w:val="Heading([123])"/>', element)
-        if style and not element.startswith("<w:tbl"):
+        style = re.search(r'<w:pStyle w:val="Heading([12])"/>', element[:200])
+        if style:
             name = "".join(re.findall(r"<w:t[^>]*>([^<]*)", element)).replace("&amp;", "&")
             if name != "Contents":
                 entries.append((int(style.group(1)), name))
-    out, instruction = [], 'TOC \\h \\o "1-3"'
+    out, instruction = [], 'TOC \\h \\o "1-2"'
     for number, (level, name) in enumerate(entries):
-        indent = 0 if level == 1 else 240
         props = (
             f'<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="{WIDTH}"/></w:tabs>'
-            f'<w:spacing w:after="30" w:before="{70 if level == 1 else 0}" w:line="240"/>'
-            f'<w:ind w:left="{indent}"/>'
+            f'<w:spacing w:after="10" w:before="{50 if level == 1 else 0}" w:line="240" '
+            f'w:lineRule="auto"/><w:ind w:left="{0 if level == 1 else 240}"/>'
         )
         field = ""
         if number == 0:
@@ -311,135 +358,84 @@ def contents(body: list[str], pages: dict[str, int]) -> str:
     )
 
 
+def chapter(title: str, name: str, owner: str, clean: bool, media: Media) -> list[str]:
+    text = (HERE / name).read_text()
+    out = [heading(title, 1, new_page=title == "Abstract")]
+    if owner and not clean:
+        note = "Not yet rewritten in the owner's own words."
+        out.append(callout(f"Draft · for {owner}", note))
+    body = body_of(text)
+    parts = sections(body)
+    lead = body.split("## ", 1)[0].strip()
+    if lead:
+        out.append(markdown(lead, media))
+    if name == "03-design.md":
+        selection = body_of((HERE / SELECTION).read_text())
+        ordered = {}
+        for key, value in parts.items():
+            if key.startswith("3.5"):
+                ordered["3.4 Technology selection, and the reasoning behind it"] = selection
+            ordered[key] = value
+        parts = ordered
+    for key, value in parts.items():
+        out.append(heading(key, 2))
+        out.append(markdown(value, media))
+    return out
+
+
 def main() -> None:
-    pages = json.loads(Path(sys.argv[1]).read_text()) if len(sys.argv) > 1 else {}
+    args = sys.argv[1:]
+    clean = "--clean" in args
+    paths = [a for a in args if a != "--clean"]
+    pages = json.loads(Path(paths[0]).read_text()) if paths else {}
     package = zipfile.ZipFile(SKELETON)
     document = package.read("word/document.xml").decode()
     start, end = document.index("<w:body>") + 8, document.index("</w:body>")
     old = elements(document[start:end])
+    media = Media()
 
-    evaluation = (HERE / "05-evaluation-and-results.md").read_text()
-    results = sections(evaluation[: evaluation.index("### References used")])
-    opening = evaluation[evaluation.index("A household document assistant") :].split("## 5.1")[0]
-    status = re.search(r"> \*\*Status\.\*\* (.*?)\n\n", evaluation, re.S).group(1)
-    status = " ".join(line.lstrip("> ") for line in status.splitlines())
-    selection = (HERE / "03-4-technology-selection.md").read_text()
-    table_part, cited = selection.split("### References used in this section")
-    table_part = table_part[table_part.index("Every layer runs") :]
-    references = evaluation[evaluation.index("### References used") :].split("\n", 1)[1]
-    entries = sorted(
-        {" ".join(e.split()) for e in (references + "\n\n" + cited).strip().split("\n\n")},
-        key=str.lower,
-    )
-    packs = sections((HERE / "04-packs-and-interface.md").read_text())
-    roadmap = (HERE / "07-commercialisation-roadmap.md").read_text()
-    roadmap = "It claims no price" + roadmap.split("It claims no price", 1)[1]
-    limits = (HERE / "08-limitations-and-future-work.md").read_text()
-    limits = limits[limits.index("## What ten weeks") :]
+    title_page = [e for n, e in enumerate(old[:7]) if n != 5]
+    title_page = [
+        e.replace('w:w="9360"', f'w:w="{WIDTH}"').replace('w:w="6960"', f'w:w="{WIDTH - 2400}"')
+        for e in title_page
+    ]
+    body = [*title_page, heading("Contents", 1, new_page=True), "CONTENTS"]
+    for title, name, owner in CHAPTERS:
+        body += chapter(title, name, owner, clean, media)
+
+    body.append(heading("References", 1, new_page=True))
+    hang = '<w:ind w:left="480" w:hanging="480"/>'
+    body += [para(e, after=16, props=hang, line=240, jc="") for e in references()]
+
+    body.append(heading("Appendices", 1, new_page=True))
+    body.append(para("Excluded from the twenty-page body. Appendices C and D follow."))
+    listing = next(e for e in old if e.startswith("<w:tbl") and "Team contribution" in e)
+    body.append(listing.replace('w:w="9360"', f'w:w="{WIDTH}"'))
     appendix = (HERE / "appendix-c-evaluation-results.md").read_text()
-    appendix = appendix[appendix.index("## C.1") :]
+    body.append(heading("Appendix C · Full evaluation results", 2, new_page=True))
+    body.append(para("The raw runs are in `eval/results/`."))
+    body.append(markdown(appendix[appendix.index("## C.1") :], media))
     sample = (HERE / "appendix-d-golden-set-sample.md").read_text()
-    sample = sample[sample.index("The sample is chosen") :]
-    result = {key.split(" ")[0]: value for key, value in results.items()}
+    body.append(heading("Appendix D · Golden set: sample questions", 2, new_page=True))
+    body.append(markdown(sample[sample.index("The sample is chosen") :], media))
 
-    zee_note = callout(
-        "Draft · Zee",
-        "From the longer packs chapter, not yet condensed to the budget or re-checked after the "
-        "28 October freeze.",
-    )
-    replaced = {
-        75: zee_note
-        + markdown(packs["The argument"])
-        + zee_section(packs, "1 ·")
-        + zee_section(packs, "5 ·")
-        + gap("<w:t>[Figure 2 is still to draw.]</w:t>", "Christian and Zee"),
-        90: zee_note
-        + zee_section(packs, "2 ·")
-        + zee_section(packs, "3 ·")
-        + zee_section(packs, "4 ·"),
-        92: zee_note
-        + zee_section(packs, "6 ·")
-        + heading("What this chapter does not claim", 4)
-        + markdown(packs["What this chapter does not claim"]),
-        78: callout("Draft · Yew Mun", "For Christian to review.") + markdown(table_part),
-        100: markdown(result["5.1"]),
-        103: markdown(result["5.2"]),
-        105: markdown(result["5.3"]),
-        107: markdown(result["5.4"]),
-        110: markdown(result["5.5"]),
-        112: markdown(result["5.6"]),
-        115: markdown(result["5.7"]),
-        145: callout("Draft · Yew Mun", "For Desmond to review and add to.") + markdown(limits),
-        152: "".join(
-            para(entry, extra='<w:ind w:left="480" w:hanging="480"/>') for entry in entries
-        )
-        + gap(old[152], GAPS[152]),
-    }
-    body: list[str] = []
-    for number, element in enumerate(old):
-        is_table = element.startswith("<w:tbl")
-        if number > 32 and 'w:type="page"' in element:
-            continue  # the heading it precedes carries the break, so it cannot strand a blank page
-        if number > 32 and 'w:type="page"' in old[number - 1]:
-            element = element.replace(
-                '<w:pStyle w:val="Heading1"/>', '<w:pStyle w:val="Heading1"/><w:pageBreakBefore/>'
-            )
-        if number == 5 or 8 <= number <= 29 or number in (31, 47, 50, 51, 155, 157, 158):
-            continue  # the working-title note, the guidance pages, the notes beside the thesis
-        if is_table and number not in (6, 49, 156):
-            continue  # a guidance box
-        if number == 32:
-            body.append("CONTENTS")
-        elif number == 48:
-            body.append(
-                callout(
-                    "To refine · Christian",
-                    "The skeleton's working thesis, to be refined but not weakened.",
-                )
-            )
-        elif number == 97:
-            body.append(element)
-            body.append(callout("Status", status))
-            body.append(markdown(opening))
-        elif number == 108:
-            body.append(
-                element.replace(
-                    "5.5 Abstention, and why it is the headline", "5.5 Unsupported claims"
-                )
-            )
-        elif number == 141:
-            body.append(
-                callout("Draft · Zee", "The commercialisation roadmap, for Christian's §7.")
-            )
-            body.append(markdown(roadmap))
-            body.append(gap(element, GAPS[number]))
-        elif number in replaced:
-            body.append(replaced[number])
-        elif number in GAPS:
-            body.append(gap(element, GAPS[number]))
-        elif number == 156:
-            body.append(element.replace('w:w="9360"', f'w:w="{WIDTH}"'))
-            title = heading("Appendix C · Full evaluation results", 1)
-            body.append(title.replace("<w:keepNext/>", "<w:keepNext/><w:pageBreakBefore/>"))
-            body.append(
-                para("Excluded from the twenty-page body. The raw runs are in `eval/results/`.")
-            )
-            body.append(callout("Status", status.split(" §5.6")[0]))
-            body.append(markdown(appendix))
-            title = heading("Appendix D · Golden set: sample questions", 1)
-            body.append(title.replace("<w:keepNext/>", "<w:keepNext/><w:pageBreakBefore/>"))
-            body.append(markdown(sample))
-        elif number == 6:
-            body.append(
-                element.replace('w:w="9360"', f'w:w="{WIDTH}"').replace(
-                    'w:w="6960"', f'w:w="{WIDTH - 2400}"'
-                )
-            )
-        else:
-            body.append(element)
     joined = [contents(body, pages) if part == "CONTENTS" else part for part in body]
-    document = document[:start] + "".join(joined) + document[end:]
+    tail = next(e for e in old if e.startswith("<w:sectPr"))
+    tail = tail.replace('w:right="1512"', 'w:right="1440"').replace(
+        'w:left="1512"', 'w:left="1440"'
+    )
+    document = document[:start] + "".join(joined) + tail + document[end:]
+    document = document.replace("Aptos Display", "Arial").replace("Aptos", "Arial")
 
+    types = "".join(
+        f'<Default Extension="{ext}" ContentType="image/{kind}"/>'
+        for ext, kind in (("png", "png"), ("jpg", "jpeg"))
+    )
+    relations = "".join(
+        f'<Relationship Id="rIdMedia{n}" Target="media/image{n}{p.suffix}" Type="http://schemas.'
+        'openxmlformats.org/officeDocument/2006/relationships/image"/>'
+        for n, p in enumerate(media.files, 1)
+    )
     with zipfile.ZipFile(OUTPUT, "w", zipfile.ZIP_DEFLATED) as out:
         for item in package.infolist():
             if item.filename.endswith("/"):
@@ -447,15 +443,22 @@ def main() -> None:
             data = package.read(item.filename)
             if item.filename == "word/document.xml":
                 data = document.encode()
+            elif item.filename == "[Content_Types].xml":
+                data = data.replace(b"</Types>", types.encode() + b"</Types>")
+            elif item.filename == "word/_rels/document.xml.rels":
+                data = data.replace(b"</Relationships>", relations.encode() + b"</Relationships>")
             elif item.filename == "word/header1.xml":
-                data = data.replace(b"skeleton", b"draft")
+                label = b"clean" if clean else b"draft"
+                data = data.replace(b"skeleton", label).replace(b"Aptos", b"Arial")
+            elif item.filename in ("word/styles.xml", "word/footer1.xml"):
+                data = data.replace(b"Aptos Display", b"Arial").replace(b"Aptos", b"Arial")
             elif item.filename == "docProps/core.xml":
                 data = data.replace(
-                    "ILP Project Report — skeleton".encode(),
-                    b"Project Parrot: final report (draft)",
-                )
-                data = data.replace(b"Report skeleton for", b"Report draft for")
+                    "ILP Project Report — skeleton".encode(), b"Project Parrot: final report"
+                ).replace(b"Report skeleton for", b"Report for")
             out.writestr(item.filename, data)
+        for number, path in enumerate(media.files, 1):
+            out.write(path, f"word/media/image{number}{path.suffix}")
     print(OUTPUT)
 
 

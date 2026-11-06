@@ -8,15 +8,13 @@
 
 ---
 
-Every layer runs on the owner's machine, and the reasons below are mostly about keeping it there.
-
 | Layer | Choice | Reasoning |
 |---|---|---|
 | Generation and page images | Qwen-SEA-LION-v4-4B-VL (AI Singapore, 2025), through Ollama | Argued below |
 | Embedding | `embeddinggemma:300m` (Schechter Vera et al., 2025), 768 dimensions | A 308-million-parameter model built for on-device use |
 | Reranking | `bge-reranker-v2-m3`, in process | Ollama cannot serve a cross-encoder, so this is the one model outside it (ADR 0018) |
-| Parsing | Docling (Auer et al., 2024), with OCR | Keeps layout and tables; a page it cannot read goes to the generator as an image (ADR 0006) |
-| Storage | PostgreSQL 17 with `pgvector` | The proposal had ChromaDB and FalkorDB. A household's questions are relational selects, not graph traversals, so one database holds chunks, facts and agent state (ADR 0002) |
+| Parsing | Docling (Auer et al., 2024), with OCR | Keeps layout and tables; what it cannot read waits in quarantine, and a person can send it to the generator as page images (ADR 0006) |
+| Storage | PostgreSQL 17 with `pgvector` | The proposal had ChromaDB and FalkorDB. A household's questions are relational selects, not graph traversals, so one database holds chunks, facts and obligations (ADR 0002) |
 | Retrieval | Hand-written hybrid search with reciprocal rank fusion | A pattern ported, not a module adopted, so every boundary stays ours (ADR 0003) |
 | Orchestration | LangGraph | Routing, retrieval, the grounding gate and the answer are separate steps |
 | Background work | Celery with Redis | A PDF took about eight seconds on the capture thread, and nothing was watching the folder meanwhile (ADR 0008) |
@@ -24,8 +22,8 @@ Every layer runs on the owner's machine, and the reasons below are mostly about 
 
 **The generator is the choice that carries the argument.** Qwen-SEA-LION-v4-4B-VL is a
 four-billion-parameter vision-language model from AI Singapore, under an MIT licence. Two reasons
-for it are on record. One is vision: a page the parser cannot read is tried again against the page
-image by the same model, so quarantine is a second pass rather than a dead end. The other is fit,
+for it are on record. One is vision: a document the parser cannot read can be sent back and read
+from its page images by the same model, so quarantine is a second pass rather than a dead end. The other is fit,
 and that is a design argument, not a specification. The proposal's 27-billion-parameter model
 needed two graphics cards, and a local-first assistant that needs a workstation is a research
 prototype.
