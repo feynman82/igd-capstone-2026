@@ -22,6 +22,7 @@ SKELETON = HERE / "ILP_Report_Skeleton.docx"
 OUTPUT = HERE / "Project Parrot Final Report (draft).docx"
 WIDTH = 8882  # A4 less the skeleton's margins; its own tables are 9360 and overhang the right edge
 GREEN, AMBER, GREY, INK = "0F5F52", "8A6224", "5A6560", "1A1A1A"
+SPACER = '<w:p><w:pPr><w:spacing w:after="0" w:line="120" w:lineRule="exact"/></w:pPr></w:p>'
 FONT = '<w:rFonts w:ascii="{0}" w:cs="{0}" w:eastAsia="{0}" w:hAnsi="{0}"/>'
 
 # Skeleton element -> who owes that passage, for each gap. The text is the skeleton's own brief.
@@ -50,7 +51,6 @@ GAPS = {
     137: "Christian and Zee",
     139: "Christian and Zee",
     141: "Christian and Zee",
-    145: "Desmond and Yew Mun",
     148: "Christian",
     152: "Siew, with everyone's sources",
 }
@@ -167,8 +167,7 @@ def callout(label: str, text: str, color: str = AMBER, fill: str = "F5EEE0") -> 
         f'<w:tbl><w:tblPr><w:tblW w:type="dxa" w:w="{WIDTH}"/>'
         f"<w:tblBorders>{borders}</w:tblBorders></w:tblPr>"
         f'<w:tblGrid><w:gridCol w:w="{WIDTH}"/></w:tblGrid>'
-        f"<w:tr><w:tc>{cell}{inner}</w:tc></w:tr></w:tbl>"
-        '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>'
+        f"<w:tr><w:tc>{cell}{inner}</w:tc></w:tr></w:tbl>" + SPACER
     )
 
 
@@ -208,7 +207,7 @@ def table(rows: list[list[str]]) -> str:
                 f"{inline(text, size)}</w:p></w:tc>"
             )
         out.append("</w:tr>")
-    out.append('</w:tbl><w:p><w:pPr><w:spacing w:after="120"/></w:pPr></w:p>')
+    out.append("</w:tbl>" + SPACER)
     return "".join(out)
 
 
@@ -329,6 +328,8 @@ def main() -> None:
     packs = sections((HERE / "04-packs-and-interface.md").read_text())
     roadmap = (HERE / "07-commercialisation-roadmap.md").read_text()
     roadmap = "It claims no price" + roadmap.split("It claims no price", 1)[1]
+    limits = (HERE / "08-limitations-and-future-work.md").read_text()
+    limits = limits[limits.index("## What ten weeks") :]
     appendix = (HERE / "appendix-c-evaluation-results.md").read_text()
     appendix = appendix[appendix.index("## C.1") :]
     result = {key.split(" ")[0]: value for key, value in results.items()}
@@ -359,6 +360,7 @@ def main() -> None:
         110: markdown(result["5.5"]),
         112: markdown(result["5.6"]),
         115: markdown(result["5.7"]),
+        145: callout("Draft · Yew Mun", "For Desmond to review and add to.") + markdown(limits),
         152: "".join(
             para(entry.replace("\n", " "), extra='<w:ind w:left="480" w:hanging="480"/>')
             for entry in references.strip().split("\n\n")
@@ -368,6 +370,12 @@ def main() -> None:
     body: list[str] = []
     for number, element in enumerate(old):
         is_table = element.startswith("<w:tbl")
+        if number > 32 and 'w:type="page"' in element:
+            continue  # the heading it precedes carries the break, so it cannot strand a blank page
+        if number > 32 and 'w:type="page"' in old[number - 1]:
+            element = element.replace(
+                '<w:pStyle w:val="Heading1"/>', '<w:pStyle w:val="Heading1"/><w:pageBreakBefore/>'
+            )
         if number == 5 or 8 <= number <= 29 or number in (31, 47, 50, 51, 155, 157, 158):
             continue  # the working-title note, the guidance pages, the notes beside the thesis
         if is_table and number not in (6, 49, 156):
@@ -403,8 +411,8 @@ def main() -> None:
             body.append(gap(element, GAPS[number]))
         elif number == 156:
             body.append(element.replace('w:w="9360"', f'w:w="{WIDTH}"'))
-            body.append('<w:p><w:r><w:br w:type="page"/></w:r></w:p>')
-            body.append(heading("Appendix C · Full evaluation results", 1))
+            title = heading("Appendix C · Full evaluation results", 1)
+            body.append(title.replace("<w:keepNext/>", "<w:keepNext/><w:pageBreakBefore/>"))
             body.append(
                 para("Excluded from the twenty-page body. The raw runs are in `eval/results/`.")
             )
