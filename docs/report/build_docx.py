@@ -338,6 +338,8 @@ def main() -> None:
     limits = limits[limits.index("## What ten weeks") :]
     appendix = (HERE / "appendix-c-evaluation-results.md").read_text()
     appendix = appendix[appendix.index("## C.1") :]
+    sample = (HERE / "appendix-d-golden-set-sample.md").read_text()
+    sample = sample[sample.index("The sample is chosen") :]
     result = {key.split(" ")[0]: value for key, value in results.items()}
 
     zee_note = callout(
@@ -424,6 +426,9 @@ def main() -> None:
             )
             body.append(callout("Status", status.split(" §5.6")[0]))
             body.append(markdown(appendix))
+            title = heading("Appendix D · Golden set: sample questions", 1)
+            body.append(title.replace("<w:keepNext/>", "<w:keepNext/><w:pageBreakBefore/>"))
+            body.append(markdown(sample))
         elif number == 6:
             body.append(
                 element.replace('w:w="9360"', f'w:w="{WIDTH}"').replace(
