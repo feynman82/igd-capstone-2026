@@ -22,7 +22,7 @@ from xml.sax.saxutils import escape
 
 HERE = Path(__file__).parent
 SKELETON = HERE / "ILP_Report_Skeleton.docx"
-OUTPUT = HERE / "Project Parrot Final Report (draft).docx"
+OUTPUT = HERE / "Report rebuilt from chapters (not the master).docx"  # the master is edited in Word
 WIDTH = 9026  # A4 with one-inch margins
 BODY, SMALL = 24, 20
 GREEN, AMBER, GREY, INK = "0F5F52", "8A6224", "5A6560", "1A1A1A"
@@ -47,6 +47,15 @@ CHAPTERS = [
     ("8 · Limitations and future work", "08-limitations-and-future-work.md", "Desmond"),
     ("9 · Key findings, recommendations and conclusion", "09-conclusion.md", "Christian"),
 ]
+CONTENTS_STYLES = "".join(  # so the list keeps its shape when Word refreshes it
+    f'<w:style w:type="paragraph" w:styleId="TOC{n}"><w:name w:val="toc {n}"/>'
+    f'<w:uiPriority w:val="39"/><w:pPr>'
+    f'<w:tabs><w:tab w:val="right" w:leader="dot" w:pos="{WIDTH}"/></w:tabs>'
+    f'<w:spacing w:before="{before}" w:after="10" w:line="240" w:lineRule="auto"/>'
+    f'<w:ind w:left="{left}"/></w:pPr><w:rPr>{FONT}{bold}<w:sz w:val="19"/><w:szCs w:val="19"/>'
+    "</w:rPr></w:style>"
+    for n, before, left, bold in ((1, 50, 0, "<w:b/><w:bCs/>"), (2, 0, 240, ""))
+)
 SELECTION = "03-4-technology-selection.md"  # §3.4, placed between §3.3 and §3.5
 REFERENCE_FILES = ("05-evaluation-and-results.md", SELECTION, "references-verified.md")
 
@@ -410,7 +419,8 @@ def main() -> None:
     body.append(heading("Appendices", 1, new_page=True))
     body.append(para("Excluded from the twenty-page body. Appendices C and D follow."))
     listing = next(e for e in old if e.startswith("<w:tbl") and "Team contribution" in e)
-    body.append(listing.replace('w:w="9360"', f'w:w="{WIDTH}"'))
+    narrower = f'w:w="{4100 - (9360 - WIDTH)}"'
+    body.append(listing.replace('w:w="9360"', f'w:w="{WIDTH}"').replace('w:w="4100"', narrower))
     appendix = (HERE / "appendix-c-evaluation-results.md").read_text()
     body.append(heading("Appendix C · Full evaluation results", 2, new_page=True))
     body.append(para("The raw runs are in `eval/results/`."))
@@ -427,9 +437,11 @@ def main() -> None:
     document = document[:start] + "".join(joined) + tail + document[end:]
     document = document.replace("Aptos Display", "Arial").replace("Aptos", "Arial")
 
-    types = "".join(
+    declared = package.read("[Content_Types].xml").decode()
+    types = "".join(  # Word refuses a file that declares an extension twice; the skeleton has some
         f'<Default Extension="{ext}" ContentType="image/{kind}"/>'
         for ext, kind in (("png", "png"), ("jpg", "jpeg"))
+        if f'Extension="{ext}"' not in declared
     )
     relations = "".join(
         f'<Relationship Id="rIdMedia{n}" Target="media/image{n}{p.suffix}" Type="http://schemas.'
@@ -450,12 +462,21 @@ def main() -> None:
             elif item.filename == "word/header1.xml":
                 label = b"clean" if clean else b"draft"
                 data = data.replace(b"skeleton", label).replace(b"Aptos", b"Arial")
-            elif item.filename in ("word/styles.xml", "word/footer1.xml"):
-                data = data.replace(b"Aptos Display", b"Arial").replace(b"Aptos", b"Arial")
+            elif item.filename == "word/styles.xml":
+                data = data.replace(b"</w:styles>", CONTENTS_STYLES.encode() + b"</w:styles>")
+                data = re.sub(  # a refreshed contents list uses this style
+                    rb'(w:styleId="Hyperlink">.*?<w:rPr>)',
+                    rb"\1" + FONT.encode(),
+                    data,
+                    count=1,
+                    flags=re.S,
+                )
             elif item.filename == "docProps/core.xml":
                 data = data.replace(
                     "ILP Project Report — skeleton".encode(), b"Project Parrot: final report"
                 ).replace(b"Report skeleton for", b"Report for")
+            if item.filename.endswith(".xml"):  # the brief sets one font, numbering included
+                data = data.replace(b"Aptos Display", b"Arial").replace(b"Aptos", b"Arial")
             out.writestr(item.filename, data)
         for number, path in enumerate(media.files, 1):
             out.write(path, f"word/media/image{number}{path.suffix}")

@@ -9,9 +9,10 @@ writing anything — they carry the rubric, the page budget and the writing sche
 bold section titles, 1.5 line spacing, justified, 20 pages, and an abstract of 150 to 300 words. At
 that format a page holds about 340 words, so the skeleton's page budgets overstate what fits.
 
-`Project Parrot Final Report (draft).docx` is built in the brief's format from the chapters here.
-Rebuild it with `python3 docs/report/build_docx.py`; do not edit it by hand. A chapter drafted from
-the repository carries a note until its owner has rewritten it. Clear the owner in `CHAPTERS` then.
+`Project Parrot Final Report.docx` is the master, and it is edited in Word. The chapter files here
+are the first drafts it started from and no longer match it, so change the Word file, not the
+chapters. `python3 docs/report/build_docx.py` still builds from the chapters, into a separate file
+that does not touch the master. Appendix K of the report lists what was open at submission.
 Chapters `04-packs-and-interface.md` and `07-commercialisation-roadmap.md` are the longer sources
 §3.3, §4.3, §4.4 and §7.4 were condensed from; they are not in the build.
 
