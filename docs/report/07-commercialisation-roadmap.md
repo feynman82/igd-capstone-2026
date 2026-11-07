@@ -48,7 +48,7 @@ Each later stage is one of the three revenue routes named in the pitch. All thre
 
 | Stage | What ships | What must be true first |
 |---|---|---|
-| **Now: prototype** | Core, Insurance and Tax packs, Reminder and Alert | Run 3 on real redacted documents (§5) |
+| **Now: prototype** | Core, Insurance and Tax packs, Reminder and Alert | Run 3 on synthetic documents (§5) |
 | **Household product** | Catalogue packs, bought one at a time | A measured minimum hardware spec |
 | **Professional seat** | An insurance agent reviews a client's cover, with consent (ADR 0016) | A position on the Financial Advisers Act |
 | **Pack marketplace** | Packs written by domain experts | A published pack contract, and provenance review that scales beyond one reviewer |
