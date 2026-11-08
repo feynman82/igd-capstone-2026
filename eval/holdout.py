@@ -50,6 +50,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 from collections.abc import Sequence
 from datetime import UTC, date, datetime
@@ -139,8 +140,23 @@ def apply_schema(url: str) -> None:
             cur.execute(path.read_text(encoding="utf-8"))
 
 
-def ingest(settings: Any, documents: Sequence[Path]) -> list[tuple[str, str, int]]:
-    """Read each document straight into the holdout vault. Returns (name, status, facts).
+def safe_reason(reason: str | None) -> str | None:
+    """A quarantine reason with every quoted span replaced, so it can go in a committed file.
+
+    Most reasons are fixed sentences or field names, but extraction quotes what it rejected —
+    `pay_date '…' (not a date)` — and on a holdout that is a real person's value. A schema error
+    is withheld whole, since its message can echo the model's output.
+    """
+    if reason is None:
+        return None
+    if "schema:" in reason:
+        return reason.split("schema:")[0] + "schema: the model's output did not fit"
+    return re.sub(r"'(?:\\.|[^'\\])*'|\"(?:\\.|[^\"\\])*\"", "<value>", reason)
+
+
+def ingest(settings: Any, documents: Sequence[Path]) -> list[dict[str, Any]]:
+    """Read each document straight into the holdout vault. One record per document, reasons
+    redacted.
 
     Deliberately not through `inbox/`: the watched folder belongs to the development vault, and
     a holdout document that lands there has already lost the property that makes it a holdout.
@@ -153,7 +169,7 @@ def ingest(settings: Any, documents: Sequence[Path]) -> list[tuple[str, str, int
     from core.runtime.ollama import Ollama
 
     client = Ollama(settings)
-    out: list[tuple[str, str, int]] = []
+    out: list[dict[str, Any]] = []
     with connect(settings) as conn:
         for path in documents:
             payload = path.read_bytes()
@@ -175,9 +191,55 @@ def ingest(settings: Any, documents: Sequence[Path]) -> list[tuple[str, str, int
                 mime=mime,
                 original_name=path.name,
             )
-            out.append((path.name, outcome.status, outcome.facts))
-            print(f"  {path.name:<44} {outcome.status:<12} {outcome.facts:>3} facts")
+            reason = safe_reason(outcome.reason)
+            out.append(
+                {
+                    "name": path.name,
+                    "document_id": row.document_id,
+                    "mime": mime,
+                    "first_pass": outcome.status,
+                    "first_pass_reason": reason,
+                    "status": outcome.status,
+                    "facts": outcome.facts,
+                }
+            )
+            print(
+                f"  {path.name:<44} {outcome.status:<12} {outcome.facts:>3} facts  {reason or ''}"
+            )
     return out
+
+
+def image_pass(settings: Any, documents: Sequence[Path], read: list[dict[str, Any]]) -> None:
+    """The second pass the product's worker runs on the quarantine queue
+    (`core.ingest.quarantine.retry`): each quarantined document read again from its page images.
+    Updates each record in place. Without it, an image-only holdout measures a step the product
+    never stops at — the 8 November run did, and scored one document of fourteen."""
+    from core.ingest.quarantine import retry
+    from core.runtime.db import connect
+    from core.runtime.ollama import Ollama
+
+    client = Ollama(settings)
+    paths = {path.name: path for path in documents}
+    with connect(settings) as conn:
+        for record in read:
+            if record["status"] != "quarantined":
+                continue
+            recovery = retry(
+                conn,
+                client,
+                document_id=record["document_id"],
+                payload=paths[record["name"]].read_bytes(),
+                mime=record["mime"],
+                original_name=record["name"],
+            )
+            record["image_pass"] = "recovered" if recovery.recovered else "still quarantined"
+            record["image_pass_reason"] = safe_reason(recovery.reason)
+            record["status"] = "indexed" if recovery.recovered else "quarantined"
+            record["facts"] = recovery.facts
+            print(
+                f"  {record['name']:<44} image pass: {record['image_pass']:<17} "
+                f"{recovery.facts:>3} facts  {record['image_pass_reason'] or ''}"
+            )
 
 
 def score(settings: Any, register_path: Path) -> dict[str, Any]:
@@ -305,6 +367,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         create_vault(admin, args.vault)
         apply_schema(holdout)
         read = ingest(isolated, found)
+        before = score(isolated, args.register)
+        image_pass(isolated, found, read)
         measured = score(isolated, args.register)
     finally:
         if args.keep:
@@ -337,13 +401,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         "synthetic_extraction_f1": synthetic,
         "gap": gap,
         "gap_by_doc_type": by_type,
-        "documents": [{"name": n, "status": s, "facts": f} for n, s, f in read],
+        # The first pass alone, scored before the image pass ran: what the image pass added.
+        "first_pass_only": {
+            "indexed": before["indexed"],
+            "extraction_f1": before["extraction_f1"],
+            "by_doc_type": before["by_doc_type"],
+        },
+        "documents": [
+            {k: v for k, v in record.items() if k not in ("document_id", "mime")} for record in read
+        ],
     }
     args.out.mkdir(parents=True, exist_ok=True)
     target.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     print()
-    print(f"extraction F1 on real documents : {real}")
+    first = before["extraction_f1"]
+    print(f"first pass only                 : {first}  ({before['indexed']} indexed)")
+    print(f"extraction F1 on real documents : {real}  ({measured['indexed']} indexed)")
     print(f"extraction F1 on synthetic      : {synthetic}  ({baseline['file']})")
     print(f"the gap                         : {gap}  <- this is the result")
     print("\nby document type (read these; the overall gap mixes types):")

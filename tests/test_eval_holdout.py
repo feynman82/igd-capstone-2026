@@ -21,9 +21,24 @@ from eval.holdout import (
     gaps_by_type,
     main,
     migrations,
+    safe_reason,
     synthetic_baseline,
     vault_url,
 )
+
+
+def test_a_quarantine_reason_never_carries_a_value() -> None:
+    assert safe_reason("pay_date '31 Feb' (not a date); x \"it's\" (on no page)") == (
+        "pay_date <value> (not a date); x <value> (on no page)"
+    )
+    assert safe_reason("item 'O\\'Neil' (on no page)") == "item <value> (on no page)"
+    assert safe_reason("image pass: schema: 'S1234567A' is not of type") == (
+        "image pass: schema: the model's output did not fit"
+    )
+    assert safe_reason("required fields not found on any page: gross_pay") == (
+        "required fields not found on any page: gross_pay"
+    )
+    assert safe_reason(None) is None
 
 
 def test_a_holdout_inside_the_repository_is_refused(tmp_path: Path) -> None:

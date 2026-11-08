@@ -1,0 +1,122 @@
+{
+  "run": {
+    "date": "2026-11-08T01:38:22+00:00",
+    "label": "holdout",
+    "kind": "holdout",
+    "documents": 14,
+    "vault": "parrot_holdout",
+    "generator": "hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M",
+    "embedder": "embeddinggemma:300m",
+    "git_sha": "4ba83b0",
+    "register_sha256": "29cc32a2fcec42f0a42b7ebd962120270f879ad07472b4f72a98ce082a7ce5d4",
+    "baseline_file": "2026-10-28-since-run3-on-main.json",
+    "baseline_git_sha": "f0d337a"
+  },
+  "holdout": {
+    "register_rows": 14,
+    "indexed": 1,
+    "extraction_f1": 0.2857,
+    "extraction": {
+      "tp": 1,
+      "fp": 3,
+      "fn": 2,
+      "precision": 0.25,
+      "recall": 0.3333333333333333,
+      "f1": 0.28571428571428575
+    },
+    "by_doc_type": {
+      "loan_agreement": {
+        "documents": 1,
+        "tp": 1,
+        "fp": 3,
+        "fn": 2,
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575
+      }
+    },
+    "no_ground_truth": []
+  },
+  "synthetic_extraction_f1": 0.9611,
+  "gap": 0.6754,
+  "gap_by_doc_type": {
+    "loan_agreement": {
+      "documents": 1,
+      "holdout_f1": 0.2857,
+      "synthetic_f1": 1.0,
+      "gap": 0.7143
+    }
+  },
+  "documents": [
+    {
+      "name": "H01.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H02.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H03.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H04.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H05.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H06.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H07.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H08.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H09.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H10.png",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H11.pdf",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H12.pdf",
+      "status": "indexed",
+      "facts": 4
+    },
+    {
+      "name": "H13.pdf",
+      "status": "quarantined",
+      "facts": 0
+    },
+    {
+      "name": "H14.png",
+      "status": "quarantined",
+      "facts": 0
+    }
+  ]
+}

@@ -1,0 +1,206 @@
+{
+  "run": {
+    "date": "2026-11-08T01:56:41+00:00",
+    "label": "holdout-image-pass",
+    "kind": "holdout",
+    "documents": 14,
+    "vault": "parrot_holdout",
+    "generator": "hf.co/mradermacher/Qwen-SEA-LION-v4-4B-VL-GGUF:Q4_K_M",
+    "embedder": "embeddinggemma:300m",
+    "git_sha": "4ba83b0-dirty",
+    "register_sha256": "29cc32a2fcec42f0a42b7ebd962120270f879ad07472b4f72a98ce082a7ce5d4",
+    "baseline_file": "2026-10-28-since-run3-on-main.json",
+    "baseline_git_sha": "f0d337a"
+  },
+  "holdout": {
+    "register_rows": 14,
+    "indexed": 3,
+    "extraction_f1": 0.6154,
+    "extraction": {
+      "tp": 8,
+      "fp": 8,
+      "fn": 2,
+      "precision": 0.5,
+      "recall": 0.8,
+      "f1": 0.6153846153846154
+    },
+    "by_doc_type": {
+      "loan_agreement": {
+        "documents": 2,
+        "tp": 3,
+        "fp": 6,
+        "fn": 2,
+        "precision": 0.3333333333333333,
+        "recall": 0.6,
+        "f1": 0.42857142857142855
+      },
+      "policy_schedule": {
+        "documents": 1,
+        "tp": 5,
+        "fp": 2,
+        "fn": 0,
+        "precision": 0.7142857142857143,
+        "recall": 1.0,
+        "f1": 0.8333333333333333
+      }
+    },
+    "no_ground_truth": []
+  },
+  "synthetic_extraction_f1": 0.9611,
+  "gap": 0.3457,
+  "gap_by_doc_type": {
+    "loan_agreement": {
+      "documents": 2,
+      "holdout_f1": 0.4286,
+      "synthetic_f1": 1.0,
+      "gap": 0.5714
+    },
+    "policy_schedule": {
+      "documents": 1,
+      "holdout_f1": 0.8333,
+      "synthetic_f1": 0.9854,
+      "gap": 0.152
+    }
+  },
+  "first_pass_only": {
+    "indexed": 1,
+    "extraction_f1": 0.2857,
+    "by_doc_type": {
+      "loan_agreement": {
+        "documents": 1,
+        "tp": 1,
+        "fp": 3,
+        "fn": 2,
+        "precision": 0.25,
+        "recall": 0.3333333333333333,
+        "f1": 0.28571428571428575
+      }
+    }
+  },
+  "documents": [
+    {
+      "name": "H01.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "required fields not found on any page: pay_period"
+    },
+    {
+      "name": "H02.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "required fields not found on any page: pay_period"
+    },
+    {
+      "name": "H03.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "required fields not found on any page: pay_period"
+    },
+    {
+      "name": "H04.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "required fields not found on any page: pay_period"
+    },
+    {
+      "name": "H05.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "schema: the model's output did not fit"
+    },
+    {
+      "name": "H06.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "schema: the model's output did not fit"
+    },
+    {
+      "name": "H07.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "required fields not found on any page: pay_period",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "required fields not found on any page: pay_period"
+    },
+    {
+      "name": "H08.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "schema: the model's output did not fit",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "schema: the model's output did not fit"
+    },
+    {
+      "name": "H09.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "schema: the model's output did not fit",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "schema: the model's output did not fit"
+    },
+    {
+      "name": "H10.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "schema: the model's output did not fit",
+      "status": "indexed",
+      "facts": 7,
+      "image_pass": "recovered",
+      "image_pass_reason": null
+    },
+    {
+      "name": "H11.pdf",
+      "first_pass": "quarantined",
+      "first_pass_reason": "schema: the model's output did not fit",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "required fields not found on any page: principal"
+    },
+    {
+      "name": "H12.pdf",
+      "first_pass": "indexed",
+      "first_pass_reason": null,
+      "status": "indexed",
+      "facts": 4
+    },
+    {
+      "name": "H13.pdf",
+      "first_pass": "quarantined",
+      "first_pass_reason": "schema: the model's output did not fit",
+      "status": "quarantined",
+      "facts": 0,
+      "image_pass": "still quarantined",
+      "image_pass_reason": "schema: the model's output did not fit"
+    },
+    {
+      "name": "H14.png",
+      "first_pass": "quarantined",
+      "first_pass_reason": "schema: the model's output did not fit",
+      "status": "indexed",
+      "facts": 5,
+      "image_pass": "recovered",
+      "image_pass_reason": null
+    }
+  ]
+}
